@@ -1,0 +1,810 @@
+diff --git a/.env.dryrun.example b/.env.dryrun.example
+new file mode 100644
+index 0000000..81e22ec
+--- /dev/null
++++ b/.env.dryrun.example
+@@ -0,0 +1,5 @@
++# Phase 10.2.1 PostgreSQL dry-run configuration.
++# Copy this file to .env.dryrun on your local machine and replace the
++# placeholder values. Never commit .env.dryrun because it may contain secrets.
++
++PHASE10_DRY_RUN_DATABASE_URL=postgresql://dryrun_user:change-me@localhost:5432/mecprecision_dryrun
+diff --git a/.gitignore b/.gitignore
+index e3605a2..ad82beb 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -14,6 +14,7 @@ venv/
+ .env
+ .env.*
+ !.env.example
++!.env.dryrun.example
+ 
+ # Django
+ db.sqlite3
+diff --git a/django_backend/tests/test_phase10_dry_run_gate.py b/django_backend/tests/test_phase10_dry_run_gate.py
+index 0fd83c3..447809e 100644
+--- a/django_backend/tests/test_phase10_dry_run_gate.py
++++ b/django_backend/tests/test_phase10_dry_run_gate.py
+@@ -5,6 +5,11 @@ from scripts.phase10_dry_run_migration import (
+     is_safe_test_database_url,
+     mask_database_url,
+ )
++from scripts.check_phase10_postgres_connection import (
++    evaluate_postgres_environment,
++    has_forbidden_database_name,
++    validate_dryrun_database_url,
++)
+ 
+ 
+ def test_dry_run_gate_blocks_missing_target_database(monkeypatch):
+@@ -26,9 +31,41 @@ def test_dry_run_gate_accepts_only_safe_test_database_names():
+     assert not is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_prod")
+ 
+ 
++def test_dry_run_gate_rejects_production_marker_even_when_dryrun_exists():
++    """A database name cannot combine a safe marker with a production marker."""
++    result = evaluate_dry_run(
++        "postgresql://user:pass@localhost/mecprecision_prod_dryrun"
++    )
++
++    assert result["status"] == "blocked"
++    assert result["dry_run_allowed"] is False
++    assert result["environment_validation"]["has_forbidden_database_name"] is True
++
++
+ def test_dry_run_report_masks_credentials():
+     """Reports must not expose database passwords."""
+     masked = mask_database_url("postgresql://user:secret-password@localhost:5432/mecprecision_test")
+ 
+     assert "secret-password" not in masked
+     assert "user:***@" in masked
++
++
++def test_postgres_environment_validator_reports_missing_url_without_connection(monkeypatch):
++    """Missing URL should be a safe blocked state and should not touch PostgreSQL."""
++    monkeypatch.delenv("PHASE10_DRY_RUN_DATABASE_URL", raising=False)
++
++    result = evaluate_postgres_environment()
++
++    assert result["status"] == "not_configured"
++    assert result["production_touched"] is False
++    assert result["connection"]["connection_checked"] is False
++
++
++def test_postgres_environment_validator_rejects_production_database_name():
++    """The validator must refuse production-like PostgreSQL database names."""
++    database_url = "postgresql://user:pass@localhost:5432/mecprecision_prod"
++    validation = validate_dryrun_database_url(database_url)
++
++    assert has_forbidden_database_name(database_url)
++    assert validation["has_forbidden_database_name"] is True
++    assert validation["errors"]
+diff --git a/docker-compose.phase10-dryrun.yml b/docker-compose.phase10-dryrun.yml
+new file mode 100644
+index 0000000..e6308a4
+--- /dev/null
++++ b/docker-compose.phase10-dryrun.yml
+@@ -0,0 +1,21 @@
++services:
++  phase10-postgres-dryrun:
++    image: postgres:16
++    container_name: mecprecision_phase10_dryrun_postgres
++    restart: unless-stopped
++    environment:
++      POSTGRES_DB: mecprecision_dryrun
++      POSTGRES_USER: dryrun_user
++      POSTGRES_PASSWORD: dryrun_password_change_me
++    ports:
++      - "5432:5432"
++    volumes:
++      - phase10_postgres_dryrun_data:/var/lib/postgresql/data
++    healthcheck:
++      test: ["CMD-SHELL", "pg_isready -U dryrun_user -d mecprecision_dryrun"]
++      interval: 10s
++      timeout: 5s
++      retries: 5
++
++volumes:
++  phase10_postgres_dryrun_data:
+diff --git a/docs/codex-prompts/PHASE_10.2.1_POSTGRESQL_DRY_RUN_ENVIRONMENT_SETUP.md b/docs/codex-prompts/PHASE_10.2.1_POSTGRESQL_DRY_RUN_ENVIRONMENT_SETUP.md
+new file mode 100644
+index 0000000..598b168
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_10.2.1_POSTGRESQL_DRY_RUN_ENVIRONMENT_SETUP.md
+@@ -0,0 +1,93 @@
++# Phase 10.2.1 - PostgreSQL Dry Run Environment Setup
++
++## Project
++
++mecprecision-vietnam
++
++## Objective
++
++Prepare a safe non-production PostgreSQL environment for Phase 10.2 dry-run
++migration execution.
++
++Goal:
++
++- Enable controlled PostgreSQL migration simulation.
++- Do not touch production.
++- Do not modify the legacy SQLite database.
++- Do not execute real database ownership transfer.
++
++## Status
++
++Completed:
++
++- Phase 10 - Database Ownership Control Gate
++- Phase 10.1 - PostgreSQL Schema Design
++- Phase 10.2 - Database Dry Run Migration Gate
++
++Current blocker:
++
++- `PHASE10_DRY_RUN_DATABASE_URL` is not configured.
++
++## Important Rules
++
++Do not:
++
++- migrate production database
++- modify production environment
++- write to legacy SQLite database
++- execute real ownership transfer
++- generate production Django migrations
++- delete legacy data
++
++Only:
++
++- create test PostgreSQL environment
++- configure dry-run connection
++- validate connectivity
++- document setup process
++
++## Required Documents
++
++Read before implementation:
++
++- `docs/migration/POSTGRESQL_SCHEMA_DESIGN.md`
++- `docs/migration/DATABASE_DRY_RUN_REPORT.md`
++- `docs/migration/PHASE_10_PREPARATION_PLAN.md`
++- `docs/migration/COMPOSITE_KEY_STRATEGY.md`
++- `docs/testing/PHASE_TESTING_STANDARD.md`
++
++## Tasks
++
++1. Create PostgreSQL dry-run environment documentation.
++2. Create `.env.dryrun.example`.
++3. Create `scripts/check_phase10_postgres_connection.py`.
++4. Update `scripts/phase10_dry_run_migration.py` safety validation.
++5. Create setup guide.
++6. Run validation commands.
++7. Create review package.
++
++## Git Requirements
++
++Branch:
++
++```text
++migration/phase-10.2.1-postgresql-dryrun-environment
++```
++
++Commit:
++
++```text
++chore: setup postgresql dry run environment
++```
++
++Tag:
++
++```text
++phase-10.2.1-dryrun-environment-ready
++```
++
++## Final Status
++
++WAITING FOR ARCHITECT REVIEW
++
++Do not start Phase 10.3.
+diff --git a/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md b/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md
+new file mode 100644
+index 0000000..6be637e
+--- /dev/null
++++ b/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md
+@@ -0,0 +1,97 @@
++# Phase 10.2.1 Setup Guide
++
++## Step 1: Install PostgreSQL
++
++Install PostgreSQL 16 or use Docker Desktop.
++
++Docker option:
++
++```powershell
++docker compose -f docker-compose.phase10-dryrun.yml up -d
++```
++
++Fallback for older Docker Compose installations:
++
++```powershell
++docker-compose -f docker-compose.phase10-dryrun.yml up -d
++```
++
++## Step 2: Create Dry-Run Database
++
++Required database name examples:
++
++- `mecprecision_dryrun`
++- `mecprecision_test`
++- `mecprecision_staging`
++
++Do not use names such as:
++
++- `mecprecision_prod`
++- `mecprecision_production`
++- `mecprecision_live`
++
++## Step 3: Configure Environment Variable
++
++Copy the example file:
++
++```powershell
++Copy-Item .env.dryrun.example .env.dryrun
++```
++
++Edit `.env.dryrun` and replace the password.
++
++Temporary PowerShell option:
++
++```powershell
++$env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://dryrun_user:password@localhost:5432/mecprecision_dryrun"
++```
++
++## Step 4: Run Connection Test
++
++Run:
++
++```powershell
++python scripts/check_phase10_postgres_connection.py
++```
++
++Expected when database is ready:
++
++```text
++"status": "ready"
++```
++
++Expected when URL is not configured:
++
++```text
++"status": "not_configured"
++```
++
++This is safe because no database connection is attempted.
++
++## Step 5: Execute Phase 10.2 Dry Run
++
++After the connection test returns `ready`, rerun:
++
++```powershell
++python scripts/phase10_dry_run_migration.py
++```
++
++Expected:
++
++```text
++"dry_run_allowed": true
++```
++
++This still does not import production data or transfer ownership. It only clears
++the environment safety gate for the next migration dry-run step.
++
++## Troubleshooting
++
++If the validator returns `blocked`, check:
++
++- URL starts with `postgresql://` or `postgres://`
++- database name includes `dryrun`, `test`, `staging` or `dev`
++- database name does not include `prod`, `production` or `live`
++- PostgreSQL container/service is running
++- username and password are correct
++- user can create objects in the dry-run database
+diff --git a/docs/migration/POSTGRESQL_DRY_RUN_ENVIRONMENT.md b/docs/migration/POSTGRESQL_DRY_RUN_ENVIRONMENT.md
+new file mode 100644
+index 0000000..d2ff52a
+--- /dev/null
++++ b/docs/migration/POSTGRESQL_DRY_RUN_ENVIRONMENT.md
+@@ -0,0 +1,134 @@
++# PostgreSQL Dry Run Environment
++
++## Phase
++
++Phase 10.2.1 - PostgreSQL Dry Run Environment Setup
++
++## Purpose
++
++This environment is only for migration simulation. It is a safe target for
++running Phase 10.2 dry-run checks before any real database ownership transfer.
++
++## PostgreSQL Version Requirement
++
++Use PostgreSQL 16 or newer for local dry-run validation.
++
++PostgreSQL 15 is acceptable for compatibility checks, but the target design
++should be reviewed again if production later chooses a different major version.
++
++## Database Naming Convention
++
++The database name must clearly indicate that it is not production.
++
++Allowed examples:
++
++- `mecprecision_dryrun`
++- `mecprecision_test`
++- `mecprecision_staging`
++- `mecprecision_dev`
++
++Rejected examples:
++
++- `mecprecision_prod`
++- `mecprecision_production`
++- `mecprecision_live`
++- `postgres`
++- `template0`
++- `template1`
++
++The safety validator rejects names containing production/live markers even if a
++dry-run marker is also present.
++
++## User And Permission Requirement
++
++Use a dedicated dry-run database user.
++
++Minimum permissions:
++
++- connect to the dry-run database
++- create temporary objects
++- use the `public` schema
++- create objects in the `public` schema
++
++Do not use a production application user, DBA superuser or shared production
++credential for dry-run work.
++
++## Connection Configuration
++
++Configure the dry-run URL with:
++
++```powershell
++$env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://dryrun_user:password@localhost:5432/mecprecision_dryrun"
++```
++
++For local development, copy:
++
++```text
++.env.dryrun.example
++```
++
++to:
++
++```text
++.env.dryrun
++```
++
++Then replace the example password.
++
++## Environment Variables
++
++| Variable | Purpose | Required |
++|---|---|---|
++| `PHASE10_DRY_RUN_DATABASE_URL` | Non-production PostgreSQL target for migration dry run | Yes |
++
++## Optional Docker Environment
++
++This phase adds a local-only Docker Compose file:
++
++```powershell
++docker compose -f docker-compose.phase10-dryrun.yml up -d
++```
++
++If your Docker installation uses the older standalone Compose command, use:
++
++```powershell
++docker-compose -f docker-compose.phase10-dryrun.yml up -d
++```
++
++It creates a PostgreSQL container named:
++
++```text
++mecprecision_phase10_dryrun_postgres
++```
++
++The compose file is for local simulation only. It is not a production deployment
++definition.
++
++## Safety Rules
++
++- Never point `PHASE10_DRY_RUN_DATABASE_URL` to a production database.
++- Never use database names containing `prod`, `production` or `live`.
++- Never run ownership transfer from this phase.
++- Never write to `backend/database/mecprecision.sqlite`.
++- Keep `.env.dryrun` out of Git.
++- Commit only `.env.dryrun.example`.
++
++## Validation Command
++
++Run:
++
++```powershell
++python scripts/check_phase10_postgres_connection.py
++```
++
++If no URL is configured, the script reports `not_configured` and does not
++attempt a PostgreSQL connection.
++
++When the URL is configured, the script validates:
++
++- URL scheme
++- safe database name
++- forbidden production markers
++- PostgreSQL connectivity
++- PostgreSQL version
++- required permissions
+diff --git a/scripts/check_phase10_postgres_connection.py b/scripts/check_phase10_postgres_connection.py
+new file mode 100644
+index 0000000..9869ba2
+--- /dev/null
++++ b/scripts/check_phase10_postgres_connection.py
+@@ -0,0 +1,252 @@
++"""Validate the PostgreSQL dry-run target for Phase 10.2.1.
++
++The script is intentionally defensive. It refuses production-looking database
++names before attempting any network connection, then checks PostgreSQL version
++and permissions only when the URL is structurally safe.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import re
++from pathlib import Path
++from urllib.parse import urlparse
++
++try:
++    from dotenv import load_dotenv
++except ImportError:  # pragma: no cover - python-dotenv is installed in Django env.
++    load_dotenv = None
++
++
++ENV_NAME = "PHASE10_DRY_RUN_DATABASE_URL"
++SAFE_DATABASE_NAME_MARKERS = {"test", "dryrun", "dry_run", "staging", "dev"}
++FORBIDDEN_DATABASE_NAME_MARKERS = {"prod", "production", "live"}
++SYSTEM_DATABASE_NAMES = {"postgres", "template0", "template1"}
++
++
++def load_dryrun_environment():
++    """Load local dry-run env files without requiring them to exist."""
++    if load_dotenv is None:
++        return
++
++    project_root = Path(__file__).resolve().parents[1]
++    load_dotenv(project_root / ".env", override=False)
++    load_dotenv(project_root / ".env.dryrun", override=False)
++
++
++def mask_database_url(database_url):
++    """Hide passwords before printing database URLs in logs or reports."""
++    if not database_url:
++        return ""
++
++    parsed = urlparse(database_url)
++    host = parsed.hostname or ""
++    port = f":{parsed.port}" if parsed.port else ""
++    username = parsed.username or ""
++    auth = f"{username}:***@" if username else ""
++    return f"{parsed.scheme}://{auth}{host}{port}{parsed.path}"
++
++
++def database_name_from_url(database_url):
++    """Return the database name part of a PostgreSQL URL."""
++    return urlparse(database_url).path.lstrip("/")
++
++
++def database_name_tokens(database_name):
++    """Split a database name into readable safety tokens."""
++    normalized = database_name.lower()
++    tokens = {token for token in re.split(r"[^a-z0-9]+", normalized) if token}
++    tokens.add(normalized)
++    return tokens
++
++
++def is_postgresql_url(database_url):
++    """Return True when the URL scheme is postgres/postgresql."""
++    return urlparse(database_url).scheme in {"postgres", "postgresql"}
++
++
++def is_safe_test_database_url(database_url):
++    """Allow only database names that clearly mark a non-production target."""
++    database_name = database_name_from_url(database_url).lower()
++    return any(marker in database_name for marker in SAFE_DATABASE_NAME_MARKERS)
++
++
++def has_forbidden_database_name(database_url):
++    """Reject database names that look like production/live databases."""
++    database_name = database_name_from_url(database_url).lower()
++    tokens = database_name_tokens(database_name)
++    return (
++        database_name in SYSTEM_DATABASE_NAMES
++        or bool(tokens.intersection(FORBIDDEN_DATABASE_NAME_MARKERS))
++    )
++
++
++def validate_dryrun_database_url(database_url):
++    """Validate URL format and non-production naming before connecting."""
++    errors = []
++    warnings = []
++    database_name = database_name_from_url(database_url) if database_url else ""
++
++    if not database_url:
++        errors.append(f"{ENV_NAME} is not configured.")
++    elif not is_postgresql_url(database_url):
++        errors.append("Dry-run target must use postgres/postgresql URL scheme.")
++    elif not database_name:
++        errors.append("Dry-run database URL must include a database name.")
++    else:
++        if has_forbidden_database_name(database_url):
++            errors.append(
++                "Dry-run database name looks like production/live/system database."
++            )
++        if not is_safe_test_database_url(database_url):
++            errors.append(
++                "Dry-run database name must include test, dryrun, dry_run, staging or dev."
++            )
++
++    if database_url and urlparse(database_url).password in {"password", "change-me"}:
++        warnings.append("Database URL still contains an example password.")
++
++    return {
++        "database_name": database_name,
++        "masked_database_url": mask_database_url(database_url),
++        "is_postgresql_url": bool(database_url and is_postgresql_url(database_url)),
++        "is_safe_non_production_name": bool(
++            database_url and is_safe_test_database_url(database_url)
++        ),
++        "has_forbidden_database_name": bool(
++            database_url and has_forbidden_database_name(database_url)
++        ),
++        "errors": errors,
++        "warnings": warnings,
++    }
++
++
++def check_postgres_connection(database_url):
++    """Connect to PostgreSQL and verify version plus minimum dry-run permissions."""
++    result = {
++        "connection_checked": False,
++        "connection_ok": False,
++        "postgresql_version": "",
++        "current_database": "",
++        "current_user": "",
++        "permissions": {},
++        "errors": [],
++    }
++
++    validation = validate_dryrun_database_url(database_url)
++    if validation["errors"]:
++        result["errors"].extend(validation["errors"])
++        return result
++
++    try:
++        import psycopg
++    except ImportError:
++        result["errors"].append("psycopg is not installed.")
++        return result
++
++    result["connection_checked"] = True
++    try:
++        with psycopg.connect(database_url, connect_timeout=5) as connection:
++            with connection.cursor() as cursor:
++                cursor.execute("SHOW server_version")
++                result["postgresql_version"] = cursor.fetchone()[0]
++
++                cursor.execute("SELECT current_database(), current_user")
++                current_database, current_user = cursor.fetchone()
++                result["current_database"] = current_database
++                result["current_user"] = current_user
++
++                permission_queries = {
++                    "database_connect": "SELECT has_database_privilege(current_database(), 'CONNECT')",
++                    "database_temp": "SELECT has_database_privilege(current_database(), 'TEMP')",
++                    "public_schema_usage": "SELECT has_schema_privilege('public', 'USAGE')",
++                    "public_schema_create": "SELECT has_schema_privilege('public', 'CREATE')",
++                }
++                for permission_name, query in permission_queries.items():
++                    cursor.execute(query)
++                    result["permissions"][permission_name] = bool(cursor.fetchone()[0])
++
++        missing_permissions = [
++            name for name, allowed in result["permissions"].items() if not allowed
++        ]
++        if missing_permissions:
++            result["errors"].append(
++                "Dry-run user is missing required permissions: "
++                + ", ".join(missing_permissions)
++            )
++        else:
++            result["connection_ok"] = True
++    except Exception as exc:  # pragma: no cover - depends on local PostgreSQL.
++        result["errors"].append(f"PostgreSQL connection failed: {exc}")
++
++    return result
++
++
++def evaluate_postgres_environment(database_url=None, check_connection=True):
++    """Build a structured environment report for docs and CI output."""
++    load_dryrun_environment()
++    database_url = database_url or os.getenv(ENV_NAME, "")
++    validation = validate_dryrun_database_url(database_url)
++    connection = (
++        check_postgres_connection(database_url)
++        if database_url and not validation["errors"] and check_connection
++        else {
++            "connection_checked": False,
++            "connection_ok": False,
++            "postgresql_version": "",
++            "current_database": "",
++            "current_user": "",
++            "permissions": {},
++            "errors": [],
++        }
++    )
++
++    errors = validation["errors"] + connection["errors"]
++    if not database_url:
++        status = "not_configured"
++    elif errors:
++        status = "blocked"
++    elif check_connection and connection["connection_ok"]:
++        status = "ready"
++    else:
++        status = "validated_without_connection"
++
++    return {
++        "status": status,
++        "safe_to_proceed": status == "ready",
++        "production_touched": False,
++        "validation": validation,
++        "connection": connection,
++        "errors": errors,
++        "warnings": validation["warnings"],
++    }
++
++
++def main():
++    """CLI entrypoint for PostgreSQL dry-run environment validation."""
++    parser = argparse.ArgumentParser(
++        description="Validate Phase 10 PostgreSQL dry-run connection"
++    )
++    parser.add_argument("--database-url", default=None, help="Override dry-run URL")
++    parser.add_argument(
++        "--skip-connection",
++        action="store_true",
++        help="Only validate URL and safety naming; do not connect to PostgreSQL",
++    )
++    args = parser.parse_args()
++
++    result = evaluate_postgres_environment(
++        args.database_url,
++        check_connection=not args.skip_connection,
++    )
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++
++    if result["status"] in {"not_configured", "validated_without_connection"}:
++        return 0
++    return 0 if result["safe_to_proceed"] else 2
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/phase10_dry_run_migration.py b/scripts/phase10_dry_run_migration.py
+index 7efe3be..22aeb86 100644
+--- a/scripts/phase10_dry_run_migration.py
++++ b/scripts/phase10_dry_run_migration.py
+@@ -8,57 +8,40 @@ unless a clearly non-production PostgreSQL URL is supplied.
+ 
+ from __future__ import annotations
+ 
++import os
+ import argparse
+ import json
+-import os
+-from urllib.parse import urlparse
+ 
+ try:
+     from scripts.phase10_readiness_snapshot import snapshot_database
++    from scripts.check_phase10_postgres_connection import (
++        evaluate_postgres_environment,
++        is_postgresql_url,
++        is_safe_test_database_url,
++        mask_database_url,
++        validate_dryrun_database_url,
++    )
+ except ImportError:  # pragma: no cover - used when running this file directly.
+     from phase10_readiness_snapshot import snapshot_database
+-
+-
+-SAFE_DATABASE_NAME_MARKERS = {"test", "dryrun", "dry_run", "staging", "dev"}
+-
+-
+-def mask_database_url(database_url):
+-    """Mask credentials before including a URL in reports."""
+-    if not database_url:
+-        return ""
+-
+-    parsed = urlparse(database_url)
+-    host = parsed.hostname or ""
+-    port = f":{parsed.port}" if parsed.port else ""
+-    username = parsed.username or ""
+-    auth = f"{username}:***@" if username else ""
+-    return f"{parsed.scheme}://{auth}{host}{port}{parsed.path}"
+-
+-
+-def is_postgresql_url(database_url):
+-    """Return True when the URL points to PostgreSQL."""
+-    return urlparse(database_url).scheme in {"postgres", "postgresql"}
+-
+-
+-def is_safe_test_database_url(database_url):
+-    """Allow only clearly non-production target database names."""
+-    parsed = urlparse(database_url)
+-    database_name = parsed.path.lstrip("/").lower()
+-    return any(marker in database_name for marker in SAFE_DATABASE_NAME_MARKERS)
++    from check_phase10_postgres_connection import (
++        evaluate_postgres_environment,
++        is_postgresql_url,
++        is_safe_test_database_url,
++        mask_database_url,
++        validate_dryrun_database_url,
++    )
+ 
+ 
+ def evaluate_dry_run(database_url=None):
+     """Evaluate whether Phase 10.2 can run against a safe test target."""
+     database_url = database_url or os.getenv("PHASE10_DRY_RUN_DATABASE_URL", "")
+     snapshot = snapshot_database()
+-    errors = []
+-
+-    if not database_url:
+-        errors.append("PHASE10_DRY_RUN_DATABASE_URL is not configured.")
+-    elif not is_postgresql_url(database_url):
+-        errors.append("Dry-run target must use postgres/postgresql URL scheme.")
+-    elif not is_safe_test_database_url(database_url):
+-        errors.append("Dry-run database name must include test, dryrun, staging or dev.")
++    url_validation = validate_dryrun_database_url(database_url)
++    environment_validation = evaluate_postgres_environment(
++        database_url,
++        check_connection=False,
++    )
++    errors = url_validation["errors"]
+ 
+     dry_run_allowed = not errors
+     return {
+@@ -66,6 +49,18 @@ def evaluate_dry_run(database_url=None):
+         "dry_run_allowed": dry_run_allowed,
+         "target_database_url": mask_database_url(database_url),
+         "errors": errors,
++        "environment_validation": {
++            "status": environment_validation["status"],
++            "database_name": url_validation["database_name"],
++            "is_postgresql_url": url_validation["is_postgresql_url"],
++            "is_safe_non_production_name": url_validation[
++                "is_safe_non_production_name"
++            ],
++            "has_forbidden_database_name": url_validation[
++                "has_forbidden_database_name"
++            ],
++            "production_touched": environment_validation["production_touched"],
++        },
+         "legacy_snapshot": {
+             "database_size_bytes": snapshot["database_size_bytes"],
+             "database_size_unchanged": snapshot["database_size_unchanged"],
