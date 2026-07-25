@@ -4,30 +4,30 @@
 
 Map legacy API routes to Django replacements before decommission.
 
-| Method | Legacy route | Django replacement | Ready | Notes |
+| Method | Legacy route | Django replacement | Status | Notes |
 |---|---|---|---|---|
-| GET | `/api/health` | `/api/v1/health/` | Yes | Contract tested |
-| GET | `/api/products` | `/api/v1/catalog/products/` | Yes | Read-only replacement exists |
-| GET | `/api/products/{id}` | `/api/v1/catalog/products/{id}/` | Yes | Read-only replacement exists |
-| GET | `/api/product-categories` | `/api/v1/catalog/categories/` | Yes | Read-only replacement exists |
-| GET | `/api/news` | TBD | No | Django news API missing |
-| GET | `/api/home` | TBD | No | Home aggregate API missing |
-| GET | `/api/capabilities` | TBD | No | Capabilities API missing |
-| GET | `/api/openapi.json` | TBD | No | Django OpenAPI endpoint missing |
-| GET | `/api/version` | TBD | No | Django version endpoint missing |
-| GET | `/api/aws-demo` | TBD | No | Demo endpoint not migrated |
-| GET | `/api/external/weather` | TBD | No | External weather demo not migrated |
-| POST | `/api/contact` | `/api/v1/crm/contact-requests/` | No | Django endpoint is read-only |
-| POST | `/api/quote-request` | `/api/v1/sales/quotes/` | No | Django endpoint is read-only |
-| POST | `/api/ai/chat` | TBD | No | AI API not migrated |
-| POST/PUT/DELETE | `/api/products` | TBD | No | Django write API not available |
+| GET | `/api/health` | `/api/v1/health/` | READY | Contract tested |
+| GET | `/api/products` | `/api/v1/catalog/products/` | READY | Read replacement exists |
+| GET | `/api/products/{id}` | `/api/v1/catalog/products/{id}/` | READY | Detail replacement exists |
+| GET | `/api/product-categories` | `/api/v1/catalog/categories/` | READY | Category replacement exists |
+| GET | `/api/news` | `/api/v1/news/` | READY | CMS-backed news replacement |
+| GET | `/api/home` | `/api/v1/public/home/` | READY | Django aggregate replacement |
+| GET | `/api/capabilities` | `/api/v1/catalog/capabilities/` | READY | Capability replacement exists |
+| GET | `/api/openapi.json` | `/api/v1/openapi.json` | READY | Compact Django OpenAPI replacement |
+| GET | `/api/version` | `/api/v1/version/` | READY | Version replacement exists |
+| GET | `/api/aws-demo` | `/api/v1/demo/aws/` | READY | Local deterministic demo replacement |
+| GET | `/api/external/weather` | `/api/v1/demo/external/weather/` | READY | Network-free weather demo replacement |
+| POST | `/api/contact` | `/api/v1/crm/contact-requests/` | READY | Validated Django write intent |
+| POST | `/api/quote-request` | `/api/v1/sales/quotes/` | READY | Validated Django write intent |
+| POST | `/api/ai/chat` | `/api/v1/ai/chat/` | READY | Migration-safe AI response |
+| POST/PUT/DELETE | `/api/products` | `/api/v1/catalog/products/` and `/api/v1/catalog/products/{id}/` | READY | Admin-token protected write intent |
 
 ## Summary
 
 ```text
-Ready replacements: 4
-Not ready replacements: 11
+Ready replacements: 15
+Not ready replacements: 0
 ```
 
-Legacy API decommission is not approved until every production-used endpoint has
-a verified Django replacement or an approved removal decision.
+Legacy API decommission is still not approved until production traffic logs,
+client contract tests, rollback window and architecture approval are verified.

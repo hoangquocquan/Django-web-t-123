@@ -13,6 +13,11 @@ def ok(data):
     return Response({"success": True, "data": data})
 
 
+def created(data):
+    """Return the standard success envelope for newly accepted resources."""
+    return Response({"success": True, "data": data}, status=status.HTTP_201_CREATED)
+
+
 def bad_request(code, message):
     """Return a consistent 400 response for invalid API input."""
     return Response(

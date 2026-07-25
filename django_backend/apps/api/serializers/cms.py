@@ -17,6 +17,23 @@ def page_to_dict(page):
     }
 
 
+def banner_to_dict(banner):
+    """Convert a CMS banner ORM object into JSON."""
+    return {
+        "id": banner.id,
+        "title": banner.title,
+        "placement": banner.placement,
+        "image_url": banner.image_url,
+        "link_url": banner.link_url,
+        "content": banner.content,
+        "sort_order": banner.sort_order,
+        "status": banner.status,
+        "starts_at": banner.starts_at,
+        "ends_at": banner.ends_at,
+        "created_at": banner.created_at,
+    }
+
+
 def menu_item_to_dict(item):
     """Convert a menu item and its already-prefetched children into JSON."""
     return {

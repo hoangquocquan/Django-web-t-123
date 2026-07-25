@@ -100,16 +100,17 @@ def test_auth_profile_does_not_expose_password_hash(client, legacy_db):
     assert "token" not in body["data"]
 
 
-def test_business_api_rejects_write_methods(client, legacy_db):
-    """Phase 9.1 APIs are read-only and must reject write attempts."""
+def test_business_api_write_replacement_is_validation_gated(client, legacy_db):
+    """Phase 11.1.1 opens product writes only behind replacement validation."""
     response = client.post(
         "/api/v1/catalog/products/",
         data={"name": "Should not write"},
         content_type="application/json",
     )
 
-    assert response.status_code == 403
-    assert "detail" in response.json()
+    assert response.status_code == 400
+    assert response.json()["success"] is False
+    assert response.json()["error"]["code"] == "permission_denied"
 
 
 def test_missing_business_resource_returns_consistent_404(client, legacy_db):

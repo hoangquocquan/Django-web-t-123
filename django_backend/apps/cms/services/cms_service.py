@@ -26,6 +26,10 @@ class CmsService:
         """Return published pages."""
         return self.page_repository.list_published_pages()
 
+    def list_public_news(self):
+        """Return CMS-backed news replacement records."""
+        return self.page_repository.list_published_pages()
+
     def get_public_page(self, slug):
         """Return one published page by slug."""
         return self.page_repository.get_published_page_by_slug(slug)

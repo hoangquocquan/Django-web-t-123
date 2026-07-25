@@ -39,10 +39,12 @@ and full Django replacement coverage are not available in this environment.
 | Client contract tests pass | Pending |
 | Rollback window respected | Pending |
 | Access logs archived | Pending |
-| Write endpoints migrated to Django | Not complete |
-| AI/demo/API docs endpoints migrated | Not complete |
+| Write endpoints migrated to Django | Replacement contract complete |
+| AI/demo/API docs endpoints migrated | Replacement contract complete |
+| Production traffic evidence | Still required |
 
 ## Decision
 
-Do not disable, redirect or remove legacy API routes in this phase. Keep this
-phase as a readiness package until all blockers are cleared.
+Do not disable, redirect or remove legacy API routes yet. Phase 11.1.1 completes
+Django replacement coverage, but decommission still needs production traffic
+evidence, client contract verification and architecture approval.

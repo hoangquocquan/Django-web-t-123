@@ -1,6 +1,7 @@
-"""Read-only CRM API views for Phase 9.1 cutover."""
+"""CRM API views for migrated read and contact replacement contracts."""
 
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 from apps.api.permissions import ReadOnlyApiPermission
 from apps.api.serializers.crm import (
@@ -9,6 +10,7 @@ from apps.api.serializers.crm import (
     customer_to_dict,
 )
 from apps.api.views.helpers import handle_not_found, ok, paginated_ok
+from apps.api.views.replacement import contact_create
 from apps.crm.services.crm_service import CrmService
 
 
@@ -31,9 +33,11 @@ def customer_detail(request, customer_id):
     )
 
 
-@api_view(["GET"])
-@permission_classes([ReadOnlyApiPermission])
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
 def contact_requests(request):
-    """Return public contact requests without changing read/status fields."""
+    """Return contact requests or accept a public contact replacement intent."""
+    if request.method == "POST":
+        return contact_create(request)
     service = CrmService()
     return paginated_ok(request, service.list_contact_requests(), contact_request_to_dict)

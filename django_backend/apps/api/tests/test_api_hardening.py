@@ -44,19 +44,36 @@ def test_invalid_pagination_returns_consistent_400(client, legacy_db):
 @pytest.mark.parametrize(
     "url",
     [
-        "/api/v1/catalog/products/",
         "/api/v1/crm/customers/",
-        "/api/v1/sales/quotes/",
         "/api/v1/cms/pages/",
         "/api/v1/auth/profile/",
     ],
 )
 def test_unsafe_methods_are_blocked_across_business_apis(client, legacy_db, method, url):
-    """All business APIs remain read-only before database ownership migration."""
+    """Non-replacement business APIs still block unsafe methods."""
     request_method = getattr(client, method)
     response = request_method(url, data={}, content_type="application/json")
 
     assert response.status_code in {403, 405}
+
+
+def test_phase11_1_1_write_replacements_are_validation_gated(client, legacy_db):
+    """Explicit replacement write routes exist but reject unsafe empty payloads."""
+    product_response = client.post(
+        "/api/v1/catalog/products/",
+        data={},
+        content_type="application/json",
+    )
+    quote_response = client.post(
+        "/api/v1/sales/quotes/",
+        data={},
+        content_type="application/json",
+    )
+
+    assert product_response.status_code == 400
+    assert product_response.json()["error"]["code"] == "permission_denied"
+    assert quote_response.status_code == 400
+    assert quote_response.json()["error"]["code"] == "validation_error"
 
 
 def test_catalog_product_list_query_count_is_bounded(client, legacy_db):

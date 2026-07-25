@@ -16,8 +16,8 @@ def test_phase11_1_blocks_by_default():
     assert result["database_changed"] is False
 
 
-def test_phase11_1_blocks_when_routes_lack_django_replacements():
-    """Ngay cả khi có cờ vận hành, route chưa có replacement vẫn chặn decommission."""
+def test_phase11_1_blocks_when_traffic_log_is_missing_after_replacements():
+    """Có đủ replacement nhưng thiếu traffic log thì vẫn chưa được decommission."""
     env = {
         "PHASE11_1_DJANGO_API_CONTRACTS_VERIFIED": "verified",
         "PHASE11_1_ZERO_LEGACY_API_TRAFFIC_CONFIRMED": "verified",
@@ -30,7 +30,8 @@ def test_phase11_1_blocks_when_routes_lack_django_replacements():
     result = evaluate_api_decommission_readiness(env)
 
     assert result["status"] == "blocked_safely"
-    assert result["route_mapping"]["not_ready_count"] > 0
+    assert result["route_mapping"]["not_ready_count"] == 0
+    assert "Traffic log path was not provided." in result["errors"]
     assert result["compatibility_adapters_removed"] is False
 
 
