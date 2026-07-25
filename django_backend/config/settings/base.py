@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(BASE_DIR / ".env")
 
 
@@ -84,6 +85,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.core",
     "apps.common",
+    "apps.catalog",
 ]
 
 
@@ -121,7 +123,17 @@ TEMPLATES = [
 
 
 DATABASES = {
-    "default": database_from_url(os.getenv("DATABASE_URL", ""))
+    "default": database_from_url(os.getenv("DATABASE_URL", "")),
+    "legacy": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.getenv(
+            "LEGACY_DATABASE_URL",
+            f"file:{(PROJECT_ROOT / 'backend' / 'database' / 'mecprecision.sqlite').as_posix()}?mode=ro",
+        ),
+        "OPTIONS": {
+            "uri": True,
+        },
+    },
 }
 
 

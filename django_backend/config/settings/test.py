@@ -13,7 +13,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": ":memory:",
-    }
+    },
+    "legacy": DATABASES["legacy"],
 }
 
 LOGGING["handlers"]["file"]["filename"] = LOG_DIR / "django-test.log"  # noqa: F405
