@@ -50,21 +50,19 @@ CRM Hardening & Migration Governance
 
 Sales / Quotation Migration
 
-## Current
-
 ### Phase 6.1
 
 Sales Quotation Hardening & Transaction Governance
 
-Status: Completed after approval.
-
-Phase này ghi lại ADR Sales, snapshot strategy, transaction strategy, file lifecycle strategy, data quality review và playbook trước Phase 7.
-
-## Planned
+## Current
 
 ### Phase 7
 
 CMS Migration
+
+Phase này tạo ORM read-only cho CMS pages, menu items, banners và newsletter subscribers, đồng thời kiểm tra self-referential menu relationship.
+
+## Planned
 
 ### Phase 8
 
