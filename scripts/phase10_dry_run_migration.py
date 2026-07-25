@@ -8,57 +8,40 @@ unless a clearly non-production PostgreSQL URL is supplied.
 
 from __future__ import annotations
 
+import os
 import argparse
 import json
-import os
-from urllib.parse import urlparse
 
 try:
     from scripts.phase10_readiness_snapshot import snapshot_database
+    from scripts.check_phase10_postgres_connection import (
+        evaluate_postgres_environment,
+        is_postgresql_url,
+        is_safe_test_database_url,
+        mask_database_url,
+        validate_dryrun_database_url,
+    )
 except ImportError:  # pragma: no cover - used when running this file directly.
     from phase10_readiness_snapshot import snapshot_database
-
-
-SAFE_DATABASE_NAME_MARKERS = {"test", "dryrun", "dry_run", "staging", "dev"}
-
-
-def mask_database_url(database_url):
-    """Mask credentials before including a URL in reports."""
-    if not database_url:
-        return ""
-
-    parsed = urlparse(database_url)
-    host = parsed.hostname or ""
-    port = f":{parsed.port}" if parsed.port else ""
-    username = parsed.username or ""
-    auth = f"{username}:***@" if username else ""
-    return f"{parsed.scheme}://{auth}{host}{port}{parsed.path}"
-
-
-def is_postgresql_url(database_url):
-    """Return True when the URL points to PostgreSQL."""
-    return urlparse(database_url).scheme in {"postgres", "postgresql"}
-
-
-def is_safe_test_database_url(database_url):
-    """Allow only clearly non-production target database names."""
-    parsed = urlparse(database_url)
-    database_name = parsed.path.lstrip("/").lower()
-    return any(marker in database_name for marker in SAFE_DATABASE_NAME_MARKERS)
+    from check_phase10_postgres_connection import (
+        evaluate_postgres_environment,
+        is_postgresql_url,
+        is_safe_test_database_url,
+        mask_database_url,
+        validate_dryrun_database_url,
+    )
 
 
 def evaluate_dry_run(database_url=None):
     """Evaluate whether Phase 10.2 can run against a safe test target."""
     database_url = database_url or os.getenv("PHASE10_DRY_RUN_DATABASE_URL", "")
     snapshot = snapshot_database()
-    errors = []
-
-    if not database_url:
-        errors.append("PHASE10_DRY_RUN_DATABASE_URL is not configured.")
-    elif not is_postgresql_url(database_url):
-        errors.append("Dry-run target must use postgres/postgresql URL scheme.")
-    elif not is_safe_test_database_url(database_url):
-        errors.append("Dry-run database name must include test, dryrun, staging or dev.")
+    url_validation = validate_dryrun_database_url(database_url)
+    environment_validation = evaluate_postgres_environment(
+        database_url,
+        check_connection=False,
+    )
+    errors = url_validation["errors"]
 
     dry_run_allowed = not errors
     return {
@@ -66,6 +49,18 @@ def evaluate_dry_run(database_url=None):
         "dry_run_allowed": dry_run_allowed,
         "target_database_url": mask_database_url(database_url),
         "errors": errors,
+        "environment_validation": {
+            "status": environment_validation["status"],
+            "database_name": url_validation["database_name"],
+            "is_postgresql_url": url_validation["is_postgresql_url"],
+            "is_safe_non_production_name": url_validation[
+                "is_safe_non_production_name"
+            ],
+            "has_forbidden_database_name": url_validation[
+                "has_forbidden_database_name"
+            ],
+            "production_touched": environment_validation["production_touched"],
+        },
         "legacy_snapshot": {
             "database_size_bytes": snapshot["database_size_bytes"],
             "database_size_unchanged": snapshot["database_size_unchanged"],

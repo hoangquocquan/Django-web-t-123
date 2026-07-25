@@ -5,6 +5,11 @@ from scripts.phase10_dry_run_migration import (
     is_safe_test_database_url,
     mask_database_url,
 )
+from scripts.check_phase10_postgres_connection import (
+    evaluate_postgres_environment,
+    has_forbidden_database_name,
+    validate_dryrun_database_url,
+)
 
 
 def test_dry_run_gate_blocks_missing_target_database(monkeypatch):
@@ -26,9 +31,41 @@ def test_dry_run_gate_accepts_only_safe_test_database_names():
     assert not is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_prod")
 
 
+def test_dry_run_gate_rejects_production_marker_even_when_dryrun_exists():
+    """A database name cannot combine a safe marker with a production marker."""
+    result = evaluate_dry_run(
+        "postgresql://user:pass@localhost/mecprecision_prod_dryrun"
+    )
+
+    assert result["status"] == "blocked"
+    assert result["dry_run_allowed"] is False
+    assert result["environment_validation"]["has_forbidden_database_name"] is True
+
+
 def test_dry_run_report_masks_credentials():
     """Reports must not expose database passwords."""
     masked = mask_database_url("postgresql://user:secret-password@localhost:5432/mecprecision_test")
 
     assert "secret-password" not in masked
     assert "user:***@" in masked
+
+
+def test_postgres_environment_validator_reports_missing_url_without_connection(monkeypatch):
+    """Missing URL should be a safe blocked state and should not touch PostgreSQL."""
+    monkeypatch.delenv("PHASE10_DRY_RUN_DATABASE_URL", raising=False)
+
+    result = evaluate_postgres_environment()
+
+    assert result["status"] == "not_configured"
+    assert result["production_touched"] is False
+    assert result["connection"]["connection_checked"] is False
+
+
+def test_postgres_environment_validator_rejects_production_database_name():
+    """The validator must refuse production-like PostgreSQL database names."""
+    database_url = "postgresql://user:pass@localhost:5432/mecprecision_prod"
+    validation = validate_dryrun_database_url(database_url)
+
+    assert has_forbidden_database_name(database_url)
+    assert validation["has_forbidden_database_name"] is True
+    assert validation["errors"]
