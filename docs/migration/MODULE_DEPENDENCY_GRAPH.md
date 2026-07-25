@@ -396,3 +396,220 @@ Next planning reference:
 
 - `DATABASE_MIGRATION_STRATEGY.md`
 - `API_MIGRATION_PLAN.md`
+
+## 13. Phase 1 Review Update - Dependency Validation Notes
+
+The dependency graph was reviewed against the Phase 1 planning requirements.
+
+Main adjustments:
+
+- `core` must remain small.
+- `common` must not become a giant application.
+- CMS, media, and common utilities must stay separated.
+- Media read-only migration can happen early.
+- Media upload/write migration must happen later.
+- API compatibility layer is a required dependency for endpoint cutover.
+
+## 14. Phase 1 Review Update - Core Boundary Rule
+
+`core` should contain only:
+
+- health
+- middleware
+- exceptions
+- logging
+- constants
+
+`core` should not contain:
+
+- product business logic
+- CRM business logic
+- quotation business logic
+- CMS page/menu/banner logic
+- media upload logic
+- AI prompt logic
+- admin user management logic
+
+Reason:
+
+If `core` becomes too large, every module will depend on it heavily and future refactoring becomes risky.
+
+Correct dependency:
+
+```text
+core
+  -> used by modules
+```
+
+Incorrect dependency:
+
+```text
+core
+  -> contains all modules
+```
+
+## 15. Phase 1 Review Update - Common Boundary Rule
+
+Do not create a giant `common` app.
+
+`common` can contain small reusable building blocks:
+
+- settings helper
+- response helpers
+- constants
+- audit helper interface
+- small utility functions
+
+`common` should not contain:
+
+- CMS pages
+- CMS menus
+- CMS banners
+- media upload manager
+- product logic
+- quote workflow
+- customer workflow
+
+Recommended separation:
+
+```text
+common
+  -> reusable utilities only
+
+content/cms
+  -> pages
+  -> menus
+  -> banners
+
+media
+  -> files
+  -> folders
+  -> preview
+  -> upload/write later
+```
+
+## 16. Phase 1 Review Update - Media Strategy
+
+Media has two different migration tracks.
+
+### Media Read-Only
+
+Can migrate earlier.
+
+Purpose:
+
+- Read existing image URLs.
+- Show previews.
+- List uploaded files.
+- Keep product/news/banner/avatar paths working.
+
+Dependencies:
+
+- `core`
+- existing path convention
+- database mapping for text URL fields
+
+Risk:
+
+- Medium, because broken paths affect UI display.
+
+### Media Upload/Write
+
+Must migrate later.
+
+Purpose:
+
+- Upload new files.
+- Rename files.
+- Delete files.
+- Move files into folders.
+- Update database paths.
+
+Dependencies:
+
+- `accounts.permissions`
+- CSRF
+- validation
+- audit logging
+- backup/rollback rule
+
+Risk:
+
+- High, because failed upload/delete can lose files or break public images.
+
+## 17. Phase 1 Review Update - API Compatibility Layer
+
+The API compatibility layer is a migration dependency.
+
+Purpose:
+
+- Keep old frontend response shape stable.
+- Convert Django internal naming to legacy JSON field names.
+- Preserve status values and error shape.
+- Allow side-by-side contract testing.
+
+Dependency graph:
+
+```text
+core
+  -> api_compatibility
+      -> catalog
+      -> crm
+      -> sales
+      -> content
+      -> ai
+      -> dashboard
+```
+
+Endpoint cutover dependency:
+
+```text
+module ORM parity
+  -> module service parity
+  -> api_compatibility adapter
+  -> contract tests
+  -> route cutover
+```
+
+No API endpoint should be cut over without this compatibility check.
+
+## 18. Phase 1 Review Update - Revised High-Level Dependency Graph
+
+```text
+core
+  -> api_compatibility
+  -> common utilities
+  -> catalog reference data
+      -> catalog products
+  -> crm customers
+      -> crm contacts
+  -> sales quotation
+  -> content/news/cms
+  -> media read-only
+  -> ai
+  -> dashboard
+  -> accounts/security
+      -> admin cms writes
+      -> media writes
+      -> developer tools
+```
+
+Important:
+
+- `media read-only` can happen before admin/security cutover.
+- `media writes` must wait for admin/security.
+- `accounts/security` can be mapped read-only earlier, but auth cutover remains late.
+
+## 19. Phase 1 Review Update - Final Dependency Validation
+
+Validated rules:
+
+| Rule | Status |
+|---|---|
+| `core` remains small | Required and documented |
+| Giant `common` app avoided | Required and documented |
+| CMS separated from common | Required and documented |
+| Media separated from common/CMS | Required and documented |
+| Media read-only can migrate early | Accepted |
+| Media write/upload migrates later | Required |
+| API compatibility layer dependency added | Required and documented |

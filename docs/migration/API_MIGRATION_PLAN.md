@@ -573,3 +573,152 @@ Future API implementation should not start until these reports are reviewed.
 ## 20. Recommended Next Step
 
 Step 2: Analyze existing database schema and convert legacy models to Django ORM models.
+
+## 21. Phase 1 Review Update - API Version Strategy
+
+Recommended Django API namespace:
+
+```text
+/api/v1/
+```
+
+Example migration:
+
+```text
+Legacy:
+GET /api/products
+
+New:
+GET /api/v1/products
+```
+
+Important decision:
+
+- `/api/v1/` should be the stable Django API contract.
+- The old `/api/...` routes should remain available during migration.
+- Breaking changes should not be introduced into `/api/v1/` after frontend integration starts.
+- Future breaking changes should use `/api/v2/`.
+
+Preferred public API naming:
+
+| Area | Recommended Endpoint Pattern |
+|---|---|
+| Health | `/api/v1/health/` |
+| Products | `/api/v1/products/` |
+| Categories | `/api/v1/product-categories/` |
+| Capabilities | `/api/v1/capabilities/` |
+| News | `/api/v1/news/` |
+| Contact | `/api/v1/contacts/` |
+| Quote requests | `/api/v1/quote-requests/` |
+| AI | `/api/v1/ai/...` |
+
+More nested variants such as `/api/v1/catalog/products/` can still be used internally or later, but `/api/v1/products/` is easier for compatibility with the current frontend mental model.
+
+## 22. Phase 1 Review Update - Compatibility Strategy
+
+Compatibility rules:
+
+- Keep old API working.
+- Add Django API beside legacy API.
+- Do not remove old routes until route parity is proven.
+- Use an adapter layer if Django internal serializers differ from legacy response shape.
+- Preserve response field names that the frontend already uses.
+- Preserve HTTP status behavior where possible.
+- Preserve pagination/search/filter query parameters where possible.
+- Preserve Vietnamese user-facing messages where the current UI expects them.
+
+Adapter layer purpose:
+
+```text
+Django ORM/service output
+  -> Compatibility adapter
+  -> Legacy-shaped JSON response
+  -> Existing frontend can still read it
+```
+
+The adapter layer prevents internal Django model naming from leaking into the public API too early.
+
+Example:
+
+```text
+Internal Django field: thumbnail_url
+Legacy/frontend field: image
+Adapter returns: image
+```
+
+## 23. Phase 1 Review Update - API Migration Method
+
+Each endpoint should move through these steps:
+
+1. Document old endpoint behavior.
+2. Create Django endpoint under `/api/v1/`.
+3. Keep old endpoint active.
+4. Compare old response and new response.
+5. Add contract tests.
+6. Switch frontend or proxy only after validation.
+7. Keep rollback route to legacy.
+
+For write APIs:
+
+1. Backup database first.
+2. Validate request fields.
+3. Use transaction.
+4. Match legacy side effects.
+5. Test rollback on failure.
+
+## 24. Phase 1 Review Update - Endpoint Migration Matrix
+
+| Old Endpoint | New Endpoint | Method | Affected Module | Breaking Change Risk | Notes |
+|---|---|---|---|---|---|
+| `/api/health` | `/api/v1/health/` | GET | Foundation/Core | Low | First safe Django endpoint |
+| `/api/version` | `/api/v1/version/` | GET | Foundation/Core | Low | Include app/env/version information |
+| `/api/home` | `/api/v1/home/` | GET | Public/Home | Medium | Aggregates product/news/settings/banner data |
+| `/api/products` | `/api/v1/products/` | GET | Catalog | High | Must preserve search/category/status/sort/pagination behavior |
+| `/api/products` | `/api/v1/products/` | POST | Catalog/Admin | High | Write migration later; requires auth/permission/validation |
+| `/api/products/{id}` | `/api/v1/products/{id}/` | GET | Catalog | High | Must preserve detail, specs, gallery, related products |
+| `/api/products/{id}` | `/api/v1/products/{id}/` | PUT | Catalog/Admin | High | Write migration later |
+| `/api/products/{id}` | `/api/v1/products/{id}/` | DELETE | Catalog/Admin | High | Requires delete confirmation/audit/rollback strategy |
+| `/api/product-categories` | `/api/v1/product-categories/` | GET | Catalog | Medium | Category names/slugs must match |
+| `/api/capabilities` | `/api/v1/capabilities/` | GET | Catalog/Manufacturing | Medium | Depends on machines/processes relationship |
+| `/api/news` | `/api/v1/news/` | GET | Content | Medium | Must preserve category/tag/publish status |
+| `/api/contact` | `/api/v1/contacts/` | POST | CRM | High | Business lead write; requires validation and spam/security review |
+| `/api/quote-request` | `/api/v1/quote-requests/` | POST | Sales | High | Multi-table write with quote items/files |
+| `/api/ai/chat` | `/api/v1/ai/chat/` | POST | AI | Medium | Preserve Ollama fallback and timeout behavior |
+| `/api/ai/content-seo` | `/api/v1/ai/content-seo/` | POST | AI/Admin | Medium/High | Admin-only, should suggest not auto-publish |
+| `/api/ai/translate` | `/api/v1/ai/translate/` | POST | AI/Localization | Medium | Needs cache and fallback behavior |
+| `/api/openapi.json` | `/api/v1/schema/` | GET | Developer/API Docs | Low | Django-generated schema later |
+| `/api/docs` | `/api/v1/docs/` | GET | Developer/API Docs | Low | Swagger/Redoc |
+| `/api/aws-demo` | `/api/v1/integrations/aws-demo/` | GET | Integration Demo | Low/Medium | Demo only; do not block core migration |
+
+## 25. Phase 1 Review Update - Admin API Compatibility
+
+Admin migration should not start by replacing HTML pages directly.
+
+Recommended method:
+
+1. Keep legacy admin pages active.
+2. Add Django JSON APIs for read-only admin data.
+3. Connect admin UI to Django only after permissions are ready.
+4. Move write APIs after CSRF, permissions, validation, file upload, and audit logs are validated.
+
+High-risk admin API areas:
+
+- users
+- roles/permissions
+- product save/delete
+- media upload/delete
+- quote status updates
+- settings save
+- developer tools
+
+## 26. Phase 1 Review Update - API Compatibility Layer Dependency
+
+The API compatibility layer depends on:
+
+- `core` for common response/error format.
+- database mapping for field names and status values.
+- module services for business behavior.
+- serializers/adapters for legacy response shape.
+- tests for legacy-vs-Django parity.
+
+No module should expose a new Django response shape to the existing frontend until compatibility is reviewed.
