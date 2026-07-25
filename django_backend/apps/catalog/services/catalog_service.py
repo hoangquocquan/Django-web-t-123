@@ -1,14 +1,23 @@
 """Catalog read-only service layer."""
 
+from apps.catalog.repositories.category_repository import CategoryRepository
+from apps.catalog.repositories.material_repository import MaterialRepository
 from apps.catalog.repositories.product_repository import ProductRepository
 
 
 class CatalogService:
     """Read-only catalog service that depends on repository adapters only."""
 
-    def __init__(self, product_repository=None):
+    def __init__(
+        self,
+        product_repository=None,
+        category_repository=None,
+        material_repository=None,
+    ):
         """Allow tests to pass a repository double later if needed."""
         self.product_repository = product_repository or ProductRepository()
+        self.category_repository = category_repository or CategoryRepository()
+        self.material_repository = material_repository or MaterialRepository()
 
     def list_products(self):
         """Return products without business transformation in Phase 4A."""
@@ -22,3 +31,11 @@ class CatalogService:
             "product": product,
             "images": images,
         }
+
+    def list_categories(self):
+        """Return catalog categories through the repository boundary."""
+        return self.category_repository.list_categories()
+
+    def list_materials(self):
+        """Return catalog materials through the repository boundary."""
+        return self.material_repository.list_materials()

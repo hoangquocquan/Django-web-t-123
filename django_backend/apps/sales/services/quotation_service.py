@@ -24,3 +24,7 @@ class QuotationService:
             "items": items,
             "files": files,
         }
+
+    def list_quote_files(self, quote_id):
+        """Return uploaded files for one quote without changing file metadata."""
+        return self.quotation_repository.list_quote_files(quote_id)

@@ -59,6 +59,14 @@ class PasswordHashInspector:
 class PermissionMatrix:
     """Map legacy admin/editor/viewer roles to permission decisions."""
 
+    def permissions_for_role(self, role):
+        """Return a safe, serializable permission map for one role."""
+        role_permissions = ROLE_PERMISSIONS.get(role, {})
+        return {
+            module_name: sorted(actions)
+            for module_name, actions in role_permissions.items()
+        }
+
     def has_permission(self, role, module_name, action="read"):
         """Return whether a role can perform an action on a module."""
         role_permissions = ROLE_PERMISSIONS.get(role)
@@ -91,6 +99,10 @@ class AuthCompatibilityService:
             "is_active": user.is_active,
             "two_factor_enabled": user.two_factor_enabled,
         }
+
+    def get_permissions_for_role(self, role):
+        """Return safe permission metadata without changing sessions or tokens."""
+        return self.permission_matrix.permissions_for_role(role)
 
     def inspect_user_password_hash(self, email):
         """Inspect hash compatibility without returning the hash value."""

@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.core",
     "apps.common",
+    "apps.api",
     "apps.catalog",
     "apps.crm",
     "apps.sales",
