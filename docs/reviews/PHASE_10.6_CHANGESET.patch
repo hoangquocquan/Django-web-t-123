@@ -1,0 +1,443 @@
+diff --git a/django_backend/tests/test_phase10_post_production_validation.py b/django_backend/tests/test_phase10_post_production_validation.py
+new file mode 100644
+index 0000000..ebf7220
+--- /dev/null
++++ b/django_backend/tests/test_phase10_post_production_validation.py
+@@ -0,0 +1,61 @@
++"""Tests for Phase 10.6 post-production validation workflow."""
++
++from scripts.phase10_post_production_validation import evaluate_post_production_validation
++
++
++def test_post_production_validation_blocks_without_cutover_marker():
++    """Validation should keep legacy active before production cutover is proven."""
++    result = evaluate_post_production_validation({})
++
++    assert result["status"] == "blocked_safely"
++    assert result["legacy_shutdown_recommendation"] == "KEEP_LEGACY_ACTIVE"
++    assert result["legacy_shutdown_executed"] is False
++    assert result["rollback_capability_removed"] is False
++
++
++def test_post_production_validation_keeps_legacy_active_when_business_flags_missing():
++    """Even with a mocked cutover marker, missing business approvals should block."""
++    env = {
++        "PHASE10_CUTOVER_COMPLETED": "completed",
++        "PHASE10_PRODUCTION_DATABASE_URL": "postgresql://user:secret@localhost:5432/mecprecision_dryrun",
++    }
++
++    result = evaluate_post_production_validation(env)
++
++    assert result["status"] == "blocked_safely"
++    assert result["legacy_shutdown_recommendation"] == "KEEP_LEGACY_ACTIVE"
++    assert result["destructive_cleanup_executed"] is False
++
++
++def test_post_production_validation_can_allow_phase_11_when_all_checks_are_mocked(monkeypatch):
++    """A fully mocked passing post-cutover state can recommend Phase 11."""
++    env = {
++        "PHASE10_CATALOG_FLOW_VALIDATED": "passed",
++        "PHASE10_CRM_FLOW_VALIDATED": "passed",
++        "PHASE10_SALES_FLOW_VALIDATED": "passed",
++        "PHASE10_CMS_FLOW_VALIDATED": "passed",
++        "PHASE10_AUTH_FLOW_VALIDATED": "passed",
++        "PHASE10_ERROR_MONITORING_CLEAN": "passed",
++        "PHASE10_PERFORMANCE_BASELINE_RECORDED": "passed",
++        "PHASE10_ROLLBACK_WINDOW_COMPLETE": "completed",
++        "PHASE10_BUSINESS_APPROVAL_RECEIVED": "approved",
++    }
++
++    def fake_validation(_env):
++        return {
++            "status": "passed",
++            "errors": [],
++            "database": {"connection": {"connection_ok": True}},
++            "application": {"api_health": "passed"},
++        }
++
++    monkeypatch.setattr(
++        "scripts.phase10_post_production_validation.evaluate_post_cutover_validation",
++        fake_validation,
++    )
++
++    result = evaluate_post_production_validation(env)
++
++    assert result["status"] == "passed"
++    assert result["legacy_shutdown_recommendation"] == "ALLOW_PHASE_11"
++    assert result["legacy_shutdown_executed"] is False
+diff --git a/docs/api/POST_CUTOVER_API_VALIDATION.md b/docs/api/POST_CUTOVER_API_VALIDATION.md
+new file mode 100644
+index 0000000..b73203d
+--- /dev/null
++++ b/docs/api/POST_CUTOVER_API_VALIDATION.md
+@@ -0,0 +1,46 @@
++# Post Cutover API Validation
++
++## Phase
++
++Phase 10.6 - Post Production Cutover Validation
++
++## Purpose
++
++Compare legacy API behavior before cutover with Django API behavior after
++cutover.
++
++## Before Cutover
++
++Validate legacy API behavior:
++
++- response schema
++- status code
++- business logic
++- performance baseline
++
++## After Cutover
++
++Validate Django API behavior:
++
++- response schema matches approved contract
++- status code matches approved contract
++- business logic remains equivalent
++- performance remains within accepted threshold
++
++## Required API Groups
++
++| Area | Required |
++|---|---|
++| Health | Yes |
++| Catalog | Yes |
++| CRM | Yes |
++| Sales | Yes |
++| CMS | Yes |
++| Authentication | Yes |
++
++## Current Status
++
++```text
++API VALIDATION PLAN READY
++POST-CUTOVER API VALIDATION NOT EXECUTED
++```
+diff --git a/docs/codex-prompts/PHASE_10.6_POST_PRODUCTION_CUTOVER_VALIDATION.md b/docs/codex-prompts/PHASE_10.6_POST_PRODUCTION_CUTOVER_VALIDATION.md
+new file mode 100644
+index 0000000..d957881
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_10.6_POST_PRODUCTION_CUTOVER_VALIDATION.md
+@@ -0,0 +1,25 @@
++# Phase 10.6 - Post Production Cutover Validation
++
++## Objective
++
++Validate production system stability after database ownership cutover.
++
++## Safety Boundary
++
++This phase validates, monitors, compares and documents. It must not shut down
++legacy, delete legacy database, remove rollback capability or remove backups.
++
++## Required Outputs
++
++- `docs/migration/POST_CUTOVER_VALIDATION_CHECKLIST.md`
++- `scripts/phase10_post_production_validation.py`
++- `docs/api/POST_CUTOVER_API_VALIDATION.md`
++- `docs/migration/BUSINESS_FLOW_VALIDATION_REPORT.md`
++- `docs/performance/POST_CUTOVER_PERFORMANCE_BASELINE.md`
++- `docs/migration/LEGACY_SHUTDOWN_DECISION_REPORT.md`
++
++## Final Status
++
++WAITING FOR ARCHITECT REVIEW
++
++Do not start Phase 11.
+diff --git a/docs/migration/BUSINESS_FLOW_VALIDATION_REPORT.md b/docs/migration/BUSINESS_FLOW_VALIDATION_REPORT.md
+new file mode 100644
+index 0000000..a153a12
+--- /dev/null
++++ b/docs/migration/BUSINESS_FLOW_VALIDATION_REPORT.md
+@@ -0,0 +1,46 @@
++# Business Flow Validation Report
++
++## Phase
++
++Phase 10.6 - Post Production Cutover Validation
++
++## Catalog
++
++| Flow | Status |
++|---|---|
++| product listing | Pending production cutover marker |
++| product detail | Pending production cutover marker |
++
++## CRM
++
++| Flow | Status |
++|---|---|
++| customer access | Pending production cutover marker |
++| customer history | Pending production cutover marker |
++
++## Sales
++
++| Flow | Status |
++|---|---|
++| quotation | Pending production cutover marker |
++| order data | Pending production cutover marker |
++
++## CMS
++
++| Flow | Status |
++|---|---|
++| menu | Pending production cutover marker |
++| content | Pending production cutover marker |
++
++## Accounts
++
++| Flow | Status |
++|---|---|
++| login | Pending production cutover marker |
++| permission | Pending production cutover marker |
++
++## Current Result
++
++```text
++BUSINESS FLOW VALIDATION PENDING
++```
+diff --git a/docs/migration/LEGACY_SHUTDOWN_DECISION_REPORT.md b/docs/migration/LEGACY_SHUTDOWN_DECISION_REPORT.md
+new file mode 100644
+index 0000000..3ee43c5
+--- /dev/null
++++ b/docs/migration/LEGACY_SHUTDOWN_DECISION_REPORT.md
+@@ -0,0 +1,34 @@
++# Legacy Shutdown Decision Report
++
++## Phase
++
++Phase 10.6 - Post Production Cutover Validation
++
++## Decision
++
++```text
++KEEP_LEGACY_ACTIVE
++```
++
++## Reason
++
++Production cutover has not been verified in this environment. Post-cutover
++validation, rollback window completion and business approval are still pending.
++
++## Criteria
++
++| Criteria | Status |
++|---|---|
++| validation passed | Pending |
++| rollback window completed | Pending |
++| business approval | Pending |
++| no critical issues | Pending |
++
++## Phase 11 Recommendation
++
++```text
++DO NOT START PHASE 11
++```
++
++Legacy shutdown must wait until production validation passes and architecture
++review approves `ALLOW_PHASE_11`.
+diff --git a/docs/migration/POST_CUTOVER_VALIDATION_CHECKLIST.md b/docs/migration/POST_CUTOVER_VALIDATION_CHECKLIST.md
+new file mode 100644
+index 0000000..9804888
+--- /dev/null
++++ b/docs/migration/POST_CUTOVER_VALIDATION_CHECKLIST.md
+@@ -0,0 +1,39 @@
++# Post Cutover Validation Checklist
++
++## Phase
++
++Phase 10.6 - Post Production Cutover Validation
++
++## Application
++
++- [ ] Django health check
++- [ ] Service startup
++- [ ] Error monitoring
++
++## Database
++
++- [ ] PostgreSQL connection
++- [ ] Table availability
++- [ ] Row count validation
++- [ ] Index validation
++
++## API
++
++- [ ] API health
++- [ ] Response validation
++- [ ] Performance check
++
++## Business
++
++- [ ] Catalog flow
++- [ ] CRM flow
++- [ ] Sales flow
++- [ ] CMS flow
++- [ ] Authentication flow
++
++## Current Status
++
++```text
++POST-CUTOVER VALIDATION WORKFLOW PREPARED
++PRODUCTION CUTOVER NOT VERIFIED IN THIS ENVIRONMENT
++```
+diff --git a/docs/performance/POST_CUTOVER_PERFORMANCE_BASELINE.md b/docs/performance/POST_CUTOVER_PERFORMANCE_BASELINE.md
+new file mode 100644
+index 0000000..96803b8
+--- /dev/null
++++ b/docs/performance/POST_CUTOVER_PERFORMANCE_BASELINE.md
+@@ -0,0 +1,27 @@
++# Post Cutover Performance Baseline
++
++## Phase
++
++Phase 10.6 - Post Production Cutover Validation
++
++## Metrics To Measure
++
++| Metric | Status |
++|---|---|
++| API response time | Pending production cutover marker |
++| database query time | Pending production cutover marker |
++| error rate | Pending production cutover marker |
++| resource usage | Pending production cutover marker |
++
++## Required Baseline Windows
++
++- first 15 minutes after cutover
++- first 1 hour after cutover
++- first business day after cutover
++
++## Current Status
++
++```text
++PERFORMANCE BASELINE PLAN READY
++NO PRODUCTION PERFORMANCE DATA RECORDED
++```
+diff --git a/scripts/phase10_post_production_validation.py b/scripts/phase10_post_production_validation.py
+new file mode 100644
+index 0000000..0696eab
+--- /dev/null
++++ b/scripts/phase10_post_production_validation.py
+@@ -0,0 +1,117 @@
++"""Phase 10.6 post-production cutover validation workflow.
++
++This script validates post-cutover readiness and delegates production database
++checks to the Phase 10.5 post-cutover validator. It does not remove legacy,
++delete backups or perform destructive cleanup.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import time
++
++try:
++    from scripts.phase10_post_cutover_validation import evaluate_post_cutover_validation
++except ImportError:  # pragma: no cover - used when running this file directly.
++    from phase10_post_cutover_validation import evaluate_post_cutover_validation
++
++
++REQUIRED_BUSINESS_FLAGS = {
++    "PHASE10_CATALOG_FLOW_VALIDATED": "catalog flow",
++    "PHASE10_CRM_FLOW_VALIDATED": "CRM flow",
++    "PHASE10_SALES_FLOW_VALIDATED": "sales flow",
++    "PHASE10_CMS_FLOW_VALIDATED": "CMS flow",
++    "PHASE10_AUTH_FLOW_VALIDATED": "authentication flow",
++}
++REQUIRED_MONITORING_FLAGS = {
++    "PHASE10_ERROR_MONITORING_CLEAN": "error monitoring clean",
++    "PHASE10_PERFORMANCE_BASELINE_RECORDED": "performance baseline recorded",
++    "PHASE10_ROLLBACK_WINDOW_COMPLETE": "rollback window complete",
++    "PHASE10_BUSINESS_APPROVAL_RECEIVED": "business approval received",
++}
++
++
++def flag_enabled(value):
++    """Return True when a post-cutover validation flag is explicitly enabled."""
++    return str(value or "").strip().lower() in {"1", "true", "yes", "passed", "approved", "completed"}
++
++
++def evaluate_flags(env, required_flags):
++    """Evaluate a group of required environment validation flags."""
++    results = {}
++    errors = []
++    for key, label in required_flags.items():
++        passed = flag_enabled(env.get(key))
++        results[key] = {
++            "label": label,
++            "passed": passed,
++        }
++        if not passed:
++            errors.append(f"Missing validation: {label} ({key}).")
++    return results, errors
++
++
++def evaluate_post_production_validation(env=None):
++    """Evaluate Phase 10.6 post-production validation status."""
++    started_at = time.perf_counter()
++    env = env or os.environ
++    cutover_validation = evaluate_post_cutover_validation(env)
++    business, business_errors = evaluate_flags(env, REQUIRED_BUSINESS_FLAGS)
++    monitoring, monitoring_errors = evaluate_flags(env, REQUIRED_MONITORING_FLAGS)
++    errors = list(cutover_validation["errors"]) + business_errors + monitoring_errors
++    validation_passed = (
++        cutover_validation["status"] == "passed"
++        and not business_errors
++        and not monitoring_errors
++    )
++
++    legacy_shutdown_recommendation = (
++        "ALLOW_PHASE_11" if validation_passed else "KEEP_LEGACY_ACTIVE"
++    )
++    status = "passed" if validation_passed else "blocked_safely"
++    return {
++        "status": status,
++        "production_validation_result": status,
++        "legacy_shutdown_recommendation": legacy_shutdown_recommendation,
++        "destructive_cleanup_executed": False,
++        "legacy_shutdown_executed": False,
++        "backups_removed": False,
++        "rollback_capability_removed": False,
++        "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++        "application": {
++            "django_system_check": "run python manage.py check",
++            "service_startup": "pending production marker",
++            "error_monitoring": monitoring.get("PHASE10_ERROR_MONITORING_CLEAN", {}),
++        },
++        "database": cutover_validation["database"],
++        "api": {
++            "health": cutover_validation["application"]["api_health"],
++            "response_validation": "pending production marker",
++            "performance_check": monitoring.get("PHASE10_PERFORMANCE_BASELINE_RECORDED", {}),
++        },
++        "business": business,
++        "monitoring": monitoring,
++        "errors": errors,
++    }
++
++
++def main():
++    """CLI entrypoint for Phase 10.6 post-production validation."""
++    parser = argparse.ArgumentParser(description="Phase 10.6 post-production validation")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when validation is blocked. Default exits 0 for safe blocking.",
++    )
++    args = parser.parse_args()
++    result = evaluate_post_production_validation()
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["status"] == "passed":
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
