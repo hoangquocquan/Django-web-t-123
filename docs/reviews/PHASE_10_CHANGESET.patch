@@ -1,0 +1,338 @@
+diff --git a/django_backend/tests/test_phase10_readiness_snapshot.py b/django_backend/tests/test_phase10_readiness_snapshot.py
+new file mode 100644
+index 0000000..0372c33
+--- /dev/null
++++ b/django_backend/tests/test_phase10_readiness_snapshot.py
+@@ -0,0 +1,16 @@
++"""Tests for Phase 10 read-only migration readiness snapshot tooling."""
++
++from scripts.phase10_readiness_snapshot import EXPECTED_TABLES, snapshot_database
++
++
++def test_phase10_snapshot_reads_legacy_database_without_mutation():
++    """The snapshot script must read expected tables and keep SQLite unchanged."""
++    snapshot = snapshot_database()
++
++    assert snapshot["database_size_unchanged"] is True
++    assert snapshot["expected_table_count"] == len(EXPECTED_TABLES)
++    assert snapshot["found_table_count"] == len(EXPECTED_TABLES)
++    assert snapshot["missing_tables"] == []
++    assert snapshot["row_counts"]["products"] >= 0
++    assert snapshot["phase10_gate"]["legacy_readonly_snapshot"] is True
++    assert snapshot["phase10_gate"]["production_migration_executed"] is False
+diff --git a/docs/migration/PHASE_10_BACKUP_ROLLBACK_RUNBOOK.md b/docs/migration/PHASE_10_BACKUP_ROLLBACK_RUNBOOK.md
+new file mode 100644
+index 0000000..5adf293
+--- /dev/null
++++ b/docs/migration/PHASE_10_BACKUP_ROLLBACK_RUNBOOK.md
+@@ -0,0 +1,34 @@
++# Phase 10 Backup And Rollback Runbook
++
++## Backup Rule
++
++Before every dry run or cutover attempt:
++
++1. Copy legacy SQLite database.
++2. Record file size.
++3. Record checksum.
++4. Record row counts.
++5. Store backup outside the working tree or in approved secure storage.
++
++## Rollback Rule
++
++Rollback must be possible before any production cutover:
++
++1. Stop Django write traffic.
++2. Route API/application traffic back to legacy.
++3. Restore the verified SQLite backup if needed.
++4. Run health endpoint checks.
++5. Run API contract smoke tests.
++6. Document cause and next corrective phase.
++
++## Rollback Not Tested Yet
++
++This runbook is prepared, but full production rollback rehearsal is not executed
++in this phase because no production PostgreSQL ownership migration was run.
++
++## Required Before Phase 10.4
++
++- Restore test from backup.
++- Rollback routing test.
++- API contract comparison before and after rollback.
++- Sign-off from architecture reviewer.
+diff --git a/docs/migration/PHASE_10_DATABASE_OWNERSHIP_EXECUTION_PLAN.md b/docs/migration/PHASE_10_DATABASE_OWNERSHIP_EXECUTION_PLAN.md
+new file mode 100644
+index 0000000..186b834
+--- /dev/null
++++ b/docs/migration/PHASE_10_DATABASE_OWNERSHIP_EXECUTION_PLAN.md
+@@ -0,0 +1,52 @@
++# Phase 10 Database Ownership Execution Plan
++
++## Objective
++
++Move Django from read-only legacy database consumer to database owner only after
++all gates are approved.
++
++## Safe Work Completed In This Phase
++
++- Created a dependency gate report.
++- Created a row-count baseline.
++- Added a read-only snapshot script.
++- Added test coverage for the snapshot script.
++
++## Ownership Migration Sequence
++
++1. Complete Phase 10.1 PostgreSQL schema design.
++2. Complete Phase 10.2 database dry-run migration.
++3. Complete Phase 10.3 reconciliation.
++4. Execute Phase 10.4 production cutover only after review approval.
++
++## Target Environment
++
++Production PostgreSQL is not configured in this phase. The current Django
++`DATABASE_URL` parser already supports PostgreSQL URLs, but no production
++connection or secret is added here.
++
++## Managed Model Strategy
++
++Do not flip existing read-only unmanaged models directly. Use approved Phase
++10.1 schema design to decide whether each module keeps model names, splits
++models, or introduces new managed models.
++
++## Data Migration Strategy
++
++- Read from SQLite backup, not live production file during dry-run.
++- Import in dependency order: Catalog, CRM, Sales, CMS, Accounts.
++- Validate row counts after each domain.
++- Validate foreign keys before enabling writes.
++
++## Validation Strategy
++
++- `python manage.py check`
++- `pytest`
++- `scripts/phase10_readiness_snapshot.py`
++- row-count comparison
++- relationship validation
++- API response comparison
++
++## Cutover Rule
++
++No production database ownership switch is allowed until Phase 10.4.
+diff --git a/docs/migration/PHASE_10_DEPENDENCY_GATE_REPORT.md b/docs/migration/PHASE_10_DEPENDENCY_GATE_REPORT.md
+new file mode 100644
+index 0000000..a3550d5
+--- /dev/null
++++ b/docs/migration/PHASE_10_DEPENDENCY_GATE_REPORT.md
+@@ -0,0 +1,29 @@
++# Phase 10 Dependency Gate Report
++
++## Objective
++
++Confirm whether Phase 10 Database Ownership Migration can safely proceed.
++
++## Result
++
++```text
++BLOCKED FOR LIVE OWNERSHIP MIGRATION
++READY FOR CONTROLLED PLANNING AND READ-ONLY BASELINE VALIDATION
++```
++
++## Gate Review
++
++| Gate | Status | Notes |
++|---|---|---|
++| Phase 9.3 approved | Assumed by prompt | Phase 9.3 readiness package exists |
++| Database dependency inventory reviewed | Ready for review | `DATABASE_DEPENDENCY_INVENTORY.md` exists |
++| PostgreSQL schema design approved | Not complete | Should be Phase 10.1 |
++| Backup strategy approved | Documented, not rehearsed | Needs dry-run backup/restore test |
++| Rollback strategy approved | Documented, not rehearsed | Needs restore simulation |
++| Production migration allowed | No | This phase must not migrate production directly |
++
++## Decision
++
++This phase may add control documents, validation scripts and read-only baseline
++checks. It must not create live PostgreSQL ownership, convert production data,
++or enable write APIs until Phase 10.1 and Phase 10.2 are approved.
+diff --git a/docs/migration/PHASE_10_ROW_COUNT_BASELINE.md b/docs/migration/PHASE_10_ROW_COUNT_BASELINE.md
+new file mode 100644
+index 0000000..3850ce6
+--- /dev/null
++++ b/docs/migration/PHASE_10_ROW_COUNT_BASELINE.md
+@@ -0,0 +1,53 @@
++# Phase 10 Row Count Baseline
++
++## Source
++
++Read-only snapshot of:
++
++```text
++backend/database/mecprecision.sqlite
++```
++
++Database size:
++
++```text
++544768 bytes
++```
++
++## Baseline Counts
++
++| Table | Rows |
++|---|---:|
++| `product_categories` | 8 |
++| `materials` | 4 |
++| `machines` | 4 |
++| `manufacturing_processes` | 5 |
++| `capabilities` | 4 |
++| `products` | 11 |
++| `product_images` | 3 |
++| `product_specs` | 5 |
++| `product_materials` | 6 |
++| `product_processes` | 7 |
++| `capability_machines` | 5 |
++| `customers` | 3 |
++| `customer_notes` | 0 |
++| `contact_requests` | 6 |
++| `quote_requests` | 1 |
++| `quote_request_items` | 1 |
++| `quote_files` | 1 |
++| `cms_pages` | 10 |
++| `cms_menu_items` | 18 |
++| `cms_banners` | 0 |
++| `newsletter_subscribers` | 1 |
++| `admin_users` | 5 |
++| `admin_sessions` | 1 |
++| `login_attempts` | 30 |
++| `password_reset_tokens` | 2 |
++| `admin_2fa_challenges` | 0 |
++| `admin_activity_logs` | 55 |
++
++## Usage In Phase 10
++
++Use these counts as the first reconciliation target for dry-run migration. Any
++target PostgreSQL import must match these counts unless a documented data
++cleanup decision is approved.
+diff --git a/scripts/phase10_readiness_snapshot.py b/scripts/phase10_readiness_snapshot.py
+new file mode 100644
+index 0000000..5c59874
+--- /dev/null
++++ b/scripts/phase10_readiness_snapshot.py
+@@ -0,0 +1,118 @@
++"""Create a read-only Phase 10 legacy database readiness snapshot.
++
++This script is intentionally safe: it opens the legacy SQLite database with
++`mode=ro`, counts expected tables, and prints JSON to stdout. It does not create
++tables, run migrations, write data, or connect to production PostgreSQL.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sqlite3
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_DATABASE = PROJECT_ROOT / "backend" / "database" / "mecprecision.sqlite"
++
++EXPECTED_TABLES = [
++    "product_categories",
++    "materials",
++    "machines",
++    "manufacturing_processes",
++    "capabilities",
++    "products",
++    "product_images",
++    "product_specs",
++    "product_materials",
++    "product_processes",
++    "capability_machines",
++    "customers",
++    "customer_notes",
++    "contact_requests",
++    "quote_requests",
++    "quote_request_items",
++    "quote_files",
++    "cms_pages",
++    "cms_menu_items",
++    "cms_banners",
++    "newsletter_subscribers",
++    "admin_users",
++    "admin_sessions",
++    "login_attempts",
++    "password_reset_tokens",
++    "admin_2fa_challenges",
++    "admin_activity_logs",
++]
++
++
++def connect_readonly(database_path: Path):
++    """Open SQLite with read-only URI mode."""
++    uri = f"file:{database_path.as_posix()}?mode=ro"
++    return sqlite3.connect(uri, uri=True)
++
++
++def table_exists(cursor, table_name):
++    """Return True when a table exists in sqlite_master."""
++    return (
++        cursor.execute(
++            "SELECT name FROM sqlite_master WHERE type = ? AND name = ?",
++            ("table", table_name),
++        ).fetchone()
++        is not None
++    )
++
++
++def snapshot_database(database_path: Path = DEFAULT_DATABASE):
++    """Return row-count and dependency readiness metadata."""
++    database_path = database_path.resolve()
++    if not database_path.exists():
++        raise FileNotFoundError(f"Legacy database not found: {database_path}")
++
++    before_size = database_path.stat().st_size
++    row_counts = {}
++    missing_tables = []
++
++    with connect_readonly(database_path) as connection:
++        cursor = connection.cursor()
++        for table_name in EXPECTED_TABLES:
++            if table_exists(cursor, table_name):
++                row_counts[table_name] = cursor.execute(
++                    f"SELECT COUNT(*) FROM {table_name}"
++                ).fetchone()[0]
++            else:
++                missing_tables.append(table_name)
++
++    after_size = database_path.stat().st_size
++    return {
++        "database_path": str(database_path),
++        "database_size_bytes": before_size,
++        "database_size_unchanged": before_size == after_size,
++        "expected_table_count": len(EXPECTED_TABLES),
++        "found_table_count": len(row_counts),
++        "missing_tables": missing_tables,
++        "row_counts": row_counts,
++        "phase10_gate": {
++            "legacy_readonly_snapshot": True,
++            "postgresql_schema_approved": False,
++            "production_migration_executed": False,
++        },
++    }
++
++
++def main():
++    """CLI entrypoint for manual Phase 10 readiness checks."""
++    parser = argparse.ArgumentParser(description="Phase 10 read-only database snapshot")
++    parser.add_argument(
++        "--database",
++        default=str(DEFAULT_DATABASE),
++        help="Path to legacy SQLite database",
++    )
++    args = parser.parse_args()
++    snapshot = snapshot_database(Path(args.database))
++    print(json.dumps(snapshot, indent=2, ensure_ascii=False))
++
++
++if __name__ == "__main__":
++    main()
