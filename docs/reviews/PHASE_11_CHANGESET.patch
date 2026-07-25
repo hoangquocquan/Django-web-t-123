@@ -1,0 +1,477 @@
+diff --git a/django_backend/tests/test_phase11_legacy_shutdown_readiness.py b/django_backend/tests/test_phase11_legacy_shutdown_readiness.py
+new file mode 100644
+index 0000000..b3d73f8
+--- /dev/null
++++ b/django_backend/tests/test_phase11_legacy_shutdown_readiness.py
+@@ -0,0 +1,46 @@
++"""Tests cho cổng kiểm tra shutdown legacy Phase 11."""
++
++from scripts.phase11_legacy_shutdown_readiness import evaluate_shutdown_readiness
++
++
++def test_phase11_blocks_when_phase10_decision_keeps_legacy_active():
++    """Báo cáo hiện tại vẫn yêu cầu giữ legacy, nên shutdown phải bị chặn."""
++    result = evaluate_shutdown_readiness({})
++
++    assert result["status"] == "blocked_safely"
++    assert result["legacy_shutdown_recommendation"] == "KEEP_LEGACY_ACTIVE"
++    assert result["legacy_shutdown_executed"] is False
++    assert result["legacy_database_deleted"] is False
++    assert result["backups_deleted"] is False
++
++
++def test_phase11_blocks_when_operational_evidence_is_missing(tmp_path):
++    """Có marker kiến trúc nhưng thiếu bằng chứng vận hành thì vẫn chưa được shutdown."""
++    decision_report = tmp_path / "decision.md"
++    decision_report.write_text("ALLOW_PHASE_11\n", encoding="utf-8")
++
++    result = evaluate_shutdown_readiness({}, decision_report_path=decision_report)
++
++    assert result["status"] == "blocked_safely"
++    assert "PHASE11_ZERO_LEGACY_TRAFFIC_CONFIRMED" in " ".join(result["errors"])
++    assert result["legacy_code_removed"] is False
++
++
++def test_phase11_can_be_ready_for_manual_review_when_all_gates_are_mocked(tmp_path):
++    """Khi mọi điều kiện được mock là đã đạt, script chỉ cho phép review thủ công."""
++    decision_report = tmp_path / "decision.md"
++    decision_report.write_text("ALLOW_PHASE_11\n", encoding="utf-8")
++    env = {
++        "PHASE11_TRAFFIC_MIGRATION_VERIFIED": "verified",
++        "PHASE11_ZERO_LEGACY_TRAFFIC_CONFIRMED": "verified",
++        "PHASE11_ROLLBACK_WINDOW_CLOSED": "completed",
++        "PHASE11_ARCHIVE_RESTORE_VERIFIED": "verified",
++        "PHASE11_BUSINESS_OWNER_APPROVED": "approved",
++    }
++
++    result = evaluate_shutdown_readiness(env, decision_report_path=decision_report)
++
++    assert result["status"] == "ready_for_manual_shutdown_review"
++    assert result["legacy_shutdown_recommendation"] == "ALLOW_MANUAL_SHUTDOWN_REVIEW"
++    assert result["legacy_shutdown_executed"] is False
++    assert result["traffic_switch_executed"] is False
+diff --git a/docs/migration/LEGACY_ARCHIVE_STRATEGY.md b/docs/migration/LEGACY_ARCHIVE_STRATEGY.md
+new file mode 100644
+index 0000000..99879ea
+--- /dev/null
++++ b/docs/migration/LEGACY_ARCHIVE_STRATEGY.md
+@@ -0,0 +1,45 @@
++# Legacy Archive Strategy
++
++## Objective
++
++Preserve the legacy system as a read-only archive before any future shutdown.
++The archive must support audit, rollback investigation and restore testing.
++
++## Archive Scope
++
++| Item | Include | Notes |
++|---|---|---|
++| Legacy source | Yes | `backend/` |
++| Legacy database | Yes | `backend/database/mecprecision.sqlite` |
++| SQL schema and seed | Yes | `backend/database/schema.sql`, `backend/database/seed.sql` |
++| Uploads/media | Yes | `backend/uploads/` |
++| Logs/audit evidence | Yes | `backend/logs/` and audit-related exports |
++| Environment files | Controlled | Do not expose secrets in review packages |
++| Backups | Yes | Never delete backups during Phase 11 |
++
++## Security Rules
++
++- Do not commit `.env` files.
++- Do not include raw credentials in public review artifacts.
++- Store database archives in a protected location.
++- Record checksum for every archive file.
++- Limit archive restore access to approved operators.
++
++## Restore Verification
++
++Archive restore is not considered valid until:
++
++1. Archive checksum matches the recorded checksum.
++2. SQLite database opens successfully.
++3. Critical tables can be counted.
++4. Upload paths can be listed.
++5. Legacy entrypoint can be inspected from the archive.
++
++## Current Archive Status
++
++```text
++PENDING
++```
++
++No archive was created by this phase. This phase only defines the required
++strategy and readiness checks.
+diff --git a/docs/migration/LEGACY_DEPENDENCY_AUDIT.md b/docs/migration/LEGACY_DEPENDENCY_AUDIT.md
+new file mode 100644
+index 0000000..7e5c1d0
+--- /dev/null
++++ b/docs/migration/LEGACY_DEPENDENCY_AUDIT.md
+@@ -0,0 +1,65 @@
++# Legacy Dependency Audit
++
++## Phase
++
++Phase 11 - Legacy System Shutdown
++
++## Current Decision
++
++```text
++KEEP_LEGACY_ACTIVE
++```
++
++Phase 10.6 has not approved legacy shutdown. The current decision report says
++production cutover is not verified, rollback completion is pending and business
++approval is pending.
++
++## Legacy Runtime Assets
++
++| Asset | Location | Current status | Shutdown action |
++|---|---|---|---|
++| Legacy HTTP entrypoint | `backend/app.py` | Exists | Keep active |
++| Legacy SQLite database | `backend/database/mecprecision.sqlite` | Exists | Keep as active rollback/archive source |
++| Legacy schema | `backend/database/schema.sql` | Exists | Preserve |
++| Legacy seed data | `backend/database/seed.sql` | Exists | Preserve |
++| Legacy repositories/services | `backend/repositories`, `backend/services` | Exists | Preserve |
++| Legacy uploads | `backend/uploads` | Exists | Preserve and include in archive plan |
++| Legacy logs | `backend/logs` | Exists | Preserve for audit trail |
++
++## Django Dependencies Still Referencing Legacy
++
++The migrated Django modules still contain read-only legacy ORM mappings and
++repositories that use the `legacy` database alias.
++
++| Django area | Dependency type | Reason |
++|---|---|---|
++| `django_backend/apps/catalog` | unmanaged read-only ORM | Catalog still maps legacy tables |
++| `django_backend/apps/crm` | unmanaged read-only ORM | CRM data still maps legacy tables |
++| `django_backend/apps/sales` | unmanaged read-only ORM | Quote data still maps legacy tables |
++| `django_backend/apps/cms` | unmanaged read-only ORM | CMS pages, menus and banners still map legacy tables |
++| `django_backend/apps/accounts` | compatibility services/repositories | Auth compatibility still reads legacy admin data |
++| `django_backend/conftest.py` | test fixture | Tests copy SQLite into read-only fixture |
++| `scripts/phase10_*` | cutover/readiness tooling | Validation scripts compare or protect legacy source |
++
++## Remaining Shutdown Blockers
++
++| Blocker | Current status |
++|---|---|
++| Production cutover approved | Pending |
++| Zero production traffic to legacy APIs | Not confirmed |
++| Rollback window closed | Pending |
++| Archive restore verified | Pending |
++| Business owner approval | Pending |
++| Architecture approval marker `ALLOW_PHASE_11` | Missing |
++
++## Risk Analysis
++
++Shutting down legacy now would be unsafe because Django still has explicit
++legacy database dependencies and the production cutover report is still marked
++`NOT EXECUTED`.
++
++## Decision
++
++Do not shut down, delete or archive-away the legacy runtime in this phase. Keep
++Phase 11 as a readiness and governance package until the blocker list is
++cleared.
+diff --git a/docs/migration/LEGACY_SHUTDOWN_RUNBOOK.md b/docs/migration/LEGACY_SHUTDOWN_RUNBOOK.md
+new file mode 100644
+index 0000000..4c77606
+--- /dev/null
++++ b/docs/migration/LEGACY_SHUTDOWN_RUNBOOK.md
+@@ -0,0 +1,66 @@
++# Legacy Shutdown Runbook
++
++## Purpose
++
++This runbook explains how to shut down the legacy system only after Django has
++been verified as the production owner.
++
++## Current Status
++
++```text
++NOT APPROVED FOR EXECUTION
++```
++
++Do not run shutdown commands while `LEGACY_SHUTDOWN_DECISION_REPORT.md` says
++`KEEP_LEGACY_ACTIVE`.
++
++## Required Evidence Before Shutdown
++
++| Evidence | Required marker |
++|---|---|
++| Traffic migration verified | `PHASE11_TRAFFIC_MIGRATION_VERIFIED=verified` |
++| Zero legacy traffic confirmed | `PHASE11_ZERO_LEGACY_TRAFFIC_CONFIRMED=verified` |
++| Rollback window closed | `PHASE11_ROLLBACK_WINDOW_CLOSED=completed` |
++| Archive restore verified | `PHASE11_ARCHIVE_RESTORE_VERIFIED=verified` |
++| Business owner approval | `PHASE11_BUSINESS_OWNER_APPROVED=approved` |
++| Architecture approval | `ALLOW_PHASE_11` in decision report |
++
++## Readiness Command
++
++```powershell
++python scripts\phase11_legacy_shutdown_readiness.py
++```
++
++Use strict mode in CI:
++
++```powershell
++python scripts\phase11_legacy_shutdown_readiness.py --strict
++```
++
++## Manual Shutdown Sequence After Approval
++
++1. Announce maintenance window.
++2. Confirm Django health checks and business smoke tests pass.
++3. Confirm production logs show zero requests to legacy routes.
++4. Create final archive package for legacy source, database, uploads and logs.
++5. Verify archive restore on a separate machine or isolated folder.
++6. Stop legacy service.
++7. Keep legacy database and code archive read-only.
++8. Monitor Django errors, latency, authentication and business flows.
++9. Record the shutdown approval ID and operator name.
++
++## Stop Conditions
++
++Stop immediately if any condition below happens:
++
++- Any traffic still reaches legacy.
++- Django API smoke tests fail.
++- Archive restore cannot be verified.
++- Rollback owner does not approve closure.
++- Architecture reviewer does not approve shutdown.
++
++## Rollback
++
++Until final shutdown approval is recorded, keep the legacy runtime and database
++archive available. If Django production validation fails, route traffic back to
++legacy and keep Phase 11 blocked.
+diff --git a/docs/migration/LEGACY_SHUTDOWN_VERIFICATION_REPORT.md b/docs/migration/LEGACY_SHUTDOWN_VERIFICATION_REPORT.md
+new file mode 100644
+index 0000000..70e0cb5
+--- /dev/null
++++ b/docs/migration/LEGACY_SHUTDOWN_VERIFICATION_REPORT.md
+@@ -0,0 +1,51 @@
++# Legacy Shutdown Verification Report
++
++## Phase
++
++Phase 11 - Legacy System Shutdown
++
++## Execution Status
++
++```text
++SHUTDOWN BLOCKED SAFELY
++```
++
++## Verification Summary
++
++| Check | Result |
++|---|---|
++| Phase 10 production cutover completed | Not verified |
++| Phase 10.6 recommends Phase 11 | No |
++| Zero legacy traffic confirmed | Not verified |
++| Rollback window closed | Not verified |
++| Archive restore verified | Not verified |
++| Legacy service stopped | No |
++| Legacy database deleted | No |
++| Backups deleted | No |
++
++## Readiness Gate
++
++Run:
++
++```powershell
++python scripts\phase11_legacy_shutdown_readiness.py
++```
++
++Current expected result:
++
++```text
++status: blocked_safely
++legacy_shutdown_recommendation: KEEP_LEGACY_ACTIVE
++legacy_shutdown_executed: false
++legacy_database_deleted: false
++backups_deleted: false
++```
++
++## Final Recommendation
++
++```text
++KEEP_LEGACY_ACTIVE
++```
++
++Phase 11 must wait for production traffic migration verification, rollback
++window closure, archive restore verification and architecture approval.
+diff --git a/scripts/phase11_legacy_shutdown_readiness.py b/scripts/phase11_legacy_shutdown_readiness.py
+new file mode 100644
+index 0000000..266395c
+--- /dev/null
++++ b/scripts/phase11_legacy_shutdown_readiness.py
+@@ -0,0 +1,168 @@
++"""Kiểm tra readiness trước khi tắt hệ thống legacy ở Phase 11.
++
++Script này cố ý chỉ kiểm tra điều kiện và in báo cáo JSON. Nó không tắt
++service, không xóa database, không xóa backup và không di chuyển source code.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import sys
++import time
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_DECISION_REPORT = PROJECT_ROOT / "docs" / "migration" / "LEGACY_SHUTDOWN_DECISION_REPORT.md"
++
++# Các cờ này đại diện cho bằng chứng vận hành ngoài đời thực.
++# Nếu thiếu một cờ, Phase 11 phải dừng an toàn.
++REQUIRED_SHUTDOWN_FLAGS = {
++    "PHASE11_TRAFFIC_MIGRATION_VERIFIED": "traffic đã chuyển sang Django",
++    "PHASE11_ZERO_LEGACY_TRAFFIC_CONFIRMED": "không còn traffic vào legacy",
++    "PHASE11_ROLLBACK_WINDOW_CLOSED": "cửa sổ rollback đã kết thúc",
++    "PHASE11_ARCHIVE_RESTORE_VERIFIED": "archive có thể restore lại",
++    "PHASE11_BUSINESS_OWNER_APPROVED": "business owner đã duyệt",
++}
++
++# Các thành phần legacy cần tồn tại cho tới khi được duyệt shutdown cuối cùng.
++LEGACY_ASSETS = {
++    "legacy_entrypoint": PROJECT_ROOT / "backend" / "app.py",
++    "legacy_database": PROJECT_ROOT / "backend" / "database" / "mecprecision.sqlite",
++    "legacy_schema": PROJECT_ROOT / "backend" / "database" / "schema.sql",
++    "legacy_seed": PROJECT_ROOT / "backend" / "database" / "seed.sql",
++}
++
++
++def flag_enabled(value):
++    """Trả về True khi cờ vận hành được bật rõ ràng."""
++    return str(value or "").strip().lower() in {
++        "1",
++        "true",
++        "yes",
++        "passed",
++        "approved",
++        "completed",
++        "verified",
++    }
++
++
++def read_text(path):
++    """Đọc file text, nếu file không tồn tại thì trả chuỗi rỗng để chặn an toàn."""
++    try:
++        return Path(path).read_text(encoding="utf-8")
++    except FileNotFoundError:
++        return ""
++
++
++def evaluate_required_flags(env):
++    """Kiểm tra từng cờ bắt buộc và gom lỗi còn thiếu."""
++    checks = {}
++    errors = []
++    for key, label in REQUIRED_SHUTDOWN_FLAGS.items():
++        passed = flag_enabled(env.get(key))
++        checks[key] = {
++            "label": label,
++            "passed": passed,
++        }
++        if not passed:
++            errors.append(f"Missing shutdown evidence: {label} ({key}).")
++    return checks, errors
++
++
++def evaluate_decision_report(decision_report_path=DEFAULT_DECISION_REPORT):
++    """Đọc báo cáo Phase 10.6 để biết Phase 11 có được phép tiếp tục chưa."""
++    content = read_text(decision_report_path)
++    allow_phase_11 = "ALLOW_PHASE_11" in content
++    keep_legacy_active = "KEEP_LEGACY_ACTIVE" in content or "DO NOT START PHASE 11" in content
++    report_exists = Path(decision_report_path).exists()
++    errors = []
++
++    if not report_exists:
++        errors.append("Missing legacy shutdown decision report.")
++    if keep_legacy_active:
++        errors.append("Phase 10.6 decision requires KEEP_LEGACY_ACTIVE.")
++    if not allow_phase_11:
++        errors.append("Architecture approval marker ALLOW_PHASE_11 is missing.")
++
++    return {
++        "path": str(decision_report_path),
++        "exists": report_exists,
++        "allow_phase_11": allow_phase_11,
++        "keep_legacy_active": keep_legacy_active,
++        "errors": errors,
++    }
++
++
++def inspect_legacy_assets():
++    """Kiểm tra các asset legacy vẫn còn để phục vụ rollback/archive."""
++    assets = {}
++    errors = []
++    for name, path in LEGACY_ASSETS.items():
++        exists = path.exists()
++        assets[name] = {
++            "path": str(path),
++            "exists": exists,
++            "size_bytes": path.stat().st_size if exists and path.is_file() else None,
++        }
++        if not exists:
++            errors.append(f"Missing required legacy archive asset: {name}.")
++    return assets, errors
++
++
++def evaluate_shutdown_readiness(env=None, decision_report_path=DEFAULT_DECISION_REPORT):
++    """Tổng hợp toàn bộ điều kiện để quyết định có thể shutdown legacy chưa."""
++    started_at = time.perf_counter()
++    env = env or os.environ
++    decision = evaluate_decision_report(decision_report_path)
++    flag_checks, flag_errors = evaluate_required_flags(env)
++    assets, asset_errors = inspect_legacy_assets()
++    errors = list(decision["errors"]) + flag_errors + asset_errors
++    ready = not errors
++
++    return {
++        "status": "ready_for_manual_shutdown_review" if ready else "blocked_safely",
++        "legacy_shutdown_recommendation": "ALLOW_MANUAL_SHUTDOWN_REVIEW" if ready else "KEEP_LEGACY_ACTIVE",
++        "legacy_shutdown_executed": False,
++        "legacy_code_removed": False,
++        "legacy_database_deleted": False,
++        "backups_deleted": False,
++        "traffic_switch_executed": False,
++        "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++        "decision_report": decision,
++        "shutdown_flags": flag_checks,
++        "legacy_assets": assets,
++        "errors": errors,
++    }
++
++
++def main():
++    """CLI entrypoint cho kiểm tra readiness Phase 11."""
++    # PowerShell trên Windows có thể dùng codepage không hỗ trợ đủ tiếng Việt.
++    # Reconfigure stdout giúp JSON tiếng Việt in ra ổn định hơn.
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++
++    parser = argparse.ArgumentParser(description="Phase 11 legacy shutdown readiness gate")
++    parser.add_argument(
++        "--decision-report",
++        default=str(DEFAULT_DECISION_REPORT),
++        help="Đường dẫn tới báo cáo quyết định shutdown legacy.",
++    )
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Trả mã lỗi khác 0 nếu shutdown bị chặn. Mặc định chặn an toàn vẫn exit 0.",
++    )
++    args = parser.parse_args()
++    result = evaluate_shutdown_readiness(decision_report_path=Path(args.decision_report))
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["status"] == "ready_for_manual_shutdown_review":
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
