@@ -34,15 +34,23 @@ Catalog Read-Only ORM
 
 Catalog ORM Hardening & Implementation Standardization
 
-Phase này củng cố test fixture, kiểm tra database routing, review composite key và ghi lại ADR để Phase 4A đủ an toàn trước khi mở rộng sang module tiếp theo.
+### Phase 4.2
 
-## Current
+Catalog ORM Stabilization & Migration Readiness
 
 ### Phase 5
 
 CRM Migration
 
-Phase này tạo ORM read-only cho customers, customer notes và contact requests, đồng thời chuẩn hóa repository/service boundary cho CRM.
+## Current
+
+### Phase 5.1
+
+CRM Hardening & Migration Governance
+
+Status: Completed after approval.
+
+Phase này ghi lại ADR CRM, review chất lượng dữ liệu, chiến lược liên kết contact/customer và checklist trước Phase 6.
 
 ## Planned
 
