@@ -48,15 +48,19 @@ CRM Migration
 
 CRM Hardening & Migration Governance
 
-Status: Completed after approval.
+Status: Completed after approval
 
 Phase này ghi lại ADR CRM, review chất lượng dữ liệu, chiến lược liên kết contact/customer và checklist trước Phase 6.
 
-## Planned
+## Current
 
 ### Phase 6
 
 Sales / Quotation Migration
+
+Phase này tạo ORM read-only cho quote requests, quote items và quote files, đồng thời ghi lại transaction strategy cho phase ghi dữ liệu sau này.
+
+## Planned
 
 ### Phase 7
 
