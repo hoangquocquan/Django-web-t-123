@@ -2,44 +2,67 @@
 
 ## Phase
 
-Phase 11.1 - Legacy API Decommission
+Phase 11.1.2 - Legacy API Traffic Verification
 
-## Execution Status
+## Verification Period
 
 ```text
-DECOMMISSION BLOCKED SAFELY
+NOT PROVIDED
 ```
 
-## Verification Summary
+## Traffic Sources Checked
 
-| Check | Result |
+| Source | Status |
 |---|---|
-| Production traffic log supplied | No |
-| Zero legacy API traffic confirmed | No |
-| Django replacements complete | No |
-| Client contract tests verified | No |
-| Legacy routes disabled | No |
-| Compatibility adapters removed | No |
-| Proxy changes applied | No |
-| Database changed | No |
+| Production proxy logs | Not provided |
+| Production application logs | Not provided |
+| Integration logs | Not provided |
+| Scheduled job logs | Not provided |
+| Local source/dependency scan | Completed |
 
-## Expected Readiness Result
+## Traffic Result
 
 ```text
-status: blocked_safely
-legacy_api_decommission_recommendation: KEEP_LEGACY_API_ACTIVE
-legacy_routes_disabled: false
-legacy_routes_removed: false
-compatibility_adapters_removed: false
-proxy_changes_applied: false
-database_changed: false
+legacy_api_calls: not verified
+replacement_api_calls: not verified
+unknown_clients: not verified
 ```
 
-## Final Recommendation
+## Dependency Scan Result
+
+```text
+files_scanned: 30
+legacy_references: 53
+unknown_references: 0
+decision: DEPENDENCIES_DOCUMENTED
+```
+
+All local frontend/script legacy API references detected by the scanner have
+documented Django replacements.
+
+## Decision
 
 ```text
 KEEP_LEGACY_API_ACTIVE
 ```
 
-The project needs production traffic evidence and complete Django replacements
-before any legacy API route can be disabled.
+## Reason
+
+The project now has tools to verify traffic and local dependencies. Local
+dependency scan is documented, but no production traffic logs were provided in
+this environment. Decommission must remain blocked until logs prove legacy
+`/api/...` traffic is zero and replacement `/api/v1/...` traffic is active.
+
+## Commands
+
+```powershell
+python scripts\phase11_1_2_legacy_api_traffic_verification.py --log <proxy-log>
+python scripts\phase11_1_2_api_dependency_scanner.py
+```
+
+## Security Review
+
+- Log samples are masked for token/password-like query values.
+- Review artifacts must not include raw credentials.
+- Customer data in logs should be redacted before sharing outside the operator
+  group.
