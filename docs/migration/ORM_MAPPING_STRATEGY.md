@@ -887,3 +887,82 @@ Migration Notes:
 - Do not create migrations.
 - Do not run migrations.
 - Do not change legacy repositories or APIs.
+
+## 5. Phase 3.1 Hardening - Read-Only ORM Flow
+
+Approved preparation flow for Phase 4:
+
+```text
+Legacy Database
+  -> Unmanaged Django Models
+  -> Validation
+  -> Service Layer
+  -> API Migration
+```
+
+Meaning:
+
+1. Legacy SQLite remains the source of truth.
+2. Django models read existing tables only.
+3. Validation compares Django ORM output with legacy SQLite/repository output.
+4. Service layer comes after model validation.
+5. API migration comes after service/read parity.
+
+No database ownership transfer happens in Phase 4.
+
+## 6. Phase 3.1 Hardening - Ownership Rules
+
+Phase 4 must use:
+
+```python
+class Meta:
+    managed = False
+    db_table = "legacy_table_name"
+```
+
+Phase 4 must not:
+
+- run `makemigrations`,
+- run `migrate`,
+- create managed models for legacy tables,
+- add columns,
+- rename columns,
+- add surrogate IDs,
+- migrate files/media,
+- migrate auth/session behavior.
+
+## 7. Phase 3.1 Hardening - Supporting Rule Documents
+
+Before implementing any Phase 4 model, check:
+
+| Document | Purpose |
+|---|---|
+| `ORM_MODEL_CONVENTION.md` | Model naming, table mapping, field mapping, PK/FK rules |
+| `COMPOSITE_KEY_STRATEGY.md` | Junction table and composite PK handling |
+| `DATABASE_VIEW_STRATEGY.md` | Read-only view mapping rules |
+| `MEDIA_MIGRATION_STRATEGY.md` | Media/path fields remain text |
+| `AUTH_MIGRATION_BOUNDARY.md` | Auth tables remain read-only boundary |
+
+## 8. Phase 3.1 Hardening - Recommended Phase 4 Slices
+
+| Slice | Scope | Reason |
+|---|---|---|
+| 4A Catalog ORM | categories, materials, machines, processes, products, images, specs, capability links | Highest read-only value and needed by future APIs. |
+| 4B CRM/Sales Read ORM | customers, contacts, quotes, quote items, quote files | Needed for business workflows, but writes remain later. |
+| 4C Content ORM | news categories, news, tags, news_tags | Supports public content and SEO. |
+| 4D CMS Read ORM | pages, menus, banners, newsletter | Admin read visibility only. |
+| 4E System/Analytics Read ORM | visits, events, jobs, notifications, settings | Dashboard/supporting infrastructure. |
+| 4F AI Read ORM | conversations, translation cache | AI history/cache read support only. |
+| 4G Auth Read Boundary | users, sessions, reset, 2FA, audit | Conditional; security review required before behavior migration. |
+
+## 9. Phase 3.1 Hardening - Validation Before API Migration
+
+Every Phase 4 model must pass:
+
+- row count parity,
+- primary key parity,
+- foreign key resolution,
+- null/default behavior review,
+- representative field comparison,
+- no API response changes,
+- no database writes.

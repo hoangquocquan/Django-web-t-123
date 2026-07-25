@@ -1356,3 +1356,116 @@ CREATE VIEW product_overview AS
 - Keep media/file path fields as text until media storage migration is approved.
 - Auth/session/password tables require separate security review before cutover.
 - Quote/contact write flows require transaction parity tests before any Django write endpoint.
+
+## 6. Phase 3.1 Hardening - Composite Key Tables
+
+The following tables use composite primary keys and must not be implemented as normal auto-ID Django models in Phase 4.
+
+| Table | Migration Phase | Current Key | Read-Only Mapping Priority | Rule |
+|---|---|---|---|---|
+| `product_materials` | 4A Catalog ORM | `product_id`, `material_id` | High | Use unmanaged explicit through model `ProductMaterial`. |
+| `product_processes` | 4A Catalog ORM | `product_id`, `process_id` | High | Use unmanaged explicit through model `ProductProcess`; preserve `step_order`. |
+| `capability_machines` | 4A Catalog ORM | `capability_id`, `machine_id` | Medium | Use unmanaged explicit through model `CapabilityMachine`. |
+| `news_tags` | 4C Content ORM | `news_id`, `tag_id` | Medium | Use unmanaged explicit through model `NewsTag`. |
+
+Decision:
+
+- Do not add surrogate IDs in Phase 4.
+- Do not introduce third-party composite key package without approval.
+- Do not create Django-managed M2M tables.
+
+Detailed rules:
+
+- `COMPOSITE_KEY_STRATEGY.md`
+
+## 7. Phase 3.1 Hardening - Views
+
+Current view:
+
+| View | Migration Phase | Read-Only Mapping Priority | Rule |
+|---|---|---|---|
+| `product_overview` | Later reporting/dashboard phase | Low | Do not map in first Phase 4 pass unless explicitly approved. |
+
+Decision:
+
+- Views are read-only.
+- If mapped later, use `managed = False` and `db_table = "product_overview"`.
+- Do not use a view-backed model for admin write workflows.
+
+Detailed rules:
+
+- `DATABASE_VIEW_STRATEGY.md`
+
+## 8. Phase 3.1 Hardening - Migration Priority
+
+The following matrix adds the required `Migration Phase` decision for every legacy table.
+
+| Table | Migration Phase | Django Area | Read-Only Priority | Notes |
+|---|---|---|---|---|
+| `product_categories` | 4A Catalog ORM | catalog | High | Required before product mapping. |
+| `materials` | 4A Catalog ORM | catalog | High | Required by products and quote items. |
+| `machines` | 4A Catalog ORM | catalog | Medium | Required by capability mappings. |
+| `manufacturing_processes` | 4A Catalog ORM | catalog | High | Required by product process mapping. |
+| `products` | 4A Catalog ORM | catalog | High | Central catalog table. |
+| `product_images` | 4A Catalog ORM | catalog | High | Product gallery read support. |
+| `product_specs` | 4A Catalog ORM | catalog | High | Product detail read support. |
+| `product_materials` | 4A Catalog ORM | catalog | High | Composite through table. |
+| `product_processes` | 4A Catalog ORM | catalog | High | Composite through table with extra fields. |
+| `capabilities` | 4A Catalog ORM | catalog | Medium | Public manufacturing capability content. |
+| `capability_machines` | 4A Catalog ORM | catalog | Medium | Composite through table. |
+| `customers` | 4B CRM/Sales Read ORM | crm | High | Required before quote request mapping. |
+| `customer_notes` | 4B CRM/Sales Read ORM | crm | Medium | Read-only customer history. |
+| `contact_requests` | 4B CRM/Sales Read ORM | crm | High | Public lead data; writes later only. |
+| `quote_requests` | 4B CRM/Sales Read ORM | sales | High | Transactional; read-only first. |
+| `quote_request_items` | 4B CRM/Sales Read ORM | sales | High | Quote child rows. |
+| `quote_files` | 4B CRM/Sales Read ORM | sales | Medium | File paths remain text. |
+| `news_categories` | 4C Content ORM | content | Medium | Required before news mapping. |
+| `tags` | 4C Content ORM | content | Medium | Required by news tags. |
+| `news` | 4C Content ORM | content | Medium | Public news/content table. |
+| `news_tags` | 4C Content ORM | content | Medium | Composite through table. |
+| `cms_pages` | 4D CMS Read ORM | cms | Medium | Dynamic pages read-only first. |
+| `cms_menu_items` | 4D CMS Read ORM | cms | Medium | Self-referential menu. |
+| `cms_banners` | 4D CMS Read ORM | cms | Low | Banner content, currently zero rows. |
+| `newsletter_subscribers` | 4D CMS Read ORM | cms | Low | Write/export later. |
+| `page_visits` | 4E Analytics/System Read ORM | dashboard | Low | Dashboard/reporting source. |
+| `enterprise_events` | 4E Analytics/System Read ORM | system | Low | Event log; write behavior later. |
+| `job_queue` | 4E Analytics/System Read ORM | system | Low | Queue migration later. |
+| `notifications` | 4E Analytics/System Read ORM | system | Low | Admin notification read support. |
+| `system_settings` | 4E Analytics/System Read ORM | system | Medium | Settings read-only first. |
+| `ai_conversations` | 4F AI Read ORM | ai | Low | AI history; no AI behavior change. |
+| `ai_translation_cache` | 4F AI Read ORM | ai | Low | AI cache; no cache ownership transfer. |
+| `admin_users` | 4G Auth Read Boundary | accounts | Conditional | Read-only only if needed; no auth migration. |
+| `admin_sessions` | 4G Auth Read Boundary | accounts | Conditional | Read-only only; do not migrate sessions. |
+| `login_attempts` | 4G Auth Read Boundary | accounts | Conditional | Security-sensitive. |
+| `password_reset_tokens` | 4G Auth Read Boundary | accounts | Conditional | Security-sensitive tokens. |
+| `admin_2fa_challenges` | 4G Auth Read Boundary | accounts | Conditional | Security-sensitive 2FA data. |
+| `auth_email_outbox` | 4G Auth Read Boundary | accounts | Conditional | Email/security data. |
+| `admin_activity_logs` | 4G Auth Read Boundary | accounts | Medium | Audit display can be read-only. |
+
+## 9. Phase 3.1 Hardening - Read-Only Mapping Priority
+
+Recommended Phase 4 order:
+
+1. 4A Catalog ORM.
+2. 4B CRM/Sales read ORM.
+3. 4C Content ORM.
+4. 4D CMS read ORM.
+5. 4E Analytics/System read ORM.
+6. 4F AI read ORM.
+7. 4G Auth read boundary only if explicitly needed.
+
+Stop conditions:
+
+- unclear timestamp format,
+- composite key ambiguity,
+- auth/security uncertainty,
+- media storage temptation,
+- view-backed model ambiguity.
+
+Related boundary documents:
+
+- `ORM_MODEL_CONVENTION.md`
+- `COMPOSITE_KEY_STRATEGY.md`
+- `DATABASE_VIEW_STRATEGY.md`
+- `MEDIA_MIGRATION_STRATEGY.md`
+- `AUTH_MIGRATION_BOUNDARY.md`
