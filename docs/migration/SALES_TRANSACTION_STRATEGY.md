@@ -2,56 +2,91 @@
 
 ## Purpose
 
-Future quotation writes will be multi-step.
+Future quotation writes will be multi-step and must be transaction-safe.
 
-For example:
+Phase 6.1 does not introduce write transactions. It only defines the future boundary.
 
-1. Create or link customer.
-2. Create quote request header.
-3. Create quote line items.
-4. Store uploaded file metadata.
-5. Add audit log or notification.
+## Future Workflow
 
-If step 4 fails, steps 1 to 3 may need rollback. Phase 6 does not implement writes, but it documents the transaction boundary now.
+```text
+Customer creation/linking
+        |
+        v
+Quote creation
+        |
+        v
+Quote items creation
+        |
+        v
+File metadata creation
+```
 
-## Current Phase 6 Rule
+## Atomic Transaction Requirement
 
-Phase 6 is read-only.
-
-No `transaction.atomic()` write flow is introduced yet.
-
-## Future Write Boundary
-
-When write migration is approved, quote creation should run inside one transaction:
+Future quote creation must use a single database transaction for database records:
 
 ```python
 with transaction.atomic():
-    customer = customer_service.get_or_create_customer(...)
+    customer = customer_service.resolve_customer(...)
     quote = quotation_repository.create_quote(...)
     quotation_repository.create_items(quote, ...)
-    quotation_repository.create_files(quote, ...)
+    quotation_repository.create_file_metadata(quote, ...)
 ```
 
-## Rollback Rule
+If any required database step fails, all database changes in the transaction must rollback.
 
-If any required step fails:
+## Rollback Strategy
 
-- rollback quote header,
-- rollback quote items,
-- rollback file metadata,
-- keep physical uploaded file cleanup as a separate safe cleanup task,
-- record failure in audit log if the audit system is outside the transaction.
+Rollback inside database transaction:
 
-## Validation Before Write Migration
+- customer link created only for this quote,
+- quote header,
+- quote items,
+- quote file metadata,
+- audit/event rows if they are part of the same database transaction.
 
-Before enabling writes:
+Do not rely on database rollback for:
 
-- Define required quote fields.
-- Define file validation rules.
-- Define max file size and allowed extensions.
-- Decide whether files are stored in local media, S3-compatible storage or external storage.
-- Add integration tests for rollback behavior.
+- physical files already written to disk,
+- files uploaded to S3/CDN/external storage,
+- emails already sent,
+- external notifications already dispatched.
+
+## Failure Scenarios
+
+Customer validation fails:
+
+- Do not create quote.
+- Return validation error.
+
+Quote item validation fails:
+
+- Rollback quote header and previous items.
+- Keep uploaded temp files in quarantine until cleanup job runs.
+
+File metadata insert fails:
+
+- Rollback quote header and items.
+- Schedule physical file cleanup if file upload already happened.
+
+Notification fails:
+
+- Quote may still be valid if notification is non-critical.
+- Use outbox or queue pattern for retry.
+
+## External File Handling
+
+Recommended future flow:
+
+1. Upload physical file to temporary storage.
+2. Validate file type, size and scan result.
+3. Start database transaction.
+4. Create quote, items and file metadata.
+5. Move file from temporary to permanent storage after database success.
+6. Run cleanup job for abandoned temporary files.
 
 ## Current Recommendation
 
-Keep Phase 6 read-only and use repository/service tests as the baseline for future transaction-safe write migration.
+Keep Phase 6.1 read-only.
+
+Require architecture approval before introducing write APIs, transactions or file storage changes.
