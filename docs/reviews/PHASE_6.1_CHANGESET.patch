@@ -1,0 +1,865 @@
+diff --git a/django_backend/apps/sales/tests/test_sales_hardening.py b/django_backend/apps/sales/tests/test_sales_hardening.py
+new file mode 100644
+index 0000000..b1d2034
+--- /dev/null
++++ b/django_backend/apps/sales/tests/test_sales_hardening.py
+@@ -0,0 +1,83 @@
++"""Hardening tests for Phase 6.1 sales quotation governance."""
++
++from django.db import connections
++
++from apps.sales.models import QuoteFile, QuoteRequest, QuoteRequestItem
++from apps.sales.repositories.quotation_repository import QuotationRepository
++
++
++def test_quote_requests_do_not_have_missing_customer_references(legacy_db):
++    """Every quote request must point to an existing customer."""
++    with connections["legacy"].cursor() as cursor:
++        cursor.execute(
++            """
++            SELECT COUNT(*)
++            FROM quote_requests quotes
++            LEFT JOIN customers customers ON customers.id = quotes.customer_id
++            WHERE customers.id IS NULL
++            """
++        )
++        missing_customer_count = cursor.fetchone()[0]
++
++    assert missing_customer_count == 0
++
++
++def test_quote_items_do_not_have_missing_product_or_material_references(legacy_db):
++    """Optional product/material references must be valid when present."""
++    with connections["legacy"].cursor() as cursor:
++        cursor.execute(
++            """
++            SELECT COUNT(*)
++            FROM quote_request_items items
++            LEFT JOIN products products ON products.id = items.product_id
++            WHERE items.product_id IS NOT NULL AND products.id IS NULL
++            """
++        )
++        missing_product_count = cursor.fetchone()[0]
++
++        cursor.execute(
++            """
++            SELECT COUNT(*)
++            FROM quote_request_items items
++            LEFT JOIN materials materials ON materials.id = items.material_id
++            WHERE items.material_id IS NOT NULL AND materials.id IS NULL
++            """
++        )
++        missing_material_count = cursor.fetchone()[0]
++
++    assert missing_product_count == 0
++    assert missing_material_count == 0
++
++
++def test_quote_items_have_positive_quantities(legacy_db):
++    """Quantity must be positive for current legacy quote items."""
++    bad_items = QuoteRequestItem.objects.using("legacy").filter(quantity__lte=0)
++
++    assert bad_items.count() == 0
++
++
++def test_quote_files_have_required_metadata_and_parent_quote(legacy_db):
++    """Quote files must keep file name, file URL and parent quote relationship."""
++    file_record = QuoteFile.objects.using("legacy").select_related("quote_request").first()
++
++    assert file_record is not None
++    assert file_record.quote_request.id == file_record.quote_request_id
++    assert file_record.file_name
++    assert file_record.file_url
++
++
++def test_sales_repository_detail_querysets_use_legacy_alias(legacy_db):
++    """Repository detail querysets must stay on the legacy database alias."""
++    repository = QuotationRepository()
++    quote = QuoteRequest.objects.using("legacy").first()
++
++    assert repository.list_quote_items(quote.id)._db == "legacy"
++    assert repository.list_quote_files(quote.id)._db == "legacy"
++
++
++def test_sales_legacy_db_fixture_uses_database_copy(legacy_db):
++    """Sales tests must use the copied test database, not the source SQLite file."""
++    normalized_path = legacy_db.as_posix()
++
++    assert normalized_path.endswith("mecprecision-test.sqlite")
++    assert "/backend/database/" not in normalized_path
+diff --git a/docs/architecture/adr/ADR-010-sales-quotation-strategy.md b/docs/architecture/adr/ADR-010-sales-quotation-strategy.md
+new file mode 100644
+index 0000000..ec1bacf
+--- /dev/null
++++ b/docs/architecture/adr/ADR-010-sales-quotation-strategy.md
+@@ -0,0 +1,82 @@
++# ADR-010 Sales Quotation Strategy
++
++## Context
++
++Legacy sales tables:
++
++- `quote_requests`
++- `quote_request_items`
++- `quote_files`
++
++Dependencies:
++
++CRM:
++
++- `customers`
++
++Catalog:
++
++- `products`
++- `materials`
++
++Phase 6 mapped these tables with unmanaged read-only Django ORM models. Phase 6.1 hardens the architecture before CMS migration and before any future write-enabled quotation work.
++
++## Decision
++
++Use the read-only unmanaged ORM pattern for Sales / Quotation.
++
++Sales models remain:
++
++- `managed = False`
++- routed through database alias `legacy`
++- protected by `LegacyReadOnlyModel`
++- accessed through repository and service boundaries
++
++No Sales API, serializer, CRUD write operation, pricing change or data migration is introduced in Phase 6.1.
++
++## Domain Boundary
++
++CRM responsibility:
++
++- Own customer identity and customer profile data.
++- Decide future customer creation/linking rules.
++- Provide customer records to quotation flows.
++
++Catalog responsibility:
++
++- Own product and material reference data.
++- Provide current product/material metadata.
++- Define catalog change lifecycle.
++
++Sales responsibility:
++
++- Own quotation lifecycle.
++- Own quote header, quote item and quote file metadata.
++- Preserve historical quote state when future snapshot fields are approved.
++- Coordinate future write transaction boundaries.
++
++## Consequences
++
++Benefits:
++
++- Keeps cross-module ownership clear.
++- Avoids Sales mutating customer, product or material master data.
++- Preserves safe legacy read-only behavior.
++- Prepares a clean path for future transaction-safe quotation writes.
++
++Risks:
++
++- Current quote item rows reference live product/material records, so historical quote state is not fully protected yet.
++- File metadata exists in database, but physical file lifecycle is outside database rollback.
++- Status workflow values need normalization before future write APIs.
++
++Future actions:
++
++- Approve snapshot fields before quote write migration.
++- Approve transaction boundary before quote creation APIs.
++- Approve file lifecycle and cleanup process before upload migration.
++- Add status transition policy before workflow automation.
++
++## Status
++
++Accepted
+diff --git a/docs/migration/MIGRATION_ROADMAP.md b/docs/migration/MIGRATION_ROADMAP.md
+index 16e7d06..c6df30e 100644
+--- a/docs/migration/MIGRATION_ROADMAP.md
++++ b/docs/migration/MIGRATION_ROADMAP.md
+@@ -42,23 +42,23 @@ Catalog ORM Stabilization & Migration Readiness
+ 
+ CRM Migration
+ 
+-## Current
+-
+ ### Phase 5.1
+ 
+ CRM Hardening & Migration Governance
+ 
+-Status: Completed after approval
++### Phase 6
+ 
+-Phase này ghi lại ADR CRM, review chất lượng dữ liệu, chiến lược liên kết contact/customer và checklist trước Phase 6.
++Sales / Quotation Migration
+ 
+ ## Current
+ 
+-### Phase 6
++### Phase 6.1
+ 
+-Sales / Quotation Migration
++Sales Quotation Hardening & Transaction Governance
++
++Status: Completed after approval.
+ 
+-Phase này tạo ORM read-only cho quote requests, quote items và quote files, đồng thời ghi lại transaction strategy cho phase ghi dữ liệu sau này.
++Phase này ghi lại ADR Sales, snapshot strategy, transaction strategy, file lifecycle strategy, data quality review và playbook trước Phase 7.
+ 
+ ## Planned
+ 
+diff --git a/docs/migration/QUOTATION_SNAPSHOT_STRATEGY.md b/docs/migration/QUOTATION_SNAPSHOT_STRATEGY.md
+new file mode 100644
+index 0000000..5ae3a6a
+--- /dev/null
++++ b/docs/migration/QUOTATION_SNAPSHOT_STRATEGY.md
+@@ -0,0 +1,61 @@
++# Quotation Snapshot Strategy
++
++## Problem
++
++Products, materials and prices can change over time.
++
++A quotation must preserve what the customer was quoted at the time of creation, approval or conversion. If quote items only point to live product/material rows, old quotes may appear to change when catalog data changes.
++
++## Current Phase 6.1 State
++
++Current legacy quote items store:
++
++- `product_id`
++- `material_id`
++- `drawing_code`
++- `quantity`
++- `tolerance`
++- `note`
++
++They do not yet store a full historical snapshot of product name, material name, specification or price.
++
++## Future Snapshot Fields
++
++Recommended future fields for quote item snapshot:
++
++- `product_name_snapshot`
++- `product_sku_snapshot`
++- `material_name_snapshot`
++- `material_standard_snapshot`
++- `specification_snapshot`
++- `drawing_code_snapshot`
++- `unit_price_snapshot`
++- `currency_snapshot`
++- `quantity_snapshot`
++- `tolerance_snapshot`
++- `lead_time_snapshot`
++- `catalog_version_snapshot`
++
++## When Snapshot Happens
++
++Quote creation:
++
++- Capture initial customer request context.
++- Snapshot product/material names if selected.
++- Snapshot uploaded drawing metadata.
++
++Quote approval:
++
++- Capture approved price, lead time and final technical assumptions.
++- This is the most important commercial snapshot point.
++
++Quote conversion:
++
++- Capture final state before converting to order/project.
++- Preserve quote-to-order audit trace.
++
++## Recommendation
++
++Do not implement database changes in Phase 6.1.
++
++Before write migration, create an approved schema plan for snapshot fields and decide which snapshot event is legally/commercially authoritative.
+diff --git a/docs/migration/QUOTE_FILE_LIFECYCLE_STRATEGY.md b/docs/migration/QUOTE_FILE_LIFECYCLE_STRATEGY.md
+new file mode 100644
+index 0000000..ec699e2
+--- /dev/null
++++ b/docs/migration/QUOTE_FILE_LIFECYCLE_STRATEGY.md
+@@ -0,0 +1,77 @@
++# Quote File Lifecycle Strategy
++
++## Current State
++
++Legacy table: `quote_files`
++
++Fields:
++
++- `id`
++- `quote_request_id`
++- `file_name`
++- `file_url`
++- `file_type`
++- `uploaded_at`
++
++The database stores file metadata and path/URL. It does not guarantee that the physical file exists.
++
++## Phase 6.1 Rule
++
++Do not migrate physical files.
++
++Do not rewrite file paths.
++
++Do not move files into Django media storage.
++
++## Future Upload Flow
++
++Recommended future flow:
++
++1. Receive upload.
++2. Store file in temporary location.
++3. Validate extension and MIME type.
++4. Validate size limit.
++5. Optional malware scan.
++6. Create quote records inside database transaction.
++7. Create file metadata.
++8. Move file to permanent storage after database success.
++9. Queue cleanup for temporary files.
++
++## Storage Migration
++
++Future storage options:
++
++- local Django `MEDIA_ROOT`,
++- S3-compatible object storage,
++- CDN-backed storage,
++- private document storage with signed URLs.
++
++Storage decision must be separate from Phase 6.1.
++
++## Cleanup Strategy
++
++Cleanup should handle:
++
++- temporary files older than retention window,
++- metadata rows pointing to missing files,
++- files without metadata rows,
++- failed upload attempts,
++- duplicate uploads.
++
++## Orphan File Handling
++
++Database orphan:
++
++- `quote_files.quote_request_id` points to missing quote.
++- Current data review found 0 orphan quote file rows.
++
++Physical orphan:
++
++- file exists on disk/storage but has no database row.
++- Phase 6.1 does not scan physical storage.
++
++## Recommendation
++
++Preserve legacy file metadata as read-only for now.
++
++Before upload migration, approve file validation, storage backend, cleanup job and rollback behavior.
+diff --git a/docs/migration/SALES_DATA_QUALITY_REVIEW.md b/docs/migration/SALES_DATA_QUALITY_REVIEW.md
+new file mode 100644
+index 0000000..a048d9b
+--- /dev/null
++++ b/docs/migration/SALES_DATA_QUALITY_REVIEW.md
+@@ -0,0 +1,153 @@
++# Sales Data Quality Review
++
++## Scope
++
++This review reads the current legacy SQLite sales data only. It does not modify data.
++
++Tables reviewed:
++
++- `quote_requests`
++- `quote_request_items`
++- `quote_files`
++
++## Current Snapshot
++
++| Table | Row Count | Notes |
++| --- | ---: | --- |
++| `quote_requests` | 1 | Quote header records |
++| `quote_request_items` | 1 | Quote line items |
++| `quote_files` | 1 | Uploaded quote file metadata |
++
++## Quote Requests
++
++### Issue: Missing Customer References
++
++Observed:
++
++- Missing customer references: 0
++
++Impact:
++
++- Current quote header can resolve CRM customer relationship.
++
++Recommendation:
++
++- Keep FK validation before any future data migration.
++
++### Issue: Invalid Status
++
++Observed:
++
++- Quote ID `1` has status `assigned`.
++
++Impact:
++
++- `assigned` may be valid in the legacy CMS, but the future Sales workflow needs an approved status vocabulary.
++
++Recommendation:
++
++- Do not modify data in Phase 6.1.
++- Define final status set before creating write APIs or workflow automation.
++
++### Issue: Incomplete Fields
++
++Observed:
++
++- Missing project name: 0
++- Missing message: 0
++
++Impact:
++
++- Current demo quote has enough basic context.
++
++Recommendation:
++
++- Add required-field policy in future write migration.
++
++## Quote Request Items
++
++### Issue: Invalid Product References
++
++Observed:
++
++- Invalid product references: 0
++
++Impact:
++
++- Current quote item can resolve catalog product relationship.
++
++Recommendation:
++
++- Keep validation before snapshot migration.
++
++### Issue: Invalid Material References
++
++Observed:
++
++- Invalid material references: 0
++
++Impact:
++
++- Current quote item can resolve catalog material relationship.
++
++Recommendation:
++
++- Keep validation before snapshot migration.
++
++### Issue: Missing Quantities
++
++Observed:
++
++- Quantity values less than or equal to 0: 0
++
++Impact:
++
++- Current item quantity is usable.
++
++Recommendation:
++
++- Future writes must require positive quantity.
++
++### Issue: Pricing Issues
++
++Observed:
++
++- Current legacy `quote_request_items` table does not store unit price.
++
++Impact:
++
++- Historical quote value cannot be reconstructed from item rows alone.
++
++Recommendation:
++
++- Add approved snapshot fields in a future write-enabled quotation migration.
++
++## Quote Files
++
++### Issue: Missing Paths
++
++Observed:
++
++- Missing `file_name` or `file_url`: 0
++
++Impact:
++
++- Current file metadata can be displayed or reviewed.
++
++Recommendation:
++
++- Preserve file paths exactly until file lifecycle migration is approved.
++
++### Issue: Invalid References
++
++Observed:
++
++- Quote files pointing to missing quote requests: 0
++
++Impact:
++
++- Current file metadata has valid parent quote relationship.
++
++Recommendation:
++
++- Keep orphan validation before storage migration.
+diff --git a/docs/migration/SALES_MIGRATION_PLAYBOOK.md b/docs/migration/SALES_MIGRATION_PLAYBOOK.md
+new file mode 100644
+index 0000000..4768d0b
+--- /dev/null
++++ b/docs/migration/SALES_MIGRATION_PLAYBOOK.md
+@@ -0,0 +1,106 @@
++# Sales Migration Playbook
++
++## Objective
++
++Use Phase 6 Sales / Quotation as the standard pattern for future read-only and write-enabled Sales migration work.
++
++## Standard Pattern
++
++```text
++Model
++  |
++  v
++Repository
++  |
++  v
++Service
++  |
++  v
++Transaction Boundary
++  |
++  v
++Tests
++```
++
++## Model
++
++Rules:
++
++- Inherit `LegacyReadOnlyModel`.
++- Use `managed = False`.
++- Keep `db_table` exactly matching legacy SQLite.
++- Keep file paths and quote values unchanged.
++- Do not add snapshot fields until a future schema phase is approved.
++
++## Repository
++
++Rules:
++
++- Query through `.using("legacy")`.
++- Keep Sales ORM access inside repository.
++- Use `select_related` for customer/product/material.
++- Use `prefetch_related` for items and files.
++
++## Service
++
++Rules:
++
++- Depend on repository interface.
++- Do not call ORM directly.
++- Do not implement workflow status mutation in read-only phases.
++- Return quote detail as quote header, items and files.
++
++## Transaction Boundary
++
++Read-only phase:
++
++- No write transaction.
++- No `transaction.atomic()` write flow.
++
++Future write phase:
++
++- Wrap quote creation, items and file metadata in one database transaction.
++- Keep physical file cleanup outside database rollback but controlled by job/queue.
++
++## Tests
++
++Required tests:
++
++- row count parity,
++- repository uses legacy alias,
++- quote/customer relationship,
++- item/product/material relationship,
++- file path preservation,
++- read-only protection,
++- fixture copy validation,
++- query count for list/detail loading.
++
++## Common Mistakes
++
++- Mutating customer records from Sales.
++- Mutating product or material records from Sales.
++- Treating live product price as historical quote price.
++- Moving physical files during ORM migration.
++- Creating write APIs before transaction and snapshot decisions are approved.
++- Adding status workflow automation before status vocabulary is approved.
++
++## Dependency Rules
++
++CRM owns:
++
++- customer profile,
++- customer identity,
++- customer merge/link rules.
++
++Catalog owns:
++
++- product master data,
++- material master data,
++- product pricing source if introduced later.
++
++Sales owns:
++
++- quote lifecycle,
++- quote item snapshot,
++- quote file metadata,
++- quote transaction boundary.
+diff --git a/docs/migration/SALES_TRANSACTION_STRATEGY.md b/docs/migration/SALES_TRANSACTION_STRATEGY.md
+index b0dc47b..f878257 100644
+--- a/docs/migration/SALES_TRANSACTION_STRATEGY.md
++++ b/docs/migration/SALES_TRANSACTION_STRATEGY.md
+@@ -2,56 +2,91 @@
+ 
+ ## Purpose
+ 
+-Future quotation writes will be multi-step.
++Future quotation writes will be multi-step and must be transaction-safe.
++
++Phase 6.1 does not introduce write transactions. It only defines the future boundary.
++
++## Future Workflow
++
++```text
++Customer creation/linking
++        |
++        v
++Quote creation
++        |
++        v
++Quote items creation
++        |
++        v
++File metadata creation
++```
+ 
+-For example:
++## Atomic Transaction Requirement
+ 
+-1. Create or link customer.
+-2. Create quote request header.
+-3. Create quote line items.
+-4. Store uploaded file metadata.
+-5. Add audit log or notification.
++Future quote creation must use a single database transaction for database records:
+ 
+-If step 4 fails, steps 1 to 3 may need rollback. Phase 6 does not implement writes, but it documents the transaction boundary now.
++```python
++with transaction.atomic():
++    customer = customer_service.resolve_customer(...)
++    quote = quotation_repository.create_quote(...)
++    quotation_repository.create_items(quote, ...)
++    quotation_repository.create_file_metadata(quote, ...)
++```
+ 
+-## Current Phase 6 Rule
++If any required database step fails, all database changes in the transaction must rollback.
+ 
+-Phase 6 is read-only.
++## Rollback Strategy
+ 
+-No `transaction.atomic()` write flow is introduced yet.
++Rollback inside database transaction:
+ 
+-## Future Write Boundary
++- customer link created only for this quote,
++- quote header,
++- quote items,
++- quote file metadata,
++- audit/event rows if they are part of the same database transaction.
+ 
+-When write migration is approved, quote creation should run inside one transaction:
++Do not rely on database rollback for:
+ 
+-```python
+-with transaction.atomic():
+-    customer = customer_service.get_or_create_customer(...)
+-    quote = quotation_repository.create_quote(...)
+-    quotation_repository.create_items(quote, ...)
+-    quotation_repository.create_files(quote, ...)
+-```
++- physical files already written to disk,
++- files uploaded to S3/CDN/external storage,
++- emails already sent,
++- external notifications already dispatched.
++
++## Failure Scenarios
++
++Customer validation fails:
++
++- Do not create quote.
++- Return validation error.
+ 
+-## Rollback Rule
++Quote item validation fails:
+ 
+-If any required step fails:
++- Rollback quote header and previous items.
++- Keep uploaded temp files in quarantine until cleanup job runs.
+ 
+-- rollback quote header,
+-- rollback quote items,
+-- rollback file metadata,
+-- keep physical uploaded file cleanup as a separate safe cleanup task,
+-- record failure in audit log if the audit system is outside the transaction.
++File metadata insert fails:
+ 
+-## Validation Before Write Migration
++- Rollback quote header and items.
++- Schedule physical file cleanup if file upload already happened.
+ 
+-Before enabling writes:
++Notification fails:
+ 
+-- Define required quote fields.
+-- Define file validation rules.
+-- Define max file size and allowed extensions.
+-- Decide whether files are stored in local media, S3-compatible storage or external storage.
+-- Add integration tests for rollback behavior.
++- Quote may still be valid if notification is non-critical.
++- Use outbox or queue pattern for retry.
++
++## External File Handling
++
++Recommended future flow:
++
++1. Upload physical file to temporary storage.
++2. Validate file type, size and scan result.
++3. Start database transaction.
++4. Create quote, items and file metadata.
++5. Move file from temporary to permanent storage after database success.
++6. Run cleanup job for abandoned temporary files.
+ 
+ ## Current Recommendation
+ 
+-Keep Phase 6 read-only and use repository/service tests as the baseline for future transaction-safe write migration.
++Keep Phase 6.1 read-only.
++
++Require architecture approval before introducing write APIs, transactions or file storage changes.
+diff --git a/docs/reviews/PHASE_6.1_REVIEW_SUMMARY.md b/docs/reviews/PHASE_6.1_REVIEW_SUMMARY.md
+new file mode 100644
+index 0000000..f8d2fa8
+--- /dev/null
++++ b/docs/reviews/PHASE_6.1_REVIEW_SUMMARY.md
+@@ -0,0 +1,95 @@
++# Phase 6.1 Review Summary
++
++## Objective
++
++Harden Sales / Quotation architecture before Phase 7 CMS Migration.
++
++This phase focuses on architecture documentation, validation, test improvements and ADR creation only.
++
++## Problems Resolved
++
++- Defined Sales domain boundary against CRM and Catalog.
++- Documented future quote transaction boundary.
++- Documented future quotation snapshot strategy.
++- Documented quote file lifecycle and cleanup concerns.
++- Reviewed sales data quality risks without modifying data.
++- Added hardening tests for FK validity, file metadata and fixture-based testing.
++
++## ADR Created
++
++- `docs/architecture/adr/ADR-010-sales-quotation-strategy.md`
++
++## Documents Created
++
++- `docs/migration/QUOTATION_SNAPSHOT_STRATEGY.md`
++- `docs/migration/QUOTE_FILE_LIFECYCLE_STRATEGY.md`
++- `docs/migration/SALES_DATA_QUALITY_REVIEW.md`
++- `docs/migration/SALES_MIGRATION_PLAYBOOK.md`
++
++## Documents Updated
++
++- `docs/migration/SALES_TRANSACTION_STRATEGY.md`
++- `docs/migration/MIGRATION_ROADMAP.md`
++
++## Database Impact
++
++No database schema changes.
++
++No data migration.
++
++No legacy database writes.
++
++No pricing data changes.
++
++No physical file migration.
++
++## API Impact
++
++No API changes.
++
++No serializers, controllers or CRUD endpoints were added.
++
++## Transaction Strategy
++
++Future quote writes must wrap customer resolution, quote creation, item creation and file metadata creation in a database transaction.
++
++Physical file handling must use temporary storage and cleanup jobs because database rollback cannot undo external file writes.
++
++## Snapshot Strategy
++
++Future quote items need snapshot fields for product, material, specification, unit price, currency, quantity, tolerance and lead time.
++
++No snapshot fields were implemented in Phase 6.1.
++
++## Tests
++
++Commands:
++
++- `python manage.py check`
++- `pytest`
++
++Result:
++
++PASS
++
++Observed:
++
++- `python manage.py check`: no issues.
++- `pytest`: 57 passed.
++
++## Risks Remaining
++
++- Current quote status includes `assigned`; future workflow status vocabulary needs approval.
++- Current quote item table has no unit price snapshot.
++- Current demo database has only one quote, one item and one file.
++- Physical file existence is not validated in Phase 6.1.
++
++## Recommendation
++
++Approve Phase 6.1 as Sales governance hardening.
++
++Proceed to Phase 7 only after architecture review accepts ADR-010, snapshot strategy, transaction strategy and file lifecycle strategy.
++
++Status:
++
++WAITING FOR ARCHITECT REVIEW
