@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 
 from apps.api.permissions import ReadOnlyApiPermission
 from apps.api.serializers.cms import menu_item_to_dict, page_to_dict
-from apps.api.views.helpers import handle_not_found, list_ok, ok
+from apps.api.views.helpers import handle_not_found, ok, paginated_ok
 from apps.cms.services.cms_service import CmsService
 
 
@@ -13,7 +13,7 @@ from apps.cms.services.cms_service import CmsService
 def pages(request):
     """Return published dynamic pages through the CMS service layer."""
     service = CmsService()
-    return list_ok(page_to_dict(page) for page in service.list_public_pages())
+    return paginated_ok(request, service.list_public_pages(), page_to_dict)
 
 
 @api_view(["GET"])
@@ -33,7 +33,4 @@ def menu(request):
     """Return nested menu items for one location, defaulting to header."""
     location = request.query_params.get("location", "header")
     service = CmsService()
-    return list_ok(
-        menu_item_to_dict(item)
-        for item in service.list_navigation(location=location)
-    )
+    return paginated_ok(request, service.list_navigation(location=location), menu_item_to_dict)

@@ -8,7 +8,7 @@ from apps.api.serializers.crm import (
     customer_detail_to_dict,
     customer_to_dict,
 )
-from apps.api.views.helpers import handle_not_found, list_ok, ok
+from apps.api.views.helpers import handle_not_found, ok, paginated_ok
 from apps.crm.services.crm_service import CrmService
 
 
@@ -17,7 +17,7 @@ from apps.crm.services.crm_service import CrmService
 def customers(request):
     """Return customer profiles through the CRM service layer."""
     service = CrmService()
-    return list_ok(customer_to_dict(customer) for customer in service.list_customer_profiles())
+    return paginated_ok(request, service.list_customer_profiles(), customer_to_dict)
 
 
 @api_view(["GET"])
@@ -36,7 +36,4 @@ def customer_detail(request, customer_id):
 def contact_requests(request):
     """Return public contact requests without changing read/status fields."""
     service = CrmService()
-    return list_ok(
-        contact_request_to_dict(contact)
-        for contact in service.list_contact_requests()
-    )
+    return paginated_ok(request, service.list_contact_requests(), contact_request_to_dict)

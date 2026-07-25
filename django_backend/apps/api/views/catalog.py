@@ -9,7 +9,7 @@ from apps.api.serializers.catalog import (
     product_detail_to_dict,
     product_to_dict,
 )
-from apps.api.views.helpers import handle_not_found, list_ok, ok
+from apps.api.views.helpers import handle_not_found, ok, paginated_ok
 from apps.catalog.services.catalog_service import CatalogService
 
 
@@ -18,7 +18,7 @@ from apps.catalog.services.catalog_service import CatalogService
 def products(request):
     """Return read-only product list through the Catalog service layer."""
     service = CatalogService()
-    return list_ok(product_to_dict(product) for product in service.list_products())
+    return paginated_ok(request, service.list_products(), product_to_dict)
 
 
 @api_view(["GET"])
@@ -37,7 +37,7 @@ def product_detail(request, product_id):
 def categories(request):
     """Return read-only product categories through the Catalog service layer."""
     service = CatalogService()
-    return list_ok(category_to_dict(category) for category in service.list_categories())
+    return paginated_ok(request, service.list_categories(), category_to_dict)
 
 
 @api_view(["GET"])
@@ -45,4 +45,4 @@ def categories(request):
 def materials(request):
     """Return read-only manufacturing materials through the Catalog service."""
     service = CatalogService()
-    return list_ok(material_to_dict(material) for material in service.list_materials())
+    return paginated_ok(request, service.list_materials(), material_to_dict)

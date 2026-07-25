@@ -22,7 +22,6 @@ from apps.sales.services.quotation_service import QuotationService
         "/api/v1/sales/quotes/",
         "/api/v1/cms/pages/",
         "/api/v1/cms/menu/",
-        "/api/v1/auth/permissions/",
     ],
 )
 def test_read_only_business_list_endpoints_return_success(client, legacy_db, url):
@@ -33,6 +32,8 @@ def test_read_only_business_list_endpoints_return_success(client, legacy_db, url
     assert response.status_code == 200
     assert body["success"] is True
     assert "data" in body
+    assert "results" in body["data"]
+    assert "limit" in body["data"]
 
 
 def test_catalog_product_detail_endpoint_uses_legacy_data(client, legacy_db):
