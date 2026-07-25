@@ -1,0 +1,1205 @@
+diff --git a/django_backend/tests/test_phase11_1_2_legacy_api_traffic.py b/django_backend/tests/test_phase11_1_2_legacy_api_traffic.py
+new file mode 100644
+index 0000000..7fee663
+--- /dev/null
++++ b/django_backend/tests/test_phase11_1_2_legacy_api_traffic.py
+@@ -0,0 +1,105 @@
++"""Tests for Phase 11.1.2 legacy API traffic verification."""
++
++from scripts.phase11_1_2_api_dependency_scanner import scan_dependencies
++from scripts.phase11_1_2_legacy_api_traffic_verification import (
++    analyze_log_lines,
++    evaluate_traffic,
++    extract_api_paths,
++    is_legacy_api_path,
++    is_replacement_api_path,
++    mask_sensitive_text,
++)
++
++
++def test_legacy_route_detection_excludes_api_v1():
++    """Legacy `/api/...` and Django `/api/v1/...` must be classified separately."""
++    assert is_legacy_api_path("/api/contact") is True
++    assert is_legacy_api_path("/api/products/123") is True
++    assert is_replacement_api_path("/api/v1/crm/contact-requests/") is True
++    assert is_legacy_api_path("/api/v1/crm/contact-requests/") is False
++
++
++def test_extract_api_paths_from_log_line():
++    """The parser should find API paths inside common log formats."""
++    line = '127.0.0.1 "GET /api/products HTTP/1.1" 200 "GET /api/v1/catalog/products/"'
++
++    assert extract_api_paths(line) == ["/api/products", "/api/v1/catalog/products"]
++
++
++def test_unknown_client_detection_for_legacy_hits():
++    """Legacy hits without a client marker should be counted as unknown clients."""
++    result = analyze_log_lines(["GET /api/contact 200\n"], source_name="test.log")
++
++    assert result["legacy_requests"] == 1
++    assert result["unknown_clients"] == 1
++    assert result["replacement_requests"] == 0
++
++
++def test_empty_traffic_report_blocks_decommission():
++    """No production logs means no proof of zero legacy traffic."""
++    result = evaluate_traffic([])
++
++    assert result["status"] == "blocked_safely"
++    assert result["safe_to_decommission"] is False
++    assert result["decision"] == "KEEP_LEGACY_API_ACTIVE"
++
++
++def test_safe_decommission_decision_with_clean_replacement_traffic(tmp_path):
++    """A provided log with only `/api/v1/...` traffic can pass traffic verification."""
++    log_file = tmp_path / "proxy-access.log"
++    log_file.write_text(
++        'client=web GET /api/v1/catalog/products/ 200\n'
++        'client=admin POST /api/v1/crm/contact-requests/ 201\n',
++        encoding="utf-8",
++    )
++
++    result = evaluate_traffic([str(log_file)])
++
++    assert result["status"] == "passed"
++    assert result["legacy_requests"] == 0
++    assert result["replacement_requests"] == 2
++    assert result["safe_to_decommission"] is True
++    assert result["decision"] == "READY_FOR_DECOMMISSION"
++
++
++def test_legacy_traffic_blocks_decommission(tmp_path):
++    """Any legacy `/api/...` hit should block the decommission decision."""
++    log_file = tmp_path / "proxy-access.log"
++    log_file.write_text("client=mobile GET /api/products 200\n", encoding="utf-8")
++
++    result = evaluate_traffic([str(log_file)])
++
++    assert result["status"] == "blocked_safely"
++    assert result["legacy_requests"] == 1
++    assert result["safe_to_decommission"] is False
++
++
++def test_dependency_scanner_reports_ready_replacement(tmp_path):
++    """Source scan should map known legacy references to replacement endpoints."""
++    source_file = tmp_path / "app.js"
++    source_file.write_text('fetch("/api/contact")\nfetch("/api/v1/health/")\n', encoding="utf-8")
++
++    result = scan_dependencies([str(source_file)])
++
++    assert result["legacy_references"] == 1
++    assert result["unknown_references"] == 0
++    assert result["findings"][0]["replacement"] == "/api/v1/crm/contact-requests/"
++
++
++def test_dependency_scanner_reports_unknown_reference(tmp_path):
++    """Unknown legacy API names should stay visible for reviewer action."""
++    source_file = tmp_path / "integration.py"
++    source_file.write_text('url = "/api/custom-legacy"\n', encoding="utf-8")
++
++    result = scan_dependencies([str(source_file)])
++
++    assert result["status"] == "blocked_safely"
++    assert result["unknown_references"] == 1
++
++
++def test_log_samples_mask_sensitive_values():
++    """Reports must not expose token/password-like values from logs."""
++    masked = mask_sensitive_text("GET /api/contact?token=abc123&password=secret")
++
++    assert "abc123" not in masked
++    assert "secret" not in masked
+diff --git a/docs/codex-prompts/PHASE_11.1.2_LEGACY_API_TRAFFIC_VERIFICATION.md b/docs/codex-prompts/PHASE_11.1.2_LEGACY_API_TRAFFIC_VERIFICATION.md
+new file mode 100644
+index 0000000..36acc53
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_11.1.2_LEGACY_API_TRAFFIC_VERIFICATION.md
+@@ -0,0 +1,581 @@
++# TASK: Phase 11.1.2 - Legacy API Traffic Verification
++
++
++Project:
++
++mecprecision-vietnam
++
++
++
++====================================================
++SAVE THIS PROMPT
++====================================================
++
++
++Before implementation:
++
++
++Save this task specification into:
++
++
++C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\codex-prompts
++
++
++Filename:
++
++
++PHASE_11.1.2_LEGACY_API_TRAFFIC_VERIFICATION.md
++
++
++
++====================================================
++STATUS
++====================================================
++
++
++Completed:
++
++
++Phase 11.1
++Legacy API Decommission Governance
++
++
++Phase 11.1.1
++Django API Replacement Completion
++
++
++
++Current status:
++
++
++15/15 legacy API route groups have Django replacements.
++
++
++
++Current blocker:
++
++
++No production traffic evidence proving legacy API usage is zero.
++
++
++
++====================================================
++OBJECTIVE
++====================================================
++
++
++Verify that no active clients depend on legacy API routes
++before disabling legacy API endpoints.
++
++
++
++Goal:
++
++
++Confirm:
++
++
++Legacy:
++
++/api/...
++
++
++Traffic:
++
++
++ZERO
++
++
++Replacement:
++
++
++/api/v1/...
++
++
++Active usage confirmed
++
++
++
++====================================================
++IMPORTANT RULES
++====================================================
++
++
++DO NOT:
++
++
++- disable legacy API routes
++- modify production proxy
++- remove legacy API code
++- remove compatibility adapters
++- delete logs
++
++
++ONLY:
++
++
++- analyze traffic
++- create verification tools
++- document evidence
++- prepare decommission decision
++
++
++
++====================================================
++READ REQUIRED DOCUMENTS
++====================================================
++
++
++Read:
++
++
++docs/migration/LEGACY_API_COMPATIBILITY_MATRIX.md
++
++
++docs/migration/LEGACY_API_DECOMMISSION_AUDIT.md
++
++
++docs/migration/LEGACY_API_DECOMMISSION_RUNBOOK.md
++
++
++docs/api/LEGACY_API_REPLACEMENT_STATUS.md
++
++
++docs/migration/PRODUCTION_CUTOVER_REPORT.md
++
++
++docs/testing/PHASE_TESTING_STANDARD.md
++
++
++
++====================================================
++TASK 1
++====================================================
++
++
++Create Legacy API Traffic Audit Document.
++
++
++
++Create:
++
++
++docs/migration/LEGACY_API_TRAFFIC_AUDIT.md
++
++
++
++Include:
++
++
++Traffic sources:
++
++
++- frontend applications
++
++- mobile clients
++
++- integrations
++
++- scheduled jobs
++
++- internal scripts
++
++
++For each:
++
++
++Source
++
++Legacy API usage
++
++Replacement API
++
++Status
++
++
++
++====================================================
++TASK 2
++====================================================
++
++
++Create Traffic Verification Script.
++
++
++
++Create:
++
++
++scripts/phase11_1_2_legacy_api_traffic_verification.py
++
++
++
++Requirements:
++
++
++Analyze:
++
++
++- API access logs
++
++- proxy logs
++
++- application logs
++
++- integration logs
++
++
++Detect:
++
++
++Legacy routes:
++
++
++/api/...
++
++
++Exclude:
++
++
++/api/v1/...
++
++
++
++Output:
++
++
++JSON report:
++
++
++
++Example:
++
++
++{
++ "legacy_requests":0,
++ "replacement_requests":100,
++ "safe_to_decommission":true
++}
++
++
++
++====================================================
++TASK 3
++====================================================
++
++
++Create API Usage Report.
++
++
++
++Create:
++
++
++docs/migration/LEGACY_API_TRAFFIC_VERIFICATION_REPORT.md
++
++
++
++Include:
++
++
++Verification period
++
++Traffic sources checked
++
++Legacy API calls
++
++Replacement API calls
++
++Unknown clients
++
++Decision
++
++
++
++Possible results:
++
++
++READY_FOR_DECOMMISSION
++
++
++or
++
++
++KEEP_LEGACY_API_ACTIVE
++
++
++
++====================================================
++TASK 4
++====================================================
++
++
++Create Client Dependency Scanner.
++
++
++
++Create:
++
++
++scripts/phase11_1_2_api_dependency_scanner.py
++
++
++
++Scan:
++
++
++- frontend source
++
++- JavaScript files
++
++- configuration files
++
++- integration configs
++
++- scheduled scripts
++
++
++
++Detect:
++
++
++References:
++
++
++/api/
++
++
++Legacy endpoint names
++
++
++
++Report:
++
++
++File
++
++Reference
++
++Replacement status
++
++
++
++====================================================
++TASK 5
++====================================================
++
++
++Create Safety Tests.
++
++
++
++Create:
++
++
++django_backend/tests/test_phase11_1_2_legacy_api_traffic.py
++
++
++
++Test:
++
++
++- legacy route detection
++
++- api/v1 exclusion
++
++- unknown client detection
++
++- empty traffic report handling
++
++- safe decommission decision
++
++
++
++====================================================
++TASK 6
++====================================================
++
++
++Security Review.
++
++
++
++Verify:
++
++
++- logs do not expose secrets
++
++- tokens are masked
++
++- credentials removed
++
++- customer data protected
++
++
++
++====================================================
++TASK 7
++====================================================
++
++
++Testing.
++
++
++
++Run:
++
++
++python scripts/phase11_1_2_legacy_api_traffic_verification.py
++
++
++python scripts/phase11_1_2_api_dependency_scanner.py
++
++
++python manage.py check
++
++
++pytest django_backend\tests\test_phase11_1_2_legacy_api_traffic.py
++
++
++pytest
++
++
++powershell -ExecutionPolicy Bypass -File scripts\run_migration_test.ps1
++
++
++
++Expected:
++
++
++All verification tests PASS.
++
++
++
++====================================================
++TASK 8
++====================================================
++
++
++Create Review Package.
++
++
++
++Create:
++
++
++docs/reviews/
++
++
++PHASE_11.1.2_REVIEW_SUMMARY.md
++
++
++PHASE_11.1.2_CHANGESET.patch
++
++
++
++Summary:
++
++
++Objective
++
++Traffic verification result
++
++Legacy API usage
++
++Dependency scan
++
++Security review
++
++Testing result
++
++Recommendation
++
++
++
++====================================================
++GIT REQUIREMENTS
++====================================================
++
++
++Create branch:
++
++
++migration/phase-11.1.2-legacy-api-traffic-verification
++
++
++
++Commit:
++
++
++git add .
++
++
++git commit -m "feat: add legacy api traffic verification"
++
++
++
++Create tag:
++
++
++phase-11.1.2-traffic-verified
++
++
++
++====================================================
++FINAL OUTPUT
++====================================================
++
++
++Return:
++
++
++1.
++
++Branch name
++
++
++2.
++
++Base commit
++
++
++3.
++
++Final commit
++
++
++4.
++
++Legacy API traffic result
++
++
++5.
++
++Dependency scan result
++
++
++6.
++
++Testing result
++
++
++7.
++
++Review package location
++
++
++8.
++
++Git tag
++
++
++
++FINAL STATUS:
++
++
++WAITING FOR ARCHITECT REVIEW
++
++
++STOP.
++
++DO NOT START PHASE 11.1.3 OR PHASE 11.2.
+\ No newline at end of file
+diff --git a/docs/migration/LEGACY_API_TRAFFIC_AUDIT.md b/docs/migration/LEGACY_API_TRAFFIC_AUDIT.md
+new file mode 100644
+index 0000000..7c7a0a6
+--- /dev/null
++++ b/docs/migration/LEGACY_API_TRAFFIC_AUDIT.md
+@@ -0,0 +1,39 @@
++# Legacy API Traffic Audit
++
++## Phase
++
++Phase 11.1.2 - Legacy API Traffic Verification
++
++## Current Context
++
++Phase 11.1.1 completed Django replacements for 15/15 known legacy API route
++groups. The remaining blocker is production traffic evidence.
++
++## Traffic Sources
++
++| Source | Legacy API usage | Replacement API | Status |
++|---|---|---|---|
++| Public frontend pages | Potential historical `/api/...` calls | `/api/v1/...` | Needs source scan |
++| Admin/CMS frontend | Potential product/contact/quote calls | `/api/v1/catalog`, `/api/v1/crm`, `/api/v1/sales` | Needs source scan |
++| Mobile clients | Unknown | `/api/v1/...` | Production access logs required |
++| External integrations | Unknown | `/api/v1/...` | Integration logs required |
++| Scheduled jobs/scripts | Potential script references | `/api/v1/...` | Source scan required |
++| Internal developer tools | Potential legacy test references | `/api/v1/...` | Source scan required |
++
++## Required Evidence
++
++- API gateway/proxy logs for the verification period.
++- Legacy backend access logs if still running.
++- Django API access logs proving `/api/v1/...` usage.
++- Client/integration inventory from operators.
++- Confirmation that logs have secrets masked before review.
++
++## Current Decision
++
++```text
++KEEP_LEGACY_API_ACTIVE
++```
++
++This phase provides verification tooling. It does not claim production traffic
++is zero unless production log files are supplied and pass the verification
++script.
+diff --git a/docs/migration/LEGACY_API_TRAFFIC_VERIFICATION_REPORT.md b/docs/migration/LEGACY_API_TRAFFIC_VERIFICATION_REPORT.md
+index f6e4b7c..897840f 100644
+--- a/docs/migration/LEGACY_API_TRAFFIC_VERIFICATION_REPORT.md
++++ b/docs/migration/LEGACY_API_TRAFFIC_VERIFICATION_REPORT.md
+@@ -2,44 +2,67 @@
+ 
+ ## Phase
+ 
+-Phase 11.1 - Legacy API Decommission
++Phase 11.1.2 - Legacy API Traffic Verification
+ 
+-## Execution Status
++## Verification Period
+ 
+ ```text
+-DECOMMISSION BLOCKED SAFELY
++NOT PROVIDED
+ ```
+ 
+-## Verification Summary
++## Traffic Sources Checked
+ 
+-| Check | Result |
++| Source | Status |
+ |---|---|
+-| Production traffic log supplied | No |
+-| Zero legacy API traffic confirmed | No |
+-| Django replacements complete | No |
+-| Client contract tests verified | No |
+-| Legacy routes disabled | No |
+-| Compatibility adapters removed | No |
+-| Proxy changes applied | No |
+-| Database changed | No |
++| Production proxy logs | Not provided |
++| Production application logs | Not provided |
++| Integration logs | Not provided |
++| Scheduled job logs | Not provided |
++| Local source/dependency scan | Completed |
+ 
+-## Expected Readiness Result
++## Traffic Result
+ 
+ ```text
+-status: blocked_safely
+-legacy_api_decommission_recommendation: KEEP_LEGACY_API_ACTIVE
+-legacy_routes_disabled: false
+-legacy_routes_removed: false
+-compatibility_adapters_removed: false
+-proxy_changes_applied: false
+-database_changed: false
++legacy_api_calls: not verified
++replacement_api_calls: not verified
++unknown_clients: not verified
+ ```
+ 
+-## Final Recommendation
++## Dependency Scan Result
++
++```text
++files_scanned: 30
++legacy_references: 53
++unknown_references: 0
++decision: DEPENDENCIES_DOCUMENTED
++```
++
++All local frontend/script legacy API references detected by the scanner have
++documented Django replacements.
++
++## Decision
+ 
+ ```text
+ KEEP_LEGACY_API_ACTIVE
+ ```
+ 
+-The project needs production traffic evidence and complete Django replacements
+-before any legacy API route can be disabled.
++## Reason
++
++The project now has tools to verify traffic and local dependencies. Local
++dependency scan is documented, but no production traffic logs were provided in
++this environment. Decommission must remain blocked until logs prove legacy
++`/api/...` traffic is zero and replacement `/api/v1/...` traffic is active.
++
++## Commands
++
++```powershell
++python scripts\phase11_1_2_legacy_api_traffic_verification.py --log <proxy-log>
++python scripts\phase11_1_2_api_dependency_scanner.py
++```
++
++## Security Review
++
++- Log samples are masked for token/password-like query values.
++- Review artifacts must not include raw credentials.
++- Customer data in logs should be redacted before sharing outside the operator
++  group.
+diff --git a/scripts/phase11_1_2_api_dependency_scanner.py b/scripts/phase11_1_2_api_dependency_scanner.py
+new file mode 100644
+index 0000000..7ae9314
+--- /dev/null
++++ b/scripts/phase11_1_2_api_dependency_scanner.py
+@@ -0,0 +1,167 @@
++"""Scan source/config files for legacy API dependencies.
++
++The scanner helps find clients that still reference `/api/...` legacy routes.
++It excludes `/api/v1/...` because that namespace belongs to Django replacements.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import re
++import sys
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_SCAN_ROOTS = ["frontend", "scripts"]
++TEXT_SUFFIXES = {
++    ".py",
++    ".js",
++    ".html",
++    ".css",
++    ".json",
++    ".yml",
++    ".yaml",
++    ".toml",
++    ".ini",
++    ".cfg",
++    ".conf",
++    ".md",
++    ".ps1",
++}
++SKIP_PARTS = {"__pycache__", ".git", "logs", "uploads", "fixtures"}
++LEGACY_API_PATTERN = re.compile(r"(?P<path>/api(?:/[A-Za-z0-9._~{}-]+)+)")
++
++REPLACEMENTS = {
++    "/api/health": "/api/v1/health/",
++    "/api/products": "/api/v1/catalog/products/",
++    "/api/products/{id}": "/api/v1/catalog/products/{id}/",
++    "/api/product-categories": "/api/v1/catalog/categories/",
++    "/api/news": "/api/v1/news/",
++    "/api/home": "/api/v1/public/home/",
++    "/api/capabilities": "/api/v1/catalog/capabilities/",
++    "/api/openapi.json": "/api/v1/openapi.json",
++    "/api/version": "/api/v1/version/",
++    "/api/aws-demo": "/api/v1/demo/aws/",
++    "/api/external/weather": "/api/v1/demo/external/weather/",
++    "/api/contact": "/api/v1/crm/contact-requests/",
++    "/api/quote-request": "/api/v1/sales/quotes/",
++    "/api/ai/chat": "/api/v1/ai/chat/",
++}
++
++
++def is_replacement_path(path):
++    """Return True for Django replacement API paths."""
++    return path == "/api/v1" or path.startswith("/api/v1/")
++
++
++def normalize_legacy_path(path):
++    """Normalize dynamic legacy paths for mapping lookup."""
++    path = path.rstrip(".")
++    if re.fullmatch(r"/api/products/\d+", path):
++        return "/api/products/{id}"
++    return path
++
++
++def display_path(path):
++    """Return a stable path string for reports, even outside the project root."""
++    try:
++        return str(path.relative_to(PROJECT_ROOT))
++    except ValueError:
++        return str(path)
++
++
++def should_scan(path):
++    """Return True when a file is a useful text source for dependency scanning."""
++    if any(part in SKIP_PARTS for part in path.parts):
++        return False
++    return path.suffix.lower() in TEXT_SUFFIXES
++
++
++def iter_scan_files(scan_roots=None):
++    """Yield files under configured roots."""
++    roots = scan_roots or DEFAULT_SCAN_ROOTS
++    for root in roots:
++        root_path = PROJECT_ROOT / root
++        if not root_path.exists():
++            continue
++        if root_path.is_file() and should_scan(root_path):
++            yield root_path
++            continue
++        for path in root_path.rglob("*"):
++            if path.is_file() and should_scan(path):
++                yield path
++
++
++def scan_file(path):
++    """Scan one file for legacy API references."""
++    findings = []
++    try:
++        content = path.read_text(encoding="utf-8", errors="ignore").splitlines()
++    except OSError:
++        return findings
++
++    for line_number, line in enumerate(content, start=1):
++        for match in LEGACY_API_PATTERN.finditer(line):
++            path_text = match.group("path").rstrip(".")
++            if path_text in {"/api", "/api/"}:
++                continue
++            if is_replacement_path(path_text):
++                continue
++            normalized = normalize_legacy_path(path_text)
++            findings.append(
++                {
++                    "file": display_path(path),
++                    "line": line_number,
++                    "reference": path_text,
++                    "normalized_reference": normalized,
++                    "replacement": REPLACEMENTS.get(normalized),
++                    "replacement_status": "READY" if normalized in REPLACEMENTS else "UNKNOWN",
++                }
++            )
++    return findings
++
++
++def scan_dependencies(scan_roots=None):
++    """Scan configured roots and summarize legacy API dependencies."""
++    findings = []
++    for path in iter_scan_files(scan_roots):
++        findings.extend(scan_file(path))
++    unknown = [item for item in findings if item["replacement_status"] == "UNKNOWN"]
++    return {
++        "status": "passed" if not unknown else "blocked_safely",
++        "files_scanned": len(list(iter_scan_files(scan_roots))),
++        "legacy_references": len(findings),
++        "unknown_references": len(unknown),
++        "findings": findings[:200],
++        "decision": "DEPENDENCIES_DOCUMENTED" if not unknown else "UNKNOWN_DEPENDENCIES_FOUND",
++    }
++
++
++def parse_roots(values=None, env=None):
++    """Read scan roots from CLI or environment."""
++    if values:
++        return values
++    env = env or os.environ
++    raw = env.get("PHASE11_1_2_SCAN_ROOTS", "")
++    if not raw.strip():
++        return DEFAULT_SCAN_ROOTS
++    return [part.strip() for part in re.split(r"[;,]", raw) if part.strip()]
++
++
++def main():
++    """CLI entrypoint."""
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++    parser = argparse.ArgumentParser(description="Phase 11.1.2 API dependency scanner")
++    parser.add_argument("--root", action="append", default=[], help="Root folder or file to scan.")
++    args = parser.parse_args()
++    result = scan_dependencies(parse_roots(args.root))
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/phase11_1_2_legacy_api_traffic_verification.py b/scripts/phase11_1_2_legacy_api_traffic_verification.py
+new file mode 100644
+index 0000000..174d9c5
+--- /dev/null
++++ b/scripts/phase11_1_2_legacy_api_traffic_verification.py
+@@ -0,0 +1,186 @@
++"""Verify whether legacy `/api/...` routes still receive traffic.
++
++This phase does not disable routes. It only reads operator-provided logs and
++returns a JSON decision. `/api/v1/...` is counted as Django replacement traffic,
++not legacy traffic.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import re
++import sys
++import time
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++
++API_PATH_PATTERN = re.compile(r"(?P<path>/api(?:/[A-Za-z0-9._~{}-]+)+)")
++SECRET_PATTERN = re.compile(
++    r"(?i)(token|api_key|apikey|password|secret|authorization|session_id)=([^&\s]+)"
++)
++
++
++def is_replacement_api_path(path):
++    """Return True when a path belongs to Django `/api/v1/...` namespace."""
++    return path == "/api/v1" or path.startswith("/api/v1/")
++
++
++def is_legacy_api_path(path):
++    """Return True when a path belongs to legacy `/api/...` namespace."""
++    return path.startswith("/api/") and not is_replacement_api_path(path)
++
++
++def mask_sensitive_text(text):
++    """Mask common secret values before writing samples to reports."""
++    return SECRET_PATTERN.sub(lambda match: f"{match.group(1)}=***", text)
++
++
++def extract_api_paths(line):
++    """Extract API paths from one log line."""
++    paths = []
++    for match in API_PATH_PATTERN.finditer(line):
++        path = match.group("path").rstrip(".")
++        if path in {"/api", "/api/"}:
++            continue
++        paths.append(path)
++    return paths
++
++
++def client_is_unknown(line):
++    """Return True when the log line has no obvious client identifier."""
++    lowered = line.lower()
++    known_markers = ("client=", "client_id=", "user-agent", "user_agent", "ua=")
++    return not any(marker in lowered for marker in known_markers)
++
++
++def analyze_log_lines(lines, source_name="<memory>"):
++    """Analyze iterable log lines and count legacy/replacement API traffic."""
++    legacy_requests = 0
++    replacement_requests = 0
++    unknown_clients = 0
++    legacy_samples = []
++    replacement_samples = []
++
++    for line_number, raw_line in enumerate(lines, start=1):
++        line = raw_line.rstrip("\n")
++        for path in extract_api_paths(line):
++            sample = {
++                "source": source_name,
++                "line": line_number,
++                "path": path,
++                "sample": mask_sensitive_text(line)[:300],
++            }
++            if is_replacement_api_path(path):
++                replacement_requests += 1
++                if len(replacement_samples) < 10:
++                    replacement_samples.append(sample)
++            elif is_legacy_api_path(path):
++                legacy_requests += 1
++                if client_is_unknown(line):
++                    unknown_clients += 1
++                if len(legacy_samples) < 10:
++                    legacy_samples.append(sample)
++
++    return {
++        "source": source_name,
++        "legacy_requests": legacy_requests,
++        "replacement_requests": replacement_requests,
++        "unknown_clients": unknown_clients,
++        "legacy_samples": legacy_samples,
++        "replacement_samples": replacement_samples,
++    }
++
++
++def analyze_log_file(path):
++    """Analyze one log file if it exists."""
++    log_path = Path(path)
++    if not log_path.exists():
++        return {
++            "source": str(log_path),
++            "exists": False,
++            "legacy_requests": 0,
++            "replacement_requests": 0,
++            "unknown_clients": 0,
++            "legacy_samples": [],
++            "replacement_samples": [],
++            "errors": ["Log file does not exist."],
++        }
++
++    with log_path.open("r", encoding="utf-8", errors="ignore") as file:
++        result = analyze_log_lines(file, source_name=str(log_path))
++    result["exists"] = True
++    result["errors"] = []
++    return result
++
++
++def parse_log_paths(values=None, env=None):
++    """Read log paths from CLI values or `PHASE11_1_2_LOG_PATHS`."""
++    if values:
++        return [str(Path(value)) for value in values]
++
++    env = env or os.environ
++    raw = env.get("PHASE11_1_2_LOG_PATHS", "")
++    if not raw.strip():
++        return []
++    parts = re.split(r"[;,]", raw)
++    return [part.strip() for part in parts if part.strip()]
++
++
++def evaluate_traffic(log_paths=None, env=None):
++    """Evaluate whether provided traffic evidence supports decommission."""
++    started_at = time.perf_counter()
++    paths = parse_log_paths(log_paths, env=env)
++    source_results = [analyze_log_file(path) for path in paths]
++    legacy_requests = sum(item["legacy_requests"] for item in source_results)
++    replacement_requests = sum(item["replacement_requests"] for item in source_results)
++    unknown_clients = sum(item["unknown_clients"] for item in source_results)
++    logs_checked = sum(1 for item in source_results if item.get("exists"))
++    errors = [
++        error
++        for item in source_results
++        for error in item.get("errors", [])
++    ]
++
++    if not paths:
++        errors.append("No production traffic logs were provided.")
++    if legacy_requests:
++        errors.append("Legacy API traffic is still present.")
++    if unknown_clients:
++        errors.append("Unknown legacy API clients were detected.")
++    if logs_checked and replacement_requests == 0:
++        errors.append("No Django replacement API traffic was observed.")
++
++    safe_to_decommission = bool(paths) and logs_checked == len(paths) and not errors
++    return {
++        "status": "passed" if safe_to_decommission else "blocked_safely",
++        "legacy_requests": legacy_requests,
++        "replacement_requests": replacement_requests,
++        "unknown_clients": unknown_clients,
++        "logs_provided": bool(paths),
++        "logs_checked": logs_checked,
++        "safe_to_decommission": safe_to_decommission,
++        "decision": "READY_FOR_DECOMMISSION" if safe_to_decommission else "KEEP_LEGACY_API_ACTIVE",
++        "sources": source_results,
++        "errors": errors,
++        "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++    }
++
++
++def main():
++    """CLI entrypoint."""
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++    parser = argparse.ArgumentParser(description="Phase 11.1.2 legacy API traffic verification")
++    parser.add_argument("--log", action="append", default=[], help="Path to API/proxy/application log.")
++    args = parser.parse_args()
++    result = evaluate_traffic(args.log)
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
