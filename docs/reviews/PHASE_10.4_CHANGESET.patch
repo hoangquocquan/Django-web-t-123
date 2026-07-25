@@ -1,0 +1,512 @@
+diff --git a/django_backend/tests/test_phase10_cutover_readiness.py b/django_backend/tests/test_phase10_cutover_readiness.py
+new file mode 100644
+index 0000000..ae1aa8b
+--- /dev/null
++++ b/django_backend/tests/test_phase10_cutover_readiness.py
+@@ -0,0 +1,75 @@
++"""Tests for Phase 10.4 production cutover readiness gate."""
++
++import hashlib
++
++from scripts.phase10_cutover_readiness import (
++    evaluate_cutover_readiness,
++    validate_production_database_url,
++)
++
++
++def test_cutover_readiness_blocks_without_required_approvals():
++    """Cutover must remain blocked when approvals and backup are missing."""
++    result = evaluate_cutover_readiness({})
++
++    assert result["status"] == "blocked"
++    assert result["production_cutover_executed"] is False
++    assert result["production_database_switched"] is False
++    assert result["errors"]
++
++
++def test_cutover_readiness_rejects_non_production_database_name():
++    """Production cutover must not target dry-run/test database names."""
++    validation = validate_production_database_url(
++        "postgresql://user:secret@localhost:5432/mecprecision_dryrun"
++    )
++
++    assert validation["errors"]
++    assert "secret" not in validation["masked_database_url"]
++
++
++def test_cutover_readiness_accepts_complete_mocked_inputs(tmp_path):
++    """A fully configured dry check can become ready without executing cutover."""
++    backup = tmp_path / "legacy-final.sqlite"
++    backup.write_bytes(b"backup")
++    checksum = hashlib.sha256(b"backup").hexdigest()
++    env = {
++        "PHASE10_MAINTENANCE_WINDOW_APPROVED": "approved",
++        "PHASE10_LEGACY_WRITE_FREEZE_APPROVED": "approved",
++        "PHASE10_ROLLBACK_APPROVED": "approved",
++        "PHASE10_FINAL_BACKUP_VERIFIED": "approved",
++        "PHASE10_PRODUCTION_DATABASE_URL": "postgresql://prod_user:secret@db:5432/mecprecision",
++        "PHASE10_FINAL_BACKUP_PATH": str(backup),
++        "PHASE10_FINAL_BACKUP_SHA256": checksum,
++        "PHASE10_ROLLBACK_OWNER": "database-owner",
++        "PHASE10_CUTOVER_APPROVAL_ID": "APPROVAL-10.4",
++    }
++
++    result = evaluate_cutover_readiness(env)
++
++    assert result["status"] == "ready"
++    assert result["ready_for_cutover"] is True
++    assert result["production_cutover_executed"] is False
++    assert result["backup"]["actual_sha256"] == checksum
++
++
++def test_cutover_readiness_detects_backup_checksum_mismatch(tmp_path):
++    """A wrong backup checksum must block cutover readiness."""
++    backup = tmp_path / "legacy-final.sqlite"
++    backup.write_bytes(b"backup")
++    env = {
++        "PHASE10_MAINTENANCE_WINDOW_APPROVED": "approved",
++        "PHASE10_LEGACY_WRITE_FREEZE_APPROVED": "approved",
++        "PHASE10_ROLLBACK_APPROVED": "approved",
++        "PHASE10_FINAL_BACKUP_VERIFIED": "approved",
++        "PHASE10_PRODUCTION_DATABASE_URL": "postgresql://prod_user:secret@db:5432/mecprecision",
++        "PHASE10_FINAL_BACKUP_PATH": str(backup),
++        "PHASE10_FINAL_BACKUP_SHA256": "wrong",
++        "PHASE10_ROLLBACK_OWNER": "database-owner",
++        "PHASE10_CUTOVER_APPROVAL_ID": "APPROVAL-10.4",
++    }
++
++    result = evaluate_cutover_readiness(env)
++
++    assert result["status"] == "blocked"
++    assert "checksum" in " ".join(result["errors"]).lower()
+diff --git a/docs/migration/PRODUCTION_CUTOVER_READINESS_REPORT.md b/docs/migration/PRODUCTION_CUTOVER_READINESS_REPORT.md
+new file mode 100644
+index 0000000..0404522
+--- /dev/null
++++ b/docs/migration/PRODUCTION_CUTOVER_READINESS_REPORT.md
+@@ -0,0 +1,75 @@
++# Production Cutover Readiness Report
++
++## Phase
++
++Phase 10.4 - Production Database Cutover
++
++## Result
++
++```text
++CUTOVER BLOCKED BY DESIGN
++```
++
++## Reason
++
++Production cutover requires final backup verification, maintenance window
++approval, legacy write freeze approval, rollback owner assignment and production
++secret handling. These values are intentionally not present in the repository.
++
++## Readiness Gate
++
++Script:
++
++```powershell
++python scripts\phase10_cutover_readiness.py
++```
++
++Current expected result:
++
++```text
++status: blocked
++production_cutover_executed: false
++production_database_switched: false
++```
++
++## Completed In This Phase
++
++- Created production cutover readiness gate.
++- Created production cutover runbook.
++- Created production rollback plan.
++- Added unit tests for readiness, production URL validation and backup checksum.
++
++## Not Executed
++
++- No production backup was created by Codex.
++- No production migration was executed.
++- No production database configuration was switched.
++- No production traffic was routed.
++- No writes were enabled.
++
++## Required Before Real Cutover
++
++| Requirement | Status |
++|---|---|
++| Phase 10.3 approved | Pending architecture review |
++| Final SQLite backup | Not provided |
++| Backup checksum | Not provided |
++| Maintenance window approval | Not provided |
++| Legacy write freeze approval | Not provided |
++| Rollback owner | Not provided |
++| Production secret manager values | Not provided |
++| API smoke test approval | Pending |
++| Auth/session verification | Pending |
++
++## Security
++
++- Production secrets are not committed.
++- Passwords are masked by the readiness gate.
++- Production-looking URLs are validated separately from dry-run URLs.
++- URLs containing `dryrun`, `test`, `staging` or `dev` are rejected for production cutover.
++
++## Recommendation
++
++Do not execute cutover from this workstation or repository state. Use this
++readiness package for architecture and operations review. After approval, run a
++separate production-controlled cutover with real backups, secrets and operators.
+diff --git a/docs/migration/PRODUCTION_CUTOVER_RUNBOOK.md b/docs/migration/PRODUCTION_CUTOVER_RUNBOOK.md
+new file mode 100644
+index 0000000..329690d
+--- /dev/null
++++ b/docs/migration/PRODUCTION_CUTOVER_RUNBOOK.md
+@@ -0,0 +1,86 @@
++# Production Database Cutover Runbook
++
++## Phase
++
++Phase 10.4 - Production Database Cutover Readiness
++
++## Status
++
++```text
++CUTOVER NOT EXECUTED
++```
++
++## Purpose
++
++This runbook defines the human-approved production database ownership transfer
++from legacy SQLite to Django/PostgreSQL. It is a readiness document and does not
++switch production traffic by itself.
++
++## Required Approvals
++
++| Gate | Environment Flag |
++|---|---|
++| Maintenance window approved | `PHASE10_MAINTENANCE_WINDOW_APPROVED=approved` |
++| Legacy write freeze approved | `PHASE10_LEGACY_WRITE_FREEZE_APPROVED=approved` |
++| Rollback plan approved | `PHASE10_ROLLBACK_APPROVED=approved` |
++| Final backup verified | `PHASE10_FINAL_BACKUP_VERIFIED=approved` |
++
++## Required Values
++
++| Value | Environment Variable |
++|---|---|
++| Production PostgreSQL URL | `PHASE10_PRODUCTION_DATABASE_URL` |
++| Final legacy backup path | `PHASE10_FINAL_BACKUP_PATH` |
++| Final legacy backup checksum | `PHASE10_FINAL_BACKUP_SHA256` |
++| Rollback owner | `PHASE10_ROLLBACK_OWNER` |
++| Cutover approval ID | `PHASE10_CUTOVER_APPROVAL_ID` |
++
++## Cutover Sequence
++
++1. Announce maintenance window.
++2. Freeze legacy writes.
++3. Create final SQLite backup.
++4. Record backup file size and SHA256 checksum.
++5. Verify rollback owner is online.
++6. Run final migration against production PostgreSQL.
++7. Validate row counts.
++8. Validate API smoke tests and API contract tests.
++9. Switch Django production database configuration.
++10. Keep writes disabled until validation passes.
++11. Enable writes only after validation gates pass.
++12. Monitor post-cutover metrics.
++
++## Validation Gates
++
++- `python manage.py check`
++- `pytest`
++- API health check
++- API contract smoke tests
++- login/session smoke test
++- row-count validation
++- rollback readiness check
++
++## Stop Conditions
++
++Stop cutover immediately if:
++
++- final backup is missing,
++- backup checksum does not match,
++- rollback owner is unavailable,
++- API contract test fails,
++- row count mismatch is unresolved,
++- authentication/session behavior is uncertain,
++- production database URL points to test/dry-run/staging/dev database.
++
++## Security Rules
++
++- Never commit production secrets.
++- Never print raw database passwords.
++- Never expose session IDs, password hashes, reset tokens or 2FA codes.
++- Use approved secret manager for production values.
++
++## Current Phase Decision
++
++This phase creates readiness gates and documentation only. Actual production
++cutover remains blocked until all approvals and production secrets are provided
++through the approved deployment process.
+diff --git a/docs/migration/PRODUCTION_ROLLBACK_PLAN.md b/docs/migration/PRODUCTION_ROLLBACK_PLAN.md
+new file mode 100644
+index 0000000..8eb3754
+--- /dev/null
++++ b/docs/migration/PRODUCTION_ROLLBACK_PLAN.md
+@@ -0,0 +1,56 @@
++# Production Rollback Plan
++
++## Phase
++
++Phase 10.4 - Production Database Cutover Readiness
++
++## Rollback Objective
++
++Restore service to the legacy database path if production cutover validation
++fails.
++
++## Rollback Owner
++
++The rollback owner must be assigned before cutover:
++
++```text
++PHASE10_ROLLBACK_OWNER
++```
++
++## Rollback Steps
++
++1. Keep Django writes disabled.
++2. Stop production traffic switch.
++3. Route application/API traffic back to legacy service.
++4. Restore verified SQLite backup if the legacy source was modified.
++5. Re-run health checks.
++6. Re-run API contract smoke tests.
++7. Confirm admin login/session behavior.
++8. Document failure reason and corrective phase.
++
++## Rollback Verification
++
++| Check | Required |
++|---|---|
++| Legacy backup exists | Yes |
++| Backup checksum matches | Yes |
++| Rollback owner online | Yes |
++| Traffic route-back plan ready | Yes |
++| API smoke test command ready | Yes |
++| Auth/session validation ready | Yes |
++
++## Rollback Window
++
++Rollback window must stay open until:
++
++- post-cutover monitoring is clean,
++- application writes are validated,
++- API contracts are stable,
++- rollback owner signs off.
++
++## Current Status
++
++```text
++ROLLBACK PLAN DOCUMENTED
++PRODUCTION ROLLBACK NOT EXECUTED
++```
+diff --git a/scripts/phase10_cutover_readiness.py b/scripts/phase10_cutover_readiness.py
+new file mode 100644
+index 0000000..705e913
+--- /dev/null
++++ b/scripts/phase10_cutover_readiness.py
+@@ -0,0 +1,190 @@
++"""Phase 10.4 production database cutover readiness gate.
++
++This script does not execute cutover. It only checks whether the documented
++production prerequisites are present before a human-approved cutover window.
++"""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++from urllib.parse import urlparse
++
++try:
++    from scripts.check_phase10_postgres_connection import mask_database_url
++except ImportError:  # pragma: no cover - used when running this file directly.
++    from check_phase10_postgres_connection import mask_database_url
++
++
++REQUIRED_FLAGS = {
++    "PHASE10_MAINTENANCE_WINDOW_APPROVED": "maintenance window approval",
++    "PHASE10_LEGACY_WRITE_FREEZE_APPROVED": "legacy write freeze approval",
++    "PHASE10_ROLLBACK_APPROVED": "rollback plan approval",
++    "PHASE10_FINAL_BACKUP_VERIFIED": "final backup verification",
++}
++REQUIRED_VALUES = {
++    "PHASE10_PRODUCTION_DATABASE_URL": "production PostgreSQL database URL",
++    "PHASE10_FINAL_BACKUP_PATH": "final legacy backup path",
++    "PHASE10_FINAL_BACKUP_SHA256": "final backup SHA256 checksum",
++    "PHASE10_ROLLBACK_OWNER": "assigned rollback owner",
++    "PHASE10_CUTOVER_APPROVAL_ID": "cutover approval identifier",
++}
++NON_PRODUCTION_MARKERS = {"dryrun", "dry_run", "test", "staging", "dev"}
++PRODUCTION_FORBIDDEN_DATABASE_NAMES = {"postgres", "template0", "template1"}
++
++
++def env_flag_enabled(value):
++    """Return True when an approval-style environment flag is explicitly enabled."""
++    return str(value or "").strip().lower() in {"1", "true", "yes", "approved"}
++
++
++def database_name_from_url(database_url):
++    """Extract the database name from a PostgreSQL URL."""
++    return urlparse(database_url).path.lstrip("/")
++
++
++def validate_production_database_url(database_url):
++    """Validate that a production URL looks like a real PostgreSQL production target."""
++    errors = []
++    parsed = urlparse(database_url or "")
++    database_name = database_name_from_url(database_url or "").lower()
++
++    if not database_url:
++        errors.append("PHASE10_PRODUCTION_DATABASE_URL is not configured.")
++    elif parsed.scheme not in {"postgres", "postgresql"}:
++        errors.append("Production database URL must use postgres/postgresql scheme.")
++    elif not database_name:
++        errors.append("Production database URL must include a database name.")
++    else:
++        if database_name in PRODUCTION_FORBIDDEN_DATABASE_NAMES:
++            errors.append("Production cutover must not target a system database.")
++        if any(marker in database_name for marker in NON_PRODUCTION_MARKERS):
++            errors.append(
++                "Production cutover URL still points to a non-production database name."
++            )
++
++    return {
++        "database_name": database_name,
++        "masked_database_url": mask_database_url(database_url),
++        "errors": errors,
++    }
++
++
++def sha256_file(path):
++    """Return SHA256 checksum for a backup file."""
++    hasher = hashlib.sha256()
++    with Path(path).open("rb") as file_handle:
++        for chunk in iter(lambda: file_handle.read(1024 * 1024), b""):
++            hasher.update(chunk)
++    return hasher.hexdigest()
++
++
++def validate_backup(path_value, expected_sha256):
++    """Validate final backup presence and checksum without creating files."""
++    errors = []
++    backup_path = Path(path_value) if path_value else None
++    actual_sha256 = ""
++    size_bytes = None
++
++    if not path_value:
++        errors.append("PHASE10_FINAL_BACKUP_PATH is not configured.")
++    elif not backup_path.exists():
++        errors.append(f"Final backup file does not exist: {path_value}")
++    elif not backup_path.is_file():
++        errors.append(f"Final backup path is not a file: {path_value}")
++    else:
++        size_bytes = backup_path.stat().st_size
++        actual_sha256 = sha256_file(backup_path)
++        if expected_sha256 and actual_sha256.lower() != expected_sha256.lower():
++            errors.append("Final backup SHA256 checksum does not match.")
++
++    if not expected_sha256:
++        errors.append("PHASE10_FINAL_BACKUP_SHA256 is not configured.")
++
++    return {
++        "path": path_value or "",
++        "exists": bool(backup_path and backup_path.exists()),
++        "size_bytes": size_bytes,
++        "actual_sha256": actual_sha256,
++        "expected_sha256_configured": bool(expected_sha256),
++        "errors": errors,
++    }
++
++
++def evaluate_cutover_readiness(env=None):
++    """Evaluate all Phase 10.4 cutover prerequisites."""
++    env = env or os.environ
++    errors = []
++    approvals = {}
++    configured_values = {}
++
++    for key, label in REQUIRED_FLAGS.items():
++        enabled = env_flag_enabled(env.get(key))
++        approvals[key] = {
++            "label": label,
++            "approved": enabled,
++        }
++        if not enabled:
++            errors.append(f"Missing approval: {label} ({key}).")
++
++    for key, label in REQUIRED_VALUES.items():
++        value = env.get(key, "")
++        configured_values[key] = bool(value)
++        if not value:
++            errors.append(f"Missing required value: {label} ({key}).")
++
++    database_validation = validate_production_database_url(
++        env.get("PHASE10_PRODUCTION_DATABASE_URL", "")
++    )
++    backup_validation = validate_backup(
++        env.get("PHASE10_FINAL_BACKUP_PATH", ""),
++        env.get("PHASE10_FINAL_BACKUP_SHA256", ""),
++    )
++    errors.extend(database_validation["errors"])
++    errors.extend(backup_validation["errors"])
++
++    ready = not errors
++    return {
++        "status": "ready" if ready else "blocked",
++        "ready_for_cutover": ready,
++        "production_cutover_executed": False,
++        "production_database_switched": False,
++        "legacy_writes_enabled": False,
++        "database": database_validation,
++        "backup": backup_validation,
++        "approvals": approvals,
++        "configured_values": configured_values,
++        "rollback": {
++            "owner": env.get("PHASE10_ROLLBACK_OWNER", ""),
++            "approval_present": approvals["PHASE10_ROLLBACK_APPROVED"]["approved"],
++            "traffic_route_back_plan_required": True,
++        },
++        "validation_gates": {
++            "phase_10_3_reconciliation_required": True,
++            "api_contract_tests_required": True,
++            "smoke_tests_required": True,
++            "post_cutover_monitoring_required": True,
++        },
++        "errors": errors,
++    }
++
++
++def main():
++    """CLI entrypoint for Phase 10.4 cutover readiness."""
++    parser = argparse.ArgumentParser(description="Phase 10.4 cutover readiness gate")
++    parser.add_argument(
++        "--json",
++        action="store_true",
++        help="Print JSON output. This is the default and kept for clarity.",
++    )
++    _args = parser.parse_args()
++    result = evaluate_cutover_readiness()
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0 if result["ready_for_cutover"] else 2
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
