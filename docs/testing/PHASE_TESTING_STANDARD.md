@@ -49,6 +49,7 @@ Run all migrated modules:
 - crm
 - sales
 - cms
+- accounts/auth
 
 Purpose:
 

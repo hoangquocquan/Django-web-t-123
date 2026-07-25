@@ -49,9 +49,13 @@ Invoke-Step "Step 5: CMS module tests" {
     pytest django_backend/apps/cms/tests
 }
 
+Invoke-Step "Step 6: Auth module tests" {
+    pytest django_backend/apps/accounts/tests
+}
+
 Push-Location $BackendPath
 try {
-    Invoke-Step "Step 6: Full regression tests" {
+    Invoke-Step "Step 7: Full regression tests" {
         pytest
     }
 }

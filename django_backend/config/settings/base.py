@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     "apps.crm",
     "apps.sales",
     "apps.cms",
+    "apps.accounts",
 ]
 
 

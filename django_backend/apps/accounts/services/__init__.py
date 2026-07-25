@@ -1,0 +1,1 @@
+"""Authentication compatibility services."""

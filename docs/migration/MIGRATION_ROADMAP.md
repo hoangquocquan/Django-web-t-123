@@ -64,15 +64,13 @@ Migration Testing Standard Completed.
 
 ## Current
 
-### Architecture Review
-
-Phase review packages are waiting for architecture review before continuing to Phase 8.
-
-## Planned
-
 ### Phase 8
 
 Authentication Migration
+
+Phase này tạo read-only auth mapping, permission matrix, security review, hash compatibility checks và rollback plan mà không thay đổi legacy login/session behavior.
+
+## Planned
 
 ### Phase 9
 
