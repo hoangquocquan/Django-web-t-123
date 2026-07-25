@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.common",
     "apps.catalog",
+    "apps.crm",
 ]
 
 

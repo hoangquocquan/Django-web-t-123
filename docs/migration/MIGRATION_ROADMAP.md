@@ -38,17 +38,13 @@ Phase này củng cố test fixture, kiểm tra database routing, review composi
 
 ## Current
 
-### Phase 4.2
-
-Catalog ORM Stabilization & Migration Readiness
-
-Phase này chuẩn hóa repository, kiểm tra query count và tạo playbook để CRM, Sales, CMS có thể đi theo cùng một pattern.
-
-## Planned
-
 ### Phase 5
 
 CRM Migration
+
+Phase này tạo ORM read-only cho customers, customer notes và contact requests, đồng thời chuẩn hóa repository/service boundary cho CRM.
+
+## Planned
 
 ### Phase 6
 
