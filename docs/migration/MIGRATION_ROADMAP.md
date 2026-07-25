@@ -62,24 +62,88 @@ CMS Migration
 
 Authentication Migration
 
-Auth read-only mapping, permission matrix, security review, hash compatibility
-checks, and rollback plan.
-
-### Migration Testing Standard
-
-Migration Testing Standard Completed.
-
-## Current
-
 ### Phase 9
 
-API Cutover
+API Health Cutover
 
-Cut over only the read-only `/api/health` endpoint to Django while preserving
-the legacy response contract and documenting rollback.
+### Phase 9.1
+
+Business API Cutover
+
+### Phase 9.2
+
+API Hardening & Production Readiness
+
+### Phase 9.3
+
+Migration Readiness Validation
 
 ## Planned
 
 ### Phase 10
 
-Production cutover planning
+Database Ownership Migration - PLANNED
+
+### Phase 10.1
+
+PostgreSQL Schema Design - PLANNED
+
+### Phase 10.2
+
+Database Dry Run Migration - PLANNED
+
+### Phase 10.3
+
+Data Validation Reconciliation - PLANNED
+
+### Phase 10.4
+
+Production Database Cutover - PLANNED
+
+### Phase 11
+
+Legacy System Shutdown - PLANNED
+
+### Phase 11.1
+
+Legacy API Decommission - PLANNED
+
+### Phase 11.2
+
+Legacy Database Archive - PLANNED
+
+### Phase 11.3
+
+Legacy Code Removal - PLANNED
+
+### Phase 12
+
+Production Hardening - PLANNED
+
+### Phase 12.1
+
+Performance Optimization - PLANNED
+
+### Phase 12.2
+
+Security Hardening - PLANNED
+
+### Phase 12.3
+
+Operation Monitoring - PLANNED
+
+### Phase 13
+
+Django Native Modernization - PLANNED
+
+### Phase 13.1
+
+Architecture Cleanup - PLANNED
+
+### Phase 13.2
+
+Technical Debt Reduction - PLANNED
+
+### Phase 13.3
+
+Advanced Django Optimization - PLANNED
