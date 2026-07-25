@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>{{ article.seo_title|default:article.title }}</title>
+  <meta name="description" content="{{ article.seo_description|default:article.description }}">
+</head>
+<body>
+  <main>
+    <p><a href="{% url 'news:list' %}">Quay lại tin tức</a></p>
+    <article>
+      <p>{{ article.category.name }} - {{ article.author|default:"MecPrecision" }}</p>
+      <h1>{{ article.title }}</h1>
+      <img src="{{ article.image }}" alt="{{ article.title }}" width="640">
+      <p>{{ article.description }}</p>
+      <div>{{ article.content|linebreaks }}</div>
+      <p>Tag: {{ article.tags_text|default:"-" }}</p>
+    </article>
+  </main>
+</body>
+</html>

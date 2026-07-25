@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Liên hệ - MecPrecision Django</title>
+</head>
+<body>
+  <main>
+    <h1>Danh sách liên hệ</h1>
+
+    <form method="get">
+      <input name="q" value="{{ q }}" placeholder="Tìm theo tên, công ty, email, sản phẩm">
+      <select name="status">
+        <option value="">Tất cả trạng thái</option>
+        <option value="new" {% if status == "new" %}selected{% endif %}>Mới</option>
+        <option value="processing" {% if status == "processing" %}selected{% endif %}>Đang xử lý</option>
+        <option value="done" {% if status == "done" %}selected{% endif %}>Đã xử lý</option>
+      </select>
+      <button type="submit">Tìm</button>
+    </form>
+
+    <table border="1" cellpadding="8">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Khách</th>
+          <th>Công ty</th>
+          <th>Sản phẩm quan tâm</th>
+          <th>Trạng thái</th>
+          <th>Đã đọc</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contact in page_obj %}
+          <tr>
+            <td>{{ contact.id }}</td>
+            <td><a href="{% url 'customers:contact-detail' contact.id %}">{{ contact.name }}</a></td>
+            <td>{{ contact.company|default:"-" }}</td>
+            <td>{{ contact.interested_product|default:"-" }}</td>
+            <td>{{ contact.status }}</td>
+            <td>{% if contact.is_read %}Rồi{% else %}Chưa{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">Chưa có liên hệ phù hợp.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

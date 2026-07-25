@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>{{ quote.project_name }} - Báo giá</title>
+</head>
+<body>
+  <main>
+    <p><a href="{% url 'quotation:list' %}">Quay lại danh sách báo giá</a></p>
+    <h1>{{ quote.project_name|default:"Yêu cầu báo giá" }}</h1>
+
+    <section>
+      <h2>Khách hàng</h2>
+      <p>{{ quote.customer.company_name|default:quote.customer.contact_name }}</p>
+      <p>Email: {{ quote.customer.email|default:"-" }}</p>
+      <p>Điện thoại: {{ quote.customer.phone|default:"-" }}</p>
+    </section>
+
+    <section>
+      <h2>Nội dung yêu cầu</h2>
+      <p>Trạng thái: {{ quote.status }}</p>
+      <p>{{ quote.message|default:"-" }}</p>
+      <p>Ghi chú nội bộ: {{ quote.internal_note|default:"-" }}</p>
+    </section>
+
+    <section>
+      <h2>Chi tiết sản phẩm cần báo giá</h2>
+      <ul>
+        {% for item in quote.items.all %}
+          <li>{{ item.drawing_code|default:"Không có mã bản vẽ" }} - SL: {{ item.quantity }} - Dung sai: {{ item.tolerance|default:"-" }}</li>
+        {% empty %}
+          <li>Chưa có dòng chi tiết.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>File đính kèm</h2>
+      <ul>
+        {% for file in quote.files.all %}
+          <li><a href="{{ file.file_url }}">{{ file.file_name }}</a> - {{ file.file_type|default:"file" }}</li>
+        {% empty %}
+          <li>Chưa có file đính kèm.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

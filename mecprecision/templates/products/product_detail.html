@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ product.name }} - MecPrecision</title>
+  </head>
+  <body>
+    <a href="{% url 'products:list' %}">Quay lại danh sách</a>
+    <h1>{{ product.name }}</h1>
+    <p><strong>Danh mục:</strong> {{ product.category.name }}</p>
+    <p>{{ product.short_description }}</p>
+    <img src="{{ product.main_image }}" alt="{{ product.name }}" style="max-width: 360px;" />
+    <h2>Thông số</h2>
+    <ul>
+      {% for spec in product.specs.all %}
+        <li>{{ spec.spec_name }}: {{ spec.spec_value }} {{ spec.unit }}</li>
+      {% empty %}
+        <li>Chưa có thông số.</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

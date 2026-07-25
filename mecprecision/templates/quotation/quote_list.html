@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Yêu cầu báo giá - MecPrecision Django</title>
+</head>
+<body>
+  <main>
+    <h1>Danh sách yêu cầu báo giá</h1>
+
+    <form method="get">
+      <input name="q" value="{{ q }}" placeholder="Tìm theo dự án, khách hàng, email, điện thoại">
+      <select name="status">
+        <option value="">Tất cả trạng thái</option>
+        <option value="new" {% if status == "new" %}selected{% endif %}>Yêu cầu mới</option>
+        <option value="assigned" {% if status == "assigned" %}selected{% endif %}>Đã phân công</option>
+        <option value="processing" {% if status == "processing" %}selected{% endif %}>Đang xử lý</option>
+        <option value="quoted" {% if status == "quoted" %}selected{% endif %}>Đã báo giá</option>
+        <option value="completed" {% if status == "completed" %}selected{% endif %}>Hoàn thành</option>
+      </select>
+      <button type="submit">Tìm</button>
+    </form>
+
+    <table border="1" cellpadding="8">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Dự án</th>
+          <th>Khách hàng</th>
+          <th>Email</th>
+          <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for quote in page_obj %}
+          <tr>
+            <td>{{ quote.id }}</td>
+            <td><a href="{% url 'quotation:detail' quote.id %}">{{ quote.project_name|default:"-" }}</a></td>
+            <td>{{ quote.customer.company_name|default:quote.customer.contact_name }}</td>
+            <td>{{ quote.customer.email|default:"-" }}</td>
+            <td>{{ quote.status }}</td>
+            <td>{{ quote.created_at }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">Chưa có yêu cầu báo giá phù hợp.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

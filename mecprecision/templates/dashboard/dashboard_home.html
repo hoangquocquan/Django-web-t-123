@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard - MecPrecision Django</title>
+</head>
+<body>
+  <main>
+    <h1>Dashboard</h1>
+    <section>
+      <h2>Số liệu chính</h2>
+      <ul>
+        <li>Sản phẩm: {{ dashboard.counts.products }}</li>
+        <li>Tin tức: {{ dashboard.counts.news }}</li>
+        <li>Khách hàng: {{ dashboard.counts.customers }}</li>
+        <li>Yêu cầu báo giá: {{ dashboard.counts.quotes }}</li>
+        <li>Liên hệ mới: {{ dashboard.counts.new_contacts }}</li>
+        <li>Người online: {{ dashboard.counts.online_users }}</li>
+        <li>Lượt truy cập: {{ dashboard.counts.visits }}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Lượt truy cập gần nhất</h2>
+      <table border="1" cellpadding="8">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Path</th>
+            <th>IP</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in dashboard.recent_visits %}
+            <tr>
+              <td>{{ visit.id }}</td>
+              <td>{{ visit.path }}</td>
+              <td>{{ visit.remote_addr|default:"-" }}</td>
+              <td>{{ visit.visited_at }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">Chưa có lượt truy cập.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

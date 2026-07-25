@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Django Products - MecPrecision</title>
+  </head>
+  <body>
+    <h1>Sản phẩm từ Django Product module</h1>
+    <form method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Tìm sản phẩm..." />
+      <button type="submit">Tìm</button>
+    </form>
+    <ul>
+      {% for product in page_obj %}
+        <li>
+          <a href="{% url 'products:detail' product.id %}">{{ product.name }}</a>
+          - {{ product.category.name }}
+          - {{ product.status }}
+        </li>
+      {% empty %}
+        <li>Chưa có sản phẩm.</li>
+      {% endfor %}
+    </ul>
+    <p>Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</p>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+services:
+  # Service web là ứng dụng Python backend + frontend static.
+  web:
+    # build . nghĩa là Docker sẽ đọc Dockerfile ở thư mục hiện tại.
+    build: .
+    ports:
+      # Map port máy thật 8000 sang port container 8000.
+      - "8000:8000"
+    environment:
+      # Các biến này giống .env nhưng dùng riêng khi chạy bằng Docker Compose.
+      MEC_ENV: production
+      MEC_DEBUG: "false"
+      MEC_HOST: 0.0.0.0
+      MEC_PORT: 8000
+      MEC_DATABASE_PATH: /app/backend/database/mecprecision.sqlite
+      MEC_REDIS_CACHE_ENABLED: "true"
+      MEC_REDIS_URL: redis://redis:6379/0
+    depends_on:
+      # web sẽ khởi động sau redis.
+      - redis
+
+  # Service redis dùng để cache dữ liệu đọc nhiều hoặc sau này lưu session.
+  redis:
+    image: redis:7-alpine
+    ports:
+      # Map Redis ra máy host để có thể test bằng tool bên ngoài nếu cần.
+      - "6379:6379"
+
+  # Nginx mẫu cho production/local staging.
+  # Khi bật service này, truy cập qua http://127.0.0.1:8080.
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web

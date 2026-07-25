@@ -1,0 +1,4 @@
+# Dự án chủ yếu dùng thư viện có sẵn của Python.
+# pypdf giúp AI đọc được chữ trong các file PDF dạng text/catalogue.
+pypdf>=4.3.1
+Django>=5.0,<6.0

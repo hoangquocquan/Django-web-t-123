@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>{{ contact.name }} - Liên hệ</title>
+</head>
+<body>
+  <main>
+    <p><a href="{% url 'customers:contact-list' %}">Quay lại danh sách liên hệ</a></p>
+    <h1>Liên hệ từ {{ contact.name }}</h1>
+
+    <dl>
+      <dt>Công ty</dt>
+      <dd>{{ contact.company|default:"-" }}</dd>
+      <dt>Email</dt>
+      <dd>{{ contact.email|default:"-" }}</dd>
+      <dt>Điện thoại</dt>
+      <dd>{{ contact.phone|default:"-" }}</dd>
+      <dt>Sản phẩm quan tâm</dt>
+      <dd>{{ contact.interested_product|default:"-" }}</dd>
+      <dt>Nội dung</dt>
+      <dd>{{ contact.message|default:"-" }}</dd>
+      <dt>Ghi chú nội bộ</dt>
+      <dd>{{ contact.note|default:"-" }}</dd>
+    </dl>
+  </main>
+</body>
+</html>

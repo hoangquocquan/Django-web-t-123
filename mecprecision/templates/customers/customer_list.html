@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Khách hàng - MecPrecision Django</title>
+</head>
+<body>
+  <main>
+    <h1>Danh sách khách hàng</h1>
+
+    <form method="get">
+      <input name="q" value="{{ q }}" placeholder="Tìm theo công ty, tên, email, điện thoại">
+      <button type="submit">Tìm</button>
+    </form>
+
+    <table border="1" cellpadding="8">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Công ty</th>
+          <th>Người liên hệ</th>
+          <th>Email</th>
+          <th>Điện thoại</th>
+          <th>Quốc gia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in page_obj %}
+          <tr>
+            <td>{{ customer.id }}</td>
+            <td><a href="{% url 'customers:detail' customer.id %}">{{ customer.company_name|default:"-" }}</a></td>
+            <td>{{ customer.contact_name }}</td>
+            <td>{{ customer.email|default:"-" }}</td>
+            <td>{{ customer.phone|default:"-" }}</td>
+            <td>{{ customer.country }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">Chưa có khách hàng phù hợp.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

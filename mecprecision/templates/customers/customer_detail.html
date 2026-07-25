@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>{{ customer.contact_name }} - Khách hàng</title>
+</head>
+<body>
+  <main>
+    <p><a href="{% url 'customers:list' %}">Quay lại danh sách khách hàng</a></p>
+    <h1>{{ customer.company_name|default:customer.contact_name }}</h1>
+
+    <dl>
+      <dt>Người liên hệ</dt>
+      <dd>{{ customer.contact_name }}</dd>
+      <dt>Email</dt>
+      <dd>{{ customer.email|default:"-" }}</dd>
+      <dt>Điện thoại</dt>
+      <dd>{{ customer.phone|default:"-" }}</dd>
+      <dt>Quốc gia</dt>
+      <dd>{{ customer.country }}</dd>
+    </dl>
+
+    <h2>Ghi chú chăm sóc</h2>
+    <ul>
+      {% for note in customer.notes.all %}
+        <li>{{ note.note }} - {{ note.created_by|default:"Không rõ" }}</li>
+      {% empty %}
+        <li>Chưa có ghi chú.</li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

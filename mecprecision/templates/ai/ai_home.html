@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>AI - MecPrecision Django</title>
+</head>
+<body>
+  <main>
+    <h1>AI Service</h1>
+
+    <section>
+      <h2>Trạng thái</h2>
+      <ul>
+        <li>Provider: {{ status.provider }}</li>
+        <li>Ollama URL: {{ status.ollama_url }}</li>
+        <li>Model: {{ status.model }}</li>
+        <li>Timeout: {{ status.timeout_seconds }} giây</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>API demo</h2>
+      <ul>
+        <li>POST /ai/api/chat/</li>
+        <li>POST /ai/api/translate/</li>
+        <li>POST /ai/api/developer/</li>
+        <li>POST /ai/api/product-content/</li>
+        <li>GET /ai/api/contacts-summary/</li>
+        <li>GET /ai/api/quote-analysis/</li>
+        <li>GET /ai/api/smart-search/?q=cnc</li>
+        <li>GET /ai/api/dashboard-insights/</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Lịch sử gần nhất</h2>
+      <table border="1" cellpadding="8">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Kênh</th>
+            <th>Câu hỏi</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in messages %}
+            <tr>
+              <td>{{ item.id }}</td>
+              <td>{{ item.channel }}</td>
+              <td>{{ item.user_message|truncatechars:80 }}</td>
+              <td>{{ item.status }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">Chưa có lịch sử AI.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

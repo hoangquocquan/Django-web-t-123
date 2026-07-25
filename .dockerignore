@@ -1,0 +1,12 @@
+# Các file/thư mục dưới đây không cần đưa vào Docker image.
+# Bỏ chúng ra giúp image nhẹ hơn và tránh copy nhầm dữ liệu local.
+__pycache__/
+*.pyc
+.venv/
+venv/
+.git/
+.env
+
+# Log và file upload là dữ liệu runtime, không nên đóng cứng vào image.
+backend/logs/
+backend/uploads/

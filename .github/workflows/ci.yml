@@ -1,0 +1,41 @@
+name: CI
+
+# Workflow này chạy tự động trên GitHub để kiểm tra code trước khi triển khai.
+on:
+  # Chạy khi push code lên GitHub.
+  push:
+  # Chạy khi tạo pull request.
+  pull_request:
+
+jobs:
+  test:
+    name: Run automated checks
+    # Dùng Windows để giống môi trường máy local hiện tại của bạn.
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source code
+        # Tải source code của repository vào máy runner.
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        # Cài Python 3.12 trên runner.
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile backend
+        # Kiểm tra toàn bộ file Python có lỗi cú pháp không.
+        run: python -m compileall -q backend
+
+      - name: Check frontend JavaScript syntax
+        # Kiểm tra cú pháp JavaScript của frontend.
+        run: node --check frontend/js/app.js
+
+      - name: Run unit and integration tests
+        # Chạy toàn bộ test trong backend/tests.
+        run: python -m unittest discover -s backend/tests -p "test_*.py"
+
+      - name: Build Docker image
+        # Build Docker image để phát hiện lỗi Dockerfile sớm.
+        run: docker build -t mecprecision-vietnam:ci .
