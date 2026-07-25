@@ -1,0 +1,916 @@
+diff --git a/docs/codex-prompts/PHASE_9.3_MIGRATION_READINESS_VALIDATION.md b/docs/codex-prompts/PHASE_9.3_MIGRATION_READINESS_VALIDATION.md
+new file mode 100644
+index 0000000..3f34041
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_9.3_MIGRATION_READINESS_VALIDATION.md
+@@ -0,0 +1,507 @@
++# TASK: Phase 9.3 - Migration Readiness Validation
++
++
++Project:
++
++mecprecision-vietnam
++
++
++
++====================================================
++SAVE THIS PROMPT
++====================================================
++
++
++Before implementation:
++
++
++Save this task specification into:
++
++
++C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\codex-prompts
++
++
++Filename:
++
++
++PHASE_9.3_MIGRATION_READINESS_VALIDATION.md
++
++
++
++====================================================
++STATUS
++====================================================
++
++
++Completed:
++
++
++Phase 9
++API Health Cutover
++
++
++Phase 9.1
++Business API Cutover
++
++
++Phase 9.2
++API Hardening & Production Readiness
++
++
++
++====================================================
++OBJECTIVE
++====================================================
++
++
++Perform final migration readiness assessment
++before Phase 10 Database Ownership Migration.
++
++
++
++Goal:
++
++
++Confirm Django application layer is ready
++for database ownership transition.
++
++
++
++====================================================
++IMPORTANT RULES
++====================================================
++
++
++DO NOT:
++
++
++- migrate database
++- change managed=False models
++- create schema migrations
++- write to legacy database
++- shutdown legacy system
++- change production traffic
++
++
++
++ONLY:
++
++
++- audit
++- document
++- validate
++- prepare migration plan
++
++
++
++====================================================
++READ REQUIRED DOCUMENTS
++====================================================
++
++
++Before implementation read:
++
++
++docs/testing/PHASE_TESTING_STANDARD.md
++
++
++docs/migration/API_CUTOVER_STRATEGY.md
++
++
++docs/migration/API_CUTOVER_ROLLBACK_PLAN.md
++
++
++docs/api/API_CUTOVER_MATRIX.md
++
++
++docs/security/API_SECURITY_REVIEW.md
++
++
++docs/api/API_REFERENCE.md
++
++
++docs/architecture/adr/
++
++
++
++====================================================
++TASK 1
++====================================================
++
++
++Create Database Dependency Inventory.
++
++
++
++Create:
++
++
++docs/migration/DATABASE_DEPENDENCY_INVENTORY.md
++
++
++
++Include:
++
++
++- all Django apps
++- models used
++- database tables
++- legacy database dependency
++- read/write status
++- migration priority
++
++
++
++Cover:
++
++
++Catalog
++
++CRM
++
++Sales
++
++CMS
++
++Accounts
++
++API
++
++
++
++====================================================
++TASK 2
++====================================================
++
++
++Create Unmanaged Model Inventory.
++
++
++
++Create:
++
++
++docs/migration/UNMANAGED_MODEL_INVENTORY.md
++
++
++
++Include:
++
++
++For every model:
++
++
++- app name
++- model name
++- table name
++- managed status
++- primary key
++- foreign keys
++- dependencies
++- migration complexity
++
++
++
++====================================================
++TASK 3
++====================================================
++
++
++Create Database Migration Impact Assessment.
++
++
++
++Create:
++
++
++docs/migration/DATABASE_MIGRATION_IMPACT_ASSESSMENT.md
++
++
++
++Include:
++
++
++- schema risks
++- data volume risks
++- relationship risks
++- constraint risks
++- indexing risks
++- downtime risks
++
++
++
++====================================================
++TASK 4
++====================================================
++
++
++Create Phase 10 Preparation Plan.
++
++
++
++Create:
++
++
++docs/migration/PHASE_10_PREPARATION_PLAN.md
++
++
++
++Include:
++
++
++- PostgreSQL migration approach
++- backup strategy
++- rollback strategy
++- migration order
++- validation steps
++- cutover checklist
++
++
++
++====================================================
++TASK 5
++====================================================
++
++
++Create Data Ownership Matrix.
++
++
++
++Create:
++
++
++docs/migration/DATA_OWNERSHIP_MATRIX.md
++
++
++
++Define:
++
++
++Current:
++
++
++Legacy database owner
++
++
++Future:
++
++
++Django database owner
++
++
++
++For:
++
++
++Catalog
++
++CRM
++
++Sales
++
++CMS
++
++Accounts
++
++
++
++====================================================
++TASK 6
++====================================================
++
++
++Create Migration Gate Checklist.
++
++
++
++Create:
++
++
++docs/migration/MIGRATION_READINESS_CHECKLIST.md
++
++
++
++Checklist:
++
++
++Application Layer:
++
++[ ] API ready
++
++[ ] Services ready
++
++[ ] Repository boundaries confirmed
++
++
++Database:
++
++[ ] Inventory completed
++
++[ ] Dependencies mapped
++
++[ ] Backup strategy ready
++
++
++Testing:
++
++[ ] Regression passed
++
++[ ] Rollback tested
++
++
++Security:
++
++[ ] Authentication boundary reviewed
++
++[ ] Sensitive data protected
++
++
++
++====================================================
++TASK 7
++====================================================
++
++
++Run Validation Tests.
++
++
++
++Execute:
++
++
++python manage.py check
++
++
++pytest
++
++
++.\scripts\run_migration_test.ps1
++
++
++
++Expected:
++
++
++PASS
++
++
++
++====================================================
++TASK 8
++====================================================
++
++
++Create Review Package.
++
++
++
++Create:
++
++
++docs/reviews/
++
++
++PHASE_9.3_REVIEW_SUMMARY.md
++
++
++PHASE_9.3_CHANGESET.patch
++
++
++
++Summary:
++
++
++Objective
++
++Inventory results
++
++Migration readiness
++
++Risks
++
++Phase 10 recommendation
++
++
++
++====================================================
++GIT REQUIREMENTS
++====================================================
++
++
++Create branch:
++
++
++migration/phase-9.3-readiness-validation
++
++
++
++Commit:
++
++
++git add .
++
++
++git commit -m "docs: add migration readiness validation"
++
++
++
++Create tag:
++
++
++phase-9.3-readiness-complete
++
++
++
++====================================================
++FINAL OUTPUT
++====================================================
++
++
++Return:
++
++
++1.
++
++Branch name
++
++
++2.
++
++Base commit
++
++
++3.
++
++Final commit
++
++
++4.
++
++Documents created
++
++
++5.
++
++Testing result
++
++
++6.
++
++Review package location
++
++
++7.
++
++Git tag
++
++
++
++FINAL STATUS:
++
++
++WAITING FOR ARCHITECT REVIEW
++
++
++STOP.
++
++DO NOT START PHASE 10.
+\ No newline at end of file
+diff --git a/docs/migration/DATABASE_DEPENDENCY_INVENTORY.md b/docs/migration/DATABASE_DEPENDENCY_INVENTORY.md
+new file mode 100644
+index 0000000..3a5bf35
+--- /dev/null
++++ b/docs/migration/DATABASE_DEPENDENCY_INVENTORY.md
+@@ -0,0 +1,71 @@
++# Database Dependency Inventory
++
++## Scope
++
++Phase 9.3 validates database dependencies before Phase 10 Database Ownership
++Migration. This is an audit-only document. No schema, data or ownership is
++changed.
++
++Legacy database:
++
++```text
++backend/database/mecprecision.sqlite
++```
++
++Observed size:
++
++```text
++544768 bytes
++```
++
++## Row Count Snapshot
++
++| Table | Rows |
++|---|---:|
++| `product_categories` | 8 |
++| `materials` | 4 |
++| `machines` | 4 |
++| `manufacturing_processes` | 5 |
++| `capabilities` | 4 |
++| `products` | 11 |
++| `product_images` | 3 |
++| `product_specs` | 5 |
++| `product_materials` | 6 |
++| `product_processes` | 7 |
++| `capability_machines` | 5 |
++| `customers` | 3 |
++| `customer_notes` | 0 |
++| `contact_requests` | 6 |
++| `quote_requests` | 1 |
++| `quote_request_items` | 1 |
++| `quote_files` | 1 |
++| `cms_pages` | 10 |
++| `cms_menu_items` | 18 |
++| `cms_banners` | 0 |
++| `newsletter_subscribers` | 1 |
++| `admin_users` | 5 |
++| `admin_sessions` | 1 |
++| `login_attempts` | 30 |
++| `password_reset_tokens` | 2 |
++| `admin_2fa_challenges` | 0 |
++| `admin_activity_logs` | 55 |
++
++## Application Dependencies
++
++| Django app | Models used | Database tables | Legacy dependency | Read/write status | Migration priority |
++|---|---|---|---|---|---|
++| `apps.catalog` | `Category`, `Material`, `Machine`, `ManufacturingProcess`, `Capability`, `Product`, `ProductImage`, `ProductSpec`, `ProductMaterial`, `ProductProcess`, `CapabilityMachine` | catalog/product/capability tables | required for product APIs and sales quote item references | read-only | 1 |
++| `apps.crm` | `Customer`, `CustomerNote`, `ContactRequest` | `customers`, `customer_notes`, `contact_requests` | required by customer/contact APIs and sales quote owner records | read-only | 2 |
++| `apps.sales` | `QuoteRequest`, `QuoteRequestItem`, `QuoteFile` | quotation tables | depends on CRM customers and Catalog products/materials | read-only | 3 |
++| `apps.cms` | `CmsPage`, `CmsMenuItem`, `CmsBanner`, `NewsletterSubscriber` | CMS content/menu/newsletter tables | required by CMS API and future frontend content cutover | read-only | 4 |
++| `apps.accounts` | `AdminUser`, `AdminSession`, `LoginAttempt`, `PasswordResetToken`, `AdminTwoFactorChallenge`, `AdminActivityLog` | auth/admin tables | required for auth preparation and future admin ownership | read-only | 5 |
++| `apps.api` | no database models | none directly | calls service layer only | read-only | cross-cutting |
++| `apps.core` | no business models | legacy database file health check | required for health cutover | read-only | cross-cutting |
++
++## Readiness Notes
++
++- Catalog should migrate before Sales because quote items reference products and
++  materials.
++- CRM should migrate before Sales because quotes reference customers.
++- Accounts should not migrate until authentication/security cutover is approved.
++- API app has no model ownership and should remain a routing/serialization layer.
+diff --git a/docs/migration/DATABASE_MIGRATION_IMPACT_ASSESSMENT.md b/docs/migration/DATABASE_MIGRATION_IMPACT_ASSESSMENT.md
+new file mode 100644
+index 0000000..9b8fc1f
+--- /dev/null
++++ b/docs/migration/DATABASE_MIGRATION_IMPACT_ASSESSMENT.md
+@@ -0,0 +1,83 @@
++# Database Migration Impact Assessment
++
++## Objective
++
++Assess the impact of moving from legacy SQLite ownership to Django database
++ownership in a future Phase 10. This document does not perform the migration.
++
++## Schema Risks
++
++- SQLite text-heavy columns may need stricter PostgreSQL field decisions.
++- Boolean values currently represented by SQLite must be validated during import.
++- Composite key relationship tables require explicit migration handling.
++- Existing slug/email uniqueness must be verified before adding strict
++  production constraints.
++
++## Data Volume Risks
++
++Current data volume is small, but migration design must still support growth.
++
++Highest observed row counts:
++
++- `admin_activity_logs`: 55
++- `login_attempts`: 30
++- `cms_menu_items`: 18
++- `products`: 11
++- `cms_pages`: 10
++
++Risk is low for current volume, but future production data needs batching and
++validation scripts.
++
++## Relationship Risks
++
++- Sales depends on CRM and Catalog.
++- Quote items reference live product/material master data; historical snapshot
++  behavior is not fully solved yet.
++- `contact_requests` has no durable relationship to `customers`.
++- CMS menu has self-referential parent/child hierarchy.
++- Auth tables include session/token/challenge relationships that require
++  security approval before ownership migration.
++
++## Constraint Risks
++
++- Unique constraints: category slug, material name, product slug, admin email,
++  newsletter email and CMS page slug need duplicate validation.
++- Nullable foreign keys and `DO_NOTHING` relationships must be reviewed before
++  PostgreSQL enforcement.
++- Composite primary keys should either remain composite or receive an approved
++  surrogate-key design.
++
++## Indexing Risks
++
++Recommended future indexes:
++
++- `products.slug`
++- `products.category_id`
++- `contact_requests.status`
++- `contact_requests.created_at`
++- `quote_requests.customer_id`
++- `quote_requests.status`
++- `cms_pages.slug`
++- `cms_menu_items.location`
++- `admin_users.email`
++- `admin_sessions.admin_id`
++- `admin_activity_logs.created_at`
++
++## Downtime Risks
++
++Current database size suggests low migration time, but downtime risk depends on
++production traffic and write freeze strategy.
++
++Phase 10 should define:
++
++- backup point
++- legacy write freeze window
++- migration dry run
++- validation window
++- rollback deadline
++
++## Overall Assessment
++
++Application layer readiness is strong for read-only APIs. Database ownership
++migration should proceed only after Phase 10 planning confirms backups,
++validation scripts, rollback plan and auth boundary decisions.
+diff --git a/docs/migration/DATA_OWNERSHIP_MATRIX.md b/docs/migration/DATA_OWNERSHIP_MATRIX.md
+new file mode 100644
+index 0000000..07c0529
+--- /dev/null
++++ b/docs/migration/DATA_OWNERSHIP_MATRIX.md
+@@ -0,0 +1,26 @@
++# Data Ownership Matrix
++
++## Current Ownership
++
++All migrated modules currently read from legacy SQLite. Legacy remains the data
++owner and Django is a read-only consumer.
++
++## Future Ownership Target
++
++Future ownership means Django-managed database tables become the source of
++truth after a reviewed Phase 10 migration.
++
++| Domain | Current owner | Current Django mode | Future owner | Future Django mode | Ownership migration note |
++|---|---|---|---|---|---|
++| Catalog | Legacy SQLite/backend | read-only unmanaged | Django | managed models | migrate first because Sales depends on products/materials |
++| CRM | Legacy SQLite/backend | read-only unmanaged | Django | managed models | migrate before Sales; define contact/customer matching separately |
++| Sales | Legacy SQLite/backend | read-only unmanaged | Django | managed models | migrate after Catalog and CRM; preserve quote snapshot semantics |
++| CMS | Legacy SQLite/backend | read-only unmanaged | Django | managed models | migrate after content/menu validation; preserve nested menu tree |
++| Accounts | Legacy SQLite/backend | read-only unmanaged | Django after security approval | managed models or dedicated auth design | highest security risk; do not migrate before auth cutover review |
++
++## Ownership Rules
++
++- No module changes owner without backup, validation and rollback plan.
++- No write API is enabled until its module owns data safely.
++- Accounts ownership requires separate security review.
++- API layer should remain independent of database ownership details.
+diff --git a/docs/migration/MIGRATION_READINESS_CHECKLIST.md b/docs/migration/MIGRATION_READINESS_CHECKLIST.md
+new file mode 100644
+index 0000000..e4cfceb
+--- /dev/null
++++ b/docs/migration/MIGRATION_READINESS_CHECKLIST.md
+@@ -0,0 +1,55 @@
++# Migration Readiness Checklist
++
++## Application Layer
++
++- [x] API ready
++- [x] Services ready
++- [x] Repository boundaries confirmed
++- [x] Read-only API permission enforced
++- [x] Pagination contract added
++
++## Database
++
++- [x] Inventory completed
++- [x] Dependencies mapped
++- [x] Unmanaged models inventoried
++- [x] Backup strategy documented
++- [ ] PostgreSQL target schema approved
++- [ ] Dry-run migration completed
++
++## Testing
++
++- [x] Regression passed
++- [x] API hardening tests passed
++- [x] Database safety tests passed
++- [x] Rollback plan documented
++- [ ] Production rollback rehearsed
++
++## Security
++
++- [x] Authentication boundary reviewed
++- [x] Sensitive data protected in read APIs
++- [x] Login cutover not implemented accidentally
++- [ ] Production auth cutover approved
++- [ ] Rate limiting approved
++
++## Operations
++
++- [x] Monitoring plan documented
++- [x] Production readiness checklist documented
++- [ ] Metrics tooling deployed
++- [ ] Alert thresholds approved
++
++## Phase 10 Gate Decision
++
++Status:
++
++```text
++CONDITIONALLY READY FOR PHASE 10 PLANNING
++```
++
++Condition:
++
++Phase 10 may start planning and dry-run design. It must not start real database
++ownership migration until PostgreSQL schema, backup/restore validation and
++security gates are approved.
+diff --git a/docs/migration/PHASE_10_PREPARATION_PLAN.md b/docs/migration/PHASE_10_PREPARATION_PLAN.md
+new file mode 100644
+index 0000000..57b9370
+--- /dev/null
++++ b/docs/migration/PHASE_10_PREPARATION_PLAN.md
+@@ -0,0 +1,65 @@
++# Phase 10 Preparation Plan
++
++## Objective
++
++Prepare for Database Ownership Migration without starting it in Phase 9.3.
++
++## PostgreSQL Migration Approach
++
++1. Keep legacy SQLite as source of truth during planning.
++2. Create managed Django model design proposal per module.
++3. Create PostgreSQL target schema in an isolated environment.
++4. Run import scripts against a copied SQLite backup.
++5. Validate row counts, relationships and API responses.
++6. Repeat dry run until deterministic.
++7. Only then schedule controlled production cutover.
++
++## Backup Strategy
++
++- Create SQLite file backup before every dry run.
++- Store backup with timestamp and checksum.
++- Export schema and row counts.
++- Preserve uploaded/media file paths separately.
++- Keep rollback copy available until post-cutover validation passes.
++
++## Rollback Strategy
++
++Rollback means:
++
++1. Stop routing writes to Django-owned database.
++2. Route application traffic back to legacy backend/database.
++3. Restore legacy SQLite backup if any write freeze was violated.
++4. Compare health/API contract tests again.
++5. Document rollback cause and create minor phase correction.
++
++## Migration Order
++
++Recommended order:
++
++1. Catalog reference data
++2. CRM customers and contact requests
++3. Sales quotation data
++4. CMS pages/menu/banner/newsletter
++5. Accounts/auth data after security approval
++
++## Validation Steps
++
++- Compare row counts for every table.
++- Validate foreign-key relationships.
++- Validate unique fields.
++- Run Django API tests against migrated target database.
++- Run full regression suite.
++- Compare representative API responses before/after migration.
++- Verify no password/session/token sensitive fields are exposed.
++
++## Cutover Checklist
++
++- [ ] Target PostgreSQL schema approved.
++- [ ] Dry-run migration completed.
++- [ ] Row-count validation passed.
++- [ ] Relationship validation passed.
++- [ ] Backup and restore tested.
++- [ ] Rollback plan rehearsed.
++- [ ] Auth boundary reviewed.
++- [ ] API regression passed.
++- [ ] Production traffic switch approved.
+diff --git a/docs/migration/UNMANAGED_MODEL_INVENTORY.md b/docs/migration/UNMANAGED_MODEL_INVENTORY.md
+new file mode 100644
+index 0000000..95b61da
+--- /dev/null
++++ b/docs/migration/UNMANAGED_MODEL_INVENTORY.md
+@@ -0,0 +1,66 @@
++# Unmanaged Model Inventory
++
++## Scope
++
++All listed models inherit `LegacyReadOnlyModel` and use `managed = False`.
++Phase 9.3 does not convert any model to managed mode.
++
++## Catalog
++
++| App | Model | Table | Managed | Primary key | Foreign keys | Dependencies | Complexity |
++|---|---|---|---|---|---|---|---|
++| catalog | `Category` | `product_categories` | False | `id` | none | Product | Low |
++| catalog | `Material` | `materials` | False | `id` | none | ProductMaterial, QuoteRequestItem | Low |
++| catalog | `Machine` | `machines` | False | `id` | none | CapabilityMachine | Low |
++| catalog | `ManufacturingProcess` | `manufacturing_processes` | False | `id` | none | ProductProcess | Low |
++| catalog | `Capability` | `capabilities` | False | `id` | none | CapabilityMachine | Low |
++| catalog | `Product` | `products` | False | `id` | `category_id` -> `Category` | ProductImage, ProductSpec, ProductMaterial, ProductProcess, QuoteRequestItem | Medium |
++| catalog | `ProductImage` | `product_images` | False | `id` | `product_id` -> `Product` | Product | Low |
++| catalog | `ProductSpec` | `product_specs` | False | `id` | `product_id` -> `Product` | Product | Low |
++| catalog | `ProductMaterial` | `product_materials` | False | composite `product`, `material` | `product_id`, `material_id` | Product, Material | High |
++| catalog | `ProductProcess` | `product_processes` | False | composite `product`, `process` | `product_id`, `process_id` | Product, ManufacturingProcess | High |
++| catalog | `CapabilityMachine` | `capability_machines` | False | composite `capability`, `machine` | `capability_id`, `machine_id` | Capability, Machine | High |
++
++## CRM
++
++| App | Model | Table | Managed | Primary key | Foreign keys | Dependencies | Complexity |
++|---|---|---|---|---|---|---|---|
++| crm | `Customer` | `customers` | False | `id` | none | CustomerNote, QuoteRequest | Medium |
++| crm | `CustomerNote` | `customer_notes` | False | `id` | `customer_id` -> `Customer` | Customer | Low |
++| crm | `ContactRequest` | `contact_requests` | False | `id` | none | future customer matching | Medium |
++
++## Sales
++
++| App | Model | Table | Managed | Primary key | Foreign keys | Dependencies | Complexity |
++|---|---|---|---|---|---|---|---|
++| sales | `QuoteRequest` | `quote_requests` | False | `id` | `customer_id` -> `Customer` | Customer, QuoteRequestItem, QuoteFile | High |
++| sales | `QuoteRequestItem` | `quote_request_items` | False | `id` | `quote_request_id`, `product_id`, `material_id` | QuoteRequest, Product, Material | High |
++| sales | `QuoteFile` | `quote_files` | False | `id` | `quote_request_id` -> `QuoteRequest` | file storage path | Medium |
++
++## CMS
++
++| App | Model | Table | Managed | Primary key | Foreign keys | Dependencies | Complexity |
++|---|---|---|---|---|---|---|---|
++| cms | `CmsPage` | `cms_pages` | False | `id` | none | API/frontend content | Low |
++| cms | `CmsMenuItem` | `cms_menu_items` | False | `id` | self `parent_id` | nested menu tree | Medium |
++| cms | `CmsBanner` | `cms_banners` | False | `id` | none | media paths/scheduling | Medium |
++| cms | `NewsletterSubscriber` | `newsletter_subscribers` | False | `id` | none | email export/compliance | Low |
++
++## Accounts
++
++| App | Model | Table | Managed | Primary key | Foreign keys | Dependencies | Complexity |
++|---|---|---|---|---|---|---|---|
++| accounts | `AdminUser` | `admin_users` | False | `id` | none | sessions, tokens, logs | High |
++| accounts | `AdminSession` | `admin_sessions` | False | `session_id` | `admin_id` -> `AdminUser` | active admin sessions | High |
++| accounts | `LoginAttempt` | `login_attempts` | False | `id` | none | security audit | Medium |
++| accounts | `PasswordResetToken` | `password_reset_tokens` | False | `token` | `admin_id` -> `AdminUser` | password reset workflow | High |
++| accounts | `AdminTwoFactorChallenge` | `admin_2fa_challenges` | False | `challenge_id` | `admin_id` -> `AdminUser` | 2FA workflow | High |
++| accounts | `AdminActivityLog` | `admin_activity_logs` | False | `id` | nullable `admin_id` -> `AdminUser` | audit log | Medium |
++
++## Highest Complexity Areas
++
++- Composite primary keys in catalog relationship tables.
++- Sales quote ownership and snapshot semantics.
++- Auth/session/token migration.
++- CMS nested menu self-references.
++- File path preservation for quote files and media-backed content.
