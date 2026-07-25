@@ -4,6 +4,8 @@ from scripts.phase10_dry_run_migration import (
     evaluate_dry_run,
     is_safe_test_database_url,
     mask_database_url,
+    map_sqlite_type_to_postgres,
+    target_columns_for_table,
 )
 from scripts.check_phase10_postgres_connection import (
     evaluate_postgres_environment,
@@ -79,3 +81,24 @@ def test_postgres_environment_validator_rejects_invalid_scheme():
 
     assert validation["is_postgresql_url"] is False
     assert "postgres/postgresql URL scheme" in validation["errors"][0]
+
+
+def test_dry_run_type_mapping_for_postgresql_target_schema():
+    """SQLite column types should map to safe PostgreSQL dry-run types."""
+    assert map_sqlite_type_to_postgres("INTEGER") == "BIGINT"
+    assert map_sqlite_type_to_postgres("REAL") == "NUMERIC"
+    assert map_sqlite_type_to_postgres("TEXT") == "TEXT"
+
+
+def test_dry_run_link_tables_use_surrogate_id_for_target_schema():
+    """Approved PostgreSQL design uses surrogate IDs for catalog link tables."""
+    columns = [
+        {"name": "product_id", "type": "INTEGER", "notnull": True, "pk": 1},
+        {"name": "material_id", "type": "INTEGER", "notnull": True, "pk": 2},
+    ]
+
+    target_columns = target_columns_for_table(columns, "product_materials")
+
+    assert target_columns[0]["name"] == "id"
+    assert target_columns[0]["primary_key"] is True
+    assert target_columns[1]["name"] == "product_id"

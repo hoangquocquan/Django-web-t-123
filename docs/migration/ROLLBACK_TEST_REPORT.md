@@ -2,36 +2,70 @@
 
 ## Phase
 
-Phase 10.2 - Database Dry Run Migration
+Phase 10.2 - Database Dry Run Migration Execution
 
 ## Result
 
 ```text
-ROLLBACK SMOKE TEST: NO-OP PASS
-FULL POSTGRESQL ROLLBACK: NOT EXECUTED
+ROLLBACK TEST PASS
 ```
 
-## Explanation
+## Rollback Method
 
-Because no PostgreSQL dry-run database was configured, no target schema, target
-data or production traffic was changed. The safe rollback result is therefore a
-no-op rollback: there was nothing to restore and legacy SQLite remained
-unchanged.
+The dry-run created the PostgreSQL target schema and copied rows inside one
+database transaction. After validation, the transaction was rolled back.
+
+Temporary schema:
+
+```text
+phase10_dry_run
+```
 
 ## Verified
 
-- Legacy database opened read-only.
-- Legacy database table count remained available.
-- No PostgreSQL target was created by this phase.
-- No production traffic was routed.
-- No write API was enabled.
+| Check | Result |
+|---|---|
+| Transaction rollback executed | PASS |
+| Target schema persisted after rollback | NO |
+| Legacy SQLite remained unchanged | PASS |
+| Production database touched | NO |
+| Production traffic routed | NO |
+| Write API enabled | NO |
 
-## Pending Full Rollback Test
+## Legacy Database Safety
 
-After a real test PostgreSQL dry run exists, rollback must verify:
+SQLite size before dry-run:
 
-1. target database can be dropped or restored,
-2. legacy SQLite backup can be restored,
-3. API contract tests pass after rollback,
-4. row counts return to source baseline,
-5. rollback duration is measured.
+```text
+544768 bytes
+```
+
+SQLite size after dry-run:
+
+```text
+544768 bytes
+```
+
+Result:
+
+```text
+legacy_database_unchanged: true
+```
+
+## Rollback Scope
+
+This rollback validates the test PostgreSQL dry-run transaction only.
+
+It does not replace future production rollback rehearsals, which must still
+cover:
+
+1. production backup restore,
+2. traffic routing rollback,
+3. API contract comparison,
+4. file/media restore,
+5. operator approval workflow.
+
+## Recommendation
+
+The dry-run rollback behavior is acceptable for Phase 10.2 review. Continue to
+reconciliation only after architecture approval.
