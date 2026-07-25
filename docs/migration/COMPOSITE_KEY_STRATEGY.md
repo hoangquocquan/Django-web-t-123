@@ -152,3 +152,47 @@ If the project later moves to PostgreSQL or Django-managed schema, the team can 
 - normalize extra relationship fields.
 
 That decision is outside Phase 4.
+
+## 8. Phase 10.1 PostgreSQL Ownership Decision
+
+Phase 10.1 revisits the future ownership decision for the currently mapped
+catalog link tables.
+
+Target PostgreSQL decision:
+
+```text
+Use surrogate `id` primary keys on Django-managed link tables.
+Preserve legacy pair identity with unique constraints.
+```
+
+Reason:
+
+- Django managed models and admin workflows are simpler with one primary key.
+- PostgreSQL can still enforce the original pair uniqueness.
+- Data reconciliation remains clear because the original FK pairs are preserved.
+- Future APIs can refer to link rows consistently if write workflows are added.
+
+## 9. Phase 10.1 Target Table Rules
+
+| Table | Target primary key | Required unique constraint | Notes |
+|---|---|---|---|
+| `product_materials` | new surrogate `id` | unique `(product_id, material_id)` | preserve product/material identity |
+| `product_processes` | new surrogate `id` | unique `(product_id, process_id)` | preserve `step_order` and `note` |
+| `capability_machines` | new surrogate `id` | unique `(capability_id, machine_id)` | preserve capability/machine identity |
+
+## 10. Migration Validation
+
+Before adding surrogate IDs in a dry-run migration:
+
+- confirm no duplicate FK pairs exist,
+- confirm every FK points to an existing parent row,
+- import the original FK columns unchanged,
+- compare row counts before and after import,
+- verify APIs return the same product/capability relationships.
+
+## 11. Rejected For Phase 10.1
+
+- Keeping composite primary keys as the managed Django target.
+- Dropping link tables in favor of implicit Django many-to-many tables.
+- Removing relationship metadata such as `step_order` or `note`.
+- Changing production data before a dry run is approved.
