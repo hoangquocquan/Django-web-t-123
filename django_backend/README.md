@@ -1,4 +1,4 @@
-# Django Backend - Phase 2 Foundation
+# Django Backend - Migration Foundation
 
 This folder contains the parallel Django backend for the `mecprecision-vietnam` migration.
 
@@ -72,7 +72,15 @@ PostgreSQL URLs are prepared for future phases, but Phase 2 does not migrate any
 
 ## Health APIs
 
-Versioned API:
+Phase 9 starts API cutover with a low-risk read-only health endpoint.
+
+Legacy-compatible route now served by Django:
+
+```http
+GET /api/health
+```
+
+Versioned route:
 
 ```http
 GET /api/v1/health/
@@ -88,10 +96,25 @@ Expected response:
 
 ```json
 {
-  "success": true,
-  "message": "Django foundation ready",
-  "phase": 2
+  "status": "ok",
+  "api_version": "1.1.0",
+  "environment": "development",
+  "database": "ok",
+  "sqlite_version": "3.x.x",
+  "redis_enabled": false
 }
+```
+
+Cutover status:
+
+```http
+GET /api/v1/cutover/health/
+```
+
+Rollback smoke endpoint:
+
+```http
+GET /api/v1/cutover/health/rollback/
 ```
 
 ## Run Checks

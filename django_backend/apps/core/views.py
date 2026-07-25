@@ -1,7 +1,13 @@
-"""Infrastructure-only health check views for migration Phase 2."""
+"""Infrastructure and compatibility views for the Django migration backend."""
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+from .api_compatibility import (
+    build_cutover_status_response,
+    build_health_rollback_response,
+    build_legacy_health_response,
+)
 
 
 @api_view(["GET"])
@@ -10,19 +16,25 @@ def root_health(request):
     return Response(
         {
             "success": True,
-            "message": "Django foundation ready",
-            "phase": 2,
+            "message": "Django migration backend ready",
+            "phase": 9,
         }
     )
 
 
 @api_view(["GET"])
 def health_check(request):
-    """Return the Phase 2 health check response."""
-    return Response(
-        {
-            "success": True,
-            "message": "Django foundation ready",
-            "phase": 2,
-        }
-    )
+    """Serve the legacy-compatible health API from Django."""
+    return Response(build_legacy_health_response())
+
+
+@api_view(["GET"])
+def api_cutover_status(request):
+    """Show the selected Phase 9 cutover route and compatibility contract."""
+    return Response(build_cutover_status_response())
+
+
+@api_view(["GET"])
+def health_rollback_status(request):
+    """Expose the rollback plan for the health endpoint cutover."""
+    return Response(build_health_rollback_response())

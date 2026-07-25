@@ -58,20 +58,28 @@ Sales Quotation Hardening & Transaction Governance
 
 CMS Migration
 
+### Phase 8
+
+Authentication Migration
+
+Auth read-only mapping, permission matrix, security review, hash compatibility
+checks, and rollback plan.
+
 ### Migration Testing Standard
 
 Migration Testing Standard Completed.
 
 ## Current
 
-### Phase 8
-
-Authentication Migration
-
-Phase này tạo read-only auth mapping, permission matrix, security review, hash compatibility checks và rollback plan mà không thay đổi legacy login/session behavior.
-
-## Planned
-
 ### Phase 9
 
 API Cutover
+
+Cut over only the read-only `/api/health` endpoint to Django while preserving
+the legacy response contract and documenting rollback.
+
+## Planned
+
+### Phase 10
+
+Production cutover planning
