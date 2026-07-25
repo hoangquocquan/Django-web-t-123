@@ -848,3 +848,125 @@ The Phase A-H plan is consistent with the original detailed Phase 0-11 migration
 - Phase H maps to dashboard migration.
 
 The important correction is that authentication remains late even though some user tables can be mapped earlier as read-only data.
+
+## 13. Phase 3.2 Update - Phase 4 Preparation Requirements
+
+Before Phase 4 creates read-only unmanaged Django ORM models, the following architecture rules must be approved.
+
+### Multi Database Requirement
+
+Phase 4 should use two database aliases:
+
+```text
+default = Django internal database
+legacy  = existing SQLite legacy database
+```
+
+Rules:
+
+- `default` is for Django internal tables and future Django-managed data.
+- `legacy` is for unmanaged read-only legacy models.
+- Do not run migrations against `legacy`.
+- Do not write to `legacy` in Phase 4.
+
+Reference:
+
+- `DJANGO_MULTI_DATABASE_STRATEGY.md`
+
+### Read-Only ORM Requirement
+
+All legacy ORM models in Phase 4 must be:
+
+```python
+class Meta:
+    managed = False
+    db_table = "legacy_table_name"
+```
+
+Read-only protection must include:
+
+- unmanaged models,
+- service/repository-only access,
+- future `LegacyReadOnlyModel` concept,
+- tests proving writes are blocked,
+- no Django admin write registration.
+
+Reference:
+
+- `ORM_READONLY_PROTECTION.md`
+
+### Testing Requirement
+
+Phase 4 must include:
+
+- connection test,
+- model mapping test,
+- relationship test,
+- read-only protection test,
+- data integrity/count parity test,
+- repository parity test.
+
+Reference:
+
+- `ORM_TEST_STRATEGY.md`
+
+### Catalog Slice Order
+
+Phase 4A catalog order:
+
+```text
+4A.1 Foundation
+  - ProductCategory
+  - Material
+  - Machine
+  - ManufacturingProcess
+
+4A.2 Product
+  - Product
+  - ProductImage
+  - ProductSpec
+
+4A.3 Relationships
+  - ProductMaterial
+  - ProductProcess
+  - CapabilityMachine
+```
+
+Capability should be mapped before `CapabilityMachine`.
+
+Reference:
+
+- `CATALOG_ORM_MIGRATION_PLAN.md`
+
+### Access Layer Requirement
+
+Future data access should follow:
+
+```text
+API
+  -> Service Layer
+  -> Repository Adapter
+  -> Unmanaged Django ORM
+  -> Legacy Database
+```
+
+Rules:
+
+- API must not directly call ORM.
+- Business logic must not live inside models.
+- Repository/service pattern remains the safety boundary.
+
+Reference:
+
+- `LEGACY_ACCESS_LAYER_STRATEGY.md`
+
+### Phase 4 Stop Conditions
+
+Stop and request architecture review if:
+
+- a model requires schema changes,
+- a composite key cannot be mapped safely,
+- a media field tempts conversion to `ImageField`/`FileField`,
+- an auth/session/password table requires behavior migration,
+- a view-backed model is needed for writes,
+- a test would mutate the real legacy SQLite database.
