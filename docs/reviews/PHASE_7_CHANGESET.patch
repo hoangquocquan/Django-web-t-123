@@ -1,0 +1,643 @@
+diff --git a/django_backend/apps/cms/__init__.py b/django_backend/apps/cms/__init__.py
+new file mode 100644
+index 0000000..656d6b0
+--- /dev/null
++++ b/django_backend/apps/cms/__init__.py
+@@ -0,0 +1 @@
++"""CMS read-only migration app."""
+diff --git a/django_backend/apps/cms/apps.py b/django_backend/apps/cms/apps.py
+new file mode 100644
+index 0000000..a93c265
+--- /dev/null
++++ b/django_backend/apps/cms/apps.py
+@@ -0,0 +1,10 @@
++"""CMS app configuration."""
++
++from django.apps import AppConfig
++
++
++class CmsConfig(AppConfig):
++    """Register the CMS read-only ORM app."""
++
++    default_auto_field = "django.db.models.BigAutoField"
++    name = "apps.cms"
+diff --git a/django_backend/apps/cms/models.py b/django_backend/apps/cms/models.py
+new file mode 100644
+index 0000000..2ef3cc1
+--- /dev/null
++++ b/django_backend/apps/cms/models.py
+@@ -0,0 +1,97 @@
++"""Read-only unmanaged ORM models for legacy CMS tables."""
++
++from django.db import models
++
++from apps.common.models import LegacyReadOnlyModel
++
++
++class CmsPage(LegacyReadOnlyModel):
++    """Dynamic CMS page such as About, Contact or Terms."""
++
++    id = models.IntegerField(primary_key=True)
++    title = models.TextField()
++    slug = models.TextField(unique=True)
++    content = models.TextField(blank=True, null=True)
++    seo_title = models.TextField(blank=True, null=True)
++    seo_description = models.TextField(blank=True, null=True)
++    status = models.TextField(default="draft")
++    sort_order = models.IntegerField(default=0)
++    created_at = models.TextField()
++    updated_at = models.TextField()
++
++    class Meta:
++        managed = False
++        db_table = "cms_pages"
++        ordering = ["sort_order", "-id"]
++
++    def __str__(self):
++        return self.title
++
++
++class CmsMenuItem(LegacyReadOnlyModel):
++    """Nested CMS menu item for header, footer or sidebar navigation."""
++
++    id = models.IntegerField(primary_key=True)
++    location = models.TextField(default="header")
++    parent = models.ForeignKey(
++        "self",
++        db_column="parent_id",
++        on_delete=models.SET_NULL,
++        related_name="children",
++        blank=True,
++        null=True,
++    )
++    label = models.TextField()
++    url = models.TextField()
++    sort_order = models.IntegerField(default=0)
++    status = models.TextField(default="published")
++
++    class Meta:
++        managed = False
++        db_table = "cms_menu_items"
++        ordering = ["location", "parent_id", "sort_order", "id"]
++
++    def __str__(self):
++        return self.label
++
++
++class CmsBanner(LegacyReadOnlyModel):
++    """CMS banner for home slider, popup or advertisement placement."""
++
++    id = models.IntegerField(primary_key=True)
++    title = models.TextField()
++    placement = models.TextField(default="home_slider")
++    image_url = models.TextField(blank=True, null=True)
++    link_url = models.TextField(blank=True, null=True)
++    content = models.TextField(blank=True, null=True)
++    sort_order = models.IntegerField(default=0)
++    status = models.TextField(default="draft")
++    starts_at = models.TextField(blank=True, null=True)
++    ends_at = models.TextField(blank=True, null=True)
++    created_at = models.TextField()
++
++    class Meta:
++        managed = False
++        db_table = "cms_banners"
++        ordering = ["sort_order", "-id"]
++
++    def __str__(self):
++        return self.title
++
++
++class NewsletterSubscriber(LegacyReadOnlyModel):
++    """Newsletter subscriber record managed by legacy CMS."""
++
++    id = models.IntegerField(primary_key=True)
++    email = models.TextField(unique=True)
++    status = models.TextField(default="subscribed")
++    subscribed_at = models.TextField()
++    unsubscribed_at = models.TextField(blank=True, null=True)
++
++    class Meta:
++        managed = False
++        db_table = "newsletter_subscribers"
++        ordering = ["-id"]
++
++    def __str__(self):
++        return self.email
+diff --git a/django_backend/apps/cms/repositories/__init__.py b/django_backend/apps/cms/repositories/__init__.py
+new file mode 100644
+index 0000000..499695e
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/__init__.py
+@@ -0,0 +1 @@
++"""CMS repository adapters."""
+diff --git a/django_backend/apps/cms/repositories/banner_repository.py b/django_backend/apps/cms/repositories/banner_repository.py
+new file mode 100644
+index 0000000..21986f6
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/banner_repository.py
+@@ -0,0 +1,22 @@
++"""Read-only repository adapter for CMS banners."""
++
++from apps.cms.models import CmsBanner
++from apps.cms.repositories.base import LegacyCmsRepository
++
++
++class CmsBannerRepository(LegacyCmsRepository):
++    """Read CMS banners from the legacy database."""
++
++    model = CmsBanner
++
++    def list_banners(self):
++        """Return all banners."""
++        return self.queryset().all()
++
++    def list_active_banners(self, placement):
++        """Return published banners for one placement."""
++        return self.queryset().filter(placement=placement, status="published")
++
++    def get_banner(self, banner_id):
++        """Return one banner by legacy ID."""
++        return self.queryset().get(id=banner_id)
+diff --git a/django_backend/apps/cms/repositories/base.py b/django_backend/apps/cms/repositories/base.py
+new file mode 100644
+index 0000000..a1d1df6
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/base.py
+@@ -0,0 +1,15 @@
++"""Repository base for CMS models stored in the legacy database."""
++
++
++class LegacyCmsRepository:
++    """Standardize CMS repository access through database alias `legacy`."""
++
++    database_alias = "legacy"
++    model = None
++
++    def queryset(self):
++        """Create a base QuerySet that always reads from the legacy database."""
++        if self.model is None:
++            raise NotImplementedError("Repository subclass must define model.")
++
++        return self.model.objects.using(self.database_alias)
+diff --git a/django_backend/apps/cms/repositories/menu_repository.py b/django_backend/apps/cms/repositories/menu_repository.py
+new file mode 100644
+index 0000000..165c16e
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/menu_repository.py
+@@ -0,0 +1,33 @@
++"""Read-only repository adapter for CMS menu items."""
++
++from django.db.models import Prefetch
++
++from apps.cms.models import CmsMenuItem
++from apps.cms.repositories.base import LegacyCmsRepository
++
++
++class CmsMenuRepository(LegacyCmsRepository):
++    """Read menu items from the legacy database."""
++
++    model = CmsMenuItem
++
++    def list_menu_items(self):
++        """Return all menu items with parent loaded."""
++        return self.queryset().select_related("parent").all()
++
++    def list_menu_by_location(self, location):
++        """Return menu items for one location such as header or footer."""
++        return self.list_menu_items().filter(location=location)
++
++    def list_root_menu_items(self, location=None):
++        """Return root menu items and preload children for nested menu rendering."""
++        queryset = self.queryset().filter(parent_id__isnull=True)
++        if location:
++            queryset = queryset.filter(location=location)
++        return queryset.prefetch_related(
++            Prefetch("children", queryset=self.queryset().order_by("sort_order", "id"))
++        )
++
++    def get_menu_item(self, item_id):
++        """Return one menu item by legacy ID."""
++        return self.list_menu_items().get(id=item_id)
+diff --git a/django_backend/apps/cms/repositories/newsletter_repository.py b/django_backend/apps/cms/repositories/newsletter_repository.py
+new file mode 100644
+index 0000000..d3b5358
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/newsletter_repository.py
+@@ -0,0 +1,22 @@
++"""Read-only repository adapter for newsletter subscribers."""
++
++from apps.cms.models import NewsletterSubscriber
++from apps.cms.repositories.base import LegacyCmsRepository
++
++
++class NewsletterRepository(LegacyCmsRepository):
++    """Read newsletter subscribers from the legacy database."""
++
++    model = NewsletterSubscriber
++
++    def list_subscribers(self):
++        """Return all newsletter subscribers."""
++        return self.queryset().all()
++
++    def list_subscribers_by_status(self, status):
++        """Return subscribers filtered by subscription status."""
++        return self.queryset().filter(status=status)
++
++    def get_subscriber(self, subscriber_id):
++        """Return one subscriber by legacy ID."""
++        return self.queryset().get(id=subscriber_id)
+diff --git a/django_backend/apps/cms/repositories/page_repository.py b/django_backend/apps/cms/repositories/page_repository.py
+new file mode 100644
+index 0000000..18104f5
+--- /dev/null
++++ b/django_backend/apps/cms/repositories/page_repository.py
+@@ -0,0 +1,26 @@
++"""Read-only repository adapter for CMS pages."""
++
++from apps.cms.models import CmsPage
++from apps.cms.repositories.base import LegacyCmsRepository
++
++
++class CmsPageRepository(LegacyCmsRepository):
++    """Read CMS pages from the legacy database."""
++
++    model = CmsPage
++
++    def list_pages(self):
++        """Return all CMS pages."""
++        return self.queryset().all()
++
++    def list_published_pages(self):
++        """Return published CMS pages for public navigation/content."""
++        return self.queryset().filter(status="published")
++
++    def get_page(self, page_id):
++        """Return one CMS page by legacy ID."""
++        return self.queryset().get(id=page_id)
++
++    def get_published_page_by_slug(self, slug):
++        """Return one published page by slug."""
++        return self.queryset().get(slug=slug, status="published")
+diff --git a/django_backend/apps/cms/services/__init__.py b/django_backend/apps/cms/services/__init__.py
+new file mode 100644
+index 0000000..78bbbe5
+--- /dev/null
++++ b/django_backend/apps/cms/services/__init__.py
+@@ -0,0 +1 @@
++"""CMS service layer."""
+diff --git a/django_backend/apps/cms/services/cms_service.py b/django_backend/apps/cms/services/cms_service.py
+new file mode 100644
+index 0000000..9cd8c26
+--- /dev/null
++++ b/django_backend/apps/cms/services/cms_service.py
+@@ -0,0 +1,43 @@
++"""Read-only CMS service layer."""
++
++from apps.cms.repositories.banner_repository import CmsBannerRepository
++from apps.cms.repositories.menu_repository import CmsMenuRepository
++from apps.cms.repositories.newsletter_repository import NewsletterRepository
++from apps.cms.repositories.page_repository import CmsPageRepository
++
++
++class CmsService:
++    """Service for read-only CMS content workflows."""
++
++    def __init__(
++        self,
++        page_repository=None,
++        menu_repository=None,
++        banner_repository=None,
++        newsletter_repository=None,
++    ):
++        """Allow tests to pass repository doubles without touching the ORM."""
++        self.page_repository = page_repository or CmsPageRepository()
++        self.menu_repository = menu_repository or CmsMenuRepository()
++        self.banner_repository = banner_repository or CmsBannerRepository()
++        self.newsletter_repository = newsletter_repository or NewsletterRepository()
++
++    def list_public_pages(self):
++        """Return published pages."""
++        return self.page_repository.list_published_pages()
++
++    def get_public_page(self, slug):
++        """Return one published page by slug."""
++        return self.page_repository.get_published_page_by_slug(slug)
++
++    def list_navigation(self, location):
++        """Return root menu items and children for a navigation location."""
++        return self.menu_repository.list_root_menu_items(location=location)
++
++    def list_active_banners(self, placement):
++        """Return active banners for a placement."""
++        return self.banner_repository.list_active_banners(placement)
++
++    def list_newsletter_subscribers(self):
++        """Return newsletter subscribers for future export/read views."""
++        return self.newsletter_repository.list_subscribers()
+diff --git a/django_backend/apps/cms/tests/__init__.py b/django_backend/apps/cms/tests/__init__.py
+new file mode 100644
+index 0000000..36a4a61
+--- /dev/null
++++ b/django_backend/apps/cms/tests/__init__.py
+@@ -0,0 +1 @@
++"""CMS ORM tests."""
+diff --git a/django_backend/apps/cms/tests/test_cms_orm.py b/django_backend/apps/cms/tests/test_cms_orm.py
+new file mode 100644
+index 0000000..515f9e6
+--- /dev/null
++++ b/django_backend/apps/cms/tests/test_cms_orm.py
+@@ -0,0 +1,142 @@
++"""Validation tests for Phase 7 read-only CMS ORM mappings."""
++
++from django.db import connections
++import pytest
++
++from apps.cms.models import CmsBanner, CmsMenuItem, CmsPage, NewsletterSubscriber
++from apps.cms.repositories.banner_repository import CmsBannerRepository
++from apps.cms.repositories.menu_repository import CmsMenuRepository
++from apps.cms.repositories.newsletter_repository import NewsletterRepository
++from apps.cms.repositories.page_repository import CmsPageRepository
++from apps.cms.services.cms_service import CmsService
++
++
++def table_count(table_name):
++    """Count rows directly in a legacy table for ORM parity checks."""
++    with connections["legacy"].cursor() as cursor:
++        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
++        return cursor.fetchone()[0]
++
++
++def test_cms_page_model_table_mapping_matches_legacy_count(legacy_db):
++    """CmsPage model maps to `cms_pages`."""
++    assert CmsPage.objects.using("legacy").count() == table_count("cms_pages")
++
++
++def test_cms_menu_model_table_mapping_matches_legacy_count(legacy_db):
++    """CmsMenuItem model maps to `cms_menu_items`."""
++    assert CmsMenuItem.objects.using("legacy").count() == table_count("cms_menu_items")
++
++
++def test_cms_banner_model_table_mapping_matches_legacy_count(legacy_db):
++    """CmsBanner model maps to `cms_banners`, even when the table is empty."""
++    assert CmsBanner.objects.using("legacy").count() == table_count("cms_banners")
++
++
++def test_newsletter_model_table_mapping_matches_legacy_count(legacy_db):
++    """NewsletterSubscriber model maps to `newsletter_subscribers`."""
++    assert NewsletterSubscriber.objects.using("legacy").count() == table_count(
++        "newsletter_subscribers"
++    )
++
++
++def test_menu_self_referential_relationship_is_available(legacy_db):
++    """Menu item self-reference is mapped through parent and children."""
++    menu_item = CmsMenuItem.objects.using("legacy").first()
++
++    assert menu_item is not None
++    assert hasattr(menu_item, "children")
++    assert CmsMenuItem._meta.get_field("parent").remote_field.model is CmsMenuItem
++
++
++def test_menu_items_do_not_have_orphan_parent_references(legacy_db):
++    """Nested menu parent references must point to existing menu items."""
++    with connections["legacy"].cursor() as cursor:
++        cursor.execute(
++            """
++            SELECT COUNT(*)
++            FROM cms_menu_items child
++            LEFT JOIN cms_menu_items parent ON parent.id = child.parent_id
++            WHERE child.parent_id IS NOT NULL AND parent.id IS NULL
++            """
++        )
++        orphan_count = cursor.fetchone()[0]
++
++    assert orphan_count == 0
++
++
++def test_cms_models_block_instance_save_and_delete(legacy_db):
++    """CMS legacy models reject accidental instance writes."""
++    page = CmsPage.objects.using("legacy").first()
++
++    with pytest.raises(RuntimeError):
++        page.save()
++
++    with pytest.raises(RuntimeError):
++        page.delete()
++
++
++def test_cms_models_block_bulk_update_and_delete(legacy_db):
++    """CMS legacy querysets reject accidental bulk writes."""
++    queryset = CmsPage.objects.using("legacy").filter(status="published")
++
++    with pytest.raises(RuntimeError):
++        queryset.update(status="draft")
++
++    with pytest.raises(RuntimeError):
++        queryset.delete()
++
++
++def test_cms_repositories_read_from_legacy_database(legacy_db):
++    """CMS repositories must create QuerySets on alias `legacy`."""
++    assert CmsPageRepository().list_pages()._db == "legacy"
++    assert CmsMenuRepository().list_menu_items()._db == "legacy"
++    assert CmsBannerRepository().list_banners()._db == "legacy"
++    assert NewsletterRepository().list_subscribers()._db == "legacy"
++
++
++def test_cms_service_uses_repositories_for_public_content(legacy_db):
++    """CmsService exposes read-only content through repositories."""
++    page = CmsPage.objects.using("legacy").filter(status="published").first()
++    service = CmsService()
++
++    assert service.get_public_page(page.slug).id == page.id
++    assert list(service.list_public_pages())
++    assert list(service.list_navigation("header"))
++    assert list(service.list_newsletter_subscribers())
++
++
++def test_cms_service_can_use_repository_doubles_without_orm():
++    """Service can be tested without ORM because it depends on repository interfaces."""
++
++    class FakePageRepository:
++        def list_published_pages(self):
++            return ["page-a"]
++
++        def get_published_page_by_slug(self, slug):
++            return {"slug": slug}
++
++    class FakeMenuRepository:
++        def list_root_menu_items(self, location=None):
++            return [f"menu-{location}"]
++
++    class FakeBannerRepository:
++        def list_active_banners(self, placement):
++            return [f"banner-{placement}"]
++
++    class FakeNewsletterRepository:
++        def list_subscribers(self):
++            return ["subscriber-a"]
++
++    service = CmsService(
++        page_repository=FakePageRepository(),
++        menu_repository=FakeMenuRepository(),
++        banner_repository=FakeBannerRepository(),
++        newsletter_repository=FakeNewsletterRepository(),
++    )
++
++    assert service.list_public_pages() == ["page-a"]
++    assert service.get_public_page("about") == {"slug": "about"}
++    assert service.list_navigation("header") == ["menu-header"]
++    assert service.list_active_banners("home_slider") == ["banner-home_slider"]
++    assert service.list_newsletter_subscribers() == ["subscriber-a"]
+diff --git a/django_backend/config/settings/base.py b/django_backend/config/settings/base.py
+index c23de74..653aa1b 100644
+--- a/django_backend/config/settings/base.py
++++ b/django_backend/config/settings/base.py
+@@ -88,6 +88,7 @@ INSTALLED_APPS = [
+     "apps.catalog",
+     "apps.crm",
+     "apps.sales",
++    "apps.cms",
+ ]
+ 
+ 
+diff --git a/django_backend/tests/test_cms_query_patterns.py b/django_backend/tests/test_cms_query_patterns.py
+new file mode 100644
+index 0000000..357b621
+--- /dev/null
++++ b/django_backend/tests/test_cms_query_patterns.py
+@@ -0,0 +1,38 @@
++"""Query pattern tests for CMS repositories."""
++
++from apps.cms.repositories.menu_repository import CmsMenuRepository
++from apps.cms.repositories.page_repository import CmsPageRepository
++
++
++def test_published_pages_use_single_query(legacy_db, django_assert_num_queries):
++    """Published page list should use one legacy query."""
++    repository = CmsPageRepository()
++
++    with django_assert_num_queries(1, using="legacy"):
++        pages = list(repository.list_published_pages())
++
++    assert pages
++
++
++def test_menu_items_select_parent_in_single_query(legacy_db, django_assert_num_queries):
++    """Menu item list should load parent references in one query."""
++    repository = CmsMenuRepository()
++
++    with django_assert_num_queries(1, using="legacy"):
++        menu_items = list(repository.list_menu_items())
++        parent_ids = [item.parent.id for item in menu_items if item.parent_id]
++
++    assert menu_items
++    assert isinstance(parent_ids, list)
++
++
++def test_root_menu_items_prefetch_children(legacy_db, django_assert_num_queries):
++    """Root menu loading should prefetch children with stable query count."""
++    repository = CmsMenuRepository()
++
++    with django_assert_num_queries(2, using="legacy"):
++        root_items = list(repository.list_root_menu_items(location="header"))
++        child_groups = [list(item.children.all()) for item in root_items]
++
++    assert root_items
++    assert len(child_groups) == len(root_items)
+diff --git a/docs/migration/CMS_MIGRATION_LIMITATIONS.md b/docs/migration/CMS_MIGRATION_LIMITATIONS.md
+new file mode 100644
+index 0000000..7b7cb76
+--- /dev/null
++++ b/docs/migration/CMS_MIGRATION_LIMITATIONS.md
+@@ -0,0 +1,57 @@
++# CMS Migration Limitations
++
++## Scope In Phase 7
++
++Phase 7 only implements the CMS/content read-only ORM slice in Django.
++
++Mapped tables:
++
++- `cms_pages`
++- `cms_menu_items`
++- `cms_banners`
++- `newsletter_subscribers`
++
++## What Is Intentionally Not Included
++
++- No CMS write CRUD.
++- No serializer.
++- No API endpoint.
++- No admin UI behavior change.
++- No upload migration.
++- No authentication migration.
++- No page/menu/banner/newsletter table modification.
++
++## Menu Relationship Boundary
++
++`cms_menu_items.parent_id` is a self-referential foreign key.
++
++Django maps it as:
++
++```python
++CmsMenuItem.parent
++CmsMenuItem.children
++```
++
++Current demo data has no nested menu rows, but the relationship is mapped and orphan parent references are tested.
++
++## Banner Data Boundary
++
++`cms_banners` currently has 0 rows in the demo database.
++
++Phase 7 validates table mapping and repository behavior, but cannot validate real banner content until data exists.
++
++## Newsletter Boundary
++
++`newsletter_subscribers` is mapped read-only for future export and CMS read views.
++
++Subscribe/unsubscribe write behavior remains legacy-only until a future approved migration phase.
++
++## Future Readiness
++
++Phase 7 prepares future CMS migration work for:
++
++- public page read API,
++- navigation/menu read API,
++- banner read API,
++- newsletter export,
++- CMS write migration after auth boundary is approved.
+diff --git a/docs/migration/MIGRATION_ROADMAP.md b/docs/migration/MIGRATION_ROADMAP.md
+index c6df30e..8472dde 100644
+--- a/docs/migration/MIGRATION_ROADMAP.md
++++ b/docs/migration/MIGRATION_ROADMAP.md
+@@ -50,22 +50,20 @@ CRM Hardening & Migration Governance
+ 
+ Sales / Quotation Migration
+ 
+-## Current
+-
+ ### Phase 6.1
+ 
+ Sales Quotation Hardening & Transaction Governance
+ 
+-Status: Completed after approval.
+-
+-Phase này ghi lại ADR Sales, snapshot strategy, transaction strategy, file lifecycle strategy, data quality review và playbook trước Phase 7.
+-
+-## Planned
++## Current
+ 
+ ### Phase 7
+ 
+ CMS Migration
+ 
++Phase này tạo ORM read-only cho CMS pages, menu items, banners và newsletter subscribers, đồng thời kiểm tra self-referential menu relationship.
++
++## Planned
++
+ ### Phase 8
+ 
+ Authentication Migration

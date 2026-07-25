@@ -54,13 +54,19 @@ Sales / Quotation Migration
 
 Sales Quotation Hardening & Transaction Governance
 
-## Current
-
 ### Phase 7
 
 CMS Migration
 
-Phase này tạo ORM read-only cho CMS pages, menu items, banners và newsletter subscribers, đồng thời kiểm tra self-referential menu relationship.
+### Migration Testing Standard
+
+Migration Testing Standard Completed.
+
+## Current
+
+### Architecture Review
+
+Phase review packages are waiting for architecture review before continuing to Phase 8.
 
 ## Planned
 
