@@ -1,4 +1,4 @@
-"""Health check views for migration step 1."""
+"""Infrastructure-only health check views for migration Phase 2."""
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -9,18 +9,20 @@ def root_health(request):
     """Return a minimal response proving the Django backend is running."""
     return Response(
         {
-            "status": "django running",
-            "version": "step-1",
+            "success": True,
+            "message": "Django foundation ready",
+            "phase": 2,
         }
     )
 
 
 @api_view(["GET"])
 def health_check(request):
-    """Return the step 1 migration health check response."""
+    """Return the Phase 2 health check response."""
     return Response(
         {
             "success": True,
-            "message": "Django migration step 1 completed",
+            "message": "Django foundation ready",
+            "phase": 2,
         }
     )

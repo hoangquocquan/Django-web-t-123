@@ -2,3 +2,6 @@ django
 djangorestframework
 django-cors-headers
 python-dotenv
+pytest
+pytest-django
+psycopg[binary]
