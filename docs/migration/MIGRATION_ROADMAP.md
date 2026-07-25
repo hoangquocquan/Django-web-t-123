@@ -30,13 +30,19 @@ ORM Implementation Readiness
 
 Catalog Read-Only ORM
 
-## Current
-
 ### Phase 4.1
 
 Catalog ORM Hardening & Implementation Standardization
 
 Phase này củng cố test fixture, kiểm tra database routing, review composite key và ghi lại ADR để Phase 4A đủ an toàn trước khi mở rộng sang module tiếp theo.
+
+## Current
+
+### Phase 4.2
+
+Catalog ORM Stabilization & Migration Readiness
+
+Phase này chuẩn hóa repository, kiểm tra query count và tạo playbook để CRM, Sales, CMS có thể đi theo cùng một pattern.
 
 ## Planned
 
