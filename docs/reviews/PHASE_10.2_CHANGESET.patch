@@ -1,0 +1,292 @@
+diff --git a/django_backend/tests/test_phase10_dry_run_gate.py b/django_backend/tests/test_phase10_dry_run_gate.py
+new file mode 100644
+index 0000000..0fd83c3
+--- /dev/null
++++ b/django_backend/tests/test_phase10_dry_run_gate.py
+@@ -0,0 +1,34 @@
++"""Tests for Phase 10.2 dry-run migration safety gate."""
++
++from scripts.phase10_dry_run_migration import (
++    evaluate_dry_run,
++    is_safe_test_database_url,
++    mask_database_url,
++)
++
++
++def test_dry_run_gate_blocks_missing_target_database(monkeypatch):
++    """Without a PostgreSQL test URL the dry run must stay blocked."""
++    monkeypatch.delenv("PHASE10_DRY_RUN_DATABASE_URL", raising=False)
++
++    result = evaluate_dry_run()
++
++    assert result["status"] == "blocked"
++    assert result["dry_run_allowed"] is False
++    assert result["execution"]["production_touched"] is False
++    assert result["legacy_snapshot"]["found_table_count"] == 27
++
++
++def test_dry_run_gate_accepts_only_safe_test_database_names():
++    """The gate should reject production-looking target database names."""
++    assert is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_dryrun")
++    assert is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_test")
++    assert not is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_prod")
++
++
++def test_dry_run_report_masks_credentials():
++    """Reports must not expose database passwords."""
++    masked = mask_database_url("postgresql://user:secret-password@localhost:5432/mecprecision_test")
++
++    assert "secret-password" not in masked
++    assert "user:***@" in masked
+diff --git a/docs/migration/DATABASE_DRY_RUN_REPORT.md b/docs/migration/DATABASE_DRY_RUN_REPORT.md
+new file mode 100644
+index 0000000..15f6690
+--- /dev/null
++++ b/docs/migration/DATABASE_DRY_RUN_REPORT.md
+@@ -0,0 +1,60 @@
++# Database Dry Run Report
++
++## Phase
++
++Phase 10.2 - Database Dry Run Migration
++
++## Result
++
++```text
++DRY RUN BLOCKED
++```
++
++## Reason
++
++No non-production PostgreSQL dry-run database URL is configured.
++
++Required environment variable:
++
++```text
++PHASE10_DRY_RUN_DATABASE_URL
++```
++
++The dry-run gate requires:
++
++- URL scheme: `postgres` or `postgresql`
++- database name containing one of: `test`, `dryrun`, `dry_run`, `staging`, `dev`
++
++This prevents accidental production migration.
++
++## Legacy Snapshot
++
++The legacy SQLite source was read in read-only mode.
++
++| Check | Result |
++|---|---|
++| Expected tables | 27 |
++| Found tables | 27 |
++| Missing tables | 0 |
++| Legacy database mutated | No |
++
++## Migration Execution
++
++| Step | Status |
++|---|---|
++| PostgreSQL test environment | Not configured |
++| Django migrations generated | Not executed |
++| Sample/full data migration | Not executed |
++| Relationship validation | Pending target database |
++| Migration time measurement | Not available |
++| Production touched | No |
++
++## Required Next Action
++
++Create an isolated PostgreSQL test database and set:
++
++```powershell
++$env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://user:password@localhost:5432/mecprecision_dryrun"
++```
++
++Then rerun the Phase 10.2 dry-run gate before attempting import scripts.
+diff --git a/docs/migration/MIGRATION_ERROR_REPORT.md b/docs/migration/MIGRATION_ERROR_REPORT.md
+new file mode 100644
+index 0000000..1b9c6e9
+--- /dev/null
++++ b/docs/migration/MIGRATION_ERROR_REPORT.md
+@@ -0,0 +1,30 @@
++# Migration Error Report
++
++## Phase
++
++Phase 10.2 - Database Dry Run Migration
++
++## Summary
++
++No data migration error occurred because migration execution was blocked before
++connecting to any target database.
++
++## Blocking Errors
++
++| Error | Severity | Resolution |
++|---|---|---|
++| `PHASE10_DRY_RUN_DATABASE_URL` is not configured | High | Provide an isolated non-production PostgreSQL database URL |
++| PostgreSQL dry-run environment is not available | High | Create test/staging database before import |
++| Django managed migration files are not generated yet | Medium | Generate only after target schema review and test DB approval |
++
++## Non-Errors
++
++- Legacy SQLite was readable.
++- Expected table count matched.
++- No production database was touched.
++- No credentials were exposed in reports.
++
++## Security Note
++
++Do not include raw PostgreSQL passwords, reset tokens, session IDs or 2FA codes
++in future migration logs or reports.
+diff --git a/docs/migration/ROLLBACK_TEST_REPORT.md b/docs/migration/ROLLBACK_TEST_REPORT.md
+new file mode 100644
+index 0000000..149fd75
+--- /dev/null
++++ b/docs/migration/ROLLBACK_TEST_REPORT.md
+@@ -0,0 +1,37 @@
++# Rollback Test Report
++
++## Phase
++
++Phase 10.2 - Database Dry Run Migration
++
++## Result
++
++```text
++ROLLBACK SMOKE TEST: NO-OP PASS
++FULL POSTGRESQL ROLLBACK: NOT EXECUTED
++```
++
++## Explanation
++
++Because no PostgreSQL dry-run database was configured, no target schema, target
++data or production traffic was changed. The safe rollback result is therefore a
++no-op rollback: there was nothing to restore and legacy SQLite remained
++unchanged.
++
++## Verified
++
++- Legacy database opened read-only.
++- Legacy database table count remained available.
++- No PostgreSQL target was created by this phase.
++- No production traffic was routed.
++- No write API was enabled.
++
++## Pending Full Rollback Test
++
++After a real test PostgreSQL dry run exists, rollback must verify:
++
++1. target database can be dropped or restored,
++2. legacy SQLite backup can be restored,
++3. API contract tests pass after rollback,
++4. row counts return to source baseline,
++5. rollback duration is measured.
+diff --git a/scripts/phase10_dry_run_migration.py b/scripts/phase10_dry_run_migration.py
+new file mode 100644
+index 0000000..7efe3be
+--- /dev/null
++++ b/scripts/phase10_dry_run_migration.py
+@@ -0,0 +1,101 @@
++"""Phase 10.2 dry-run migration gate.
++
++The script does not touch production. It validates whether a PostgreSQL test
++target is configured, reads the legacy SQLite snapshot in read-only mode, and
++returns a structured dry-run status. Real data import is intentionally blocked
++unless a clearly non-production PostgreSQL URL is supplied.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++from urllib.parse import urlparse
++
++try:
++    from scripts.phase10_readiness_snapshot import snapshot_database
++except ImportError:  # pragma: no cover - used when running this file directly.
++    from phase10_readiness_snapshot import snapshot_database
++
++
++SAFE_DATABASE_NAME_MARKERS = {"test", "dryrun", "dry_run", "staging", "dev"}
++
++
++def mask_database_url(database_url):
++    """Mask credentials before including a URL in reports."""
++    if not database_url:
++        return ""
++
++    parsed = urlparse(database_url)
++    host = parsed.hostname or ""
++    port = f":{parsed.port}" if parsed.port else ""
++    username = parsed.username or ""
++    auth = f"{username}:***@" if username else ""
++    return f"{parsed.scheme}://{auth}{host}{port}{parsed.path}"
++
++
++def is_postgresql_url(database_url):
++    """Return True when the URL points to PostgreSQL."""
++    return urlparse(database_url).scheme in {"postgres", "postgresql"}
++
++
++def is_safe_test_database_url(database_url):
++    """Allow only clearly non-production target database names."""
++    parsed = urlparse(database_url)
++    database_name = parsed.path.lstrip("/").lower()
++    return any(marker in database_name for marker in SAFE_DATABASE_NAME_MARKERS)
++
++
++def evaluate_dry_run(database_url=None):
++    """Evaluate whether Phase 10.2 can run against a safe test target."""
++    database_url = database_url or os.getenv("PHASE10_DRY_RUN_DATABASE_URL", "")
++    snapshot = snapshot_database()
++    errors = []
++
++    if not database_url:
++        errors.append("PHASE10_DRY_RUN_DATABASE_URL is not configured.")
++    elif not is_postgresql_url(database_url):
++        errors.append("Dry-run target must use postgres/postgresql URL scheme.")
++    elif not is_safe_test_database_url(database_url):
++        errors.append("Dry-run database name must include test, dryrun, staging or dev.")
++
++    dry_run_allowed = not errors
++    return {
++        "status": "ready" if dry_run_allowed else "blocked",
++        "dry_run_allowed": dry_run_allowed,
++        "target_database_url": mask_database_url(database_url),
++        "errors": errors,
++        "legacy_snapshot": {
++            "database_size_bytes": snapshot["database_size_bytes"],
++            "database_size_unchanged": snapshot["database_size_unchanged"],
++            "expected_table_count": snapshot["expected_table_count"],
++            "found_table_count": snapshot["found_table_count"],
++            "missing_tables": snapshot["missing_tables"],
++            "row_counts": snapshot["row_counts"],
++        },
++        "execution": {
++            "postgresql_schema_created": False,
++            "django_migrations_generated": False,
++            "data_import_executed": False,
++            "production_touched": False,
++        },
++    }
++
++
++def main():
++    """CLI entrypoint for Phase 10.2 dry-run readiness."""
++    parser = argparse.ArgumentParser(description="Phase 10.2 dry-run migration gate")
++    parser.add_argument(
++        "--database-url",
++        default=None,
++        help="Non-production PostgreSQL dry-run database URL",
++    )
++    args = parser.parse_args()
++    result = evaluate_dry_run(args.database_url)
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0 if result["dry_run_allowed"] else 2
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
