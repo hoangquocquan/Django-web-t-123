@@ -69,3 +69,13 @@ def test_postgres_environment_validator_rejects_production_database_name():
     assert has_forbidden_database_name(database_url)
     assert validation["has_forbidden_database_name"] is True
     assert validation["errors"]
+
+
+def test_postgres_environment_validator_rejects_invalid_scheme():
+    """The dry-run validator should accept only PostgreSQL URL schemes."""
+    validation = validate_dryrun_database_url(
+        "sqlite:///backend/database/mecprecision.sqlite"
+    )
+
+    assert validation["is_postgresql_url"] is False
+    assert "postgres/postgresql URL scheme" in validation["errors"][0]

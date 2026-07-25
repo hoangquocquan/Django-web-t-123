@@ -16,6 +16,18 @@ Fallback for older Docker Compose installations:
 docker-compose -f docker-compose.phase10-dryrun.yml up -d
 ```
 
+Verify container health:
+
+```powershell
+docker inspect --format "{{.State.Status}} {{.State.Health.Status}}" mecprecision_phase10_dryrun_postgres
+```
+
+Expected:
+
+```text
+running healthy
+```
+
 ## Step 2: Create Dry-Run Database
 
 Required database name examples:
@@ -29,6 +41,36 @@ Do not use names such as:
 - `mecprecision_prod`
 - `mecprecision_production`
 - `mecprecision_live`
+
+The Docker Compose dry-run environment creates this database automatically:
+
+```text
+mecprecision_dryrun
+```
+
+Verify database name:
+
+```powershell
+docker exec mecprecision_phase10_dryrun_postgres psql -U dryrun_user -d mecprecision_dryrun -tAc "SELECT current_database();"
+```
+
+Expected:
+
+```text
+mecprecision_dryrun
+```
+
+Verify PostgreSQL version:
+
+```powershell
+docker exec mecprecision_phase10_dryrun_postgres psql -U dryrun_user -d mecprecision_dryrun -tAc "SHOW server_version;"
+```
+
+Expected major version:
+
+```text
+16
+```
 
 ## Step 3: Configure Environment Variable
 
@@ -45,6 +87,10 @@ Temporary PowerShell option:
 ```powershell
 $env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://dryrun_user:password@localhost:5432/mecprecision_dryrun"
 ```
+
+For the local Docker dry-run container, use the container password from
+`docker-compose.phase10-dryrun.yml` only in your local shell or ignored
+`.env.dryrun` file. Do not commit real credentials.
 
 ## Step 4: Run Connection Test
 
