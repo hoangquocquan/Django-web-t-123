@@ -9,13 +9,6 @@ from apps.catalog.repositories.product_repository import ProductRepository
 from apps.catalog.services.catalog_service import CatalogService
 
 
-@pytest.fixture
-def legacy_db(django_db_blocker):
-    """Allow read-only access to the external legacy database without test DB setup."""
-    with django_db_blocker.unblock():
-        yield
-
-
 def test_legacy_database_connection_reads_catalog_tables(legacy_db):
     """Django can connect to the legacy SQLite database and read metadata."""
     with connections["legacy"].cursor() as cursor:
