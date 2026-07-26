@@ -13,6 +13,11 @@ from scripts.phase11_1_6_4_final_readiness_gate import evaluate_final_readiness
 VALID_EVIDENCE = {
     "status": "COMPLETE_EVIDENCE_PACKAGE",
     "ready_for_shutdown": True,
+    "environment": "production",
+    "simulation": False,
+    "source": "iis_w3c_logs_and_csv",
+    "collection_period": "2026-07-20 to 2026-07-26",
+    "approved_by": "ops-owner",
     "legacy_requests": 0,
     "django_requests": 5,
     "unknown_clients": 0,
@@ -153,7 +158,7 @@ def test_complete_package_accepted(tmp_path):
         output_path=tmp_path / "status.json",
     )
 
-    assert result["decision"] == "READY_TO_EXECUTE"
+    assert result["decision"] == "READY_TO_EXECUTE_PRODUCTION"
     assert result["evidence"] == "PASS"
     assert result["approval"] == "PASS"
     assert result["rollback"] == "PASS"

@@ -25,7 +25,7 @@ SIMULATION_EVIDENCE_REPORT = (
     / "migration"
     / "production_evidence"
     / "reports"
-    / "REAL_PRODUCTION_EVIDENCE_REPORT.json"
+    / "SIMULATION_PRODUCTION_EVIDENCE_REPORT.json"
 )
 PRODUCTION_STATUS = PROJECT_ROOT / "docs" / "migration" / "phase11_1_6_execution" / "FINAL_READINESS_STATUS.json"
 SIMULATION_STATUS = (
@@ -97,12 +97,13 @@ def test_status_separation_works():
 
 
 def test_audit_reports_simulation_evidence_gate_risk():
-    """Audit ghi rõ rủi ro: validator production chưa tự reject simulation evidence."""
+    """Audit cũ ghi rủi ro, gate mới phải chặn simulation evidence."""
     simulation_evidence = load_json(SIMULATION_EVIDENCE_REPORT)
     result = evaluate_pre_shutdown_validation(evidence=simulation_evidence, env=APPROVED_ENV)
     audit_text = AUDIT_REPORT.read_text(encoding="utf-8")
 
     assert simulation_evidence["simulation"] is True
-    assert result["status"] == "READY_TO_EXECUTE"
+    assert result["status"] == "BLOCKED_SAFELY"
+    assert "Simulation evidence cannot unlock production shutdown." in result["errors"]
     assert "does not explicitly reject `simulation = true`" in audit_text
     assert "BLOCKED_FOR_PRODUCTION" in audit_text

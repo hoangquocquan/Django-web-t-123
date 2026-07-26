@@ -59,6 +59,8 @@ APPROVAL_FILES = {
 
 TRUTHY_VALUES = {"1", "true", "yes", "approved", "complete", "completed", "ready", "verified"}
 PENDING_VALUES = {"pending", "not_provided", "missing", "tbd", ""}
+PRODUCTION_ENVIRONMENTS = {"production", "prod", "real_production"}
+SIMULATION_ENVIRONMENTS = {"staging_simulation", "training_simulation", "simulation"}
 
 
 def truthy(value):
@@ -86,6 +88,13 @@ def document_looks_approved(path):
     return True, None
 
 
+def bool_value(value):
+    """Return True for explicit boolean-like true values."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
+
+
 def load_evidence_report(path=None):
     """Load production evidence JSON report."""
     report_path = Path(path or DEFAULT_EVIDENCE_REPORT)
@@ -109,6 +118,19 @@ def load_evidence_report(path=None):
 def validate_evidence(evidence):
     """Validate complete production evidence before shutdown execution."""
     errors = []
+    environment = str(evidence.get("environment") or "").strip()
+    environment_key = environment.lower()
+    simulation = bool_value(evidence.get("simulation")) or environment_key in SIMULATION_ENVIRONMENTS
+
+    if simulation:
+        errors.append("Simulation evidence cannot unlock production shutdown.")
+    if environment_key not in PRODUCTION_ENVIRONMENTS:
+        errors.append("Production evidence environment must be production.")
+    if "simulation" not in evidence:
+        errors.append("Production evidence metadata `simulation` is missing.")
+    for field in ["source", "collection_period", "approved_by"]:
+        if not str(evidence.get(field) or "").strip():
+            errors.append(f"Production evidence metadata `{field}` is missing.")
     if evidence.get("status") != "COMPLETE_EVIDENCE_PACKAGE":
         errors.append("Production evidence is not COMPLETE_EVIDENCE_PACKAGE.")
     if not evidence.get("ready_for_shutdown"):

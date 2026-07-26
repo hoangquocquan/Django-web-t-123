@@ -23,6 +23,15 @@ DEFAULT_EVIDENCE_REPORT = (
     / "reports"
     / "REAL_PRODUCTION_TRAFFIC_REPORT.json"
 )
+PRODUCTION_ENVIRONMENTS = {"production", "prod", "real_production"}
+SIMULATION_ENVIRONMENTS = {"staging_simulation", "training_simulation", "simulation"}
+
+
+def bool_value(value):
+    """Return True for explicit boolean-like true values."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
 
 
 def load_evidence(path=None):
@@ -56,7 +65,19 @@ def validate_final_evidence(evidence):
     legacy_requests = int(evidence.get("legacy_requests") or 0)
     replacement_requests = replacement_request_count(evidence)
     unknown_clients = int(evidence.get("unknown_clients") or 0)
+    environment = str(evidence.get("environment") or "").strip()
+    environment_key = environment.lower()
+    simulation = bool_value(evidence.get("simulation")) or environment_key in SIMULATION_ENVIRONMENTS
 
+    if simulation:
+        errors.append("Simulation evidence cannot unlock final production evidence.")
+    if environment_key not in PRODUCTION_ENVIRONMENTS:
+        errors.append("Final production evidence environment must be production.")
+    if "simulation" not in evidence:
+        errors.append("Final production evidence metadata `simulation` is missing.")
+    for field in ["source", "collection_period", "approved_by"]:
+        if not str(evidence.get(field) or "").strip():
+            errors.append(f"Final production evidence metadata `{field}` is missing.")
     if evidence.get("status") != "COMPLETE_EVIDENCE_PACKAGE":
         errors.append("Evidence status must be COMPLETE_EVIDENCE_PACKAGE.")
     if not evidence.get("ready_for_shutdown"):

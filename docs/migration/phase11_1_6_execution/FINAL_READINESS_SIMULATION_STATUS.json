@@ -8,7 +8,7 @@
     "evidence": {
       "status": "PASS",
       "source_gate_status": "PASS",
-      "evidence_status": "COMPLETE_EVIDENCE_PACKAGE",
+      "evidence_status": "TRAINING_ONLY",
       "environment": "STAGING_SIMULATION",
       "simulation": true,
       "legacy_requests": 0,
@@ -55,5 +55,5 @@
     "production_configuration_changed": false,
     "real_approval_modified": false
   },
-  "elapsed_seconds": 0.0123
+  "elapsed_seconds": 0.014
 }

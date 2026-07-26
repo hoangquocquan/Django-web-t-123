@@ -72,7 +72,7 @@ def test_metadata_generated(tmp_path):
     assert metadata["operator"] == "training-user"
 
 
-def test_validator_accepts_evidence(tmp_path):
+def test_validator_marks_simulation_evidence_training_only(tmp_path):
     traffic_path = tmp_path / "traffic.json"
     generate_traffic(output_path=traffic_path, summary_path=tmp_path / "summary.json", requests=1000, days=7)
     generate_iis_logs(
@@ -92,7 +92,9 @@ def test_validator_accepts_evidence(tmp_path):
     )
 
     assert len(rows) == 1000
-    assert result["status"] == "COMPLETE_EVIDENCE_PACKAGE"
+    assert result["status"] == "TRAINING_ONLY"
+    assert result["ready_for_shutdown"] is False
+    assert result["evidence_type"] == "STAGING_SIMULATION_EVIDENCE"
     assert result["legacy_requests"] == 0
     assert result["django_requests"] >= 1000
     assert result["unknown_clients"] == 0

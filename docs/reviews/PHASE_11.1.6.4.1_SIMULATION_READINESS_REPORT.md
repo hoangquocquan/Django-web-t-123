@@ -14,7 +14,7 @@ shutdown.
 
 | Check | Result |
 | --- | --- |
-| Evidence status | `COMPLETE_EVIDENCE_PACKAGE` |
+| Evidence status | `TRAINING_ONLY` |
 | Environment | `STAGING_SIMULATION` |
 | Simulation flag | `True` |
 | Legacy `/api/*` traffic | `0` |

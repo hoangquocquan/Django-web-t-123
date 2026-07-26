@@ -34,12 +34,23 @@ DEFAULT_REPORT_PATH = (
     / "reports"
     / "REAL_PRODUCTION_EVIDENCE_REPORT.json"
 )
+DEFAULT_SIMULATION_REPORT_PATH = (
+    PROJECT_ROOT
+    / "docs"
+    / "migration"
+    / "production_evidence"
+    / "reports"
+    / "SIMULATION_PRODUCTION_EVIDENCE_REPORT.json"
+)
 DEFAULT_REVIEW_PATH = PROJECT_ROOT / "docs" / "reviews" / "PHASE_11.1.6.5_PRODUCTION_EVIDENCE_REVIEW.md"
 DEFAULT_CSV_PATH = DEFAULT_INPUT_DIR / "iis_api_evidence.csv"
 DEFAULT_IIS_LOG_DIR = DEFAULT_INPUT_DIR / "iis_logs"
 
 SUPPORTED_SUFFIXES = {".csv", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
 REQUIRED_CSV_FIELDS = ["timestamp", "source", "client", "endpoint", "status_code", "user_agent"]
+REQUIRED_METADATA_FIELDS = ["environment", "simulation", "source", "collection_period", "approved_by"]
+PRODUCTION_ENVIRONMENTS = {"production", "prod", "real_production"}
+SIMULATION_ENVIRONMENTS = {"staging_simulation", "training_simulation", "simulation"}
 
 
 def read_collection_metadata(input_dir=None):
@@ -145,6 +156,57 @@ def build_data_sources(files):
     return records, sources, errors
 
 
+def truthy_bool(value):
+    """Return True for explicit boolean-like true values."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def metadata_value(metadata, key, fallback=None):
+    """Read metadata with a controlled fallback for legacy handover files."""
+    value = metadata.get(key)
+    if value in (None, ""):
+        return fallback
+    return value
+
+
+def classify_evidence_metadata(metadata, collection_period=None):
+    """Classify evidence as real production, staging simulation or test data."""
+    environment = str(metadata.get("environment") or "").strip()
+    environment_key = environment.lower()
+    simulation = truthy_bool(metadata.get("simulation")) or environment_key in SIMULATION_ENVIRONMENTS
+    source = metadata_value(metadata, "source", "iis_w3c_logs_and_csv")
+    period = metadata_value(metadata, "collection_period", collection_period)
+    approved_by = metadata_value(metadata, "approved_by", metadata.get("reviewer"))
+
+    normalized = {
+        "environment": environment,
+        "simulation": simulation,
+        "source": source,
+        "collection_period": period,
+        "approved_by": approved_by,
+    }
+    missing = [key for key in REQUIRED_METADATA_FIELDS if normalized.get(key) in (None, "")]
+
+    if simulation:
+        evidence_type = "STAGING_SIMULATION_EVIDENCE"
+    elif environment_key in PRODUCTION_ENVIRONMENTS:
+        evidence_type = "REAL_PRODUCTION_EVIDENCE"
+    elif environment:
+        evidence_type = "DEVELOPMENT_TEST_EVIDENCE"
+    else:
+        evidence_type = "UNKNOWN_EVIDENCE"
+
+    return {
+        "evidence_type": evidence_type,
+        "metadata": normalized,
+        "missing_metadata": missing,
+        "is_simulation": simulation,
+        "is_real_production": evidence_type == "REAL_PRODUCTION_EVIDENCE",
+    }
+
+
 def validate_production_evidence_package(input_dir=None, output_path=None, review_path=None, period=None):
     """Doc evidence production va quyet dinh COMPLETE hay INCOMPLETE."""
     started_at = time.perf_counter()
@@ -156,6 +218,7 @@ def validate_production_evidence_package(input_dir=None, output_path=None, revie
     analysis = analyze_records(records)
     collection_period = infer_collection_period(records, explicit_period=period)
     metadata = read_collection_metadata(input_path)
+    classification = classify_evidence_metadata(metadata, collection_period=collection_period)
 
     if not input_path.exists():
         errors.append(f"Evidence input directory does not exist: {input_path}.")
@@ -174,18 +237,35 @@ def validate_production_evidence_package(input_dir=None, output_path=None, revie
         errors.append("Django `/api/v1/*` traffic was not confirmed.")
     if analysis["unknown_clients"] != 0:
         errors.append("Unknown API clients were detected.")
+    if classification["missing_metadata"]:
+        errors.append(f"Evidence metadata is missing required fields: {', '.join(classification['missing_metadata'])}.")
+    if not classification["is_real_production"] and not classification["is_simulation"]:
+        errors.append("Evidence environment is not an approved production environment.")
 
-    complete = not errors
+    simulation_only = classification["is_simulation"]
+    production_complete = not errors and not simulation_only
+    if simulation_only:
+        status = "TRAINING_ONLY"
+        ready_for_shutdown = False
+        decision = "TRAINING_ONLY"
+    else:
+        status = "COMPLETE_EVIDENCE_PACKAGE" if production_complete else "INCOMPLETE_EVIDENCE_PACKAGE"
+        ready_for_shutdown = production_complete
+        decision = status
+
     report = {
-        "status": "COMPLETE_EVIDENCE_PACKAGE" if complete else "INCOMPLETE_EVIDENCE_PACKAGE",
-        "ready_for_shutdown": complete,
-        "environment": metadata.get("environment") or "production",
+        "status": status,
+        "ready_for_shutdown": ready_for_shutdown,
+        "evidence_type": classification["evidence_type"],
+        "environment": classification["metadata"]["environment"] or "UNKNOWN",
+        "simulation": classification["metadata"]["simulation"],
+        "source": classification["metadata"]["source"],
+        "approved_by": classification["metadata"]["approved_by"],
         "server": metadata.get("server") or "Windows Server IIS",
         "iis_site": metadata.get("iis_site"),
         "site_id": metadata.get("site_id"),
-        "simulation": str(metadata.get("environment", "")).upper() == "STAGING_SIMULATION",
         "input_dir": str(input_path),
-        "collection_period": collection_period,
+        "collection_period": classification["metadata"]["collection_period"] or collection_period,
         "data_sources": data_sources,
         "required_files": {
             "iis_logs_found": len(iis_logs),
@@ -205,12 +285,13 @@ def validate_production_evidence_package(input_dir=None, output_path=None, revie
         "database_modified": False,
         "shutdown_executed": False,
         "errors": errors,
-        "decision": "COMPLETE_EVIDENCE_PACKAGE" if complete else "INCOMPLETE_EVIDENCE_PACKAGE",
+        "decision": decision,
         "elapsed_seconds": round(time.perf_counter() - started_at, 4),
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    destination = Path(output_path or DEFAULT_REPORT_PATH)
+    default_destination = DEFAULT_SIMULATION_REPORT_PATH if simulation_only else DEFAULT_REPORT_PATH
+    destination = Path(output_path or default_destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     write_review_report(report, review_path=review_path)
@@ -244,7 +325,11 @@ change, production code change or database change was executed.
 ## Environment
 
 - Environment: `{report.get("environment")}`
+- Evidence type: `{report.get("evidence_type")}`
+- Simulation: `{report.get("simulation")}`
 - Server: `{report.get("server")}`
+- Source: `{report.get("source")}`
+- Approved by: `{report.get("approved_by")}`
 - Collection period: `{report.get("collection_period")}`
 
 ## Data Sources

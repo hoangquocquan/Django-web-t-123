@@ -17,6 +17,11 @@ from scripts.phase11_1_6_rollback_legacy_api import create_rollback_report
 COMPLETE_EVIDENCE = {
     "status": "COMPLETE_EVIDENCE_PACKAGE",
     "ready_for_shutdown": True,
+    "environment": "production",
+    "simulation": False,
+    "source": "iis_w3c_logs_and_csv",
+    "collection_period": "2026-07-20 to 2026-07-26",
+    "approved_by": "ops-owner",
     "legacy_requests": 0,
     "django_requests": 12,
     "unknown_clients": 0,

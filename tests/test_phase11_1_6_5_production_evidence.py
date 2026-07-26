@@ -1,4 +1,5 @@
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -30,6 +31,23 @@ def write_iis_log(path, rows=None):
     lines.extend(rows or ["2026-07-20 01:00:00 10.0.0.10 GET /api/v1/catalog/products/ 200 DjangoClient"])
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines), encoding="utf-8")
+    return path
+
+
+def write_metadata(input_dir, environment="production", simulation=False):
+    metadata = {
+        "server": "IIS-PROD-01",
+        "environment": environment,
+        "simulation": simulation,
+        "source": "iis_w3c_logs_and_csv",
+        "collection_period": "2026-07-20 to 2026-07-26",
+        "approved_by": "ops-owner",
+        "iis_site": "MECPrecision-Web",
+        "site_id": "1",
+    }
+    path = Path(input_dir).parent / "handover" / "collection_metadata.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(metadata), encoding="utf-8")
     return path
 
 
@@ -140,9 +158,11 @@ def test_django_traffic_detected_but_missing_period_blocked(tmp_path):
 
 
 def test_complete_package_accepted(tmp_path):
-    write_iis_log(tmp_path / "iis_logs" / "u_ex260720.log")
+    input_dir = tmp_path / "input"
+    write_metadata(input_dir)
+    write_iis_log(input_dir / "iis_logs" / "u_ex260720.log")
     write_csv(
-        tmp_path / "iis_api_evidence.csv",
+        input_dir / "iis_api_evidence.csv",
         [
             valid_django_row(client="client-a", endpoint="/api/v1/catalog/products/"),
             valid_django_row(client="client-b", endpoint="/api/v1/sales/quotes/"),
@@ -150,7 +170,7 @@ def test_complete_package_accepted(tmp_path):
     )
 
     result = validate_production_evidence_package(
-        input_dir=tmp_path,
+        input_dir=input_dir,
         output_path=tmp_path / "report.json",
         review_path=tmp_path / "review.md",
         period="2026-07-20 to 2026-07-26",

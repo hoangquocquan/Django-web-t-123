@@ -12,7 +12,11 @@ change, production code change or database change was executed.
 ## Environment
 
 - Environment: `STAGING_SIMULATION`
+- Evidence type: `STAGING_SIMULATION_EVIDENCE`
+- Simulation: `True`
 - Server: `TRAINING-IIS-SERVER`
+- Source: `iis_w3c_logs_and_csv`
+- Approved by: `architect-review`
 - Collection period: `2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z`
 
 ## Data Sources
@@ -52,7 +56,7 @@ change, production code change or database change was executed.
 
 ## Decision
 
-`COMPLETE_EVIDENCE_PACKAGE`
+`TRAINING_ONLY`
 
 ## Next Action
 

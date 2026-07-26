@@ -16,7 +16,6 @@ from pathlib import Path
 try:
     from scripts.phase11_1_6_3_approval_validator import DEFAULT_APPROVAL_DIR
     from scripts.phase11_1_6_4_final_readiness_gate import (
-        DEFAULT_EVIDENCE_REPORT,
         DEFAULT_ROLLBACK_CHECKPOINT,
         DEFAULT_ROLLBACK_PROCEDURE,
         REQUIRED_MONITORING_FIELDS,
@@ -26,7 +25,6 @@ try:
 except ModuleNotFoundError:
     from phase11_1_6_3_approval_validator import DEFAULT_APPROVAL_DIR
     from phase11_1_6_4_final_readiness_gate import (
-        DEFAULT_EVIDENCE_REPORT,
         DEFAULT_ROLLBACK_CHECKPOINT,
         DEFAULT_ROLLBACK_PROCEDURE,
         REQUIRED_MONITORING_FIELDS,
@@ -42,6 +40,14 @@ DEFAULT_TRAINING_STATUS_OUTPUT = (
     / "migration"
     / "phase11_1_6_execution"
     / "FINAL_READINESS_SIMULATION_STATUS.json"
+)
+DEFAULT_SIMULATION_EVIDENCE_REPORT = (
+    PROJECT_ROOT
+    / "docs"
+    / "migration"
+    / "production_evidence"
+    / "reports"
+    / "SIMULATION_PRODUCTION_EVIDENCE_REPORT.json"
 )
 DEFAULT_REVIEW_OUTPUT = PROJECT_ROOT / "docs" / "reviews" / "PHASE_11.1.6.4.1_SIMULATION_READINESS_REPORT.md"
 DEFAULT_RUNBOOK = PROJECT_ROOT / "docs" / "migration" / "LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md"
@@ -148,17 +154,18 @@ def build_training_readiness(
 ):
     """Tổng hợp gate gốc và gate diễn tập thành quyết định training."""
     started_at = time.perf_counter()
+    evidence_path = Path(evidence_report or DEFAULT_SIMULATION_EVIDENCE_REPORT)
     with tempfile.TemporaryDirectory() as temporary_directory:
         raw_status_output = Path(temporary_directory) / "FINAL_READINESS_STATUS_FOR_SIMULATION.json"
         final_gate = evaluate_final_readiness(
-            evidence_report=evidence_report,
+            evidence_report=evidence_path,
             approval_dir=approval_dir,
             rollback_procedure=rollback_procedure,
             rollback_checkpoint=rollback_checkpoint,
             output_path=raw_status_output,
+            readiness_mode="training",
         )
 
-    evidence_path = Path(evidence_report or DEFAULT_EVIDENCE_REPORT)
     evidence_payload, evidence_errors = load_json(evidence_path)
     evidence_payload = evidence_payload or {}
     evidence_simulation_ok = bool(evidence_payload.get("simulation")) and evidence_payload.get("environment") == "STAGING_SIMULATION"

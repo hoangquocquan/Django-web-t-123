@@ -31,7 +31,7 @@ DEFAULT_EVIDENCE_REPORT = (
     / "migration"
     / "production_evidence"
     / "reports"
-    / "REAL_PRODUCTION_EVIDENCE_REPORT.json"
+    / "REAL_PRODUCTION_TRAFFIC_REPORT.json"
 )
 DEFAULT_ROLLBACK_PROCEDURE = PROJECT_ROOT / "docs" / "migration" / "LEGACY_API_DECOMMISSION_ROLLBACK.md"
 DEFAULT_ROLLBACK_CHECKPOINT = (
@@ -58,6 +58,8 @@ REQUIRED_MONITORING_FIELDS = [
     "HTTP status codes metric",
     "Escalation path",
 ]
+PRODUCTION_ENVIRONMENTS = {"production", "prod", "real_production"}
+SIMULATION_ENVIRONMENTS = {"staging_simulation", "training_simulation", "simulation"}
 
 
 def load_json(path):
@@ -76,16 +78,75 @@ def meaningful(value):
     return str(value or "").strip().lower() not in {"", "pending", "tbd", "missing", "not_provided", "not provided"}
 
 
-def validate_evidence_gate(evidence_report=None):
-    """Validate production evidence readiness."""
+def bool_value(value):
+    """Return True for explicit boolean-like true values."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def classify_evidence(evidence):
+    """Classify evidence so simulation data cannot unlock production readiness."""
+    environment = str(evidence.get("environment") or "").strip()
+    environment_key = environment.lower()
+    simulation = bool_value(evidence.get("simulation")) or environment_key in SIMULATION_ENVIRONMENTS
+    if simulation:
+        evidence_type = "STAGING_SIMULATION_EVIDENCE"
+    elif environment_key in PRODUCTION_ENVIRONMENTS:
+        evidence_type = "REAL_PRODUCTION_EVIDENCE"
+    elif environment:
+        evidence_type = "DEVELOPMENT_TEST_EVIDENCE"
+    else:
+        evidence_type = "UNKNOWN_EVIDENCE"
+    return {
+        "environment": environment or "UNKNOWN",
+        "simulation": simulation,
+        "evidence_type": evidence_type,
+    }
+
+
+def validate_evidence_metadata(evidence, readiness_mode="production"):
+    """Validate metadata according to production or training readiness mode."""
+    mode = str(readiness_mode or "production").strip().lower()
+    classification = classify_evidence(evidence)
+    errors = []
+
+    if mode == "production":
+        if classification["simulation"]:
+            errors.append("Simulation evidence cannot unlock production readiness.")
+        if classification["evidence_type"] != "REAL_PRODUCTION_EVIDENCE":
+            errors.append("Evidence is not classified as REAL_PRODUCTION_EVIDENCE.")
+        if "simulation" not in evidence:
+            errors.append("Production evidence metadata `simulation` is missing.")
+        for field in ["environment", "source", "collection_period", "approved_by"]:
+            if not meaningful(evidence.get(field)):
+                errors.append(f"Production evidence metadata `{field}` is missing.")
+    elif mode == "training":
+        if not classification["simulation"]:
+            errors.append("Training readiness requires simulation evidence.")
+        if classification["evidence_type"] != "STAGING_SIMULATION_EVIDENCE":
+            errors.append("Training evidence is not classified as STAGING_SIMULATION_EVIDENCE.")
+    else:
+        errors.append(f"Unknown readiness mode: {readiness_mode}.")
+
+    return classification, errors
+
+
+def validate_evidence_gate(evidence_report=None, readiness_mode="production"):
+    """Validate evidence readiness."""
     evidence_path = Path(evidence_report or DEFAULT_EVIDENCE_REPORT)
     evidence, errors = load_json(evidence_path)
     evidence = evidence or {}
+    classification, metadata_errors = validate_evidence_metadata(evidence, readiness_mode=readiness_mode)
+    errors.extend(metadata_errors)
     legacy_count = int(evidence.get("legacy_requests") or 0)
     django_count = int(evidence.get("django_requests") or evidence.get("replacement_requests") or 0)
     unknown_clients = int(evidence.get("unknown_clients") or 0)
 
-    if evidence.get("status") != "COMPLETE_EVIDENCE_PACKAGE":
+    allowed_statuses = {"COMPLETE_EVIDENCE_PACKAGE"}
+    if str(readiness_mode or "").lower() == "training":
+        allowed_statuses.add("TRAINING_ONLY")
+    if evidence.get("status") not in allowed_statuses:
         errors.append("Evidence status is not COMPLETE_EVIDENCE_PACKAGE.")
     if legacy_count != 0:
         errors.append("Legacy `/api/*` request count is not 0.")
@@ -100,6 +161,10 @@ def validate_evidence_gate(evidence_report=None):
         "status": "PASS" if not errors else "FAIL",
         "path": str(evidence_path),
         "evidence_status": evidence.get("status", "UNKNOWN"),
+        "evidence_type": classification["evidence_type"],
+        "environment": classification["environment"],
+        "simulation": classification["simulation"],
+        "readiness_mode": readiness_mode,
         "legacy_requests": legacy_count,
         "django_requests": django_count,
         "unknown_clients": unknown_clients,
@@ -198,10 +263,11 @@ def evaluate_final_readiness(
     rollback_procedure=None,
     rollback_checkpoint=None,
     output_path=None,
+    readiness_mode="production",
 ):
     """Evaluate all final readiness gates and write JSON status."""
     started_at = time.perf_counter()
-    evidence = validate_evidence_gate(evidence_report=evidence_report)
+    evidence = validate_evidence_gate(evidence_report=evidence_report, readiness_mode=readiness_mode)
     approval = validate_approval_gate(approval_dir=approval_dir)
     rollback = validate_rollback_gate(
         approval_gate=approval,
@@ -218,7 +284,14 @@ def evaluate_final_readiness(
         "maintenance": maintenance,
         "monitoring": monitoring,
     }
-    decision = "READY_TO_EXECUTE" if all(gate["status"] == "PASS" for gate in gates.values()) else "BLOCKED_SAFELY"
+    mode = str(readiness_mode or "production").strip().lower()
+    all_gates_pass = all(gate["status"] == "PASS" for gate in gates.values())
+    if all_gates_pass and mode == "training":
+        decision = "READY_TO_EXECUTE_TRAINING"
+    elif all_gates_pass:
+        decision = "READY_TO_EXECUTE_PRODUCTION"
+    else:
+        decision = "BLOCKED_SAFELY"
     result = {
         "evidence": evidence["status"],
         "approval": approval["status"],
@@ -226,6 +299,7 @@ def evaluate_final_readiness(
         "maintenance": maintenance["status"],
         "monitoring": monitoring["status"],
         "decision": decision,
+        "readiness_mode": mode,
         "gates": gates,
         "safety": {
             "shutdown_executed": False,
@@ -256,6 +330,12 @@ def main():
     parser.add_argument("--rollback-checkpoint", default=None, help="Rollback checkpoint JSON.")
     parser.add_argument("--output", default=None, help="Final readiness JSON output path.")
     parser.add_argument(
+        "--readiness-mode",
+        choices=["production", "training"],
+        default="production",
+        help="Production rejects simulation evidence; training only accepts simulation evidence.",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="Return non-zero when readiness is blocked. Default blocked state exits 0.",
@@ -267,9 +347,10 @@ def main():
         rollback_procedure=args.rollback_procedure,
         rollback_checkpoint=args.rollback_checkpoint,
         output_path=args.output,
+        readiness_mode=args.readiness_mode,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result["decision"] == "READY_TO_EXECUTE":
+    if result["decision"] in {"READY_TO_EXECUTE_PRODUCTION", "READY_TO_EXECUTE_TRAINING"}:
         return 0
     return 2 if args.strict else 0
 

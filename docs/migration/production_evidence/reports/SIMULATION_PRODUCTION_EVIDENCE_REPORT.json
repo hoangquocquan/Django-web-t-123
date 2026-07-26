@@ -1,11 +1,14 @@
 {
-  "status": "COMPLETE_EVIDENCE_PACKAGE",
-  "ready_for_shutdown": true,
+  "status": "TRAINING_ONLY",
+  "ready_for_shutdown": false,
+  "evidence_type": "STAGING_SIMULATION_EVIDENCE",
   "environment": "STAGING_SIMULATION",
+  "simulation": true,
+  "source": "iis_w3c_logs_and_csv",
+  "approved_by": "architect-review",
   "server": "TRAINING-IIS-SERVER",
   "iis_site": "MECPrecision-Web",
   "site_id": "1",
-  "simulation": true,
   "input_dir": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input",
   "collection_period": "2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z",
   "data_sources": [
@@ -57,7 +60,7 @@
   "database_modified": false,
   "shutdown_executed": false,
   "errors": [],
-  "decision": "COMPLETE_EVIDENCE_PACKAGE",
-  "elapsed_seconds": 0.0252,
-  "generated_at": "2026-07-26T13:03:38.654560+00:00"
+  "decision": "TRAINING_ONLY",
+  "elapsed_seconds": 0.0261,
+  "generated_at": "2026-07-26T13:53:44.527382+00:00"
 }
