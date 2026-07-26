@@ -77,6 +77,78 @@ $env:PHASE11_1_6_MONITORING_READY="approved"
 These overrides are for validation only. Production execution still requires
 real approval records.
 
+## Final Unlock Requirements
+
+Phase 11.1.6.1 adds the final unlock gate before shutdown execution. This gate
+does not change routes, IIS, database or production configuration. It only
+confirms that evidence and approvals are complete enough to move from:
+
+```text
+BLOCKED_SAFELY
+```
+
+to:
+
+```text
+READY_TO_EXECUTE
+```
+
+### Evidence Confirmation
+
+Run:
+
+```powershell
+python scripts\phase11_1_6_1_final_evidence_validator.py
+```
+
+Required result:
+
+```text
+READY_FOR_EXECUTION
+```
+
+The validator confirms:
+
+- Legacy `/api/*` traffic is `0`.
+- Replacement `/api/v1/*` traffic is active.
+- Unknown clients are `0`.
+- Evidence status is `COMPLETE_EVIDENCE_PACKAGE`.
+- Evidence was collected before any route/proxy change.
+
+### Approval Confirmation
+
+Complete the approval files in:
+
+```text
+docs/migration/phase11_1_6_execution/approvals/
+```
+
+Then run:
+
+```powershell
+python scripts\phase11_1_6_1_approval_validator.py
+```
+
+Required result:
+
+```text
+APPROVAL_COMPLETE
+```
+
+The validator confirms:
+
+- Technical approval is completed.
+- Business approval is completed.
+- Rollback owner is assigned.
+- Maintenance window is assigned.
+- Monitoring owner is assigned.
+
+If either validator fails, keep the execution decision as:
+
+```text
+BLOCKED_SAFELY
+```
+
 ## Execution Steps
 
 1. Confirm the maintenance window is active.
