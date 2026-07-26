@@ -79,3 +79,71 @@ does not remove compatibility code and does not change the database.
 | Django API | `/api/v1/...` remains active |
 | Database | No schema or data change |
 | Rollback | Route/proxy mapping can be restored |
+
+## Phase 11.1.5 Production Shutdown Readiness Update
+
+### Owner
+
+```text
+PENDING
+```
+
+Final shutdown owner, rollback owner and business owner must be assigned before
+production route changes are allowed.
+
+### Timeline
+
+1. Collect 7-30 days of production traffic evidence.
+2. Run `scripts\phase11_1_4_production_traffic_evidence.py`.
+3. Run `scripts\phase11_1_5_shutdown_readiness_check.py`.
+4. Obtain technical and business approval.
+5. Execute route shutdown only during the approved maintenance window.
+6. Monitor post-shutdown traffic and errors.
+
+### Validation Steps
+
+```powershell
+python scripts\phase11_1_5_shutdown_readiness_check.py
+cd django_backend
+python manage.py check
+pytest
+```
+
+Required readiness result:
+
+```text
+READY_FOR_LEGACY_API_SHUTDOWN
+```
+
+### Rollback Steps
+
+Use:
+
+```text
+docs/migration/LEGACY_API_DECOMMISSION_ROLLBACK.md
+```
+
+Minimum rollback actions:
+
+1. Restore the previous proxy/router rule for `/api/...`.
+2. Keep Django `/api/v1/...` online.
+3. Run API smoke tests.
+4. Confirm request volume and error rate return to normal.
+5. Record the incident and create a corrective minor phase.
+
+### Post Shutdown Monitoring
+
+Track:
+
+- `/api/...` request attempts
+- `/api/v1/...` request volume
+- unknown clients
+- 4xx and 5xx error rate
+- contact and quotation form success rate
+- API latency
+
+Current status:
+
+```text
+KEEP_LEGACY_API_ACTIVE
+```
