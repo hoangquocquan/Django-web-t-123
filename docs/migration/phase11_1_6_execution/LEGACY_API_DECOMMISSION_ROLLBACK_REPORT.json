@@ -1,0 +1,30 @@
+{
+  "phase": "11.1.6",
+  "created_at": "2026-07-26T01:59:03.146642+00:00",
+  "status": "ROLLBACK_READY",
+  "rollback_available": true,
+  "legacy_route": "/api/*",
+  "replacement_route": "/api/v1/*",
+  "operator_actions": [
+    "Restore the previous router/proxy rule for /api/*.",
+    "Keep /api/v1/* online.",
+    "Run API smoke tests.",
+    "Watch error rate, latency and customer impact.",
+    "Record final rollback decision."
+  ],
+  "script_applies_change": false,
+  "legacy_code_deleted": false,
+  "database_changed": false,
+  "checkpoint": {
+    "created_at": "2026-07-26T01:58:59.473701+00:00",
+    "rollback_route": "/api/*",
+    "replacement_route": "/api/v1/*",
+    "restore_action": "restore_previous_router_or_proxy_rule",
+    "legacy_code_available": true,
+    "database_unchanged": true
+  },
+  "errors": [],
+  "artifacts": {
+    "rollback_report": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json"
+  }
+}
