@@ -11,38 +11,35 @@ change, production code change or database change was executed.
 
 ## Environment
 
-- Environment: `production`
-- Server: `Windows Server IIS`
-- Collection period: `NOT_PROVIDED`
+- Environment: `STAGING_SIMULATION`
+- Server: `TRAINING-IIS-SERVER`
+- Collection period: `2026-07-19T12:54:29Z - 2026-07-26T12:46:05Z`
 
 ## Data Sources
 
-- `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_api_evidence.csv`: 0 records (csv)
+- `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_api_evidence.csv`: 1200 records (csv)
+- `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_logs\u_ex_simulated.log`: 1200 records (log)
 
 ## Traffic Counts
 
 | Metric | Value |
 | --- | --- |
-| Total API requests | `0` |
+| Total API requests | `2400` |
 | Legacy `/api/*` requests | `0` |
-| Django `/api/v1/*` requests | `0` |
+| Django `/api/v1/*` requests | `2400` |
 | Unknown clients | `0` |
-| Error requests | `0` |
-| Error rate | `0` |
+| Error requests | `138` |
+| Error rate | `0.0575` |
 
 ## Required File Check
 
-- IIS logs found: `0`
+- IIS logs found: `1`
 - CSV export path: `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_api_evidence.csv`
-- CSV rows: `0`
+- CSV rows: `1200`
 
 ## Errors
 
-- IIS W3C logs were not found in the evidence input.
-- No evidence records were found.
-- Collection period is not provided.
-- CSV export is empty.
-- Django `/api/v1/*` traffic was not confirmed.
+- None
 
 ## Safety Confirmation
 
@@ -55,7 +52,7 @@ change, production code change or database change was executed.
 
 ## Decision
 
-`INCOMPLETE_EVIDENCE_PACKAGE`
+`COMPLETE_EVIDENCE_PACKAGE`
 
 ## Next Action
 

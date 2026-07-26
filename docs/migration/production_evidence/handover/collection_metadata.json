@@ -1,11 +1,11 @@
 {
-  "server": "PENDING",
-  "environment": "production",
-  "iis_site": "PENDING",
-  "site_id": "PENDING",
-  "collection_start": "PENDING",
-  "collection_end": "PENDING",
-  "operator": "PENDING",
-  "reviewer": "PENDING",
-  "notes": "PENDING"
+  "server": "TRAINING-IIS-SERVER",
+  "environment": "STAGING_SIMULATION",
+  "iis_site": "MECPrecision-Web",
+  "site_id": "1",
+  "collection_start": "2026-07-19",
+  "collection_end": "2026-07-26",
+  "operator": "training-user",
+  "reviewer": "architect-review",
+  "notes": "Production-like simulation evidence. Not real production IIS traffic."
 }

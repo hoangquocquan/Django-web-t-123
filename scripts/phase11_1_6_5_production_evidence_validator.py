@@ -42,6 +42,19 @@ SUPPORTED_SUFFIXES = {".csv", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
 REQUIRED_CSV_FIELDS = ["timestamp", "source", "client", "endpoint", "status_code", "user_agent"]
 
 
+def read_collection_metadata(input_dir=None):
+    """Doc metadata handover neu co de report khong nham simulation voi production that."""
+    directory = Path(input_dir or DEFAULT_INPUT_DIR)
+    metadata_path = directory.parent / "handover" / "collection_metadata.json"
+    if not metadata_path.exists():
+        return {}
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return metadata if isinstance(metadata, dict) else {}
+
+
 def is_template_file(path):
     """Bo qua file mau de khong tinh nham thanh evidence production that."""
     return Path(path).name.upper().endswith("_TEMPLATE.CSV")
@@ -142,6 +155,7 @@ def validate_production_evidence_package(input_dir=None, output_path=None, revie
     records, data_sources, errors = build_data_sources(files)
     analysis = analyze_records(records)
     collection_period = infer_collection_period(records, explicit_period=period)
+    metadata = read_collection_metadata(input_path)
 
     if not input_path.exists():
         errors.append(f"Evidence input directory does not exist: {input_path}.")
@@ -165,8 +179,11 @@ def validate_production_evidence_package(input_dir=None, output_path=None, revie
     report = {
         "status": "COMPLETE_EVIDENCE_PACKAGE" if complete else "INCOMPLETE_EVIDENCE_PACKAGE",
         "ready_for_shutdown": complete,
-        "environment": "production",
-        "server": "Windows Server IIS",
+        "environment": metadata.get("environment") or "production",
+        "server": metadata.get("server") or "Windows Server IIS",
+        "iis_site": metadata.get("iis_site"),
+        "site_id": metadata.get("site_id"),
+        "simulation": str(metadata.get("environment", "")).upper() == "STAGING_SIMULATION",
         "input_dir": str(input_path),
         "collection_period": collection_period,
         "data_sources": data_sources,
