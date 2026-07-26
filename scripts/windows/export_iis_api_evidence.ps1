@@ -37,6 +37,13 @@ function Ensure-OutputFile {
     $Rows | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
 }
 
+function Add-Error {
+    param([string]$Message)
+    if (-not [string]::IsNullOrWhiteSpace($Message)) {
+        $script:errors += $Message
+    }
+}
+
 function Get-FieldValue {
     param([hashtable]$Map, [string]$Name)
     if ($Map.ContainsKey($Name)) {
@@ -48,32 +55,42 @@ function Get-FieldValue {
 $rows = @()
 $errors = @()
 $logFiles = @()
+$filesWithFields = 0
+$filesMissingUriField = 0
+$invalidRows = 0
 
 try {
     if (Test-Path $LogRoot) {
         $logFiles = @(Get-ChildItem -Path $LogRoot -Filter "*.log" -Recurse -File -ErrorAction SilentlyContinue)
     } else {
-        $errors += "IIS log root does not exist: $LogRoot"
+        Add-Error "IIS log root does not exist: $LogRoot"
     }
 
     foreach ($file in $logFiles) {
         $fields = @()
-        foreach ($line in Get-Content -LiteralPath $file.FullName -Encoding UTF8 -ErrorAction SilentlyContinue) {
-            if ([string]::IsNullOrWhiteSpace($line)) {
+        foreach ($line in Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue) {
+            $trimmedLine = $line.Trim()
+            if ([string]::IsNullOrWhiteSpace($trimmedLine)) {
                 continue
             }
-            if ($line.StartsWith("#Fields:")) {
-                $fields = $line.Substring(8).Trim().Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
+            if ($trimmedLine.StartsWith("#Fields:")) {
+                $fields = $trimmedLine.Substring(8).Trim().Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
+                $filesWithFields += 1
+                if (-not ($fields -contains "cs-uri-stem")) {
+                    $filesMissingUriField += 1
+                    Add-Error "Missing required W3C field cs-uri-stem in $($file.FullName)"
+                }
                 continue
             }
-            if ($line.StartsWith("#")) {
+            if ($trimmedLine.StartsWith("#")) {
                 continue
             }
             if ($fields.Count -eq 0) {
+                $invalidRows += 1
                 continue
             }
 
-            $values = $line.Split(" ")
+            $values = $trimmedLine.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
             $map = @{}
             for ($index = 0; $index -lt $fields.Count; $index++) {
                 $value = if ($index -lt $values.Count) { $values[$index] } else { "-" }
@@ -81,7 +98,11 @@ try {
             }
 
             $uri = Get-FieldValue $map "cs-uri-stem"
-            if (-not ($uri -like "/api/*")) {
+            if ($uri -eq "-" -or [string]::IsNullOrWhiteSpace($uri)) {
+                $invalidRows += 1
+                continue
+            }
+            if (-not ($uri -match "^/api(/|$)")) {
                 continue
             }
 
@@ -110,6 +131,9 @@ try {
         status = if ($rows.Count -gt 0) { "IIS_EVIDENCE_EXPORTED" } else { "IIS_EVIDENCE_INCOMPLETE" }
         log_root = $LogRoot
         log_files_checked = $logFiles.Count
+        files_with_w3c_fields = $filesWithFields
+        files_missing_uri_field = $filesMissingUriField
+        invalid_rows = $invalidRows
         rows_exported = $rows.Count
         legacy_rows = $legacyCount
         django_rows = $djangoCount
@@ -123,6 +147,9 @@ try {
         status = "IIS_EVIDENCE_INCOMPLETE"
         log_root = $LogRoot
         log_files_checked = $logFiles.Count
+        files_with_w3c_fields = $filesWithFields
+        files_missing_uri_field = $filesMissingUriField
+        invalid_rows = $invalidRows
         rows_exported = 0
         legacy_rows = 0
         django_rows = 0
