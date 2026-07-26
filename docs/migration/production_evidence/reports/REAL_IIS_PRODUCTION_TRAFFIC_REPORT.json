@@ -1,0 +1,9 @@
+{
+  "status": "INCOMPLETE_EVIDENCE_PACKAGE",
+  "collection_period": "NOT_PROVIDED",
+  "data_sources": [],
+  "legacy_requests": 0,
+  "django_requests": 0,
+  "unknown_clients": 0,
+  "decision": "WAITING_FOR_PRODUCTION_IIS_EVIDENCE"
+}
