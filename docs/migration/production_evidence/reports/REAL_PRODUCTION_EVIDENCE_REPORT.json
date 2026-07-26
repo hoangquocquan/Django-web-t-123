@@ -7,7 +7,7 @@
   "site_id": "1",
   "simulation": true,
   "input_dir": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input",
-  "collection_period": "2026-07-19T12:54:29Z - 2026-07-26T12:46:05Z",
+  "collection_period": "2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z",
   "data_sources": [
     {
       "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_api_evidence.csv",
@@ -15,7 +15,7 @@
       "type": "csv"
     },
     {
-      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_logs\\u_ex_simulated.log",
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_logs\\u_ex_training.log",
       "records": 1200,
       "type": "log"
     }
@@ -41,8 +41,8 @@
   "legacy_requests": 0,
   "django_requests": 2400,
   "unknown_clients": 0,
-  "error_requests": 138,
-  "error_rate": 0.0575,
+  "error_requests": 116,
+  "error_rate": 0.048333,
   "known_clients": [
     "10.0.0.10",
     "10.0.0.11",
@@ -58,6 +58,6 @@
   "shutdown_executed": false,
   "errors": [],
   "decision": "COMPLETE_EVIDENCE_PACKAGE",
-  "elapsed_seconds": 0.0234,
-  "generated_at": "2026-07-26T12:56:11.136072+00:00"
+  "elapsed_seconds": 0.0252,
+  "generated_at": "2026-07-26T13:03:38.654560+00:00"
 }

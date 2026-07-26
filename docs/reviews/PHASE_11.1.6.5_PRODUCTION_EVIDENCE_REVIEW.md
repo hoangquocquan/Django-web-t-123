@@ -13,12 +13,12 @@ change, production code change or database change was executed.
 
 - Environment: `STAGING_SIMULATION`
 - Server: `TRAINING-IIS-SERVER`
-- Collection period: `2026-07-19T12:54:29Z - 2026-07-26T12:46:05Z`
+- Collection period: `2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z`
 
 ## Data Sources
 
 - `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_api_evidence.csv`: 1200 records (csv)
-- `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_logs\u_ex_simulated.log`: 1200 records (log)
+- `C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\migration\production_evidence\input\iis_logs\u_ex_training.log`: 1200 records (log)
 
 ## Traffic Counts
 
@@ -28,8 +28,8 @@ change, production code change or database change was executed.
 | Legacy `/api/*` requests | `0` |
 | Django `/api/v1/*` requests | `2400` |
 | Unknown clients | `0` |
-| Error requests | `138` |
-| Error rate | `0.0575` |
+| Error requests | `116` |
+| Error rate | `0.048333` |
 
 ## Required File Check
 

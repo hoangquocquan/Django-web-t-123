@@ -15,15 +15,17 @@ must not be treated as production shutdown approval evidence.
 ## Traffic Generated
 
 - Generated requests: `1200`
+- Simulated clients: `5`
 - Legacy `/api/*` generated requests: `0`
 - Replacement `/api/v1/*` generated requests: `1200`
 - Unknown clients generated: `0`
 
 ## Log Files Created
 
-- `docs/migration/production_evidence/input/iis_logs/u_ex_simulated.log`
+- `docs/migration/production_evidence/input/iis_logs/u_ex_training.log`
 - `docs/migration/production_evidence/input/iis_api_evidence.csv`
 - `docs/migration/production_evidence/handover/production_like_traffic.json`
+- `docs/migration/production_evidence/handover/traffic_generation_summary.json`
 - `docs/migration/production_evidence/handover/collection_metadata.json`
 
 ## Metadata
@@ -40,13 +42,13 @@ must not be treated as production shutdown approval evidence.
 | Metric | Value |
 | --- | --- |
 | Evidence status | `COMPLETE_EVIDENCE_PACKAGE` |
-| Collection period | `2026-07-19T12:54:29Z - 2026-07-26T12:46:05Z` |
+| Collection period | `2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z` |
 | Total validator requests | `2400` |
 | Legacy API count | `0` |
 | Django API count | `2400` |
 | Unknown clients | `0` |
-| Error requests | `138` |
-| Error rate | `0.0575` |
+| Error requests | `116` |
+| Error rate | `0.048333` |
 
 The validator count is `2400` because it reads both the generated CSV evidence
 and the generated IIS W3C log. The source traffic generator created `1200`
@@ -68,5 +70,5 @@ unique simulated requests.
 ## Next Action
 
 Run the final readiness gate against this simulation package only for workflow
-validation. Real production shutdown still requires real IIS production evidence
-and formal approval gates.
+validation. Real production shutdown still requires real IIS production
+evidence and formal approval gates.

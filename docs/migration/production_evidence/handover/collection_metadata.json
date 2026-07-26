@@ -7,5 +7,5 @@
   "collection_end": "2026-07-26",
   "operator": "training-user",
   "reviewer": "architect-review",
-  "notes": "Production-like simulation evidence. Not real production IIS traffic."
+  "notes": "Production-like training evidence. Not real production IIS traffic."
 }
