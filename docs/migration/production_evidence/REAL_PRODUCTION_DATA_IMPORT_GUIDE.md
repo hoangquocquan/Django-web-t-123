@@ -56,6 +56,34 @@ Multiple inputs:
 python scripts\phase11_1_5_4_production_evidence_loader.py --input nginx.log --input gateway.csv --input app.jsonl
 ```
 
+## IIS CSV Input
+
+Phase 11.1.5.5 adds IIS automation for Windows Server environments.
+
+Generate IIS evidence CSV:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\export_iis_api_evidence.ps1
+```
+
+Validate the exported CSV:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\validate_iis_api_evidence.ps1
+```
+
+Import the IIS CSV into this Phase 11.1.5.4 loader:
+
+```powershell
+python scripts\phase11_1_5_4_production_evidence_loader.py --input docs\migration\production_evidence\input\iis_api_evidence.csv
+```
+
+Expected IIS CSV columns:
+
+```text
+timestamp,source,client,endpoint,status_code,user_agent
+```
+
 ## Output
 
 The loader writes:
