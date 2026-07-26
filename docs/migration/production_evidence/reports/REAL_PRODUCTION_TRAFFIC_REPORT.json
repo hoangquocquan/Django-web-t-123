@@ -1,0 +1,22 @@
+{
+  "status": "INCOMPLETE_EVIDENCE_PACKAGE",
+  "ready_for_shutdown": false,
+  "period": "NOT_PROVIDED",
+  "data_sources": [],
+  "legacy_requests": 0,
+  "django_requests": 0,
+  "unknown_clients": 0,
+  "total_api_requests": 0,
+  "error_requests": 0,
+  "error_rate": 0,
+  "known_clients": [],
+  "legacy_routes_disabled": false,
+  "routes_changed": false,
+  "proxy_modified": false,
+  "database_archived": false,
+  "legacy_code_removed": false,
+  "errors": [
+    "No real production data inputs were provided.",
+    "Django `/api/v1/...` traffic was not observed."
+  ]
+}
