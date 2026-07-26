@@ -1,0 +1,271 @@
+{
+  "evidence": "FAIL",
+  "approval": "FAIL",
+  "rollback": "FAIL",
+  "maintenance": "FAIL",
+  "monitoring": "FAIL",
+  "decision": "BLOCKED_SAFELY",
+  "gates": {
+    "evidence": {
+      "status": "FAIL",
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\reports\\REAL_PRODUCTION_EVIDENCE_REPORT.json",
+      "evidence_status": "INCOMPLETE_EVIDENCE_PACKAGE",
+      "legacy_requests": 0,
+      "django_requests": 0,
+      "unknown_clients": 0,
+      "errors": [
+        "Evidence status is not COMPLETE_EVIDENCE_PACKAGE.",
+        "Django `/api/v1/*` request count is not greater than 0."
+      ]
+    },
+    "approval": {
+      "status": "FAIL",
+      "approval_status": "APPROVAL_PENDING",
+      "approval_complete": false,
+      "approval_dir": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals",
+      "errors": [
+        "technical_approval: System owner is missing or pending.",
+        "technical_approval: Technical reviewer is missing or pending.",
+        "technical_approval: Evidence confirmation is missing or pending.",
+        "technical_approval: Risk assessment is missing or pending.",
+        "technical_approval: Rollback validation is missing or pending.",
+        "technical_approval: Approval status is missing or pending.",
+        "technical_approval: Signature is missing or pending.",
+        "technical_approval: Date is missing or pending.",
+        "technical_approval: Approval status is not approved/complete/assigned/ready/signed.",
+        "business_approval: Business owner is missing or pending.",
+        "business_approval: Business impact review is missing or pending.",
+        "business_approval: Customer impact assessment is missing or pending.",
+        "business_approval: Downtime acceptance is missing or pending.",
+        "business_approval: Approval status is missing or pending.",
+        "business_approval: Signature is missing or pending.",
+        "business_approval: Date is missing or pending.",
+        "business_approval: Approval status is not approved/complete/assigned/ready/signed.",
+        "rollback_owner: Rollback owner is missing or pending.",
+        "rollback_owner: Backup owner is missing or pending.",
+        "rollback_owner: Contact information is missing or pending.",
+        "rollback_owner: Approval status is missing or pending.",
+        "rollback_owner: Signature is missing or pending.",
+        "rollback_owner: Date is missing or pending.",
+        "rollback_owner: Approval status is not approved/complete/assigned/ready/signed.",
+        "maintenance_window: Planned execution date is missing or pending.",
+        "maintenance_window: Start time is missing or pending.",
+        "maintenance_window: End time is missing or pending.",
+        "maintenance_window: Timezone is missing or pending.",
+        "maintenance_window: Expected impact is missing or pending.",
+        "maintenance_window: Communication plan is missing or pending.",
+        "maintenance_window: Rollback decision time is missing or pending.",
+        "maintenance_window: Approval status is missing or pending.",
+        "maintenance_window: Signature is missing or pending.",
+        "maintenance_window: Date is missing or pending.",
+        "maintenance_window: Approval status is not approved/complete/assigned/ready/signed.",
+        "monitoring_owner: Monitoring owner is missing or pending.",
+        "monitoring_owner: Monitoring tools is missing or pending.",
+        "monitoring_owner: API errors metric is missing or pending.",
+        "monitoring_owner: Latency metric is missing or pending.",
+        "monitoring_owner: Traffic metric is missing or pending.",
+        "monitoring_owner: HTTP status codes metric is missing or pending.",
+        "monitoring_owner: Escalation path is missing or pending.",
+        "monitoring_owner: Approval status is missing or pending.",
+        "monitoring_owner: Signature is missing or pending.",
+        "monitoring_owner: Date is missing or pending.",
+        "monitoring_owner: Approval status is not approved/complete/assigned/ready/signed."
+      ],
+      "documents": {
+        "technical_approval": {
+          "complete": false,
+          "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\TECHNICAL_APPROVAL.md",
+          "fields": {
+            "System owner": "PENDING",
+            "Technical reviewer": "PENDING",
+            "Evidence confirmation": "PENDING",
+            "Risk assessment": "PENDING",
+            "Rollback validation": "PENDING",
+            "Approval status": "PENDING",
+            "Signature": "PENDING",
+            "Date": "PENDING"
+          },
+          "errors": [
+            "System owner is missing or pending.",
+            "Technical reviewer is missing or pending.",
+            "Evidence confirmation is missing or pending.",
+            "Risk assessment is missing or pending.",
+            "Rollback validation is missing or pending.",
+            "Approval status is missing or pending.",
+            "Signature is missing or pending.",
+            "Date is missing or pending.",
+            "Approval status is not approved/complete/assigned/ready/signed."
+          ]
+        },
+        "business_approval": {
+          "complete": false,
+          "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\BUSINESS_APPROVAL.md",
+          "fields": {
+            "Business owner": "PENDING",
+            "Business impact review": "PENDING",
+            "Customer impact assessment": "PENDING",
+            "Downtime acceptance": "PENDING",
+            "Approval status": "PENDING",
+            "Signature": "PENDING",
+            "Date": "PENDING"
+          },
+          "errors": [
+            "Business owner is missing or pending.",
+            "Business impact review is missing or pending.",
+            "Customer impact assessment is missing or pending.",
+            "Downtime acceptance is missing or pending.",
+            "Approval status is missing or pending.",
+            "Signature is missing or pending.",
+            "Date is missing or pending.",
+            "Approval status is not approved/complete/assigned/ready/signed."
+          ]
+        },
+        "rollback_owner": {
+          "complete": false,
+          "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\ROLLBACK_OWNER.md",
+          "fields": {
+            "Rollback owner": "PENDING",
+            "Backup owner": "PENDING",
+            "Rollback procedure reference": "docs/migration/LEGACY_API_DECOMMISSION_ROLLBACK.md",
+            "Contact information": "PENDING",
+            "Approval status": "PENDING",
+            "Signature": "PENDING",
+            "Date": "PENDING"
+          },
+          "errors": [
+            "Rollback owner is missing or pending.",
+            "Backup owner is missing or pending.",
+            "Contact information is missing or pending.",
+            "Approval status is missing or pending.",
+            "Signature is missing or pending.",
+            "Date is missing or pending.",
+            "Approval status is not approved/complete/assigned/ready/signed."
+          ]
+        },
+        "maintenance_window": {
+          "complete": false,
+          "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\MAINTENANCE_WINDOW.md",
+          "fields": {
+            "Planned execution date": "PENDING",
+            "Start time": "PENDING",
+            "End time": "PENDING",
+            "Timezone": "PENDING",
+            "Expected impact": "PENDING",
+            "Communication plan": "PENDING",
+            "Rollback decision time": "PENDING",
+            "Approval status": "PENDING",
+            "Signature": "PENDING",
+            "Date": "PENDING"
+          },
+          "errors": [
+            "Planned execution date is missing or pending.",
+            "Start time is missing or pending.",
+            "End time is missing or pending.",
+            "Timezone is missing or pending.",
+            "Expected impact is missing or pending.",
+            "Communication plan is missing or pending.",
+            "Rollback decision time is missing or pending.",
+            "Approval status is missing or pending.",
+            "Signature is missing or pending.",
+            "Date is missing or pending.",
+            "Approval status is not approved/complete/assigned/ready/signed."
+          ]
+        },
+        "monitoring_owner": {
+          "complete": false,
+          "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\MONITORING_OWNER.md",
+          "fields": {
+            "Monitoring owner": "PENDING",
+            "Monitoring tools": "PENDING",
+            "API errors metric": "PENDING",
+            "Latency metric": "PENDING",
+            "Traffic metric": "PENDING",
+            "HTTP status codes metric": "PENDING",
+            "Escalation path": "PENDING",
+            "Approval status": "PENDING",
+            "Signature": "PENDING",
+            "Date": "PENDING"
+          },
+          "errors": [
+            "Monitoring owner is missing or pending.",
+            "Monitoring tools is missing or pending.",
+            "API errors metric is missing or pending.",
+            "Latency metric is missing or pending.",
+            "Traffic metric is missing or pending.",
+            "HTTP status codes metric is missing or pending.",
+            "Escalation path is missing or pending.",
+            "Approval status is missing or pending.",
+            "Signature is missing or pending.",
+            "Date is missing or pending.",
+            "Approval status is not approved/complete/assigned/ready/signed."
+          ]
+        }
+      }
+    },
+    "rollback": {
+      "status": "FAIL",
+      "rollback_procedure": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\LEGACY_API_DECOMMISSION_ROLLBACK.md",
+      "rollback_checkpoint": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json",
+      "rollback_owner": "PENDING",
+      "errors": [
+        "Rollback owner approval document is not complete.",
+        "Rollback owner is not assigned."
+      ]
+    },
+    "maintenance": {
+      "status": "FAIL",
+      "fields": {
+        "Planned execution date": "PENDING",
+        "Start time": "PENDING",
+        "End time": "PENDING",
+        "Timezone": "PENDING",
+        "Expected impact": "PENDING",
+        "Communication plan": "PENDING",
+        "Rollback decision time": "PENDING",
+        "Approval status": "PENDING",
+        "Signature": "PENDING",
+        "Date": "PENDING"
+      },
+      "errors": [
+        "Planned execution date is not assigned.",
+        "Start time is not assigned.",
+        "End time is not assigned.",
+        "Timezone is not assigned.",
+        "Rollback decision time is not assigned.",
+        "Maintenance window approval document is not complete."
+      ]
+    },
+    "monitoring": {
+      "status": "FAIL",
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\MONITORING_OWNER.md",
+      "fields": {
+        "Monitoring owner": "PENDING",
+        "Monitoring tools": "PENDING",
+        "API errors metric": "PENDING",
+        "Latency metric": "PENDING",
+        "Traffic metric": "PENDING",
+        "HTTP status codes metric": "PENDING",
+        "Escalation path": "PENDING"
+      },
+      "errors": [
+        "Monitoring owner is not assigned.",
+        "Monitoring tools is not assigned.",
+        "API errors metric is not assigned.",
+        "Latency metric is not assigned.",
+        "Traffic metric is not assigned.",
+        "HTTP status codes metric is not assigned.",
+        "Escalation path is not assigned.",
+        "Monitoring owner approval document is not complete."
+      ]
+    }
+  },
+  "safety": {
+    "shutdown_executed": false,
+    "legacy_api_disabled": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "routes_changed": false,
+    "database_modified": false
+  },
+  "elapsed_seconds": 0.0043
+}
