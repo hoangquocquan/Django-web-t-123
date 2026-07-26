@@ -118,3 +118,43 @@ READY_FOR_LEGACY_API_SHUTDOWN
 Only when the validator confirms complete production evidence, zero legacy
 traffic, active Django traffic, zero unknown clients, rollback readiness,
 monitoring readiness and final business/technical approvals.
+
+## Phase 11.1.5.2 Evidence And Approval Collection
+
+### Evidence References
+
+- `docs/migration/PRODUCTION_EVIDENCE_INPUT_TEMPLATE.md`
+- `docs/migration/PRODUCTION_TRAFFIC_EVIDENCE_REPORT.md`
+- `docs/migration/FINAL_SHUTDOWN_EVIDENCE_CHECKLIST.md`
+
+### Approval References
+
+- `docs/migration/LEGACY_API_SHUTDOWN_APPROVAL_COLLECTION.md`
+- `docs/migration/LEGACY_API_FINAL_APPROVAL_RECORD.md`
+- `docs/migration/LEGACY_API_CLIENT_CONFIRMATION_RECORD.md`
+
+### Owner Information
+
+```text
+evidence_owner: pending
+technical_approver: pending
+business_approver: pending
+rollback_owner: pending
+monitoring_owner: pending
+```
+
+### Final Decision
+
+```text
+KEEP_LEGACY_API_ACTIVE
+```
+
+Allowed future decision:
+
+```text
+READY_FOR_LEGACY_API_SHUTDOWN
+```
+
+The decision may change only when the Phase 11.1.5.2 validator confirms
+complete production traffic evidence, complete client confirmations, rollback
+readiness, monitoring readiness and technical/business approvals.
