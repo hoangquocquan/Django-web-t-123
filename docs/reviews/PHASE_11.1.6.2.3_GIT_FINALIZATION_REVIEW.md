@@ -18,7 +18,7 @@ Phase 11.1.6.2.3 - IIS Production Evidence Collection Checklist
 
 ## Commit Hash
 
-`TO_BE_REPLACED_AFTER_COMMIT`
+`5344a77c12911e47a339ed2533a1635725338307`
 
 ## Git Tag
 
