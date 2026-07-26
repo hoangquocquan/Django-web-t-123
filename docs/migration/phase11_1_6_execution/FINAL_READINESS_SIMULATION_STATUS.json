@@ -1,0 +1,59 @@
+{
+  "evidence": "PASS",
+  "approval_simulation": "TRAINING_APPROVAL_SIMULATION",
+  "rollback": "PASS",
+  "monitoring": "PASS",
+  "decision": "READY_TO_EXECUTE_TRAINING",
+  "gates": {
+    "evidence": {
+      "status": "PASS",
+      "source_gate_status": "PASS",
+      "evidence_status": "COMPLETE_EVIDENCE_PACKAGE",
+      "environment": "STAGING_SIMULATION",
+      "simulation": true,
+      "legacy_requests": 0,
+      "django_requests": 2400,
+      "unknown_clients": 0,
+      "errors": []
+    },
+    "approval_simulation": {
+      "status": "TRAINING_APPROVAL_SIMULATION",
+      "source_gate_status": "FAIL",
+      "real_approval_modified": false,
+      "unsigned_or_pending_items": 46,
+      "note": "Approval templates are not changed during this training simulation."
+    },
+    "rollback": {
+      "status": "PASS",
+      "rollback_procedure": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\LEGACY_API_DECOMMISSION_ROLLBACK.md",
+      "rollback_checkpoint": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json",
+      "errors": []
+    },
+    "monitoring": {
+      "status": "PASS",
+      "monitoring_checklist": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\approvals\\MONITORING_OWNER.md",
+      "monitoring_metrics": [
+        "Monitoring owner",
+        "Monitoring tools",
+        "API errors metric",
+        "Latency metric",
+        "Traffic metric",
+        "HTTP status codes metric",
+        "Escalation path"
+      ],
+      "runbook": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md",
+      "errors": []
+    }
+  },
+  "safety": {
+    "shutdown_executed": false,
+    "legacy_api_disabled": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "routes_changed": false,
+    "database_modified": false,
+    "production_configuration_changed": false,
+    "real_approval_modified": false
+  },
+  "elapsed_seconds": 0.0123
+}
