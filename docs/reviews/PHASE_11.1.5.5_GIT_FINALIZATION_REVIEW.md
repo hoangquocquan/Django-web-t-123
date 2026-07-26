@@ -13,7 +13,7 @@ Phase 11.1.5.5 - IIS Evidence Documentation Git Finalization
 
 ## Commit Hash
 
-`TO_BE_REPLACED_AFTER_COMMIT`
+`1824ae1e27e02118583fd2c5142166aab1718ffa`
 
 ## Git Tag
 
