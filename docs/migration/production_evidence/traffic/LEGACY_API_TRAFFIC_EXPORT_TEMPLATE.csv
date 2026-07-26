@@ -1,0 +1,2 @@
+verification_start,verification_end,log_source,total_requests,legacy_api_requests,django_api_v1_requests,unknown_clients,evidence_owner,evidence_timestamp
+PENDING,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
