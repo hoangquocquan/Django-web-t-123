@@ -1,22 +1,30 @@
 # Maintenance Window
 
-Owner: PENDING
+Planned execution date: PENDING
 
-Date: PENDING
+Start time: PENDING
+
+End time: PENDING
+
+Timezone: PENDING
+
+Expected impact: PENDING
+
+Communication plan: PENDING
+
+Rollback decision time: PENDING
 
 Approval status: PENDING
 
 Signature: PENDING
 
-## Window
+Date: PENDING
 
-Start: PENDING
+## Window Scope
 
-End: PENDING
+Maintenance window approval confirms:
 
-Timezone: PENDING
-
-## Scope
-
-Maintenance window approval confirms when the operator may apply the production
-route/proxy change.
+- The route change may only happen during the approved window.
+- Rollback decision timing is clear.
+- Communication plan is prepared before execution.
+- Production shutdown is not allowed outside this window.
