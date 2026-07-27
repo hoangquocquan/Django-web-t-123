@@ -15,6 +15,19 @@ Reason:
 Docker CLI is installed, but the local Docker daemon/config is not accessible.
 No image was built and no external image push was attempted.
 
+Environment recovery check:
+
+- `docker version`: Docker client found, Docker daemon unavailable.
+- `docker info`: Docker context is `default`, server connection unavailable.
+- `docker ps`: Docker daemon unavailable.
+- Docker config warning: `C:\Users\hoang\.docker\config.json` access denied.
+
+Blocker report:
+
+```text
+docs/reviews/PHASE_13.1_DOCKER_ENVIRONMENT_BLOCKER.md
+```
+
 ## Image Information
 
 Image target:
@@ -52,6 +65,8 @@ The target local image does not exist because Docker build was blocked safely.
 - If Docker daemon is unavailable, scripts produce a blocked-safe report.
 - PostgreSQL service is prepared for future CI/staging use but not required by
   the current local SQLite migration backend.
+- Docker Desktop or Docker Engine must be started before image build can be
+  completed.
 
 ## Final Status
 
