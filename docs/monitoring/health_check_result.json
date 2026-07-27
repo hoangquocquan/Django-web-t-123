@@ -1,0 +1,71 @@
+{
+  "phase": "12.3",
+  "created_at": "2026-07-27T13:16:51+00:00",
+  "environment": "LOCAL_DJANGO_TEST_CLIENT",
+  "production_modified": false,
+  "routes_changed": false,
+  "database_schema_changed": false,
+  "component_count": 6,
+  "status": "HEALTHY",
+  "components": [
+    {
+      "name": "application_import",
+      "status": "PASS",
+      "latency_ms": 787.9675,
+      "details": {
+        "settings_module": "config.settings.test",
+        "debug": false
+      }
+    },
+    {
+      "name": "api:/",
+      "status": "PASS",
+      "latency_ms": 302.1813,
+      "details": {
+        "status_code": 200,
+        "available": true
+      }
+    },
+    {
+      "name": "api:/api/health/",
+      "status": "PASS",
+      "latency_ms": 0.7484,
+      "details": {
+        "status_code": 200,
+        "available": true
+      }
+    },
+    {
+      "name": "api:/api/v1/health/",
+      "status": "PASS",
+      "latency_ms": 0.7257,
+      "details": {
+        "status_code": 200,
+        "available": true
+      }
+    },
+    {
+      "name": "database",
+      "status": "PASS",
+      "latency_ms": 2.1443,
+      "details": {
+        "engine": "SQLite",
+        "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\backend\\database\\mecprecision.sqlite",
+        "integrity_check": "ok",
+        "table_count": 40,
+        "read_only": true
+      }
+    },
+    {
+      "name": "dependencies",
+      "status": "PASS",
+      "latency_ms": 0.0069,
+      "details": {
+        "redis_url_configured": false,
+        "sentry_dsn_configured": false,
+        "ollama_url_configured": false,
+        "production_probe_executed": false
+      }
+    }
+  ]
+}
