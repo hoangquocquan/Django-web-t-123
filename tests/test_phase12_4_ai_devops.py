@@ -15,7 +15,7 @@ AI_DEVOPS_DIR = PROJECT_ROOT / "docs" / "ai-devops"
 
 
 def test_validator_works(tmp_path):
-    result = validate_phase(output_path=tmp_path / "validation.json")
+    result = validate_phase(phase="12.4", output_path=tmp_path / "validation.json")
 
     assert result["phase"] == "12.4"
     assert result["status"] == "PASS"
@@ -26,7 +26,7 @@ def test_validator_works(tmp_path):
 
 
 def test_ollama_connection_handling(monkeypatch, tmp_path):
-    def fake_ollama(prompt):
+    def fake_ollama(prompt, **kwargs):
         return {"available": False, "response": "", "error": "connection refused"}
 
     monkeypatch.setattr("scripts.ollama_phase_reviewer.ask_ollama", fake_ollama)
@@ -42,8 +42,8 @@ def test_ollama_connection_handling(monkeypatch, tmp_path):
 
 
 def test_report_generation(monkeypatch, tmp_path):
-    def fake_ollama(prompt):
-        return {"available": True, "response": "decision: PASS\nhuman review required", "error": ""}
+    def fake_ollama(prompt, **kwargs):
+        return {"available": True, "model_available": True, "models": ["llama3.1"], "response": "decision: PASS\nhuman review required", "error": ""}
 
     monkeypatch.setattr("scripts.ollama_phase_reviewer.ask_ollama", fake_ollama)
     validation_path = tmp_path / "validation.json"
@@ -67,7 +67,7 @@ def test_safety_rules_exist():
 
 def test_no_automatic_production_approval():
     validation = {"status": "PASS", "warnings": []}
-    ollama_result = {"available": True}
+    ollama_result = {"available": True, "response": "decision: PASS"}
 
     assert decide(validation, ollama_result) == "PASS"
     workflow = json.loads((AI_DEVOPS_DIR / "n8n_phase_review_workflow.json").read_text(encoding="utf-8"))
@@ -75,4 +75,3 @@ def test_no_automatic_production_approval():
     assert safety["autoDeploy"] is False
     assert safety["autoApproveProduction"] is False
     assert safety["humanReviewRequired"] is True
-

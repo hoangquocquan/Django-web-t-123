@@ -31,6 +31,19 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase12_4_ai_devops.py",
         ],
         "expected_tag": "phase-12.4-ai-devops-ready",
+    },
+    "12.4.1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4.1_OLLAMA_CONNECTION_VALIDATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "ai-devops" / "OLLAMA_TEST_PROMPT.md",
+            PROJECT_ROOT / "docs" / "ai-devops" / "ollama_environment_check.json",
+            PROJECT_ROOT / "docs" / "ai-devops" / "AI_PHASE_REVIEW_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_12.4.1_OLLAMA_VALIDATION_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase12_4_1_ollama_connection.py",
+        ],
+        "expected_tag": "phase-12.4.1-ollama-ready",
     }
 }
 
@@ -66,11 +79,12 @@ def file_status(path):
     }
 
 
-def validate_phase(phase="12.4", output_path=None):
+def validate_phase(phase="12.4.1", output_path=None):
     """Validate required artifacts for a migration phase."""
     requirements = PHASE_REQUIREMENTS.get(phase)
     missing = []
     warnings = []
+    notes = []
     checked_files = []
 
     if not requirements:
@@ -97,7 +111,7 @@ def validate_phase(phase="12.4", output_path=None):
     expected_tag = requirements.get("expected_tag", "")
     tag_present = bool(tag_result["stdout"]) if expected_tag else False
     if expected_tag and not tag_present:
-        warnings.append(f"Expected tag not found yet: {expected_tag}")
+        notes.append(f"Expected tag not found yet: {expected_tag}")
 
     unsafe_status_lines = []
     for line in git_status["stdout"].splitlines():
@@ -107,7 +121,7 @@ def validate_phase(phase="12.4", output_path=None):
             continue
         unsafe_status_lines.append(line)
     if unsafe_status_lines:
-        warnings.append("Working tree has uncommitted phase changes.")
+        notes.append("Working tree has uncommitted phase changes.")
 
     status = "PASS" if not missing else "FAIL"
     result = {
@@ -116,6 +130,7 @@ def validate_phase(phase="12.4", output_path=None):
         "status": status,
         "missing": missing,
         "warnings": warnings,
+        "notes": notes,
         "checked_files": checked_files,
         "git": {
             "branch": git_branch["stdout"],
@@ -140,7 +155,7 @@ def validate_phase(phase="12.4", output_path=None):
 def main():
     """Command-line entrypoint."""
     parser = argparse.ArgumentParser(description="Validate migration phase artifacts.")
-    parser.add_argument("--phase", default="12.4")
+    parser.add_argument("--phase", default="12.4.1")
     parser.add_argument("--output", default=None)
     args = parser.parse_args()
 
@@ -151,4 +166,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
