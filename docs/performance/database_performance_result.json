@@ -1,0 +1,54 @@
+{
+  "phase": "12.2",
+  "created_at": "2026-07-27T13:08:06+00:00",
+  "database": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\backend\\database\\mecprecision.sqlite",
+  "database_engine": "SQLite",
+  "database_schema_changed": false,
+  "production_modified": false,
+  "query_count": 5,
+  "slow_threshold_ms": 25.0,
+  "slow_query_count": 0,
+  "average_query_ms": 0.1701,
+  "max_query_ms": 0.2133,
+  "total_elapsed_ms": 3.3164,
+  "sqlite_integrity_check": "ok",
+  "queries": [
+    {
+      "name": "product_count",
+      "elapsed_ms": 0.2133,
+      "row_count": 1,
+      "slow": false
+    },
+    {
+      "name": "product_list_join_category",
+      "elapsed_ms": 0.1849,
+      "row_count": 11,
+      "slow": false
+    },
+    {
+      "name": "quote_customer_join",
+      "elapsed_ms": 0.1279,
+      "row_count": 1,
+      "slow": false
+    },
+    {
+      "name": "cms_pages_by_slug",
+      "elapsed_ms": 0.1923,
+      "row_count": 10,
+      "slow": false
+    },
+    {
+      "name": "admin_sessions_expiry_index",
+      "elapsed_ms": 0.1322,
+      "row_count": 1,
+      "slow": false
+    }
+  ],
+  "errors": [],
+  "status": "DATABASE_PERFORMANCE_BASELINE_COMPLETE",
+  "artifacts": {
+    "markdown": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\performance\\database_performance_report.md",
+    "json": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\performance\\database_performance_result.json",
+    "dashboard": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\reviews\\PHASE_12.2_PERFORMANCE_REPORT.md"
+  }
+}
