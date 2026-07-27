@@ -5,11 +5,14 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+**/.pytest_cache/
 .git/
+**/.git/
 .env
 .env.*
 docs.zip
 *.log
+**/*.log
 
 # Log va file upload la du lieu runtime, khong nen dong cung vao image.
 backend/logs/

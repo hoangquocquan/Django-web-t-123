@@ -4,7 +4,6 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=config.settings.development
-ENV SECRET_KEY=docker-local-build-only-secret
 ENV DEBUG=False
 ENV ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,web
 ENV DATABASE_URL=sqlite:////app/django_backend/db.sqlite3

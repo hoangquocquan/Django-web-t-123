@@ -11,6 +11,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -71,12 +72,42 @@ def inspect_image(image):
     }
 
 
+def check_container_health(container_name, attempts=15, delay_seconds=2):
+    """Wait for Django inside the container before deciding health status.
+
+    Docker can report a container as started before Django has finished booting.
+    The retry loop keeps validation honest: it waits for a real successful
+    `/api/v1/health/` response, but still fails if the app never becomes ready.
+    """
+    health_command = [
+        "docker",
+        "exec",
+        container_name,
+        "python",
+        "-c",
+        "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5).read()",
+    ]
+    last_result = {"skipped": False, "returncode": None, "stdout": "", "stderr": ""}
+
+    for attempt in range(1, attempts + 1):
+        result = run_command(health_command, timeout=60)
+        result["attempt"] = attempt
+        result["attempts"] = attempts
+        last_result = result
+        if result["returncode"] == 0:
+            return result
+        time.sleep(delay_seconds)
+
+    return last_result
+
+
 def validate_image(image=DEFAULT_IMAGE, output_path=None, skip_container=False):
     """Validate image existence, metadata, and optional container startup."""
     docker_state = docker_available()
     image_info = {"exists": False, "user": "", "healthcheck_present": False}
     container_result = {"skipped": True, "returncode": None, "stdout": "", "stderr": ""}
     health_result = {"skipped": True, "returncode": None, "stdout": "", "stderr": ""}
+    container_logs = {"skipped": True, "returncode": None, "stdout": "", "stderr": ""}
     cleanup_result = {"skipped": True, "returncode": None, "stdout": "", "stderr": ""}
 
     if not docker_state["available"]:
@@ -88,17 +119,9 @@ def validate_image(image=DEFAULT_IMAGE, output_path=None, skip_container=False):
             cleanup_result = run_command(["docker", "rm", "-f", container_name], timeout=60)
             container_result = run_command(["docker", "run", "-d", "--name", container_name, "-p", "18000:8000", image], timeout=120)
             if container_result["returncode"] == 0:
-                health_result = run_command(
-                    [
-                        "docker",
-                        "exec",
-                        container_name,
-                        "python",
-                        "-c",
-                        "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5).read()",
-                    ],
-                    timeout=60,
-                )
+                health_result = check_container_health(container_name)
+                if health_result["returncode"] != 0:
+                    container_logs = run_command(["docker", "logs", container_name, "--tail", "120"], timeout=60)
             cleanup_result = run_command(["docker", "rm", "-f", container_name], timeout=60)
 
         security = {
@@ -120,6 +143,7 @@ def validate_image(image=DEFAULT_IMAGE, output_path=None, skip_container=False):
         "image_info": image_info,
         "container_start": container_result,
         "health_check": health_result,
+        "container_logs": container_logs,
         "cleanup": cleanup_result,
         "safety": {
             "production_deployed": False,
@@ -152,4 +176,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
