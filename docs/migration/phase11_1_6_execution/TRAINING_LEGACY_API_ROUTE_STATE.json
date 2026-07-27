@@ -1,0 +1,14 @@
+{
+  "environment": "TRAINING",
+  "legacy_route": "/api/*",
+  "legacy_available": true,
+  "replacement_route": "/api/v1/*",
+  "replacement_available": true,
+  "legacy_disabled_in_training": false,
+  "production_route_changed": false,
+  "iis_modified": false,
+  "proxy_modified": false,
+  "database_modified": false,
+  "updated_at": "2026-07-27T12:13:49.579289+00:00",
+  "training_shutdown_executed": false
+}
