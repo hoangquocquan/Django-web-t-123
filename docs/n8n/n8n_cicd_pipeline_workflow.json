@@ -1,0 +1,111 @@
+{
+  "name": "MEC Precision CI/CD Orchestration",
+  "active": false,
+  "nodes": [
+    {
+      "id": "git-trigger",
+      "name": "Git trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "path": "mecprecision-cicd",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "id": "receive-event",
+      "name": "Receive event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [220, 0],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "name": "phase", "value": "={{ $json.phase || '13.3' }}", "type": "string" },
+            { "name": "commit", "value": "={{ $json.commit || 'local' }}", "type": "string" },
+            { "name": "environment", "value": "review", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "validate-phase",
+      "name": "Validate phase",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 0],
+      "parameters": {
+        "command": "python scripts/phase_validator.py --phase 13.2"
+      }
+    },
+    {
+      "id": "run-tests",
+      "name": "Run tests",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [700, 0],
+      "parameters": {
+        "command": "python scripts/phase13_2_test_pipeline.py"
+      }
+    },
+    {
+      "id": "build-docker-image",
+      "name": "Build Docker image",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [940, 0],
+      "parameters": {
+        "command": "python scripts/phase13_1_docker_build.py"
+      }
+    },
+    {
+      "id": "call-ollama-api",
+      "name": "Call Ollama API",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1180, 0],
+      "parameters": {
+        "command": "python scripts/n8n_ollama_review.py"
+      }
+    },
+    {
+      "id": "generate-report",
+      "name": "Generate report",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1420, 0],
+      "parameters": {
+        "command": "python scripts/n8n_phase_trigger.py --local-only"
+      }
+    },
+    {
+      "id": "notification",
+      "name": "Notification",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1660, 0],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Git trigger": { "main": [[{ "node": "Receive event", "type": "main", "index": 0 }]] },
+    "Receive event": { "main": [[{ "node": "Validate phase", "type": "main", "index": 0 }]] },
+    "Validate phase": { "main": [[{ "node": "Run tests", "type": "main", "index": 0 }]] },
+    "Run tests": { "main": [[{ "node": "Build Docker image", "type": "main", "index": 0 }]] },
+    "Build Docker image": { "main": [[{ "node": "Call Ollama API", "type": "main", "index": 0 }]] },
+    "Call Ollama API": { "main": [[{ "node": "Generate report", "type": "main", "index": 0 }]] },
+    "Generate report": { "main": [[{ "node": "Notification", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "meta": {
+    "phase": "13.3",
+    "productionDeploymentIncluded": false,
+    "realSecretsIncluded": false,
+    "humanApprovalRequired": true
+  }
+}

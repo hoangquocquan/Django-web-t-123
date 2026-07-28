@@ -59,6 +59,22 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_2_test_pipeline.py",
         ],
         "expected_tag": "phase-13.2-test-pipeline-ready",
+    },
+    "13.3": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.3_N8N_CICD_ORCHESTRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_CICD_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "n8n" / "n8n_cicd_pipeline_workflow.json",
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_SETUP_GUIDE.md",
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_NOTIFICATION_DESIGN.md",
+            PROJECT_ROOT / "docs" / "n8n" / "n8n_execution_report.json",
+            PROJECT_ROOT / "docs" / "ai-devops" / "N8N_AI_REVIEW_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_13.3_N8N_CICD_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_3_n8n.py",
+        ],
+        "expected_tag": "phase-13.3-n8n-ready",
     }
 }
 
