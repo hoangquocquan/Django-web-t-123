@@ -1,0 +1,26 @@
+# n8n Phase Automation Controller configuration.
+# Không lưu secret thật trong file này.
+
+controller:
+  phase: "13.7"
+  project_path: "C:/Users/hoang/Documents/Codex/mecprecision-vietnam"
+  result_path: "n8n/results/execution_history.json"
+
+ollama:
+  endpoint: "http://localhost:11434"
+  model: "llama3"
+
+allowed_commands:
+  - "python scripts/phase_validator.py --phase 13.7"
+  - "python ai-review/run_phase_review.py --phase 13.7 --skip-migration"
+  - "python ai-review/retry_controller.py"
+  - "python ai-review/ollama_phase_reviewer.py"
+  - "python ai-review/report_generator.py"
+
+security_restrictions:
+  auto_deploy_production: false
+  auto_merge_code: false
+  bypass_human_approval: false
+  hide_failed_tests: false
+  store_real_secrets: false
+  human_approval_required: true

@@ -128,6 +128,21 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_6_self_correction.py",
         ],
         "expected_tag": "phase-13.6-self-correction-ready",
+    },
+    "13.7": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_REAL_AUTOMATION_ARCHITECTURE.md",
+            PROJECT_ROOT / "n8n" / "workflows" / "phase_automation_controller.json",
+            PROJECT_ROOT / "n8n" / "config" / "n8n_phase_controller.yml",
+            PROJECT_ROOT / "scripts" / "n8n_phase_trigger.py",
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_NOTIFICATION_DESIGN.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_13.7_N8N_AUTOMATION_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_7_n8n_controller.py",
+        ],
+        "expected_tag": "phase-13.7-n8n-controller-ready",
     }
 }
 

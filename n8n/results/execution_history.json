@@ -1,0 +1,64 @@
+[
+  {
+    "phase": "13.7",
+    "created_at": "2026-07-28T13:37:37+00:00",
+    "mode": "local_controller",
+    "status": "N8N_AUTOMATION_COMPLETE",
+    "event": {
+      "phase": "13.7",
+      "created_at": "2026-07-28T13:37:04+00:00",
+      "branch": "feature/phase-13.7-n8n-real-automation-controller",
+      "commit": "6f8415a08dddce05710cd8bfa38bc7e904c3578a",
+      "trigger_source": "local_controller",
+      "requested_action": "phase_automation_controller",
+      "production_deployment_requested": false,
+      "auto_merge_requested": false,
+      "human_approval_required": true
+    },
+    "webhook_result": {
+      "sent": false,
+      "status_code": null,
+      "response_body": "",
+      "error": "Local controller mode."
+    },
+    "execution_result": {
+      "status": "N8N_AUTOMATION_COMPLETE",
+      "phase_validation": {
+        "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe scripts/phase_validator.py --phase 13.7",
+        "returncode": 0,
+        "duration_seconds": 0.229,
+        "stdout_tail": "{\n  \"phase\": \"13.7\",\n  \"created_at\": \"2026-07-28T13:37:04+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: phase-13.7-n8n-controller-ready\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md\",\n      \"exists\": true,\n      \"size_bytes\": 922\n    },\n    {\n      \"path\": \"docs\\\\n8n\\\\N8N_REAL_AUTOMATION_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1891\n    },\n    {\n      \"path\": \"n8n\\\\workflows\\\\phase_automation_controller.json\",\n      \"exists\": true,\n      \"size_bytes\": 3988\n    },\n    {\n      \"path\": \"n8n\\\\config\\\\n8n_phase_controller.yml\",\n      \"exists\": true,\n      \"size_bytes\": 787\n    },\n    {\n      \"path\": \"scripts\\\\n8n_phase_trigger.py\",\n      \"exists\": true,\n      \"size_bytes\": 10417\n    },\n    {\n      \"path\": \"docs\\\\n8n\\\\N8N_NOTIFICATION_DESIGN.md\",\n      \"exists\": true,\n      \"size_bytes\": 1490\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\PHASE_13.7_N8N_AUTOMATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 654\n    },\n    {\n      \"path\": \"tests\\\\test_phase13_7_n8n_controller.py\",\n      \"exists\": true,\n      \"size_bytes\": 3672\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/phase-13.7-n8n-real-automation-controller\",\n    \"status_short\": \"M docs/n8n/N8N_NOTIFICATION_DESIGN.md\\n M scripts/n8n_phase_trigger.py\\n M scripts/phase_validator.py\\n?? docs.zip\\n?? docs/codex-prompts/PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md\\n?? docs/n8n/N8N_REAL_AUTOMATION_ARCHITECTURE.md\\n?? docs/reviews/PHASE_13.7_N8N_AUTOMATION_REPORT.md\\n?? n8n/\\n?? tests/test_phase13_7_n8n_controller.py\",\n    \"expected_tag\": \"phase-13.7-n8n-controller-ready\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}\n",
+        "stderr_tail": "",
+        "status": "PASS"
+      },
+      "ai_review": {
+        "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe ai-review/run_phase_review.py --phase 13.7 --skip-migration",
+        "returncode": 0,
+        "duration_seconds": 15.476,
+        "stdout_tail": "{\n  \"phase\": \"13.7\",\n  \"status\": \"AI_PHASE_REVIEW_ENGINE_COMPLETE\",\n  \"evidence\": \"ai-review/evidence/current_phase.json\",\n  \"rule_validation\": \"ai-review/results/rule_validation.json\",\n  \"test_result\": \"ai-review/results/test_result.json\",\n  \"ai_review\": \"ai-review/results/ai_review.json\",\n  \"report\": \"C:\\\\Users\\\\hoang\\\\Documents\\\\Codex\\\\mecprecision-vietnam\\\\docs\\\\reviews\\\\PHASE_AI_REVIEW_REPORT.md\",\n  \"decision\": \"PASS\",\n  \"safety\": {\n    \"production_approved\": false,\n    \"code_modified_by_ai\": false,\n    \"failed_tests_skipped\": false,\n    \"human_approval_required\": true\n  }\n}\n",
+        "stderr_tail": "",
+        "status": "PASS"
+      },
+      "self_correction": {
+        "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe ai-review/retry_controller.py",
+        "returncode": 0,
+        "duration_seconds": 17.204,
+        "stdout_tail": "{\n  \"phase\": \"13.6\",\n  \"created_at\": \"2026-07-28T13:37:37+00:00\",\n  \"status\": \"PASS\",\n  \"final_decision\": \"PASS\",\n  \"command\": \"C:\\\\Users\\\\hoang\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe -m pytest tests/test_phase13_6_self_correction.py\",\n  \"retry_count\": 1,\n  \"max_retries\": 3,\n  \"attempts\": [\n    {\n      \"attempt\": 1,\n      \"returncode\": 0,\n      \"duration_seconds\": 17.027\n    }\n  ],\n  \"last_error\": {},\n  \"analysis\": {},\n  \"fix_task\": \"\",\n  \"safety\": {\n    \"production_modified\": false,\n    \"tests_skipped\": false,\n    \"fake_pass_created\": false,\n    \"code_modified_by_ai\": false,\n    \"human_approval_required\": true\n  }\n}\n",
+        "stderr_tail": "",
+        "status": "PASS"
+      }
+    },
+    "outputs": {
+      "phase_review": "docs/reviews/PHASE_AI_REVIEW_REPORT.md",
+      "self_correction": "docs/reviews/PHASE_13.6_SELF_CORRECTION_REPORT.md",
+      "history": "n8n/results/execution_history.json"
+    },
+    "safety": {
+      "production_deployed": false,
+      "code_auto_merged": false,
+      "human_approval_bypassed": false,
+      "failed_tests_hidden": false,
+      "human_approval_required": true
+    }
+  }
+]

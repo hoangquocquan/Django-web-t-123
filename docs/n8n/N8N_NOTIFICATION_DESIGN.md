@@ -50,3 +50,25 @@ Approval message must state:
 - production safety confirmation
 
 Approval is manual. n8n cannot approve production.
+
+## Phase 13.7 Controller Notification
+
+The real automation controller sends one of these statuses:
+
+```text
+N8N_AUTOMATION_COMPLETE
+N8N_AUTOMATION_BLOCKED
+```
+
+Notification payload must include:
+
+- trigger source
+- phase
+- commit
+- phase validation result
+- AI review result
+- self correction result
+- generated report path
+- human approval request
+
+n8n cannot auto merge code and cannot auto deploy production.

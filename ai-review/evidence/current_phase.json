@@ -1,24 +1,28 @@
 {
-  "phase": "13.5",
-  "created_at": "2026-07-28T13:04:40+00:00",
-  "requirement_file": "docs\\codex-prompts\\PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md",
-  "requirement_text": "# TASK: Phase 13.5 - AI Phase Review Engine\n\nProject:\n\nmecprecision-vietnam\n\n## Objective\n\nCreate a reusable system that automatically reviews any development Phase.\n\nThe system must:\n\n1. Collect Phase evidence\n2. Validate requirements\n3. Run tests\n4. Send evidence to Ollama\n5. Generate final review report\n\n## Important Rules\n\nAI is only reviewer.\n\nAI must not:\n\n- approve production deployment\n- modify code automatically\n- skip failed tests\n\nHuman approval remains required.\n\n## Target Architecture\n\nPhase Task\n\n↓\n\nEvidence Collector\n\n↓\n\nRule Validator\n\n↓\n\nTest Executor\n\n↓\n\nOllama\n\n↓\n\nAI Phase Review Report\n\n## Git Requirements\n\nBranch:\n\nfeature/phase-13.5-ai-phase-review-engine\n\nCommit:\n\nfeat: create ai phase review engine\n\nTag:\n\nphase-13.5-ai-review-ready\n\n## Final Status\n\nAI_PHASE_REVIEW_ENGINE_COMPLETE\n\nREADY_FOR_N8N_AUTOMATION\n",
+  "phase": "13.7",
+  "created_at": "2026-07-28T13:37:04+00:00",
+  "requirement_file": "docs\\codex-prompts\\PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md",
+  "requirement_text": "# TASK: Phase 13.7 - n8n Real Automation Controller\n\nProject:\n\nmecprecision-vietnam\n\n## Objective\n\nCreate real n8n automation controller.\n\nGoal:\n\nn8n becomes the orchestrator connecting:\n\n- Testing\n- Error Correction\n- Ollama Review\n- Reporting\n\n## Important Rules\n\nDO NOT:\n\n- auto deploy production\n- auto merge code\n- bypass human approval\n- hide failed tests\n\nn8n only:\n\n- trigger workflows\n- execute automation\n- collect results\n- notify status\n\n## Target Workflow\n\nTrigger\n\n↓\n\nn8n Controller\n\n↓\n\nRun Phase Validation\n\n↓\n\nRun Tests\n\n↓\n\nPASS or FAIL\n\nPASS:\n\n- Ollama Review\n- Review Report\n\nFAIL:\n\n- Error Analysis\n- Auto Fix Task\n- Codex Fix\n- Test Again\n\n## Git Requirements\n\nBranch:\n\nfeature/phase-13.7-n8n-real-automation-controller\n\nCommit:\n\nfeat: add n8n real automation controller\n\nTag:\n\nphase-13.7-n8n-controller-ready\n\n## Final Status\n\nN8N_AUTOMATION_CONTROLLER_COMPLETE\n\nREADY_FOR_AI_SOFTWARE_FACTORY\n",
   "git": {
-    "branch": "feature/phase-13.5-ai-phase-review-engine",
-    "commit": "760bbcbb7b81b1eddde556cb3ad13f22de575341",
-    "latest_commit": "760bbcb feat: add deployment automation foundation",
+    "branch": "feature/phase-13.7-n8n-real-automation-controller",
+    "commit": "6f8415a08dddce05710cd8bfa38bc7e904c3578a",
+    "latest_commit": "6f8415a feat: add ai self correction loop",
     "changed_files": [
       "M docs/ai-devops/phase_validation_result.json",
+      " M docs/n8n/N8N_NOTIFICATION_DESIGN.md",
+      " M scripts/n8n_phase_trigger.py",
       " M scripts/phase_validator.py",
-      "?? ai-review/",
       "?? docs.zip",
-      "?? docs/ai-review/",
-      "?? docs/codex-prompts/PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md",
-      "?? docs/reviews/PHASE_AI_REVIEW_REPORT.md",
-      "?? tests/test_phase13_5_ai_review_engine.py"
+      "?? docs/codex-prompts/PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md",
+      "?? docs/n8n/N8N_REAL_AUTOMATION_ARCHITECTURE.md",
+      "?? docs/reviews/PHASE_13.7_N8N_AUTOMATION_REPORT.md",
+      "?? n8n/",
+      "?? tests/test_phase13_7_n8n_controller.py"
     ],
     "diff_files": [
       "docs/ai-devops/phase_validation_result.json",
+      "docs/n8n/N8N_NOTIFICATION_DESIGN.md",
+      "scripts/n8n_phase_trigger.py",
       "scripts/phase_validator.py"
     ]
   },
@@ -67,8 +71,8 @@
   "logs": [
     {
       "path": "docs/ai-devops/phase_validation_result.json",
-      "size_bytes": 2007,
-      "content_preview": "{\n  \"phase\": \"13.5\",\n  \"created_at\": \"2026-07-28T13:03:17+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: phase-13.5-ai-review-ready\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md\",\n      \"exists\": true,\n      \"size_bytes\": 852\n    },\n    {\n      \"path\": \"docs\\\\ai-review\\\\AI_PHASE_REVIEW_ENGINE_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1652\n    },\n    {\n      \"path\": \"ai-review\\\\config.yml\",\n      \"exists\": true,\n      \"size_bytes\": 1084\n    },\n    {\n      \"path\": \"ai-review\\\\evidence_collector.py\",\n      \"exists\": true,\n      \"size_bytes\": 4809\n    },\n    {\n      \"path\": \"ai-review\\\\requirement_validator.py\",\n      \"exists\": true,\n      \"size_bytes\": 5624\n    },\n    {\n      \"path\": \"ai-review\\\\test_executor.py\",\n      \"exists\": true,\n      \"size_bytes\": 5683\n    },\n    {\n      \"path\": \"ai-review\\\\ollama_phase_reviewer.py\",\n      \"exists\": true,\n      \"size_bytes\": 5434\n    },\n    {\n      \"path\": \"ai-review\\\\report_generator.py\",\n      \"exists\": true,\n      \"size_bytes\": 4155\n    },\n    {\n      \"path\": \"ai-review\\\\run_phase_review.py\",\n      \"exists\": true,\n      \"size_bytes\": 2341\n    },\n    {\n      \"path\": \"tests\\\\test_phase13_5_ai_review_engine.py\",\n      \"exists\": true,\n      \"size_bytes\": 4443\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/phase-13.5-ai-phase-review-engine\",\n    \"status_short\": \"M scripts/phase_validator.py\\n?? ai-review/\\n?? docs.zip\\n?? docs/ai-review/\\n?? docs/codex-prompts/PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md\\n?? tests/test_phase13_5_ai_review_engine.py\",\n    \"expected_tag\": \"phase-13.5-ai-review-ready\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
+      "size_bytes": 2001,
+      "content_preview": "{\n  \"phase\": \"13.7\",\n  \"created_at\": \"2026-07-28T13:37:04+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: phase-13.7-n8n-controller-ready\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md\",\n      \"exists\": true,\n      \"size_bytes\": 922\n    },\n    {\n      \"path\": \"docs\\\\n8n\\\\N8N_REAL_AUTOMATION_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1891\n    },\n    {\n      \"path\": \"n8n\\\\workflows\\\\phase_automation_controller.json\",\n      \"exists\": true,\n      \"size_bytes\": 3988\n    },\n    {\n      \"path\": \"n8n\\\\config\\\\n8n_phase_controller.yml\",\n      \"exists\": true,\n      \"size_bytes\": 787\n    },\n    {\n      \"path\": \"scripts\\\\n8n_phase_trigger.py\",\n      \"exists\": true,\n      \"size_bytes\": 10417\n    },\n    {\n      \"path\": \"docs\\\\n8n\\\\N8N_NOTIFICATION_DESIGN.md\",\n      \"exists\": true,\n      \"size_bytes\": 1490\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\PHASE_13.7_N8N_AUTOMATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 654\n    },\n    {\n      \"path\": \"tests\\\\test_phase13_7_n8n_controller.py\",\n      \"exists\": true,\n      \"size_bytes\": 3672\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/phase-13.7-n8n-real-automation-controller\",\n    \"status_short\": \"M docs/n8n/N8N_NOTIFICATION_DESIGN.md\\n M scripts/n8n_phase_trigger.py\\n M scripts/phase_validator.py\\n?? docs.zip\\n?? docs/codex-prompts/PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md\\n?? docs/n8n/N8N_REAL_AUTOMATION_ARCHITECTURE.md\\n?? docs/reviews/PHASE_13.7_N8N_AUTOMATION_REPORT.md\\n?? n8n/\\n?? tests/test_phase13_7_n8n_controller.py\",\n    \"expected_tag\": \"phase-13.7-n8n-controller-ready\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
     },
     {
       "path": "docs/cicd/test_pipeline_result.json",
