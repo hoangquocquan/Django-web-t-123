@@ -1,0 +1,112 @@
+{
+  "phase": "14.0",
+  "audit": "Django Migration Audit",
+  "final_decision": "PARTIALLY_MIGRATED",
+  "files_inspected": {
+    "documentation": [
+      "docs/",
+      "docs/reviews/",
+      "docs/migration/"
+    ],
+    "django": [
+      "django_backend/manage.py",
+      "django_backend/config/settings/base.py",
+      "django_backend/config/urls.py",
+      "django_backend/apps/api/urls.py",
+      "django_backend/apps/catalog/models.py",
+      "django_backend/apps/crm/models.py",
+      "django_backend/apps/sales/models.py",
+      "django_backend/apps/cms/models.py",
+      "django_backend/apps/accounts/models.py",
+      "django_backend/apps/common/models.py",
+      "django_backend/apps/api/views/",
+      "django_backend/apps/api/serializers/"
+    ],
+    "legacy": [
+      "backend/app.py",
+      "backend/controllers/",
+      "backend/services/",
+      "backend/repositories/",
+      "backend/auth/",
+      "backend/database/",
+      "backend/uploads/"
+    ],
+    "database": [
+      "backend/database/mecprecision.sqlite",
+      "backend/database/schema.sql",
+      "backend/database/seed.sql"
+    ],
+    "reports_created": [
+      "docs/django-audit/DJANGO_STRUCTURE_AUDIT.md",
+      "docs/django-audit/LEGACY_COMPONENT_AUDIT.md",
+      "docs/django-audit/DATABASE_MIGRATION_AUDIT.md",
+      "docs/django-audit/API_MIGRATION_AUDIT.md",
+      "docs/reviews/PHASE_14.0_DJANGO_MIGRATION_AUDIT_REPORT.md"
+    ]
+  },
+  "commands_executed": [
+    {
+      "command": "python manage.py check",
+      "working_directory": "django_backend",
+      "status": "PASS",
+      "result": "System check identified no issues (0 silenced)."
+    },
+    {
+      "command": "python manage.py showmigrations",
+      "working_directory": "django_backend",
+      "status": "PASS",
+      "result": "Built-in Django migrations listed for admin/auth/contenttypes/sessions; all unchecked. No business app migrations listed."
+    },
+    {
+      "command": "pytest",
+      "working_directory": "project root",
+      "status": "PASS",
+      "result": "180 passed"
+    },
+    {
+      "command": "python scripts/phase_validator.py --phase 13.8",
+      "working_directory": "project root",
+      "status": "PASS",
+      "result": "Existing migration validation script passed for latest configured AI factory phase."
+    },
+    {
+      "command": "python ai-factory/run_ai_factory.py --phase 14.0",
+      "working_directory": "project root",
+      "status": "BLOCKED_SAFE",
+      "result": "AI Software Factory loaded the Phase 14.0 prompt but blocked because scripts/phase_validator.py has no Phase 14.0 requirements and source code changes were prohibited."
+    }
+  ],
+  "database_findings": {
+    "legacy_database": "backend/database/mecprecision.sqlite",
+    "legacy_database_size_bytes": 544768,
+    "legacy_table_count": 39,
+    "django_unmanaged_model_count": 27,
+    "business_migrations_present": false,
+    "django_owns_business_schema": false,
+    "legacy_database_read_only_alias": true
+  },
+  "api_findings": {
+    "django_api_routes_declared": 23,
+    "drf_used": true,
+    "serializers_present": true,
+    "read_only_permission_present": true,
+    "write_intent_memory_store_present": true,
+    "full_django_write_migration_complete": false
+  },
+  "warnings": [
+    "Project is not fully migrated to Django.",
+    "Legacy backend and legacy SQLite database remain present.",
+    "Django business models are unmanaged and read-only.",
+    "No project business migrations were found.",
+    "Some legacy tables are not mapped by Django models.",
+    "AI Software Factory Phase 14.0 is blocked until phase_validator is extended in a future code-change phase.",
+    "docs.zip is untracked and was not included in this audit."
+  ],
+  "safety": {
+    "source_code_modified": false,
+    "database_migrated": false,
+    "legacy_files_deleted": false,
+    "production_deployed": false,
+    "human_approval_required": true
+  }
+}

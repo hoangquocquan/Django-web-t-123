@@ -2,15 +2,15 @@
 
 ## Phase Name
 
-13.8
+14.0
 
 ## Created At
 
-2026-07-28T13:50:16+00:00
+2026-07-28T14:04:44+00:00
 
 ## Final Decision
 
-PASS
+WARNING
 
 ## Requirement Status
 
@@ -23,7 +23,7 @@ PASS
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.45
+- Duration seconds: 4.244
 
 ## Security Status
 
@@ -34,9 +34,9 @@ PASS
 
 ## AI Analysis
 
-- Status: PASS
+- Status: WARNING
 - Summary: AI review completed.
-- Issues: []
+- Issues: ['Review requires human attention.', 'AI response contained production-approval-like wording.']
 - Recommendation: Proceed to human review; do not auto approve production.
 - Ollama available: True
 - Ollama model: llama3

@@ -3,27 +3,20 @@
 ## Phase
 
 ```text
-13.8
+14.0
 ```
 
 ## Implementation Result
 
 ```text
-WAITING_FOR_HUMAN_APPROVAL
+BLOCKED_FOR_FIX
 ```
 
 ## Test Result
 
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase 13.8`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase 14.0`: FAIL
 - `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_phase13_8_ai_factory.py`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase 13.8 --skip-migration`: PASS
-
-Full validation:
-
-```text
-pytest
-180 passed
-```
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase 14.0 --skip-migration`: PASS
 
 ## Correction History
 
@@ -44,7 +37,7 @@ Tests passed.
 Status:
 
 ```text
-PASS
+WARNING
 ```
 
 Decision:
@@ -70,5 +63,5 @@ ai-factory/evidence/package.json
 ## Final Decision
 
 ```text
-WAITING_FOR_HUMAN_APPROVAL
+BLOCKED_FOR_FIX
 ```
