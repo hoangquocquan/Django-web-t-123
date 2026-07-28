@@ -109,6 +109,25 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_5_ai_review_engine.py",
         ],
         "expected_tag": "phase-13.5-ai-review-ready",
+    },
+    "13.6": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.6_AI_SELF_CORRECTION_LOOP.md",
+        "documents": [
+            PROJECT_ROOT / "ai-review" / "error_collector.py",
+            PROJECT_ROOT / "ai-review" / "ollama_error_analyzer.py",
+            PROJECT_ROOT / "ai-review" / "codex_fix_generator.py",
+            PROJECT_ROOT / "ai-review" / "retry_controller.py",
+            PROJECT_ROOT / "docs" / "ai-review" / "SELF_CORRECTION_SECURITY.md",
+            PROJECT_ROOT / "docs" / "codex-prompts" / "AUTO_FIX_TASK.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_13.6_SELF_CORRECTION_REPORT.md",
+            PROJECT_ROOT / "ai-review" / "results" / "error_report.json",
+            PROJECT_ROOT / "ai-review" / "results" / "error_analysis.json",
+            PROJECT_ROOT / "ai-review" / "results" / "self_correction_result.json",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_6_self_correction.py",
+        ],
+        "expected_tag": "phase-13.6-self-correction-ready",
     }
 }
 
