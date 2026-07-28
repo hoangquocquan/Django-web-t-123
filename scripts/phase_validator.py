@@ -75,6 +75,23 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_3_n8n.py",
         ],
         "expected_tag": "phase-13.3-n8n-ready",
+    },
+    "13.4": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.4_DEPLOYMENT_AUTOMATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "deployment" / "DEPLOYMENT_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "deployment" / "DEPLOYMENT_RUNBOOK.md",
+            PROJECT_ROOT / "docs" / "deployment" / "DEPLOYMENT_SECURITY.md",
+            PROJECT_ROOT / "docs" / "deployment" / "deployment_result.json",
+            PROJECT_ROOT / "docs" / "deployment" / "health_result.json",
+            PROJECT_ROOT / "docs" / "deployment" / "rollback_result.json",
+            PROJECT_ROOT / "docs" / "n8n" / "N8N_DEPLOYMENT_WORKFLOW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_13.4_DEPLOYMENT_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_4_deployment.py",
+        ],
+        "expected_tag": "phase-13.4-deployment-ready",
     }
 }
 
