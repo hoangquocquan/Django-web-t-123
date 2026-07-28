@@ -82,6 +82,19 @@ def prepare_codex_task(phase_spec):
     }
 
 
+def default_test_command_for_phase(phase):
+    """Return the most specific pytest command available for a phase."""
+    normalized_phase = phase.replace(".", "_")
+    candidates = [
+        PROJECT_ROOT / "tests" / f"test_phase{normalized_phase}_django_ownership.py",
+        PROJECT_ROOT / "tests" / f"test_phase{normalized_phase}_ai_factory.py",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return [sys.executable, "-m", "pytest", str(candidate.relative_to(PROJECT_ROOT))]
+    return [sys.executable, "-m", "pytest", "tests/test_phase13_8_ai_factory.py"]
+
+
 def run_factory(phase="13.8", test_command=None):
     """Execute validation, tests, correction handling, AI review, and reports."""
     phase_spec = load_phase_spec(phase)
@@ -91,7 +104,7 @@ def run_factory(phase="13.8", test_command=None):
     validation = run_command([sys.executable, "scripts/phase_validator.py", "--phase", phase], timeout=120)
     commands.append(validation)
 
-    selected_test_command = test_command or [sys.executable, "-m", "pytest", "tests/test_phase13_8_ai_factory.py"]
+    selected_test_command = test_command or default_test_command_for_phase(phase)
     tests = run_command(selected_test_command, timeout=300)
     commands.append(tests)
 

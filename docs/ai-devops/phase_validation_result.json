@@ -1,68 +1,86 @@
 {
-  "phase": "13.5",
-  "created_at": "2026-07-28T14:04:36+00:00",
+  "phase": "14.1",
+  "created_at": "2026-07-28T14:22:41+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
-  "notes": [
-    "Working tree has uncommitted phase changes."
-  ],
+  "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md",
+      "path": "docs\\codex-prompts\\PHASE_14.1_DJANGO_OWNERSHIP_MIGRATION.md",
       "exists": true,
-      "size_bytes": 852
+      "size_bytes": 621
     },
     {
-      "path": "docs\\ai-review\\AI_PHASE_REVIEW_ENGINE_ARCHITECTURE.md",
+      "path": "docs\\django-migration\\PHASE_14.1_DOMAIN_SELECTION.md",
       "exists": true,
-      "size_bytes": 1652
+      "size_bytes": 1609
     },
     {
-      "path": "ai-review\\config.yml",
+      "path": "docs\\django-migration\\DJANGO_OWNERSHIP_DESIGN.md",
       "exists": true,
-      "size_bytes": 1084
+      "size_bytes": 1959
     },
     {
-      "path": "ai-review\\evidence_collector.py",
+      "path": "docs\\django-migration\\MIGRATION_RESULT.md",
       "exists": true,
-      "size_bytes": 4809
+      "size_bytes": 1532
     },
     {
-      "path": "ai-review\\requirement_validator.py",
+      "path": "django_backend\\apps\\newsletter\\models.py",
       "exists": true,
-      "size_bytes": 5624
+      "size_bytes": 1007
     },
     {
-      "path": "ai-review\\test_executor.py",
+      "path": "django_backend\\apps\\newsletter\\services.py",
       "exists": true,
-      "size_bytes": 5683
+      "size_bytes": 1130
     },
     {
-      "path": "ai-review\\ollama_phase_reviewer.py",
+      "path": "django_backend\\apps\\newsletter\\migrations\\0001_initial.py",
       "exists": true,
-      "size_bytes": 6234
+      "size_bytes": 1049
     },
     {
-      "path": "ai-review\\report_generator.py",
+      "path": "django_backend\\apps\\newsletter\\migrations\\0002_import_legacy_subscribers.py",
       "exists": true,
-      "size_bytes": 4155
+      "size_bytes": 3094
     },
     {
-      "path": "ai-review\\run_phase_review.py",
+      "path": "django_backend\\apps\\api\\serializers\\newsletter.py",
       "exists": true,
-      "size_bytes": 2341
+      "size_bytes": 812
     },
     {
-      "path": "tests\\test_phase13_5_ai_review_engine.py",
+      "path": "django_backend\\apps\\api\\views\\newsletter.py",
       "exists": true,
-      "size_bytes": 4698
+      "size_bytes": 1301
+    },
+    {
+      "path": "ai-factory\\evidence\\django_phase14_1.json",
+      "exists": true,
+      "size_bytes": 2241
+    },
+    {
+      "path": "docs\\reviews\\PHASE_14.1_DJANGO_OWNERSHIP_REVIEW.md",
+      "exists": true,
+      "size_bytes": 617
+    },
+    {
+      "path": "docs\\reviews\\PHASE_14.1_DJANGO_OWNERSHIP_REPORT.md",
+      "exists": true,
+      "size_bytes": 1707
+    },
+    {
+      "path": "tests\\test_phase14_1_django_ownership.py",
+      "exists": true,
+      "size_bytes": 4371
     }
   ],
   "git": {
-    "branch": "feature/phase-14.0-django-migration-audit",
-    "status_short": "M ai-factory/evidence/package.json\n M ai-factory/results/factory_result.json\n M ai-review/evidence/current_phase.json\n M ai-review/results/ai_review.json\n M ai-review/results/rule_validation.json\n M ai-review/results/test_result.json\n M docs/ai-devops/phase_validation_result.json\n M docs/reviews/AI_SOFTWARE_FACTORY_REPORT.md\n M docs/reviews/PHASE_AI_REVIEW_REPORT.md\n?? docs.zip\n?? docs/codex-prompts/PHASE_14.0_DJANGO_MIGRATION_AUDIT.md\n?? docs/django-audit/\n?? docs/reviews/PHASE_14.0_DJANGO_MIGRATION_AUDIT_REPORT.md",
-    "expected_tag": "phase-13.5-ai-review-ready",
+    "branch": "feature/phase-14.1-django-ownership-migration",
+    "status_short": "?? docs.zip",
+    "expected_tag": "phase-14.1-django-ownership-ready",
     "expected_tag_present": true
   },
   "safety": {

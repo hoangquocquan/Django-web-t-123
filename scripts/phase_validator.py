@@ -162,6 +162,27 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_8_ai_factory.py",
         ],
         "expected_tag": "phase-13.8-ai-factory-complete",
+    },
+    "14.1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_14.1_DJANGO_OWNERSHIP_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "PHASE_14.1_DOMAIN_SELECTION.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "DJANGO_OWNERSHIP_DESIGN.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "MIGRATION_RESULT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "newsletter" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "newsletter" / "services.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "newsletter" / "migrations" / "0001_initial.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "newsletter" / "migrations" / "0002_import_legacy_subscribers.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "serializers" / "newsletter.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "newsletter.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_phase14_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_14.1_DJANGO_OWNERSHIP_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_14.1_DJANGO_OWNERSHIP_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase14_1_django_ownership.py",
+        ],
+        "expected_tag": "phase-14.1-django-ownership-ready",
     }
 }
 

@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "apps.sales",
     "apps.cms",
     "apps.accounts",
+    "apps.newsletter",
 ]
 
 

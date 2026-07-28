@@ -6,6 +6,7 @@ from .views.auth import permissions, profile
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
 from .views.crm import contact_requests, customer_detail, customers
+from .views.newsletter import subscribers as newsletter_subscribers
 from .views.replacement import (
     ai_chat,
     aws_demo,
@@ -34,6 +35,7 @@ urlpatterns = [
     path("cms/pages/", pages, name="api-cms-pages"),
     path("cms/pages/<slug:slug>/", page_detail, name="api-cms-page-detail"),
     path("cms/menu/", menu, name="api-cms-menu"),
+    path("newsletter/subscribers/", newsletter_subscribers, name="api-newsletter-subscribers"),
     path("auth/profile/", profile, name="api-auth-profile"),
     path("auth/permissions/", permissions, name="api-auth-permissions"),
     path("public/home/", home, name="api-public-home"),
