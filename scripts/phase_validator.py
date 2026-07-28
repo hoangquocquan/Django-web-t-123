@@ -92,6 +92,23 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_4_deployment.py",
         ],
         "expected_tag": "phase-13.4-deployment-ready",
+    },
+    "13.5": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "ai-review" / "AI_PHASE_REVIEW_ENGINE_ARCHITECTURE.md",
+            PROJECT_ROOT / "ai-review" / "config.yml",
+            PROJECT_ROOT / "ai-review" / "evidence_collector.py",
+            PROJECT_ROOT / "ai-review" / "requirement_validator.py",
+            PROJECT_ROOT / "ai-review" / "test_executor.py",
+            PROJECT_ROOT / "ai-review" / "ollama_phase_reviewer.py",
+            PROJECT_ROOT / "ai-review" / "report_generator.py",
+            PROJECT_ROOT / "ai-review" / "run_phase_review.py",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_5_ai_review_engine.py",
+        ],
+        "expected_tag": "phase-13.5-ai-review-ready",
     }
 }
 
