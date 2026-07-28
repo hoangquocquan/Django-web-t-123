@@ -44,6 +44,21 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase12_4_1_ollama_connection.py",
         ],
         "expected_tag": "phase-12.4.1-ollama-ready",
+    },
+    "13.2": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.2_AUTOMATED_TEST_PIPELINE.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "cicd" / "TEST_PIPELINE_ARCHITECTURE.md",
+            PROJECT_ROOT / "ci" / "test_pipeline_config.yml",
+            PROJECT_ROOT / ".github" / "workflows" / "test_pipeline.yml",
+            PROJECT_ROOT / "docs" / "cicd" / "test_pipeline_result.json",
+            PROJECT_ROOT / "docs" / "ai-devops" / "TEST_PIPELINE_AI_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "PHASE_13.2_TEST_PIPELINE_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_2_test_pipeline.py",
+        ],
+        "expected_tag": "phase-13.2-test-pipeline-ready",
     }
 }
 

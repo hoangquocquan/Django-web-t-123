@@ -1,50 +1,57 @@
 {
-  "phase": "12.4.1",
-  "created_at": "2026-07-27T13:42:57+00:00",
+  "phase": "13.2",
+  "created_at": "2026-07-28T12:25:12+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
-  "notes": [
-    "Expected tag not found yet: phase-12.4.1-ollama-ready",
-    "Working tree has uncommitted phase changes."
-  ],
+  "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\PHASE_12.4.1_OLLAMA_CONNECTION_VALIDATION.md",
+      "path": "docs\\codex-prompts\\PHASE_13.2_AUTOMATED_TEST_PIPELINE.md",
       "exists": true,
-      "size_bytes": 749
+      "size_bytes": 1188
     },
     {
-      "path": "docs\\ai-devops\\OLLAMA_TEST_PROMPT.md",
+      "path": "docs\\cicd\\TEST_PIPELINE_ARCHITECTURE.md",
       "exists": true,
-      "size_bytes": 859
+      "size_bytes": 1784
     },
     {
-      "path": "docs\\ai-devops\\ollama_environment_check.json",
+      "path": "ci\\test_pipeline_config.yml",
       "exists": true,
-      "size_bytes": 566
+      "size_bytes": 1345
     },
     {
-      "path": "docs\\ai-devops\\AI_PHASE_REVIEW_REPORT.md",
+      "path": ".github\\workflows\\test_pipeline.yml",
       "exists": true,
-      "size_bytes": 1823
+      "size_bytes": 1332
     },
     {
-      "path": "docs\\reviews\\PHASE_12.4.1_OLLAMA_VALIDATION_REPORT.md",
+      "path": "docs\\cicd\\test_pipeline_result.json",
       "exists": true,
-      "size_bytes": 681
+      "size_bytes": 11254
     },
     {
-      "path": "tests\\test_phase12_4_1_ollama_connection.py",
+      "path": "docs\\ai-devops\\TEST_PIPELINE_AI_REVIEW.md",
       "exists": true,
-      "size_bytes": 3856
+      "size_bytes": 1572
+    },
+    {
+      "path": "docs\\reviews\\PHASE_13.2_TEST_PIPELINE_REPORT.md",
+      "exists": true,
+      "size_bytes": 1893
+    },
+    {
+      "path": "tests\\test_phase13_2_test_pipeline.py",
+      "exists": true,
+      "size_bytes": 3754
     }
   ],
   "git": {
-    "branch": "feature/phase-12.4.1-ollama-validation",
-    "status_short": "M docs/ai-devops/AI_PHASE_REVIEW_REPORT.md\n M docs/ai-devops/phase_validation_result.json\n M scripts/ollama_phase_reviewer.py\n M scripts/phase_validator.py\n M tests/test_phase12_4_ai_devops.py\n?? docs.zip\n?? docs/ai-devops/OLLAMA_TEST_PROMPT.md\n?? docs/ai-devops/ollama_environment_check.json\n?? docs/codex-prompts/PHASE_12.4.1_OLLAMA_CONNECTION_VALIDATION.md\n?? docs/reviews/PHASE_12.4.1_OLLAMA_VALIDATION_REPORT.md\n?? scripts/check_ollama_environment.py\n?? tests/test_phase12_4_1_ollama_connection.py",
-    "expected_tag": "phase-12.4.1-ollama-ready",
-    "expected_tag_present": false
+    "branch": "feature/phase-13.2-automated-test-pipeline",
+    "status_short": "?? docs.zip",
+    "expected_tag": "phase-13.2-test-pipeline-ready",
+    "expected_tag_present": true
   },
   "safety": {
     "production_modified": false,
