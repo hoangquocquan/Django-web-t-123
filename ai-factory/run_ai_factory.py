@@ -31,8 +31,12 @@ def load_phase_spec(phase):
     """Load the saved phase prompt so the runner has traceable input."""
     filename = f"PHASE_{phase}_AI_SOFTWARE_FACTORY_FINAL_INTEGRATION.md"
     prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / filename
+    if phase == "django-wave-1":
+        prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md"
     if not prompt_path.exists():
         candidates = sorted((PROJECT_ROOT / "docs" / "codex-prompts").glob(f"PHASE_{phase}*.md"))
+        if phase.startswith("django-wave"):
+            candidates = sorted((PROJECT_ROOT / "docs" / "codex-prompts").glob("WAVE_*.md"))
         prompt_path = candidates[0] if candidates else prompt_path
     return {
         "phase": phase,
@@ -84,6 +88,9 @@ def prepare_codex_task(phase_spec):
 
 def default_test_command_for_phase(phase):
     """Return the most specific pytest command available for a phase."""
+    if phase == "django-wave-1":
+        return [sys.executable, "-m", "pytest", "tests/test_wave1_django_foundation.py"]
+
     normalized_phase = phase.replace(".", "_")
     candidates = [
         PROJECT_ROOT / "tests" / f"test_phase{normalized_phase}_django_ownership.py",
@@ -157,9 +164,10 @@ def main():
 
     parser = argparse.ArgumentParser(description="Run the AI Software Factory workflow.")
     parser.add_argument("--phase", default="13.8")
+    parser.add_argument("--wave", default=None)
     args = parser.parse_args()
 
-    result = run_factory(phase=args.phase)
+    result = run_factory(phase=args.wave or args.phase)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result["status"] == "AI_SOFTWARE_FACTORY_COMPLETE" else 1
 

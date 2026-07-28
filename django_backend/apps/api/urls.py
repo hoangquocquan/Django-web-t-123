@@ -6,6 +6,14 @@ from .views.auth import permissions, profile
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
 from .views.crm import contact_requests, customer_detail, customers
+from .views.foundation import (
+    foundation_login,
+    foundation_logout,
+    foundation_permission_check,
+    foundation_roles,
+    foundation_user_profile,
+    foundation_users,
+)
 from .views.newsletter import subscribers as newsletter_subscribers
 from .views.replacement import (
     ai_chat,
@@ -38,6 +46,20 @@ urlpatterns = [
     path("newsletter/subscribers/", newsletter_subscribers, name="api-newsletter-subscribers"),
     path("auth/profile/", profile, name="api-auth-profile"),
     path("auth/permissions/", permissions, name="api-auth-permissions"),
+    path("foundation/auth/login/", foundation_login, name="api-foundation-login"),
+    path("foundation/auth/logout/", foundation_logout, name="api-foundation-logout"),
+    path("foundation/users/", foundation_users, name="api-foundation-users"),
+    path(
+        "foundation/users/<int:user_id>/profile/",
+        foundation_user_profile,
+        name="api-foundation-user-profile",
+    ),
+    path("foundation/permissions/roles/", foundation_roles, name="api-foundation-roles"),
+    path(
+        "foundation/permissions/check/",
+        foundation_permission_check,
+        name="api-foundation-permission-check",
+    ),
     path("public/home/", home, name="api-public-home"),
     path("news/", news, name="api-news"),
     path("openapi.json", openapi_schema, name="api-openapi-schema"),

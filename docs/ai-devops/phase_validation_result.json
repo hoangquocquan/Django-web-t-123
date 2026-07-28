@@ -1,86 +1,86 @@
 {
-  "phase": "14.1",
-  "created_at": "2026-07-28T14:22:41+00:00",
+  "phase": "django-wave-1",
+  "created_at": "2026-07-28T14:46:15+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\PHASE_14.1_DJANGO_OWNERSHIP_MIGRATION.md",
+      "path": "docs\\codex-prompts\\WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
       "exists": true,
-      "size_bytes": 621
+      "size_bytes": 1221
     },
     {
-      "path": "docs\\django-migration\\PHASE_14.1_DOMAIN_SELECTION.md",
+      "path": "docs\\django-migration\\WAVE1_AUTH_AUDIT.md",
       "exists": true,
-      "size_bytes": 1609
+      "size_bytes": 1426
     },
     {
-      "path": "docs\\django-migration\\DJANGO_OWNERSHIP_DESIGN.md",
+      "path": "docs\\django-migration\\WAVE1_USER_PROFILE_REPORT.md",
       "exists": true,
-      "size_bytes": 1959
+      "size_bytes": 920
     },
     {
-      "path": "docs\\django-migration\\MIGRATION_RESULT.md",
+      "path": "docs\\django-migration\\WAVE1_PERMISSION_REPORT.md",
       "exists": true,
-      "size_bytes": 1532
+      "size_bytes": 1026
     },
     {
-      "path": "django_backend\\apps\\newsletter\\models.py",
+      "path": "django_backend\\apps\\foundation\\models.py",
       "exists": true,
-      "size_bytes": 1007
+      "size_bytes": 3959
     },
     {
-      "path": "django_backend\\apps\\newsletter\\services.py",
+      "path": "django_backend\\apps\\foundation\\services.py",
       "exists": true,
-      "size_bytes": 1130
+      "size_bytes": 6144
     },
     {
-      "path": "django_backend\\apps\\newsletter\\migrations\\0001_initial.py",
+      "path": "django_backend\\apps\\foundation\\migrations\\0001_initial.py",
       "exists": true,
-      "size_bytes": 1049
+      "size_bytes": 5569
     },
     {
-      "path": "django_backend\\apps\\newsletter\\migrations\\0002_import_legacy_subscribers.py",
+      "path": "django_backend\\apps\\foundation\\migrations\\0002_seed_foundation_from_legacy.py",
       "exists": true,
-      "size_bytes": 3094
+      "size_bytes": 4945
     },
     {
-      "path": "django_backend\\apps\\api\\serializers\\newsletter.py",
+      "path": "django_backend\\apps\\api\\serializers\\foundation.py",
       "exists": true,
-      "size_bytes": 812
+      "size_bytes": 3197
     },
     {
-      "path": "django_backend\\apps\\api\\views\\newsletter.py",
+      "path": "django_backend\\apps\\api\\views\\foundation.py",
       "exists": true,
-      "size_bytes": 1301
+      "size_bytes": 7013
     },
     {
-      "path": "ai-factory\\evidence\\django_phase14_1.json",
+      "path": "ai-factory\\evidence\\django_wave_1.json",
       "exists": true,
-      "size_bytes": 2241
+      "size_bytes": 786
     },
     {
-      "path": "docs\\reviews\\PHASE_14.1_DJANGO_OWNERSHIP_REVIEW.md",
+      "path": "docs\\reviews\\WAVE_1_DJANGO_FOUNDATION_REVIEW.md",
       "exists": true,
-      "size_bytes": 617
+      "size_bytes": 1666
     },
     {
-      "path": "docs\\reviews\\PHASE_14.1_DJANGO_OWNERSHIP_REPORT.md",
+      "path": "docs\\reviews\\WAVE_1_DJANGO_FOUNDATION_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 1707
+      "size_bytes": 1194
     },
     {
-      "path": "tests\\test_phase14_1_django_ownership.py",
+      "path": "tests\\test_wave1_django_foundation.py",
       "exists": true,
-      "size_bytes": 4371
+      "size_bytes": 6789
     }
   ],
   "git": {
-    "branch": "feature/phase-14.1-django-ownership-migration",
+    "branch": "feature/wave-1-django-foundation-migration",
     "status_short": "?? docs.zip",
-    "expected_tag": "phase-14.1-django-ownership-ready",
+    "expected_tag": "wave-1-django-foundation-complete",
     "expected_tag_present": true
   },
   "safety": {

@@ -2,15 +2,15 @@
 
 ## Phase Name
 
-14.1
+django-wave-1
 
 ## Created At
 
-2026-07-28T14:19:55+00:00
+2026-07-28T14:45:00+00:00
 
 ## Final Decision
 
-PASS
+WARNING
 
 ## Requirement Status
 
@@ -23,7 +23,7 @@ PASS
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.33
+- Duration seconds: 4.197
 
 ## Security Status
 
@@ -34,9 +34,9 @@ PASS
 
 ## AI Analysis
 
-- Status: PASS
+- Status: WARNING
 - Summary: AI review completed.
-- Issues: []
+- Issues: ['Review requires human attention.', 'AI response contained production-approval-like wording.']
 - Recommendation: Proceed to human review; do not auto approve production.
 - Ollama available: True
 - Ollama model: llama3

@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "apps.cms",
     "apps.accounts",
     "apps.newsletter",
+    "apps.foundation",
 ]
 
 

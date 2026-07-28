@@ -183,6 +183,27 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase14_1_django_ownership.py",
         ],
         "expected_tag": "phase-14.1-django-ownership-ready",
+    },
+    "django-wave-1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE1_AUTH_AUDIT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE1_USER_PROFILE_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE1_PERMISSION_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "foundation" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "foundation" / "services.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "foundation" / "migrations" / "0001_initial.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "foundation" / "migrations" / "0002_seed_foundation_from_legacy.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "serializers" / "foundation.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "foundation.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_1_DJANGO_FOUNDATION_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_1_DJANGO_FOUNDATION_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave1_django_foundation.py",
+        ],
+        "expected_tag": "wave-1-django-foundation-complete",
     }
 }
 
