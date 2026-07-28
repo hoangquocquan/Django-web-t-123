@@ -1,56 +1,76 @@
 {
-  "phase": "13.7",
-  "created_at": "2026-07-28T13:39:41+00:00",
+  "phase": "13.8",
+  "created_at": "2026-07-28T13:51:50+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\PHASE_13.7_N8N_REAL_AUTOMATION_CONTROLLER.md",
+      "path": "docs\\codex-prompts\\PHASE_13.8_AI_SOFTWARE_FACTORY_FINAL_INTEGRATION.md",
       "exists": true,
-      "size_bytes": 922
+      "size_bytes": 1089
     },
     {
-      "path": "docs\\n8n\\N8N_REAL_AUTOMATION_ARCHITECTURE.md",
+      "path": "docs\\ai-factory\\AI_SOFTWARE_FACTORY_ARCHITECTURE.md",
       "exists": true,
-      "size_bytes": 1891
+      "size_bytes": 2176
     },
     {
-      "path": "n8n\\workflows\\phase_automation_controller.json",
+      "path": "docs\\ai-factory\\AI_SOFTWARE_FACTORY_GUIDE.md",
       "exists": true,
-      "size_bytes": 3988
+      "size_bytes": 1740
     },
     {
-      "path": "n8n\\config\\n8n_phase_controller.yml",
+      "path": "ai-factory\\run_ai_factory.py",
       "exists": true,
-      "size_bytes": 787
+      "size_bytes": 5545
     },
     {
-      "path": "scripts\\n8n_phase_trigger.py",
+      "path": "ai-factory\\evidence_builder.py",
       "exists": true,
-      "size_bytes": 10417
+      "size_bytes": 3294
     },
     {
-      "path": "docs\\n8n\\N8N_NOTIFICATION_DESIGN.md",
+      "path": "ai-factory\\final_report_generator.py",
       "exists": true,
-      "size_bytes": 1490
+      "size_bytes": 2995
     },
     {
-      "path": "docs\\reviews\\PHASE_13.7_N8N_AUTOMATION_REPORT.md",
+      "path": "ai-factory\\templates\\phase_requirement_template.md",
       "exists": true,
-      "size_bytes": 1751
+      "size_bytes": 552
     },
     {
-      "path": "tests\\test_phase13_7_n8n_controller.py",
+      "path": "ai-factory\\templates\\phase_test_template.md",
       "exists": true,
-      "size_bytes": 3672
+      "size_bytes": 360
+    },
+    {
+      "path": "ai-factory\\templates\\phase_review_template.md",
+      "exists": true,
+      "size_bytes": 439
+    },
+    {
+      "path": "docs\\reviews\\AI_SOFTWARE_FACTORY_REPORT.md",
+      "exists": true,
+      "size_bytes": 1094
+    },
+    {
+      "path": "docs\\reviews\\AI_SOFTWARE_FACTORY_FINAL_SUMMARY.md",
+      "exists": true,
+      "size_bytes": 1461
+    },
+    {
+      "path": "tests\\test_phase13_8_ai_factory.py",
+      "exists": true,
+      "size_bytes": 4872
     }
   ],
   "git": {
-    "branch": "feature/phase-13.7-n8n-real-automation-controller",
+    "branch": "feature/phase-13.8-ai-software-factory",
     "status_short": "?? docs.zip",
-    "expected_tag": "phase-13.7-n8n-controller-ready",
+    "expected_tag": "phase-13.8-ai-factory-complete",
     "expected_tag_present": true
   },
   "safety": {

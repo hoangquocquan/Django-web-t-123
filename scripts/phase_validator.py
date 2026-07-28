@@ -143,6 +143,25 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_phase13_7_n8n_controller.py",
         ],
         "expected_tag": "phase-13.7-n8n-controller-ready",
+    },
+    "13.8": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_13.8_AI_SOFTWARE_FACTORY_FINAL_INTEGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "ai-factory" / "AI_SOFTWARE_FACTORY_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "ai-factory" / "AI_SOFTWARE_FACTORY_GUIDE.md",
+            PROJECT_ROOT / "ai-factory" / "run_ai_factory.py",
+            PROJECT_ROOT / "ai-factory" / "evidence_builder.py",
+            PROJECT_ROOT / "ai-factory" / "final_report_generator.py",
+            PROJECT_ROOT / "ai-factory" / "templates" / "phase_requirement_template.md",
+            PROJECT_ROOT / "ai-factory" / "templates" / "phase_test_template.md",
+            PROJECT_ROOT / "ai-factory" / "templates" / "phase_review_template.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_SOFTWARE_FACTORY_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_SOFTWARE_FACTORY_FINAL_SUMMARY.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_phase13_8_ai_factory.py",
+        ],
+        "expected_tag": "phase-13.8-ai-factory-complete",
     }
 }
 
