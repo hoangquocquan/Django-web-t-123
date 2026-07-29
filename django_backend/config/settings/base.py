@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "apps.newsletter",
     "apps.foundation",
     "apps.business_core",
+    "apps.transaction_domain",
 ]
 
 

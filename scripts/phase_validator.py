@@ -226,6 +226,28 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave2_business_core.py",
         ],
         "expected_tag": "wave-2-business-core-complete",
+    },
+    "django-wave-3": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE3_ORDER_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE3_WORKFLOW_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE3_TRANSACTION_HISTORY_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE3_DATABASE_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "transaction_domain" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "transaction_domain" / "services.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "transaction_domain" / "migrations" / "0001_initial.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "transaction_domain" / "migrations" / "0002_seed_transaction_domain_from_legacy.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "serializers" / "transaction_domain.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "transaction_domain.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_3.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_3_DJANGO_TRANSACTION_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_3_DJANGO_TRANSACTION_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave3_transaction_domain.py",
+        ],
+        "expected_tag": "wave-3-transaction-complete",
     }
 }
 

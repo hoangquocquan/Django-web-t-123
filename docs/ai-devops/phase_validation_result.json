@@ -1,91 +1,91 @@
 {
-  "phase": "django-wave-2",
-  "created_at": "2026-07-29T14:07:05+00:00",
+  "phase": "django-wave-3",
+  "created_at": "2026-07-29T14:18:59+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
+      "path": "docs\\codex-prompts\\WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
       "exists": true,
-      "size_bytes": 1230
+      "size_bytes": 1306
     },
     {
-      "path": "docs\\django-migration\\WAVE2_PRODUCT_REPORT.md",
-      "exists": true,
-      "size_bytes": 702
-    },
-    {
-      "path": "docs\\django-migration\\WAVE2_CUSTOMER_REPORT.md",
-      "exists": true,
-      "size_bytes": 671
-    },
-    {
-      "path": "docs\\django-migration\\WAVE2_INVENTORY_REPORT.md",
-      "exists": true,
-      "size_bytes": 801
-    },
-    {
-      "path": "docs\\django-migration\\WAVE2_DATABASE_REPORT.md",
+      "path": "docs\\django-migration\\WAVE3_ORDER_REPORT.md",
       "exists": true,
       "size_bytes": 896
     },
     {
-      "path": "django_backend\\apps\\business_core\\models.py",
+      "path": "docs\\django-migration\\WAVE3_WORKFLOW_REPORT.md",
       "exists": true,
-      "size_bytes": 5437
+      "size_bytes": 631
     },
     {
-      "path": "django_backend\\apps\\business_core\\services.py",
+      "path": "docs\\django-migration\\WAVE3_TRANSACTION_HISTORY_REPORT.md",
       "exists": true,
-      "size_bytes": 6901
+      "size_bytes": 601
     },
     {
-      "path": "django_backend\\apps\\business_core\\migrations\\0001_initial.py",
+      "path": "docs\\django-migration\\WAVE3_DATABASE_REPORT.md",
       "exists": true,
-      "size_bytes": 6708
+      "size_bytes": 943
     },
     {
-      "path": "django_backend\\apps\\business_core\\migrations\\0002_seed_business_core_from_legacy.py",
+      "path": "django_backend\\apps\\transaction_domain\\models.py",
       "exists": true,
-      "size_bytes": 6099
+      "size_bytes": 5416
     },
     {
-      "path": "django_backend\\apps\\api\\serializers\\business_core.py",
+      "path": "django_backend\\apps\\transaction_domain\\services.py",
       "exists": true,
-      "size_bytes": 6067
+      "size_bytes": 8314
     },
     {
-      "path": "django_backend\\apps\\api\\views\\business_core.py",
+      "path": "django_backend\\apps\\transaction_domain\\migrations\\0001_initial.py",
       "exists": true,
-      "size_bytes": 8890
+      "size_bytes": 7534
     },
     {
-      "path": "ai-factory\\evidence\\django_wave_2.json",
+      "path": "django_backend\\apps\\transaction_domain\\migrations\\0002_seed_transaction_domain_from_legacy.py",
       "exists": true,
-      "size_bytes": 823
+      "size_bytes": 6635
     },
     {
-      "path": "docs\\reviews\\WAVE_2_DJANGO_BUSINESS_CORE_REVIEW.md",
+      "path": "django_backend\\apps\\api\\serializers\\transaction_domain.py",
       "exists": true,
-      "size_bytes": 1642
+      "size_bytes": 4891
     },
     {
-      "path": "docs\\reviews\\WAVE_2_DJANGO_BUSINESS_CORE_FINAL_REPORT.md",
+      "path": "django_backend\\apps\\api\\views\\transaction_domain.py",
       "exists": true,
-      "size_bytes": 1126
+      "size_bytes": 4706
     },
     {
-      "path": "tests\\test_wave2_business_core.py",
+      "path": "ai-factory\\evidence\\django_wave_3.json",
       "exists": true,
-      "size_bytes": 9031
+      "size_bytes": 911
+    },
+    {
+      "path": "docs\\reviews\\WAVE_3_DJANGO_TRANSACTION_REVIEW.md",
+      "exists": true,
+      "size_bytes": 1557
+    },
+    {
+      "path": "docs\\reviews\\WAVE_3_DJANGO_TRANSACTION_FINAL_REPORT.md",
+      "exists": true,
+      "size_bytes": 1218
+    },
+    {
+      "path": "tests\\test_wave3_transaction_domain.py",
+      "exists": true,
+      "size_bytes": 9659
     }
   ],
   "git": {
-    "branch": "feature/wave-2-django-business-core-migration",
+    "branch": "feature/wave-3-django-transaction-migration",
     "status_short": "?? docs.zip",
-    "expected_tag": "wave-2-business-core-complete",
+    "expected_tag": "wave-3-transaction-complete",
     "expected_tag_present": true
   },
   "safety": {

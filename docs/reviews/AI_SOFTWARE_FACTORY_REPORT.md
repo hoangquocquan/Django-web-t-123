@@ -3,7 +3,7 @@
 ## Phase
 
 ```text
-django-wave-2
+django-wave-3
 ```
 
 ## Implementation Result
@@ -14,9 +14,9 @@ WAITING_FOR_HUMAN_APPROVAL
 
 ## Test Result
 
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase django-wave-2`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_wave2_business_core.py`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase django-wave-2 --skip-migration`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase django-wave-3`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_wave3_transaction_domain.py`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase django-wave-3 --skip-migration`: PASS
 
 ## Correction History
 

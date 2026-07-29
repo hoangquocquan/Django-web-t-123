@@ -35,6 +35,12 @@ from .views.replacement import (
     version,
 )
 from .views.sales import quote_detail, quote_files, quotes
+from .views.transaction_domain import (
+    order_detail as transaction_order_detail,
+    orders as transaction_orders,
+    transactions,
+    workflows,
+)
 
 
 urlpatterns = [
@@ -64,6 +70,10 @@ urlpatterns = [
     path("sales/quotes/", quotes, name="api-sales-quotes"),
     path("sales/quotes/<int:quote_id>/", quote_detail, name="api-sales-quote-detail"),
     path("sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"),
+    path("orders/", transaction_orders, name="api-transaction-orders"),
+    path("orders/<int:order_id>/", transaction_order_detail, name="api-transaction-order-detail"),
+    path("workflows/", workflows, name="api-transaction-workflows"),
+    path("transactions/", transactions, name="api-transaction-history"),
     path("cms/pages/", pages, name="api-cms-pages"),
     path("cms/pages/<slug:slug>/", page_detail, name="api-cms-page-detail"),
     path("cms/menu/", menu, name="api-cms-menu"),

@@ -1,0 +1,34 @@
+{
+  "wave": "django-wave-3",
+  "objective": "Migrate Django transaction ownership for order, workflow, and transaction history.",
+  "domains": [
+    "order_management",
+    "workflow_approval",
+    "transaction_history"
+  ],
+  "legacy_preserved": true,
+  "production_deployed": false,
+  "legacy_deleted": false,
+  "payment_migrated": false,
+  "destructive_migration": false,
+  "new_api_prefixes": [
+    "/api/v1/orders/",
+    "/api/v1/workflows/",
+    "/api/v1/transactions/"
+  ],
+  "tests": {
+    "django_check": "PASS",
+    "makemigrations_check": "PASS",
+    "migrate": "PASS",
+    "wave_tests": "PASS: 10 tests",
+    "full_pytest": "PASS: 218 tests",
+    "ai_factory": "PASS"
+  },
+  "ai_review": {
+    "status": "AI_SOFTWARE_FACTORY_COMPLETE",
+    "decision": "PASS",
+    "human_approval_required": true,
+    "production_approved_by_ai": false
+  },
+  "expected_status": "DJANGO_TRANSACTION_WAVE_COMPLETE"
+}
