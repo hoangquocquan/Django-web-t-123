@@ -264,6 +264,24 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave4_legacy_reduction.py",
         ],
         "expected_tag": "wave-4-django-ownership-final",
+    },
+    "django-wave-5": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_5_DJANGO_ADMIN_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE5_ADMIN_AUDIT_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE5_ADMIN_FOUNDATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE5_ADMIN_DOMAIN_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE5_LEGACY_ADMIN_REDUCTION_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "serializers" / "admin_interface.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "admin_interface.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_5.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_5_DJANGO_ADMIN_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_5_DJANGO_ADMIN_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave5_admin_migration.py",
+        ],
+        "expected_tag": "wave-5-django-admin-complete",
     }
 }
 

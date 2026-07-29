@@ -3,6 +3,22 @@
 from django.urls import path
 
 from .views.auth import permissions, profile
+from .views.admin_interface import (
+    admin_customer_detail,
+    admin_customers,
+    admin_dashboard,
+    admin_inventory_adjust,
+    admin_inventory_items,
+    admin_inventory_warehouses,
+    admin_login,
+    admin_order_detail,
+    admin_orders,
+    admin_permissions,
+    admin_product_detail,
+    admin_products,
+    admin_transactions,
+    admin_workflows,
+)
 from .views.business_core import (
     business_customer_detail,
     business_customers,
@@ -44,6 +60,20 @@ from .views.transaction_domain import (
 
 
 urlpatterns = [
+    path("admin/login/", admin_login, name="api-admin-login"),
+    path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
+    path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
+    path("admin/products/", admin_products, name="api-admin-products"),
+    path("admin/products/<int:product_id>/", admin_product_detail, name="api-admin-product-detail"),
+    path("admin/customers/", admin_customers, name="api-admin-customers"),
+    path("admin/customers/<int:customer_id>/", admin_customer_detail, name="api-admin-customer-detail"),
+    path("admin/inventory/warehouses/", admin_inventory_warehouses, name="api-admin-inventory-warehouses"),
+    path("admin/inventory/items/", admin_inventory_items, name="api-admin-inventory-items"),
+    path("admin/inventory/items/<int:item_id>/adjust/", admin_inventory_adjust, name="api-admin-inventory-adjust"),
+    path("admin/orders/", admin_orders, name="api-admin-orders"),
+    path("admin/orders/<int:order_id>/", admin_order_detail, name="api-admin-order-detail"),
+    path("admin/workflows/", admin_workflows, name="api-admin-workflows"),
+    path("admin/transactions/", admin_transactions, name="api-admin-transactions"),
     path("catalog/products/", products, name="api-catalog-products"),
     path("catalog/products/<int:product_id>/", product_detail, name="api-catalog-product-detail"),
     path("catalog/categories/", categories, name="api-catalog-categories"),
