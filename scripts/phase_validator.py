@@ -248,6 +248,22 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave3_transaction_domain.py",
         ],
         "expected_tag": "wave-3-transaction-complete",
+    },
+    "django-wave-4": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_4_DJANGO_LEGACY_REDUCTION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE4_LEGACY_DEPENDENCY_AUDIT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE4_PAYMENT_DECISION.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE4_DATABASE_OWNERSHIP_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE4_LEGACY_RETIREMENT_PLAN.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_4.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_4_DJANGO_FINAL_OWNERSHIP_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_4_DJANGO_LEGACY_REDUCTION_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave4_legacy_reduction.py",
+        ],
+        "expected_tag": "wave-4-django-ownership-final",
     }
 }
 

@@ -35,6 +35,7 @@ def load_phase_spec(phase):
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
         "django-wave-2": "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
         "django-wave-3": "WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
+        "django-wave-4": "WAVE_4_DJANGO_LEGACY_REDUCTION.md",
     }
     if phase in wave_prompt_map:
         prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / wave_prompt_map[phase]
@@ -99,6 +100,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_wave2_business_core.py"]
     if phase == "django-wave-3":
         return [sys.executable, "-m", "pytest", "tests/test_wave3_transaction_domain.py"]
+    if phase == "django-wave-4":
+        return [sys.executable, "-m", "pytest", "tests/test_wave4_legacy_reduction.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [

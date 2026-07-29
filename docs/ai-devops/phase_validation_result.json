@@ -1,91 +1,61 @@
 {
-  "phase": "django-wave-3",
-  "created_at": "2026-07-29T14:18:59+00:00",
+  "phase": "django-wave-4",
+  "created_at": "2026-07-29T14:26:45+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
+      "path": "docs\\codex-prompts\\WAVE_4_DJANGO_LEGACY_REDUCTION.md",
       "exists": true,
-      "size_bytes": 1306
+      "size_bytes": 985
     },
     {
-      "path": "docs\\django-migration\\WAVE3_ORDER_REPORT.md",
+      "path": "docs\\django-migration\\WAVE4_LEGACY_DEPENDENCY_AUDIT.md",
       "exists": true,
-      "size_bytes": 896
+      "size_bytes": 3166
     },
     {
-      "path": "docs\\django-migration\\WAVE3_WORKFLOW_REPORT.md",
+      "path": "docs\\django-migration\\WAVE4_PAYMENT_DECISION.md",
       "exists": true,
-      "size_bytes": 631
+      "size_bytes": 1465
     },
     {
-      "path": "docs\\django-migration\\WAVE3_TRANSACTION_HISTORY_REPORT.md",
+      "path": "docs\\django-migration\\WAVE4_DATABASE_OWNERSHIP_REPORT.md",
       "exists": true,
-      "size_bytes": 601
+      "size_bytes": 2799
     },
     {
-      "path": "docs\\django-migration\\WAVE3_DATABASE_REPORT.md",
+      "path": "docs\\django-migration\\WAVE4_LEGACY_RETIREMENT_PLAN.md",
       "exists": true,
-      "size_bytes": 943
+      "size_bytes": 1734
     },
     {
-      "path": "django_backend\\apps\\transaction_domain\\models.py",
+      "path": "ai-factory\\evidence\\django_wave_4.json",
       "exists": true,
-      "size_bytes": 5416
+      "size_bytes": 1104
     },
     {
-      "path": "django_backend\\apps\\transaction_domain\\services.py",
+      "path": "docs\\reviews\\WAVE_4_DJANGO_FINAL_OWNERSHIP_REVIEW.md",
       "exists": true,
-      "size_bytes": 8314
+      "size_bytes": 1486
     },
     {
-      "path": "django_backend\\apps\\transaction_domain\\migrations\\0001_initial.py",
+      "path": "docs\\reviews\\WAVE_4_DJANGO_LEGACY_REDUCTION_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 7534
+      "size_bytes": 1345
     },
     {
-      "path": "django_backend\\apps\\transaction_domain\\migrations\\0002_seed_transaction_domain_from_legacy.py",
+      "path": "tests\\test_wave4_legacy_reduction.py",
       "exists": true,
-      "size_bytes": 6635
-    },
-    {
-      "path": "django_backend\\apps\\api\\serializers\\transaction_domain.py",
-      "exists": true,
-      "size_bytes": 4891
-    },
-    {
-      "path": "django_backend\\apps\\api\\views\\transaction_domain.py",
-      "exists": true,
-      "size_bytes": 4706
-    },
-    {
-      "path": "ai-factory\\evidence\\django_wave_3.json",
-      "exists": true,
-      "size_bytes": 911
-    },
-    {
-      "path": "docs\\reviews\\WAVE_3_DJANGO_TRANSACTION_REVIEW.md",
-      "exists": true,
-      "size_bytes": 1557
-    },
-    {
-      "path": "docs\\reviews\\WAVE_3_DJANGO_TRANSACTION_FINAL_REPORT.md",
-      "exists": true,
-      "size_bytes": 1218
-    },
-    {
-      "path": "tests\\test_wave3_transaction_domain.py",
-      "exists": true,
-      "size_bytes": 9659
+      "size_bytes": 2271
     }
   ],
   "git": {
-    "branch": "feature/wave-3-django-transaction-migration",
+    "branch": "feature/wave-4-django-legacy-reduction",
     "status_short": "?? docs.zip",
-    "expected_tag": "wave-3-transaction-complete",
+    "expected_tag": "wave-4-django-ownership-final",
     "expected_tag_present": true
   },
   "safety": {
