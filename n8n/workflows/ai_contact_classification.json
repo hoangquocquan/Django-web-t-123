@@ -1,0 +1,56 @@
+{
+  "name": "AI Contact Classification Local Demo",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Webhook Contact",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "mecprecision/contact",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "name": "Django AI Classify",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/ai/chat/",
+        "sendBody": true,
+        "jsonBody": {
+          "message": "Classify this contact request for CRM follow-up."
+        }
+      }
+    },
+    {
+      "name": "CRM Notification",
+      "type": "n8n-nodes-base.noOp",
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook Contact": {
+      "main": [
+        [
+          {
+            "node": "Django AI Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Django AI Classify": {
+      "main": [
+        [
+          {
+            "node": "CRM Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
+

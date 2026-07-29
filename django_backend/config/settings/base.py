@@ -109,6 +109,8 @@ INSTALLED_APPS = [
     "apps.business_core",
     "apps.transaction_domain",
     "apps.ai",
+    "apps.knowledge",
+    "apps.ai_agent",
 ]
 
 

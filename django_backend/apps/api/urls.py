@@ -50,6 +50,8 @@ from .views.replacement import (
     version,
 )
 from apps.ai.views import ai_chat
+from apps.ai_agent.views import agent_run
+from apps.knowledge.views import knowledge_search
 from .views.sales import quote_detail, quote_files, quotes
 from .views.transaction_domain import (
     order_detail as transaction_order_detail,
@@ -131,4 +133,6 @@ urlpatterns = [
     path("demo/aws/", aws_demo, name="api-demo-aws"),
     path("demo/external/weather/", external_weather, name="api-demo-external-weather"),
     path("ai/chat/", ai_chat, name="api-ai-chat"),
+    path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
+    path("agent/run/", agent_run, name="api-agent-run"),
 ]

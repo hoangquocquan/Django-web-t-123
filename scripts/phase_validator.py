@@ -81,6 +81,32 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-phase-1-complete",
     },
+    "ai-complete-1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AI_WAVE_1_COMPLETE_INTELLIGENCE_PLATFORM.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "knowledge_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "embedding_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "services" / "agent_controller.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "services" / "tools.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "views.py",
+            PROJECT_ROOT / "docs" / "ai" / "RAG_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "ai" / "RAG_USAGE.md",
+            PROJECT_ROOT / "docs" / "ai" / "AI_AGENT_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "ai" / "N8N_AI_AUTOMATION.md",
+            PROJECT_ROOT / "docs" / "ai" / "AI_FACTORY_V2_ARCHITECTURE.md",
+            PROJECT_ROOT / "n8n" / "workflows" / "ai_contact_classification.json",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "ai_wave_1_complete.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_WAVE_1_COMPLETE_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_WAVE_1_COMPLETE_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_ai_wave_1.py",
+        ],
+        "expected_tag": "ai-wave-1-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [
