@@ -39,6 +39,28 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "aws-phase-1-audit-complete",
     },
+    "aws-learning-2": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
+        "documents": [
+            PROJECT_ROOT / "docker" / "aws-lab" / "docker-compose.aws-lab.yml",
+            PROJECT_ROOT / "docker" / "aws-lab" / "nginx" / "default.conf",
+            PROJECT_ROOT / "docs" / "aws-lab" / "EC2_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "RDS_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "S3_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "LOAD_BALANCER_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "CICD_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "AWS_SECURITY_SIMULATION.md",
+            PROJECT_ROOT / "docs" / "aws-lab" / "AWS_LEARNING_ARCHITECTURE.md",
+            PROJECT_ROOT / ".github" / "workflows" / "aws-lab-ci.yml",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "aws_learning_phase_2.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AWS_LEARNING_PHASE_2_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AWS_LEARNING_LAB_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_aws_learning_lab.py",
+        ],
+        "expected_tag": "aws-learning-lab-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

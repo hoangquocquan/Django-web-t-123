@@ -1,23 +1,25 @@
 {
-  "phase": "aws-1",
-  "created_at": "2026-07-29T15:32:19+00:00",
+  "phase": "aws-learning-2",
+  "created_at": "2026-07-29T15:44:26+00:00",
   "requirement_file": "",
   "requirement_text": "",
   "git": {
-    "branch": "feature/aws-architecture-audit",
-    "commit": "33fb20d10d9d50abba9bbfc173acd136c16f2ec5",
-    "latest_commit": "33fb20d feat: migrate public website ownership to django",
+    "branch": "feature/aws-learning-lab",
+    "commit": "cdbb57ef39e10bb1af2e85d1e6610a0603d49669",
+    "latest_commit": "cdbb57e docs: add aws architecture audit",
     "changed_files": [
       "M ai-factory/run_ai_factory.py",
       " M docs/ai-devops/phase_validation_result.json",
       " M scripts/phase_validator.py",
-      "?? ai-factory/evidence/aws_phase_1.json",
+      "?? .github/workflows/aws-lab-ci.yml",
+      "?? ai-factory/evidence/aws_learning_phase_2.json",
+      "?? docker/",
       "?? docs.zip",
-      "?? docs/aws-audit/",
-      "?? docs/codex-prompts/AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
-      "?? docs/reviews/AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md",
-      "?? docs/reviews/AWS_PHASE_1_REVIEW.md",
-      "?? tests/test_aws_phase1_audit.py"
+      "?? docs/aws-lab/",
+      "?? docs/codex-prompts/AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
+      "?? docs/reviews/AWS_LEARNING_LAB_FINAL_REPORT.md",
+      "?? docs/reviews/AWS_LEARNING_PHASE_2_REVIEW.md",
+      "?? tests/test_aws_learning_lab.py"
     ],
     "diff_files": [
       "ai-factory/run_ai_factory.py",
@@ -70,8 +72,8 @@
   "logs": [
     {
       "path": "docs/ai-devops/phase_validation_result.json",
-      "size_bytes": 2717,
-      "content_preview": "{\n  \"phase\": \"aws-1\",\n  \"created_at\": \"2026-07-29T15:32:17+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: aws-phase-1-audit-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\AWS_PHASE_1_ARCHITECTURE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1030\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_COMPUTE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1353\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_DATABASE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1366\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_STORAGE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1082\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_NETWORK_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1165\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_SECURITY_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1139\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_CICD_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1028\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_MONITORING_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 908\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_CURRENT_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1921\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\DJANGO_AWS_READINESS_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1615\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\aws_phase_1.json\",\n      \"exists\": true,\n      \"size_bytes\": 714\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_PHASE_1_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 529\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1191\n    },\n    {\n      \"path\": \"tests\\\\test_aws_phase1_audit.py\",\n      \"exists\": true,\n      \"size_bytes\": 1852\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/aws-architecture-audit\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M docs/ai-devops/phase_validation_result.json\\n M scripts/phase_validator.py\\n?? ai-factory/evidence/aws_phase_1.json\\n?? docs.zip\\n?? docs/aws-audit/\\n?? docs/codex-prompts/AWS_PHASE_1_ARCHITECTURE_AUDIT.md\\n?? docs/reviews/AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md\\n?? docs/reviews/AWS_PHASE_1_REVIEW.md\\n?? tests/test_aws_phase1_audit.py\",\n    \"expected_tag\": \"aws-phase-1-audit-complete\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
+      "size_bytes": 2906,
+      "content_preview": "{\n  \"phase\": \"aws-learning-2\",\n  \"created_at\": \"2026-07-29T15:44:24+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: aws-learning-lab-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md\",\n      \"exists\": true,\n      \"size_bytes\": 1198\n    },\n    {\n      \"path\": \"docker\\\\aws-lab\\\\docker-compose.aws-lab.yml\",\n      \"exists\": true,\n      \"size_bytes\": 2794\n    },\n    {\n      \"path\": \"docker\\\\aws-lab\\\\nginx\\\\default.conf\",\n      \"exists\": true,\n      \"size_bytes\": 839\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\EC2_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 999\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\RDS_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 967\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\S3_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 1054\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\LOAD_BALANCER_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 845\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\CICD_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 716\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\AWS_SECURITY_SIMULATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 995\n    },\n    {\n      \"path\": \"docs\\\\aws-lab\\\\AWS_LEARNING_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1391\n    },\n    {\n      \"path\": \".github\\\\workflows\\\\aws-lab-ci.yml\",\n      \"exists\": true,\n      \"size_bytes\": 996\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\aws_learning_phase_2.json\",\n      \"exists\": true,\n      \"size_bytes\": 730\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_LEARNING_PHASE_2_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 660\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_LEARNING_LAB_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 913\n    },\n    {\n      \"path\": \"tests\\\\test_aws_learning_lab.py\",\n      \"exists\": true,\n      \"size_bytes\": 3108\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/aws-learning-lab\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M docs/ai-devops/phase_validation_result.json\\n M scripts/phase_validator.py\\n?? .github/workflows/aws-lab-ci.yml\\n?? ai-factory/evidence/aws_learning_phase_2.json\\n?? docker/\\n?? docs.zip\\n?? docs/aws-lab/\\n?? docs/codex-prompts/AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md\\n?? docs/reviews/AWS_LEARNING_LAB_FINAL_REPORT.md\\n?? docs/reviews/AWS_LEARNING_PHASE_2_REVIEW.md\\n?? tests/test_aws_learning_lab.py\",\n    \"expected_tag\": \"aws-learning-lab-complete\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
     },
     {
       "path": "docs/cicd/test_pipeline_result.json",

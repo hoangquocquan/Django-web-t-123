@@ -1,0 +1,99 @@
+services:
+  django:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: mecprecision/aws-lab-django:local
+    container_name: mecprecision-aws-lab-django
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      SECRET_KEY: aws-lab-local-secret-only
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1,django,nginx
+      DATABASE_URL: postgresql://mecprecision:mecprecision-local-password@postgres:5432/mecprecision_lab
+      LEGACY_DATABASE_URL: file:/app/backend/database/mecprecision.sqlite?mode=ro
+      REDIS_URL: redis://redis:6379/0
+      AWS_LAB_S3_ENDPOINT_URL: http://minio:9000
+      AWS_LAB_S3_BUCKET: mecprecision-media
+      AWS_LAB_S3_ACCESS_KEY_ID: minio
+      AWS_LAB_S3_SECRET_ACCESS_KEY: minio-local-password
+    depends_on:
+      postgres:
+        condition: service_started
+      minio:
+        condition: service_started
+    networks:
+      - aws-lab
+    volumes:
+      - django-media:/app/django_backend/media
+
+  django-blue:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: mecprecision/aws-lab-django:local
+    container_name: mecprecision-aws-lab-django-blue
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      SECRET_KEY: aws-lab-local-secret-only
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1,django-blue,nginx
+      DATABASE_URL: postgresql://mecprecision:mecprecision-local-password@postgres:5432/mecprecision_lab
+      LEGACY_DATABASE_URL: file:/app/backend/database/mecprecision.sqlite?mode=ro
+    depends_on:
+      postgres:
+        condition: service_started
+    networks:
+      - aws-lab
+    profiles:
+      - scale-demo
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mecprecision-aws-lab-postgres
+    environment:
+      POSTGRES_DB: mecprecision_lab
+      POSTGRES_USER: mecprecision
+      POSTGRES_PASSWORD: mecprecision-local-password
+    networks:
+      - aws-lab
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/backups:/backups
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: mecprecision-aws-lab-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio-local-password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - aws-lab
+    volumes:
+      - minio-data:/data
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mecprecision-aws-lab-nginx
+    ports:
+      - "8088:80"
+    depends_on:
+      django:
+        condition: service_started
+    networks:
+      - aws-lab
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+networks:
+  aws-lab:
+    driver: bridge
+
+volumes:
+  django-media:
+  postgres-data:
+  minio-data:

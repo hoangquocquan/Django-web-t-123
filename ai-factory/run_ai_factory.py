@@ -33,6 +33,7 @@ def load_phase_spec(phase):
     prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / filename
     wave_prompt_map = {
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
+        "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
         "django-wave-2": "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
         "django-wave-3": "WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
@@ -114,6 +115,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_wave7_public_website.py"]
     if phase == "aws-1":
         return [sys.executable, "-m", "pytest", "tests/test_aws_phase1_audit.py"]
+    if phase == "aws-learning-2":
+        return [sys.executable, "-m", "pytest", "tests/test_aws_learning_lab.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [

@@ -3,7 +3,7 @@
 ## Phase
 
 ```text
-aws-1
+aws-learning-2
 ```
 
 ## Implementation Result
@@ -14,9 +14,9 @@ WAITING_FOR_HUMAN_APPROVAL
 
 ## Test Result
 
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase aws-1`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_aws_phase1_audit.py`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase aws-1 --skip-migration`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase aws-learning-2`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_aws_learning_lab.py`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase aws-learning-2 --skip-migration`: PASS
 
 ## Correction History
 
@@ -37,7 +37,7 @@ Tests passed.
 Status:
 
 ```text
-PASS
+WARNING
 ```
 
 Decision:
