@@ -1,40 +1,27 @@
 {
-  "phase": "django-wave-7",
-  "created_at": "2026-07-29T15:24:01+00:00",
+  "phase": "aws-1",
+  "created_at": "2026-07-29T15:32:19+00:00",
   "requirement_file": "",
   "requirement_text": "",
   "git": {
-    "branch": "feature/wave-7-django-public-website-migration",
-    "commit": "c916f9b892855257e7e621c4fc2a0f386646cbd7",
-    "latest_commit": "c916f9b feat: migrate admin ui ownership to django",
+    "branch": "feature/aws-architecture-audit",
+    "commit": "33fb20d10d9d50abba9bbfc173acd136c16f2ec5",
+    "latest_commit": "33fb20d feat: migrate public website ownership to django",
     "changed_files": [
       "M ai-factory/run_ai_factory.py",
-      " M django_backend/config/settings/base.py",
-      " M django_backend/config/urls.py",
       " M docs/ai-devops/phase_validation_result.json",
-      " M scripts/phase12_3_health_check.py",
       " M scripts/phase_validator.py",
-      "?? ai-factory/evidence/django_wave_7.json",
-      "?? django_backend/apps/website/",
+      "?? ai-factory/evidence/aws_phase_1.json",
       "?? docs.zip",
-      "?? docs/codex-prompts/WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
-      "?? docs/django-migration/WAVE7_CONTENT_CONTACT_REPORT.md",
-      "?? docs/django-migration/WAVE7_CUTOVER_REPORT.md",
-      "?? docs/django-migration/WAVE7_HOME_REPORT.md",
-      "?? docs/django-migration/WAVE7_PRODUCT_WEB_REPORT.md",
-      "?? docs/django-migration/WAVE7_PUBLIC_AUDIT_REPORT.md",
-      "?? docs/django-migration/WAVE7_TECHNOLOGY_REPORT.md",
-      "?? docs/django-migration/WAVE7_WEBSITE_FOUNDATION_REPORT.md",
-      "?? docs/reviews/WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md",
-      "?? docs/reviews/WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md",
-      "?? tests/test_wave7_public_website.py"
+      "?? docs/aws-audit/",
+      "?? docs/codex-prompts/AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
+      "?? docs/reviews/AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md",
+      "?? docs/reviews/AWS_PHASE_1_REVIEW.md",
+      "?? tests/test_aws_phase1_audit.py"
     ],
     "diff_files": [
       "ai-factory/run_ai_factory.py",
-      "django_backend/config/settings/base.py",
-      "django_backend/config/urls.py",
       "docs/ai-devops/phase_validation_result.json",
-      "scripts/phase12_3_health_check.py",
       "scripts/phase_validator.py"
     ]
   },
@@ -83,8 +70,8 @@
   "logs": [
     {
       "path": "docs/ai-devops/phase_validation_result.json",
-      "size_bytes": 3478,
-      "content_preview": "{\n  \"phase\": \"django-wave-7\",\n  \"created_at\": \"2026-07-29T15:23:58+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: wave-7-public-website-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 1417\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_PUBLIC_AUDIT_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1818\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_WEBSITE_FOUNDATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 909\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_HOME_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 602\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_PRODUCT_WEB_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 612\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_TECHNOLOGY_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 435\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_CONTENT_CONTACT_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 680\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_CUTOVER_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 941\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\views.py\",\n      \"exists\": true,\n      \"size_bytes\": 8342\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\forms.py\",\n      \"exists\": true,\n      \"size_bytes\": 2712\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\urls.py\",\n      \"exists\": true,\n      \"size_bytes\": 950\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\django_wave_7.json\",\n      \"exists\": true,\n      \"size_bytes\": 767\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 833\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 956\n    },\n    {\n      \"path\": \"tests\\\\test_wave7_public_website.py\",\n      \"exists\": true,\n      \"size_bytes\": 5691\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/wave-7-django-public-website-migration\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M django_backend/config/settings/base.py\\n M django_backend/config/urls.py\\n M scripts/phase12_3_health_check.py\\n M scripts/phase_validator.py\\n?? ai-factory/evidence/django_wave_7.json\\n?? django_backend/apps/website/\\n?? docs.zip\\n?? docs/codex-prompts/WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md\\n?? docs/django-migration/WAVE7_CONTENT_CONTACT_REPORT.md\\n?? docs/django-migration/WAVE7_CUTOVER_REPORT.md\\n?? docs/django-migration/WAVE7_HOME_REPORT.md\\n?? docs/django-migration/WAVE7_PRODUCT_WEB_REPORT.md\\n?? docs/django-migration/WAVE7_PUBLIC_AUDIT_REPORT.md\\n?? docs/django-migration/WAVE7_TECHNOLOGY_REPORT.md\\n?? docs/django-migration/WAVE7_WEBSITE_FOUNDATION_REPORT.md\\n?? docs/reviews/WAVE_7_"
+      "size_bytes": 2717,
+      "content_preview": "{\n  \"phase\": \"aws-1\",\n  \"created_at\": \"2026-07-29T15:32:17+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: aws-phase-1-audit-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\AWS_PHASE_1_ARCHITECTURE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1030\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_COMPUTE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1353\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_DATABASE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1366\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_STORAGE_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1082\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_NETWORK_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1165\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_SECURITY_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1139\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_CICD_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1028\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_MONITORING_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 908\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\AWS_CURRENT_ARCHITECTURE.md\",\n      \"exists\": true,\n      \"size_bytes\": 1921\n    },\n    {\n      \"path\": \"docs\\\\aws-audit\\\\DJANGO_AWS_READINESS_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1615\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\aws_phase_1.json\",\n      \"exists\": true,\n      \"size_bytes\": 714\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_PHASE_1_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 529\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1191\n    },\n    {\n      \"path\": \"tests\\\\test_aws_phase1_audit.py\",\n      \"exists\": true,\n      \"size_bytes\": 1852\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/aws-architecture-audit\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M docs/ai-devops/phase_validation_result.json\\n M scripts/phase_validator.py\\n?? ai-factory/evidence/aws_phase_1.json\\n?? docs.zip\\n?? docs/aws-audit/\\n?? docs/codex-prompts/AWS_PHASE_1_ARCHITECTURE_AUDIT.md\\n?? docs/reviews/AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md\\n?? docs/reviews/AWS_PHASE_1_REVIEW.md\\n?? tests/test_aws_phase1_audit.py\",\n    \"expected_tag\": \"aws-phase-1-audit-complete\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
     },
     {
       "path": "docs/cicd/test_pipeline_result.json",

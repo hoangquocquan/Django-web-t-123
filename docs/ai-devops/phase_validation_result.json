@@ -1,91 +1,86 @@
 {
-  "phase": "django-wave-7",
-  "created_at": "2026-07-29T15:25:17+00:00",
+  "phase": "aws-1",
+  "created_at": "2026-07-29T15:33:26+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
+      "path": "docs\\codex-prompts\\AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
       "exists": true,
-      "size_bytes": 1417
+      "size_bytes": 1030
     },
     {
-      "path": "docs\\django-migration\\WAVE7_PUBLIC_AUDIT_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_COMPUTE_AUDIT.md",
       "exists": true,
-      "size_bytes": 1818
+      "size_bytes": 1353
     },
     {
-      "path": "docs\\django-migration\\WAVE7_WEBSITE_FOUNDATION_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_DATABASE_AUDIT.md",
       "exists": true,
-      "size_bytes": 909
+      "size_bytes": 1366
     },
     {
-      "path": "docs\\django-migration\\WAVE7_HOME_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_STORAGE_AUDIT.md",
       "exists": true,
-      "size_bytes": 602
+      "size_bytes": 1082
     },
     {
-      "path": "docs\\django-migration\\WAVE7_PRODUCT_WEB_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_NETWORK_AUDIT.md",
       "exists": true,
-      "size_bytes": 612
+      "size_bytes": 1165
     },
     {
-      "path": "docs\\django-migration\\WAVE7_TECHNOLOGY_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_SECURITY_AUDIT.md",
       "exists": true,
-      "size_bytes": 435
+      "size_bytes": 1139
     },
     {
-      "path": "docs\\django-migration\\WAVE7_CONTENT_CONTACT_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_CICD_AUDIT.md",
       "exists": true,
-      "size_bytes": 680
+      "size_bytes": 1028
     },
     {
-      "path": "docs\\django-migration\\WAVE7_CUTOVER_REPORT.md",
+      "path": "docs\\aws-audit\\AWS_MONITORING_AUDIT.md",
       "exists": true,
-      "size_bytes": 892
+      "size_bytes": 908
     },
     {
-      "path": "django_backend\\apps\\website\\views.py",
+      "path": "docs\\aws-audit\\AWS_CURRENT_ARCHITECTURE.md",
       "exists": true,
-      "size_bytes": 8342
+      "size_bytes": 1921
     },
     {
-      "path": "django_backend\\apps\\website\\forms.py",
+      "path": "docs\\aws-audit\\DJANGO_AWS_READINESS_REPORT.md",
       "exists": true,
-      "size_bytes": 2712
+      "size_bytes": 1615
     },
     {
-      "path": "django_backend\\apps\\website\\urls.py",
+      "path": "ai-factory\\evidence\\aws_phase_1.json",
       "exists": true,
-      "size_bytes": 950
+      "size_bytes": 886
     },
     {
-      "path": "ai-factory\\evidence\\django_wave_7.json",
+      "path": "docs\\reviews\\AWS_PHASE_1_REVIEW.md",
       "exists": true,
-      "size_bytes": 1013
+      "size_bytes": 529
     },
     {
-      "path": "docs\\reviews\\WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md",
+      "path": "docs\\reviews\\AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 833
+      "size_bytes": 1442
     },
     {
-      "path": "docs\\reviews\\WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md",
+      "path": "tests\\test_aws_phase1_audit.py",
       "exists": true,
-      "size_bytes": 1260
-    },
-    {
-      "path": "tests\\test_wave7_public_website.py",
-      "exists": true,
-      "size_bytes": 5691
+      "size_bytes": 1852
     }
   ],
   "git": {
-    "branch": "feature/wave-7-django-public-website-migration",
+    "branch": "feature/aws-architecture-audit",
     "status_short": "?? docs.zip",
-    "expected_tag": "wave-7-public-website-complete",
+    "expected_tag": "aws-phase-1-audit-complete",
     "expected_tag_present": true
   },
   "safety": {

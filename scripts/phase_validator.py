@@ -18,6 +18,27 @@ DEFAULT_OUTPUT = PROJECT_ROOT / "docs" / "ai-devops" / "phase_validation_result.
 
 
 PHASE_REQUIREMENTS = {
+    "aws-1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_COMPUTE_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_DATABASE_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_STORAGE_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_NETWORK_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_SECURITY_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_CICD_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_MONITORING_AUDIT.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "AWS_CURRENT_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "aws-audit" / "DJANGO_AWS_READINESS_REPORT.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "aws_phase_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AWS_PHASE_1_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AWS_ARCHITECTURE_AUDIT_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_aws_phase1_audit.py",
+        ],
+        "expected_tag": "aws-phase-1-audit-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [
