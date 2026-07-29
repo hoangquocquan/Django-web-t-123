@@ -61,6 +61,26 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "aws-learning-lab-complete",
     },
+    "ai-1": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AI_PHASE_1_OLLAMA_DJANGO_INTEGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "apps.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "services" / "ollama_client.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "services" / "prompt_manager.py",
+            PROJECT_ROOT / "docs" / "ai" / "OLLAMA_SETUP.md",
+            PROJECT_ROOT / "docs" / "ai" / "AI_SERVICE_ARCHITECTURE.md",
+            PROJECT_ROOT / "docs" / "ai" / "AI_CHAT_API.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "ai_phase_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_PHASE_1_OLLAMA_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_PHASE_1_OLLAMA_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_ai_ollama.py",
+        ],
+        "expected_tag": "ai-phase-1-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

@@ -32,6 +32,7 @@ def load_phase_spec(phase):
     filename = f"PHASE_{phase}_AI_SOFTWARE_FACTORY_FINAL_INTEGRATION.md"
     prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / filename
     wave_prompt_map = {
+        "ai-1": "AI_PHASE_1_OLLAMA_DJANGO_INTEGRATION.md",
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
         "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
@@ -117,6 +118,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_aws_phase1_audit.py"]
     if phase == "aws-learning-2":
         return [sys.executable, "-m", "pytest", "tests/test_aws_learning_lab.py"]
+    if phase == "ai-1":
+        return [sys.executable, "-m", "pytest", "tests/test_ai_ollama.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [

@@ -30,6 +30,17 @@ def env_list(name, default=""):
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
+def env_int(name, default):
+    """Read an integer value from environment variables."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 def database_from_url(database_url):
     """Convert DATABASE_URL into a Django database configuration.
 
@@ -97,6 +108,7 @@ INSTALLED_APPS = [
     "apps.foundation",
     "apps.business_core",
     "apps.transaction_domain",
+    "apps.ai",
 ]
 
 
@@ -213,3 +225,7 @@ LOGGING = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
+OLLAMA_TIMEOUT_SECONDS = env_int("OLLAMA_TIMEOUT_SECONDS", 30)
+AI_CHAT_MAX_MESSAGE_LENGTH = env_int("AI_CHAT_MAX_MESSAGE_LENGTH", 2000)

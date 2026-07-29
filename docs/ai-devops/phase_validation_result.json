@@ -1,91 +1,81 @@
 {
-  "phase": "aws-learning-2",
-  "created_at": "2026-07-29T15:45:38+00:00",
+  "phase": "ai-1",
+  "created_at": "2026-07-29T16:00:24+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
+      "path": "docs\\codex-prompts\\AI_PHASE_1_OLLAMA_DJANGO_INTEGRATION.md",
       "exists": true,
-      "size_bytes": 1198
+      "size_bytes": 1071
     },
     {
-      "path": "docker\\aws-lab\\docker-compose.aws-lab.yml",
+      "path": "django_backend\\apps\\ai\\apps.py",
       "exists": true,
-      "size_bytes": 2794
+      "size_bytes": 254
     },
     {
-      "path": "docker\\aws-lab\\nginx\\default.conf",
+      "path": "django_backend\\apps\\ai\\models.py",
       "exists": true,
-      "size_bytes": 839
+      "size_bytes": 192
     },
     {
-      "path": "docs\\aws-lab\\EC2_SIMULATION.md",
+      "path": "django_backend\\apps\\ai\\views.py",
       "exists": true,
-      "size_bytes": 999
+      "size_bytes": 2954
     },
     {
-      "path": "docs\\aws-lab\\RDS_SIMULATION.md",
+      "path": "django_backend\\apps\\ai\\services\\ollama_client.py",
       "exists": true,
-      "size_bytes": 967
+      "size_bytes": 3689
     },
     {
-      "path": "docs\\aws-lab\\S3_SIMULATION.md",
+      "path": "django_backend\\apps\\ai\\services\\prompt_manager.py",
       "exists": true,
-      "size_bytes": 1054
+      "size_bytes": 1563
     },
     {
-      "path": "docs\\aws-lab\\LOAD_BALANCER_SIMULATION.md",
+      "path": "docs\\ai\\OLLAMA_SETUP.md",
       "exists": true,
-      "size_bytes": 845
+      "size_bytes": 1053
     },
     {
-      "path": "docs\\aws-lab\\CICD_SIMULATION.md",
+      "path": "docs\\ai\\AI_SERVICE_ARCHITECTURE.md",
       "exists": true,
-      "size_bytes": 716
+      "size_bytes": 1160
     },
     {
-      "path": "docs\\aws-lab\\AWS_SECURITY_SIMULATION.md",
+      "path": "docs\\ai\\AI_CHAT_API.md",
       "exists": true,
-      "size_bytes": 995
+      "size_bytes": 877
     },
     {
-      "path": "docs\\aws-lab\\AWS_LEARNING_ARCHITECTURE.md",
+      "path": "ai-factory\\evidence\\ai_phase_1.json",
       "exists": true,
-      "size_bytes": 1391
+      "size_bytes": 914
     },
     {
-      "path": ".github\\workflows\\aws-lab-ci.yml",
+      "path": "docs\\reviews\\AI_PHASE_1_OLLAMA_REVIEW.md",
       "exists": true,
-      "size_bytes": 996
+      "size_bytes": 522
     },
     {
-      "path": "ai-factory\\evidence\\aws_learning_phase_2.json",
+      "path": "docs\\reviews\\AI_PHASE_1_OLLAMA_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 1024
+      "size_bytes": 1169
     },
     {
-      "path": "docs\\reviews\\AWS_LEARNING_PHASE_2_REVIEW.md",
+      "path": "tests\\test_ai_ollama.py",
       "exists": true,
-      "size_bytes": 660
-    },
-    {
-      "path": "docs\\reviews\\AWS_LEARNING_LAB_FINAL_REPORT.md",
-      "exists": true,
-      "size_bytes": 1211
-    },
-    {
-      "path": "tests\\test_aws_learning_lab.py",
-      "exists": true,
-      "size_bytes": 3108
+      "size_bytes": 5498
     }
   ],
   "git": {
-    "branch": "feature/aws-learning-lab",
+    "branch": "feature/ai-phase-1-ollama-integration",
     "status_short": "?? docs.zip",
-    "expected_tag": "aws-learning-lab-complete",
+    "expected_tag": "ai-phase-1-complete",
     "expected_tag_present": true
   },
   "safety": {

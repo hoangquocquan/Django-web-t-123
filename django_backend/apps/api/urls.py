@@ -41,7 +41,6 @@ from .views.foundation import (
 )
 from .views.newsletter import subscribers as newsletter_subscribers
 from .views.replacement import (
-    ai_chat,
     aws_demo,
     capabilities,
     external_weather,
@@ -50,6 +49,7 @@ from .views.replacement import (
     openapi_schema,
     version,
 )
+from apps.ai.views import ai_chat
 from .views.sales import quote_detail, quote_files, quotes
 from .views.transaction_domain import (
     order_detail as transaction_order_detail,
