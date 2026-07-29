@@ -1,86 +1,91 @@
 {
-  "phase": "django-wave-1",
-  "created_at": "2026-07-28T14:46:15+00:00",
+  "phase": "django-wave-2",
+  "created_at": "2026-07-29T14:07:05+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
+      "path": "docs\\codex-prompts\\WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
       "exists": true,
-      "size_bytes": 1221
+      "size_bytes": 1230
     },
     {
-      "path": "docs\\django-migration\\WAVE1_AUTH_AUDIT.md",
+      "path": "docs\\django-migration\\WAVE2_PRODUCT_REPORT.md",
       "exists": true,
-      "size_bytes": 1426
+      "size_bytes": 702
     },
     {
-      "path": "docs\\django-migration\\WAVE1_USER_PROFILE_REPORT.md",
+      "path": "docs\\django-migration\\WAVE2_CUSTOMER_REPORT.md",
       "exists": true,
-      "size_bytes": 920
+      "size_bytes": 671
     },
     {
-      "path": "docs\\django-migration\\WAVE1_PERMISSION_REPORT.md",
+      "path": "docs\\django-migration\\WAVE2_INVENTORY_REPORT.md",
       "exists": true,
-      "size_bytes": 1026
+      "size_bytes": 801
     },
     {
-      "path": "django_backend\\apps\\foundation\\models.py",
+      "path": "docs\\django-migration\\WAVE2_DATABASE_REPORT.md",
       "exists": true,
-      "size_bytes": 3959
+      "size_bytes": 896
     },
     {
-      "path": "django_backend\\apps\\foundation\\services.py",
+      "path": "django_backend\\apps\\business_core\\models.py",
       "exists": true,
-      "size_bytes": 6144
+      "size_bytes": 5437
     },
     {
-      "path": "django_backend\\apps\\foundation\\migrations\\0001_initial.py",
+      "path": "django_backend\\apps\\business_core\\services.py",
       "exists": true,
-      "size_bytes": 5569
+      "size_bytes": 6901
     },
     {
-      "path": "django_backend\\apps\\foundation\\migrations\\0002_seed_foundation_from_legacy.py",
+      "path": "django_backend\\apps\\business_core\\migrations\\0001_initial.py",
       "exists": true,
-      "size_bytes": 4945
+      "size_bytes": 6708
     },
     {
-      "path": "django_backend\\apps\\api\\serializers\\foundation.py",
+      "path": "django_backend\\apps\\business_core\\migrations\\0002_seed_business_core_from_legacy.py",
       "exists": true,
-      "size_bytes": 3197
+      "size_bytes": 6099
     },
     {
-      "path": "django_backend\\apps\\api\\views\\foundation.py",
+      "path": "django_backend\\apps\\api\\serializers\\business_core.py",
       "exists": true,
-      "size_bytes": 7013
+      "size_bytes": 6067
     },
     {
-      "path": "ai-factory\\evidence\\django_wave_1.json",
+      "path": "django_backend\\apps\\api\\views\\business_core.py",
       "exists": true,
-      "size_bytes": 786
+      "size_bytes": 8890
     },
     {
-      "path": "docs\\reviews\\WAVE_1_DJANGO_FOUNDATION_REVIEW.md",
+      "path": "ai-factory\\evidence\\django_wave_2.json",
       "exists": true,
-      "size_bytes": 1666
+      "size_bytes": 823
     },
     {
-      "path": "docs\\reviews\\WAVE_1_DJANGO_FOUNDATION_FINAL_REPORT.md",
+      "path": "docs\\reviews\\WAVE_2_DJANGO_BUSINESS_CORE_REVIEW.md",
       "exists": true,
-      "size_bytes": 1194
+      "size_bytes": 1642
     },
     {
-      "path": "tests\\test_wave1_django_foundation.py",
+      "path": "docs\\reviews\\WAVE_2_DJANGO_BUSINESS_CORE_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 6789
+      "size_bytes": 1126
+    },
+    {
+      "path": "tests\\test_wave2_business_core.py",
+      "exists": true,
+      "size_bytes": 9031
     }
   ],
   "git": {
-    "branch": "feature/wave-1-django-foundation-migration",
+    "branch": "feature/wave-2-django-business-core-migration",
     "status_short": "?? docs.zip",
-    "expected_tag": "wave-1-django-foundation-complete",
+    "expected_tag": "wave-2-business-core-complete",
     "expected_tag_present": true
   },
   "safety": {

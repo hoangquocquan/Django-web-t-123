@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.newsletter",
     "apps.foundation",
+    "apps.business_core",
 ]
 
 

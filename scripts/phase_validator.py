@@ -204,6 +204,28 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave1_django_foundation.py",
         ],
         "expected_tag": "wave-1-django-foundation-complete",
+    },
+    "django-wave-2": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE2_PRODUCT_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE2_CUSTOMER_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE2_INVENTORY_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE2_DATABASE_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_core" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_core" / "services.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_core" / "migrations" / "0001_initial.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_core" / "migrations" / "0002_seed_business_core_from_legacy.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "serializers" / "business_core.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "business_core.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_2.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_2_DJANGO_BUSINESS_CORE_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_2_DJANGO_BUSINESS_CORE_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave2_business_core.py",
+        ],
+        "expected_tag": "wave-2-business-core-complete",
     }
 }
 

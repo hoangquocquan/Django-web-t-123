@@ -31,8 +31,12 @@ def load_phase_spec(phase):
     """Load the saved phase prompt so the runner has traceable input."""
     filename = f"PHASE_{phase}_AI_SOFTWARE_FACTORY_FINAL_INTEGRATION.md"
     prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / filename
-    if phase == "django-wave-1":
-        prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md"
+    wave_prompt_map = {
+        "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
+        "django-wave-2": "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
+    }
+    if phase in wave_prompt_map:
+        prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / wave_prompt_map[phase]
     if not prompt_path.exists():
         candidates = sorted((PROJECT_ROOT / "docs" / "codex-prompts").glob(f"PHASE_{phase}*.md"))
         if phase.startswith("django-wave"):
@@ -90,6 +94,8 @@ def default_test_command_for_phase(phase):
     """Return the most specific pytest command available for a phase."""
     if phase == "django-wave-1":
         return [sys.executable, "-m", "pytest", "tests/test_wave1_django_foundation.py"]
+    if phase == "django-wave-2":
+        return [sys.executable, "-m", "pytest", "tests/test_wave2_business_core.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [
