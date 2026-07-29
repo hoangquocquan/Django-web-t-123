@@ -1,0 +1,46 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Workflows - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>Workflow Approval</h1>
+    <p>Move orders through the Django-owned approval workflow.</p>
+  </section>
+  <section class="admin-grid">
+    <form method="post" class="admin-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Apply transition</button>
+    </form>
+    <div class="table-panel">
+      <h2>Orders</h2>
+      <table>
+        <thead><tr><th>Order</th><th>Status</th><th>Customer</th></tr></thead>
+        <tbody>
+          {% for order in orders %}
+            <tr><td>{{ order.order_number }}</td><td>{{ order.status }}</td><td>{{ order.customer }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3">No orders available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="table-panel">
+    <h2>Approval history</h2>
+    <table>
+      <thead><tr><th>Order</th><th>Requested</th><th>Decision</th><th>Reviewed by</th></tr></thead>
+      <tbody>
+        {% for approval in approvals %}
+          <tr>
+            <td>{{ approval.order.order_number }}</td>
+            <td>{{ approval.requested_status }}</td>
+            <td>{{ approval.decision }}</td>
+            <td>{{ approval.reviewed_by }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No approval history yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

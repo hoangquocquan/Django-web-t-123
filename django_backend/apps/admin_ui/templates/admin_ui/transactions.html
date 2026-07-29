@@ -1,0 +1,25 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Transactions - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>Transaction History</h1>
+    <p>Append-only operational history created by Django services.</p>
+  </section>
+  <section class="table-panel">
+    <table>
+      <thead><tr><th>Action</th><th>Entity</th><th>Actor</th><th>Created</th></tr></thead>
+      <tbody>
+        {% for row in history_rows %}
+          <tr>
+            <td>{{ row.action }}</td>
+            <td>{{ row.entity_type }} #{{ row.entity_id }}</td>
+            <td>{{ row.actor }}</td>
+            <td>{{ row.created_at }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No transaction history yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

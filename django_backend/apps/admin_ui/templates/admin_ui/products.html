@@ -1,0 +1,33 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Products - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>Products</h1>
+    <p>Create and update Django-owned product records.</p>
+  </section>
+  <section class="admin-grid">
+    <form method="post" class="admin-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Create product</button>
+    </form>
+    <div class="table-panel">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Price</th><th></th></tr></thead>
+        <tbody>
+          {% for product in products %}
+            <tr>
+              <td>{{ product.id }}</td>
+              <td>{{ product.name }}</td>
+              <td><span class="badge">{{ product.status }}</span></td>
+              <td>{{ product.price }}</td>
+              <td><a href="{% url 'admin_ui:product-detail' product.id %}">Edit</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">No products yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

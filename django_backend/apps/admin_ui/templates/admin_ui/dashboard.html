@@ -1,0 +1,16 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Dashboard - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>Dashboard</h1>
+    <p>Django-owned admin UI for migrated domains.</p>
+  </section>
+  <section class="metric-grid">
+    {% for label, value in metrics.items %}
+      <article class="metric-card">
+        <span>{{ label|title }}</span>
+        <strong>{{ value }}</strong>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

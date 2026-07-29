@@ -1,0 +1,46 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}MEC Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'admin_ui/admin.css' %}" />
+  </head>
+  <body>
+    <header class="admin-topbar">
+      <a class="brand" href="{% url 'admin_ui:dashboard' %}">
+        <span class="brand-mark">M</span>
+        <span>MecPrecision Admin</span>
+      </a>
+      <div class="admin-user">
+        {% if admin_user %}
+          <span>{{ admin_user.full_name }}</span>
+          <a href="{% url 'admin_ui:logout' %}">Logout</a>
+        {% endif %}
+      </div>
+    </header>
+    <div class="admin-layout">
+      {% if navigation %}
+        <aside class="admin-sidebar">
+          {% for item in navigation %}
+            <a class="{% if item.module == active_module %}active{% endif %}" href="{{ item.path }}">
+              {{ item.label }}
+            </a>
+          {% endfor %}
+          <a href="{% url 'admin:index' %}">Django technical admin</a>
+        </aside>
+      {% endif %}
+      <main class="admin-main">
+        {% if messages %}
+          <div class="messages">
+            {% for message in messages %}
+              <p class="message {{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>

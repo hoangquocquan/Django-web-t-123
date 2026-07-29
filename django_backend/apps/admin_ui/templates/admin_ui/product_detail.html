@@ -1,0 +1,14 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Product Detail - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>{{ product.name }}</h1>
+    <p>Product #{{ product.id }}</p>
+  </section>
+  <form method="post" class="admin-form wide-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update product</button>
+    <a class="secondary-action" href="{% url 'admin_ui:products' %}">Back</a>
+  </form>
+{% endblock %}

@@ -2,11 +2,11 @@
 
 ## Phase Name
 
-django-wave-5
+django-wave-6
 
 ## Created At
 
-2026-07-29T14:47:25+00:00
+2026-07-29T15:02:18+00:00
 
 ## Final Decision
 
@@ -23,7 +23,7 @@ WARNING
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.43
+- Duration seconds: 4.494
 
 ## Security Status
 

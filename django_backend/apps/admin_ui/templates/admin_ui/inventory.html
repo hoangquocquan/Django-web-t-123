@@ -1,0 +1,54 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Inventory - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>Inventory</h1>
+    <p>Warehouses, stock balances, and stock adjustments.</p>
+  </section>
+  <section class="admin-grid">
+    <form method="post" class="admin-form">
+      {% csrf_token %}
+      <input type="hidden" name="form_name" value="warehouse" />
+      <h2>Create warehouse</h2>
+      {{ warehouse_form.as_p }}
+      <button type="submit">Create warehouse</button>
+    </form>
+    <form method="post" class="admin-form">
+      {% csrf_token %}
+      <input type="hidden" name="form_name" value="item" />
+      <h2>Create stock item</h2>
+      {{ item_form.as_p }}
+      <button type="submit">Create stock</button>
+    </form>
+  </section>
+  <section class="table-panel">
+    <h2>Stock balances</h2>
+    <table>
+      <thead><tr><th>Product</th><th>Warehouse</th><th>Quantity</th><th>Adjust</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.warehouse.code }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>
+              <form method="post" action="{% url 'admin_ui:inventory-adjust' item.id %}" class="inline-form">
+                {% csrf_token %}
+                <input name="quantity_delta" placeholder="+5 or -2" />
+                <select name="transaction_type">
+                  <option value="adjustment">Adjustment</option>
+                  <option value="receipt">Receipt</option>
+                  <option value="issue">Issue</option>
+                </select>
+                <input name="reason" placeholder="Reason" />
+                <button type="submit">Save</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No inventory items yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

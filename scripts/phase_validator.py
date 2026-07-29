@@ -282,6 +282,25 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave5_admin_migration.py",
         ],
         "expected_tag": "wave-5-django-admin-complete",
+    },
+    "django-wave-6": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE6_ADMIN_UI_AUDIT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE6_ADMIN_UI_FOUNDATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE6_ADMIN_DOMAIN_UI_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE6_CUTOVER_VALIDATION_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "forms.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "urls.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_6.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_6_DJANGO_ADMIN_UI_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_6_DJANGO_ADMIN_UI_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave6_admin_ui.py",
+        ],
+        "expected_tag": "wave-6-admin-ui-complete",
     }
 }
 

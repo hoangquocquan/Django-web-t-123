@@ -1,0 +1,32 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="{% static 'admin_ui/admin.css' %}" />
+  </head>
+  <body class="login-body">
+    <section class="login-panel">
+      <div class="brand login-brand">
+        <span class="brand-mark">M</span>
+        <span>MecPrecision Admin</span>
+      </div>
+      <h1>Django Admin UI</h1>
+      <p class="muted">Sign in with a Django-owned Foundation account.</p>
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <p class="message {{ message.tags }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <form method="post" class="admin-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+      </form>
+    </section>
+  </body>
+</html>
