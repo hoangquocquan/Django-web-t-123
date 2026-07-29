@@ -1,0 +1,26 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Technology</span>
+      <h1>CNC process, inspection, and production support</h1>
+      <p>Manufacturing capability rendered by Django templates with service-backed content.</p>
+    </div>
+  </section>
+  <section class="container process-grid">
+    <article><span>01</span><h2>Drawing review</h2><p>Review tolerance, material, surface finish, and production risks.</p></article>
+    <article><span>02</span><h2>Machining plan</h2><p>Define CNC turning, milling, fixture setup, and inspection checkpoints.</p></article>
+    <article><span>03</span><h2>Quality control</h2><p>Inspect dimensional accuracy and record process history for repeat jobs.</p></article>
+  </section>
+  <section class="container">
+    <div class="section-heading"><h2>Capabilities</h2></div>
+    <div class="capability-grid light">
+      {% for capability in capabilities %}
+        <article>
+          <h3>{{ capability.title }}</h3>
+          <p>{{ capability.content }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

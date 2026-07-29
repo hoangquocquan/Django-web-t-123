@@ -1,0 +1,38 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="product-detail">
+    <div class="container product-detail-grid">
+      <div class="product-media">
+        {% if product.main_image %}
+          <img src="{{ product.main_image }}" alt="{{ product.name }}" />
+        {% else %}
+          <div class="image-placeholder">{{ product.name }}</div>
+        {% endif %}
+      </div>
+      <div>
+        <span class="tag">{{ product.category_name|default:"CNC" }}</span>
+        <h1>{{ product.name }}</h1>
+        <p>{{ product.description|default:product.short_description }}</p>
+        <dl class="spec-list">
+          <div><dt>SKU</dt><dd>{{ product.sku|default:"Custom" }}</dd></div>
+          <div><dt>Status</dt><dd>{{ product.status }}</dd></div>
+          <div><dt>Price</dt><dd>{{ product.price }}</dd></div>
+        </dl>
+        <a class="button" href="{% url 'website:contact' %}">Request quote</a>
+      </div>
+    </div>
+  </section>
+  <section class="container">
+    <div class="section-heading"><h2>Related products</h2></div>
+    <div class="card-grid">
+      {% for item in related_products %}
+        <article class="compact-card">
+          <h3><a href="{% url 'website:product-detail' item.slug %}">{{ item.name }}</a></h3>
+          <p>{{ item.short_description|truncatechars:100 }}</p>
+        </article>
+      {% empty %}
+        <p>No related products yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

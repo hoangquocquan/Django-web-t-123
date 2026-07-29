@@ -1,0 +1,21 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">News</span>
+      <h1>Company updates and technical notes</h1>
+      <p>CMS-backed public content rendered through Django.</p>
+    </div>
+  </section>
+  <section class="container card-grid">
+    {% for item in news_items %}
+      <article class="compact-card">
+        <span class="tag">{{ item.status }}</span>
+        <h2><a href="{% url 'website:news-detail' item.slug %}">{{ item.title }}</a></h2>
+        <p>{{ item.seo_description|default:item.content|truncatechars:150 }}</p>
+      </article>
+    {% empty %}
+      <p>No news content has been published yet.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

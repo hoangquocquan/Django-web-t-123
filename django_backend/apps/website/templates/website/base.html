@@ -1,0 +1,48 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ seo.title }}</title>
+    <meta name="description" content="{{ seo.description }}" />
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ seo.canonical_path }}" />
+    <link rel="stylesheet" href="{% static 'website/site.css' %}" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="{% url 'website:home' %}">
+        <span class="brand-mark">M</span>
+        <span>MecPrecision VIETNAM</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="{% url 'website:home' %}">Home</a>
+        <a href="{% url 'website:products' %}">Products</a>
+        <a href="{% url 'website:technology' %}">Technology</a>
+        <a href="{% url 'website:news' %}">News</a>
+        <a href="{% url 'website:contact' %}">Contact</a>
+        <a class="admin-link" href="{% url 'admin_ui:login' %}">Admin</a>
+      </nav>
+    </header>
+    <main>
+      {% if messages %}
+        <section class="container messages">
+          {% for message in messages %}
+            <p class="message {{ message.tags }}">{{ message }}</p>
+          {% endfor %}
+        </section>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <div>
+        <strong>MecPrecision VIETNAM</strong>
+        <p>Precision CNC machining, fixtures, and manufacturing support.</p>
+      </div>
+      <div>
+        <strong>Contact</strong>
+        <p>sales@mecprecision.vn<br />Ho Chi Minh City, Vietnam</p>
+      </div>
+    </footer>
+  </body>
+</html>

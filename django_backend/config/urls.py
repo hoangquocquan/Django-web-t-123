@@ -3,11 +3,8 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from apps.core.views import root_health
-
-
 urlpatterns = [
-    path("", root_health, name="root-health"),
+    path("", include("apps.website.urls")),
     path("admin/", include("apps.admin_ui.urls")),
     path("django-admin/", admin.site.urls),
     path("api/", include("apps.core.urls")),

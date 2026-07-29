@@ -1,0 +1,39 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Products</span>
+      <h1>Precision components and manufacturing solutions</h1>
+      <p>Browse Django-owned product records with SEO-compatible URLs.</p>
+    </div>
+  </section>
+  <section class="container">
+    <form method="get" class="filter-bar">
+      <label>
+        Category
+        <select name="category">
+          <option value="">All</option>
+          {% for category in categories %}
+            <option value="{{ category }}" {% if category == active_category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Filter</button>
+    </form>
+    <div class="card-grid">
+      {% for product in products %}
+        <article class="product-card">
+          {% if product.main_image %}<img src="{{ product.main_image }}" alt="{{ product.name }}" />{% endif %}
+          <div>
+            <span class="tag">{{ product.category_name|default:"CNC" }}</span>
+            <h2><a href="{% url 'website:product-detail' product.slug %}">{{ product.name }}</a></h2>
+            <p>{{ product.short_description|default:product.description|truncatechars:140 }}</p>
+            <strong>{{ product.price }}</strong>
+          </div>
+        </article>
+      {% empty %}
+        <p>No products match this filter.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

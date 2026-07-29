@@ -1,76 +1,91 @@
 {
-  "phase": "django-wave-6",
-  "created_at": "2026-07-29T15:03:24+00:00",
+  "phase": "django-wave-7",
+  "created_at": "2026-07-29T15:25:17+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md",
+      "path": "docs\\codex-prompts\\WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
       "exists": true,
-      "size_bytes": 1348
+      "size_bytes": 1417
     },
     {
-      "path": "docs\\django-migration\\WAVE6_ADMIN_UI_AUDIT.md",
+      "path": "docs\\django-migration\\WAVE7_PUBLIC_AUDIT_REPORT.md",
       "exists": true,
-      "size_bytes": 2323
+      "size_bytes": 1818
     },
     {
-      "path": "docs\\django-migration\\WAVE6_ADMIN_UI_FOUNDATION_REPORT.md",
+      "path": "docs\\django-migration\\WAVE7_WEBSITE_FOUNDATION_REPORT.md",
       "exists": true,
-      "size_bytes": 1099
+      "size_bytes": 909
     },
     {
-      "path": "docs\\django-migration\\WAVE6_ADMIN_DOMAIN_UI_REPORT.md",
+      "path": "docs\\django-migration\\WAVE7_HOME_REPORT.md",
       "exists": true,
-      "size_bytes": 1900
+      "size_bytes": 602
     },
     {
-      "path": "docs\\django-migration\\WAVE6_CUTOVER_VALIDATION_REPORT.md",
+      "path": "docs\\django-migration\\WAVE7_PRODUCT_WEB_REPORT.md",
       "exists": true,
-      "size_bytes": 1082
+      "size_bytes": 612
     },
     {
-      "path": "django_backend\\apps\\admin_ui\\views.py",
+      "path": "docs\\django-migration\\WAVE7_TECHNOLOGY_REPORT.md",
       "exists": true,
-      "size_bytes": 18307
+      "size_bytes": 435
     },
     {
-      "path": "django_backend\\apps\\admin_ui\\forms.py",
+      "path": "docs\\django-migration\\WAVE7_CONTENT_CONTACT_REPORT.md",
       "exists": true,
-      "size_bytes": 7090
+      "size_bytes": 680
     },
     {
-      "path": "django_backend\\apps\\admin_ui\\urls.py",
+      "path": "docs\\django-migration\\WAVE7_CUTOVER_REPORT.md",
       "exists": true,
-      "size_bytes": 1009
+      "size_bytes": 892
     },
     {
-      "path": "ai-factory\\evidence\\django_wave_6.json",
+      "path": "django_backend\\apps\\website\\views.py",
       "exists": true,
-      "size_bytes": 1124
+      "size_bytes": 8342
     },
     {
-      "path": "docs\\reviews\\WAVE_6_DJANGO_ADMIN_UI_REVIEW.md",
+      "path": "django_backend\\apps\\website\\forms.py",
       "exists": true,
-      "size_bytes": 956
+      "size_bytes": 2712
     },
     {
-      "path": "docs\\reviews\\WAVE_6_DJANGO_ADMIN_UI_FINAL_REPORT.md",
+      "path": "django_backend\\apps\\website\\urls.py",
       "exists": true,
-      "size_bytes": 1298
+      "size_bytes": 950
     },
     {
-      "path": "tests\\test_wave6_admin_ui.py",
+      "path": "ai-factory\\evidence\\django_wave_7.json",
       "exists": true,
-      "size_bytes": 8875
+      "size_bytes": 1013
+    },
+    {
+      "path": "docs\\reviews\\WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md",
+      "exists": true,
+      "size_bytes": 833
+    },
+    {
+      "path": "docs\\reviews\\WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md",
+      "exists": true,
+      "size_bytes": 1260
+    },
+    {
+      "path": "tests\\test_wave7_public_website.py",
+      "exists": true,
+      "size_bytes": 5691
     }
   ],
   "git": {
-    "branch": "feature/wave-6-django-admin-ui-cutover",
+    "branch": "feature/wave-7-django-public-website-migration",
     "status_short": "?? docs.zip",
-    "expected_tag": "wave-6-admin-ui-complete",
+    "expected_tag": "wave-7-public-website-complete",
     "expected_tag_present": true
   },
   "safety": {

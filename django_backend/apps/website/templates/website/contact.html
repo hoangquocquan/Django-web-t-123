@@ -1,0 +1,26 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Contact</span>
+      <h1>Talk to MecPrecision</h1>
+      <p>Send contact details or request a CNC machining quote. Django validates the forms and stores safe submission intents.</p>
+    </div>
+  </section>
+  <section class="container form-grid">
+    <form method="post" class="site-form">
+      {% csrf_token %}
+      <input type="hidden" name="form_name" value="contact" />
+      <h2>Contact form</h2>
+      {{ contact_form.as_p }}
+      <button type="submit">Send contact</button>
+    </form>
+    <form method="post" class="site-form">
+      {% csrf_token %}
+      <input type="hidden" name="form_name" value="quote" />
+      <h2>Quote request</h2>
+      {{ quote_form.as_p }}
+      <button type="submit">Send quote</button>
+    </form>
+  </section>
+{% endblock %}

@@ -1,35 +1,40 @@
 {
-  "phase": "django-wave-6",
-  "created_at": "2026-07-29T15:02:05+00:00",
+  "phase": "django-wave-7",
+  "created_at": "2026-07-29T15:24:01+00:00",
   "requirement_file": "",
   "requirement_text": "",
   "git": {
-    "branch": "feature/wave-6-django-admin-ui-cutover",
-    "commit": "4c45f169df450a13e5c6da5c336dafadaa4b2c17",
-    "latest_commit": "4c45f16 feat: migrate admin interface ownership to django",
+    "branch": "feature/wave-7-django-public-website-migration",
+    "commit": "c916f9b892855257e7e621c4fc2a0f386646cbd7",
+    "latest_commit": "c916f9b feat: migrate admin ui ownership to django",
     "changed_files": [
       "M ai-factory/run_ai_factory.py",
       " M django_backend/config/settings/base.py",
       " M django_backend/config/urls.py",
       " M docs/ai-devops/phase_validation_result.json",
+      " M scripts/phase12_3_health_check.py",
       " M scripts/phase_validator.py",
-      "?? ai-factory/evidence/django_wave_6.json",
-      "?? django_backend/apps/admin_ui/",
+      "?? ai-factory/evidence/django_wave_7.json",
+      "?? django_backend/apps/website/",
       "?? docs.zip",
-      "?? docs/codex-prompts/WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md",
-      "?? docs/django-migration/WAVE6_ADMIN_DOMAIN_UI_REPORT.md",
-      "?? docs/django-migration/WAVE6_ADMIN_UI_AUDIT.md",
-      "?? docs/django-migration/WAVE6_ADMIN_UI_FOUNDATION_REPORT.md",
-      "?? docs/django-migration/WAVE6_CUTOVER_VALIDATION_REPORT.md",
-      "?? docs/reviews/WAVE_6_DJANGO_ADMIN_UI_FINAL_REPORT.md",
-      "?? docs/reviews/WAVE_6_DJANGO_ADMIN_UI_REVIEW.md",
-      "?? tests/test_wave6_admin_ui.py"
+      "?? docs/codex-prompts/WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
+      "?? docs/django-migration/WAVE7_CONTENT_CONTACT_REPORT.md",
+      "?? docs/django-migration/WAVE7_CUTOVER_REPORT.md",
+      "?? docs/django-migration/WAVE7_HOME_REPORT.md",
+      "?? docs/django-migration/WAVE7_PRODUCT_WEB_REPORT.md",
+      "?? docs/django-migration/WAVE7_PUBLIC_AUDIT_REPORT.md",
+      "?? docs/django-migration/WAVE7_TECHNOLOGY_REPORT.md",
+      "?? docs/django-migration/WAVE7_WEBSITE_FOUNDATION_REPORT.md",
+      "?? docs/reviews/WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md",
+      "?? docs/reviews/WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md",
+      "?? tests/test_wave7_public_website.py"
     ],
     "diff_files": [
       "ai-factory/run_ai_factory.py",
       "django_backend/config/settings/base.py",
       "django_backend/config/urls.py",
       "docs/ai-devops/phase_validation_result.json",
+      "scripts/phase12_3_health_check.py",
       "scripts/phase_validator.py"
     ]
   },
@@ -78,8 +83,8 @@
   "logs": [
     {
       "path": "docs/ai-devops/phase_validation_result.json",
-      "size_bytes": 2846,
-      "content_preview": "{\n  \"phase\": \"django-wave-6\",\n  \"created_at\": \"2026-07-29T15:02:02+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: wave-6-admin-ui-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md\",\n      \"exists\": true,\n      \"size_bytes\": 1348\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE6_ADMIN_UI_AUDIT.md\",\n      \"exists\": true,\n      \"size_bytes\": 2323\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE6_ADMIN_UI_FOUNDATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1099\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE6_ADMIN_DOMAIN_UI_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1900\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE6_CUTOVER_VALIDATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1131\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\admin_ui\\\\views.py\",\n      \"exists\": true,\n      \"size_bytes\": 18307\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\admin_ui\\\\forms.py\",\n      \"exists\": true,\n      \"size_bytes\": 7090\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\admin_ui\\\\urls.py\",\n      \"exists\": true,\n      \"size_bytes\": 1009\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\django_wave_6.json\",\n      \"exists\": true,\n      \"size_bytes\": 886\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_6_DJANGO_ADMIN_UI_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 956\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_6_DJANGO_ADMIN_UI_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 998\n    },\n    {\n      \"path\": \"tests\\\\test_wave6_admin_ui.py\",\n      \"exists\": true,\n      \"size_bytes\": 8875\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/wave-6-django-admin-ui-cutover\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M django_backend/config/settings/base.py\\n M django_backend/config/urls.py\\n M scripts/phase_validator.py\\n?? ai-factory/evidence/django_wave_6.json\\n?? django_backend/apps/admin_ui/\\n?? docs.zip\\n?? docs/codex-prompts/WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md\\n?? docs/django-migration/WAVE6_ADMIN_DOMAIN_UI_REPORT.md\\n?? docs/django-migration/WAVE6_ADMIN_UI_AUDIT.md\\n?? docs/django-migration/WAVE6_ADMIN_UI_FOUNDATION_REPORT.md\\n?? docs/django-migration/WAVE6_CUTOVER_VALIDATION_REPORT.md\\n?? docs/reviews/WAVE_6_DJANGO_ADMIN_UI_FINAL_REPORT.md\\n?? docs/reviews/WAVE_6_DJANGO_ADMIN_UI_REVIEW.md\\n?? tests/test_wave6_admin_ui.py\",\n    \"expected_tag\": \"wave-6-admin-ui-complete\",\n    \"expected_tag_present\": false\n  },\n  \"safety\": {\n    \"production_modified\": false,\n    \"auto_deploy\": false,\n    \"auto_approve_production\": false,\n    \"human_review_required\": true\n  }\n}"
+      "size_bytes": 3478,
+      "content_preview": "{\n  \"phase\": \"django-wave-7\",\n  \"created_at\": \"2026-07-29T15:23:58+00:00\",\n  \"status\": \"PASS\",\n  \"missing\": [],\n  \"warnings\": [],\n  \"notes\": [\n    \"Expected tag not found yet: wave-7-public-website-complete\",\n    \"Working tree has uncommitted phase changes.\"\n  ],\n  \"checked_files\": [\n    {\n      \"path\": \"docs\\\\codex-prompts\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md\",\n      \"exists\": true,\n      \"size_bytes\": 1417\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_PUBLIC_AUDIT_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 1818\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_WEBSITE_FOUNDATION_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 909\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_HOME_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 602\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_PRODUCT_WEB_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 612\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_TECHNOLOGY_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 435\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_CONTENT_CONTACT_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 680\n    },\n    {\n      \"path\": \"docs\\\\django-migration\\\\WAVE7_CUTOVER_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 941\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\views.py\",\n      \"exists\": true,\n      \"size_bytes\": 8342\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\forms.py\",\n      \"exists\": true,\n      \"size_bytes\": 2712\n    },\n    {\n      \"path\": \"django_backend\\\\apps\\\\website\\\\urls.py\",\n      \"exists\": true,\n      \"size_bytes\": 950\n    },\n    {\n      \"path\": \"ai-factory\\\\evidence\\\\django_wave_7.json\",\n      \"exists\": true,\n      \"size_bytes\": 767\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md\",\n      \"exists\": true,\n      \"size_bytes\": 833\n    },\n    {\n      \"path\": \"docs\\\\reviews\\\\WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md\",\n      \"exists\": true,\n      \"size_bytes\": 956\n    },\n    {\n      \"path\": \"tests\\\\test_wave7_public_website.py\",\n      \"exists\": true,\n      \"size_bytes\": 5691\n    }\n  ],\n  \"git\": {\n    \"branch\": \"feature/wave-7-django-public-website-migration\",\n    \"status_short\": \"M ai-factory/run_ai_factory.py\\n M django_backend/config/settings/base.py\\n M django_backend/config/urls.py\\n M scripts/phase12_3_health_check.py\\n M scripts/phase_validator.py\\n?? ai-factory/evidence/django_wave_7.json\\n?? django_backend/apps/website/\\n?? docs.zip\\n?? docs/codex-prompts/WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md\\n?? docs/django-migration/WAVE7_CONTENT_CONTACT_REPORT.md\\n?? docs/django-migration/WAVE7_CUTOVER_REPORT.md\\n?? docs/django-migration/WAVE7_HOME_REPORT.md\\n?? docs/django-migration/WAVE7_PRODUCT_WEB_REPORT.md\\n?? docs/django-migration/WAVE7_PUBLIC_AUDIT_REPORT.md\\n?? docs/django-migration/WAVE7_TECHNOLOGY_REPORT.md\\n?? docs/django-migration/WAVE7_WEBSITE_FOUNDATION_REPORT.md\\n?? docs/reviews/WAVE_7_"
     },
     {
       "path": "docs/cicd/test_pipeline_result.json",

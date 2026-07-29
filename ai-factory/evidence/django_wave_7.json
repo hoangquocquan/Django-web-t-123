@@ -1,0 +1,38 @@
+{
+  "wave": "django-wave-7",
+  "title": "Django Public Website Migration",
+  "status": "DJANGO_PUBLIC_WEBSITE_MIGRATION_COMPLETE",
+  "django_owned_routes": [
+    "/",
+    "/products",
+    "/product/<slug>",
+    "/technology",
+    "/news",
+    "/news/<slug>",
+    "/contact"
+  ],
+  "legacy_public_preserved": true,
+  "legacy_shutdown_executed": false,
+  "production_deployed": false,
+  "human_approval_required": true,
+  "data_sources": {
+    "products": "BusinessProduct",
+    "capabilities": "CatalogService",
+    "news": "CmsService",
+    "submissions": "replacement_submission_service"
+  },
+  "security": {
+    "csrf_enabled": true,
+    "form_validation": true,
+    "safe_submission_intents": true,
+    "external_email_sent": false,
+    "secrets_exposed": false
+  },
+  "validation": {
+    "django_check": "PASS",
+    "wave_tests": "PASS: 10 passed",
+    "full_pytest": "PASS: 252 passed",
+    "ai_factory": "PASS: AI_SOFTWARE_FACTORY_COMPLETE",
+    "ai_review_decision": "WARNING: human review required"
+  }
+}

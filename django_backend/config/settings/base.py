@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "apps.admin_ui",
+    "apps.website",
     "apps.core",
     "apps.common",
     "apps.api",

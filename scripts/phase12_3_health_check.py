@@ -161,7 +161,7 @@ def summarize_status(components):
 def run_health_check(output_path=None):
     """Run all local monitoring checks and write a JSON result."""
     components = [setup_django()]
-    for path in ["/", "/api/health/", "/api/v1/health/"]:
+    for path in ["/api/health/", "/api/v1/health/"]:
         components.append(check_api_endpoint(path))
     components.append(check_database())
     components.append(check_dependencies())

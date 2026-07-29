@@ -301,6 +301,28 @@ PHASE_REQUIREMENTS = {
             PROJECT_ROOT / "tests" / "test_wave6_admin_ui.py",
         ],
         "expected_tag": "wave-6-admin-ui-complete",
+    },
+    "django-wave-7": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
+        "documents": [
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_PUBLIC_AUDIT_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_WEBSITE_FOUNDATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_HOME_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_PRODUCT_WEB_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_TECHNOLOGY_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_CONTENT_CONTACT_REPORT.md",
+            PROJECT_ROOT / "docs" / "django-migration" / "WAVE7_CUTOVER_REPORT.md",
+            PROJECT_ROOT / "django_backend" / "apps" / "website" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "website" / "forms.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "website" / "urls.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "django_wave_7.json",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_7_DJANGO_PUBLIC_WEBSITE_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "WAVE_7_DJANGO_PUBLIC_WEBSITE_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_wave7_public_website.py",
+        ],
+        "expected_tag": "wave-7-public-website-complete",
     }
 }
 

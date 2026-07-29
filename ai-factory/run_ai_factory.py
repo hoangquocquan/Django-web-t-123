@@ -38,6 +38,7 @@ def load_phase_spec(phase):
         "django-wave-4": "WAVE_4_DJANGO_LEGACY_REDUCTION.md",
         "django-wave-5": "WAVE_5_DJANGO_ADMIN_MIGRATION.md",
         "django-wave-6": "WAVE_6_DJANGO_ADMIN_UI_CUTOVER.md",
+        "django-wave-7": "WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
     }
     if phase in wave_prompt_map:
         prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / wave_prompt_map[phase]
@@ -108,6 +109,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_wave5_admin_migration.py"]
     if phase == "django-wave-6":
         return [sys.executable, "-m", "pytest", "tests/test_wave6_admin_ui.py"]
+    if phase == "django-wave-7":
+        return [sys.executable, "-m", "pytest", "tests/test_wave7_public_website.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [

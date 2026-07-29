@@ -1,0 +1,65 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="hero" style="background-image: linear-gradient(90deg, rgba(4, 33, 65, 0.88), rgba(4, 33, 65, 0.48)), url('{{ hero_image }}');">
+    <div class="hero-inner">
+      <span class="eyebrow">Django public website</span>
+      <h1>MecPrecision VIETNAM</h1>
+      <p>Precision CNC machining, fixtures, quality inspection, and manufacturing support for industrial customers.</p>
+      <div class="hero-actions">
+        <a class="button" href="{% url 'website:products' %}">View products</a>
+        <a class="button secondary" href="{% url 'website:contact' %}">Request quote</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container split-section">
+    <div>
+      <span class="eyebrow">Company</span>
+      <h2>Built for precise, repeatable manufacturing</h2>
+      <p>MecPrecision supports CNC parts, gears, shafts, inspection fixtures, and production engineering for factories that need stable quality.</p>
+    </div>
+    <div class="stat-grid">
+      <article><strong>{{ featured_products|length }}</strong><span>Featured products</span></article>
+      <article><strong>{{ capabilities|length }}</strong><span>Capabilities</span></article>
+      <article><strong>ISO</strong><span>Quality mindset</span></article>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="section-heading">
+      <h2>Featured products</h2>
+      <a href="{% url 'website:products' %}">See all</a>
+    </div>
+    <div class="card-grid">
+      {% for product in featured_products %}
+        <article class="product-card">
+          {% if product.main_image %}<img src="{{ product.main_image }}" alt="{{ product.name }}" />{% endif %}
+          <div>
+            <span class="tag">{{ product.category_name|default:"CNC" }}</span>
+            <h3><a href="{% url 'website:product-detail' product.slug %}">{{ product.name }}</a></h3>
+            <p>{{ product.short_description|default:product.description|truncatechars:120 }}</p>
+          </div>
+        </article>
+      {% empty %}
+        <p>No Django-owned products yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="dark-band">
+    <div class="container">
+      <div class="section-heading">
+        <h2>Technology highlights</h2>
+        <a href="{% url 'website:technology' %}">Explore</a>
+      </div>
+      <div class="capability-grid">
+        {% for capability in capabilities %}
+          <article>
+            <h3>{{ capability.title }}</h3>
+            <p>{{ capability.content|truncatechars:140 }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}
