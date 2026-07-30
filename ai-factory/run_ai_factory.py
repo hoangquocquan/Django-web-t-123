@@ -35,6 +35,7 @@ def load_phase_spec(phase):
         "ai-1": "AI_PHASE_1_OLLAMA_DJANGO_INTEGRATION.md",
         "ai-complete-1": "AI_WAVE_1_COMPLETE_INTELLIGENCE_PLATFORM.md",
         "ai-knowledge-assistant": "AI_PROJECT_1_MEC_KNOWLEDGE_ASSISTANT.md",
+        "ai-cleanup": "AI_LEGACY_CLEANUP.md",
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
         "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
         "business-sales-crm-ai": "BUSINESS_WAVE_1_SALES_CRM_AI_PLATFORM.md",
@@ -127,6 +128,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_ai_wave_1.py"]
     if phase == "ai-knowledge-assistant":
         return [sys.executable, "-m", "pytest", "tests/test_ai_knowledge_assistant.py"]
+    if phase == "ai-cleanup":
+        return [sys.executable, "-m", "pytest", "tests/test_ai_legacy_cleanup.py"]
     if phase == "business-sales-crm-ai":
         return [sys.executable, "-m", "pytest", "tests/test_sales_crm_ai.py"]
 

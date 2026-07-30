@@ -107,23 +107,6 @@ def get_openapi_schema():
                     "responses": {"201": {"description": "Đã tạo yêu cầu báo giá"}, "400": {"description": "Thiếu dữ liệu"}},
                 }
             },
-            "/api/ai/chat": {
-                "post": {
-                    "summary": "Chatbot AI dùng Ollama local",
-                    "requestBody": {
-                        "required": True,
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/AiChatInput"}
-                            }
-                        },
-                    },
-                    "responses": {
-                        "200": {"description": "Câu trả lời AI hoặc fallback demo"},
-                        "400": {"description": "Thiếu câu hỏi"},
-                    },
-                }
-            },
             "/api/external/weather": {
                 "get": {
                     "summary": "Demo backend gọi API thời tiết bên ngoài",
@@ -203,14 +186,6 @@ def get_openapi_schema():
                     },
                 },
                 # ErrorResponse mô tả format lỗi thống nhất của API.
-                "AiChatInput": {
-                    "type": "object",
-                    "required": ["message"],
-                    "properties": {
-                        "message": {"type": "string", "example": "MecPrecision có gia công fixture không?"},
-                        "model": {"type": "string", "example": "llama3:latest"},
-                    },
-                },
                 "ErrorResponse": {
                     "type": "object",
                     "properties": {

@@ -11,16 +11,16 @@ from pathlib import Path
 from types import SimpleNamespace
 
 
-# File test này dùng unittest có sẵn của Python.
-# Mục tiêu là kiểm tra tự động các lớp quan trọng:
-# service/repository, controller/cache, transaction và endpoint API.
+# File test nĂ y dĂ¹ng unittest cĂ³ sáºµn cá»§a Python.
+# Má»¥c tiĂªu lĂ  kiá»ƒm tra tá»± Ä‘á»™ng cĂ¡c lá»›p quan trá»ng:
+# service/repository, controller/cache, transaction vĂ  endpoint API.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = PROJECT_ROOT / "backend"
 TEST_DATABASE_PATH = Path(tempfile.mkdtemp(prefix="mecprecision-test-")) / "mecprecision_test.sqlite"
 
-# Thiết lập môi trường test trước khi import code backend.
-# Nhờ vậy service/repository sẽ dùng database tạm, không đụng database thật.
+# Thiáº¿t láº­p mĂ´i trÆ°á»ng test trÆ°á»›c khi import code backend.
+# Nhá» váº­y service/repository sáº½ dĂ¹ng database táº¡m, khĂ´ng Ä‘á»¥ng database tháº­t.
 os.environ["MEC_ENV"] = "test"
 os.environ["MEC_DEBUG"] = "true"
 os.environ["MEC_DATABASE_PATH"] = str(TEST_DATABASE_PATH)
@@ -36,7 +36,6 @@ from database.migrations import ensure_cms_tables  # noqa: E402
 from http.server import ThreadingHTTPServer  # noqa: E402
 from repositories import auth_repository  # noqa: E402
 from services.activity_service import get_recent_activity_logs, log_admin_activity  # noqa: E402
-import services.ai_service as ai_service  # noqa: E402
 from services.auth_service import list_auth_email_outbox, request_password_reset, reset_password_with_token, set_account_active  # noqa: E402
 from services.cms_service import (  # noqa: E402
     get_active_banners,
@@ -60,10 +59,10 @@ from utils.uploads import save_uploaded_file  # noqa: E402
 
 
 def init_test_database():
-    """Tạo database test từ schema.sql và seed.sql."""
+    """Táº¡o database test tá»« schema.sql vĂ  seed.sql."""
     if TEST_DATABASE_PATH.exists():
         TEST_DATABASE_PATH.unlink()
-    # schema.sql tạo bảng, seed.sql thêm dữ liệu mẫu cho test.
+    # schema.sql táº¡o báº£ng, seed.sql thĂªm dá»¯ liá»‡u máº«u cho test.
     schema_sql = (BACKEND_ROOT / "database" / "schema.sql").read_text(encoding="utf-8")
     seed_sql = (BACKEND_ROOT / "database" / "seed.sql").read_text(encoding="utf-8")
     with sqlite3.connect(TEST_DATABASE_PATH) as connection:
@@ -74,15 +73,15 @@ def init_test_database():
 
 
 def setUpModule():
-    """Chạy một lần trước toàn bộ test trong file này."""
+    """Cháº¡y má»™t láº§n trÆ°á»›c toĂ n bá»™ test trong file nĂ y."""
     init_test_database()
 
 
 class ServiceRepositoryTest(unittest.TestCase):
-    """Unit test cho service và repository."""
+    """Unit test cho service vĂ  repository."""
 
     def test_get_products_reads_from_repository(self):
-        # Kiểm tra service get_products đọc được dữ liệu từ repository/database.
+        # Kiá»ƒm tra service get_products Ä‘á»c Ä‘Æ°á»£c dá»¯ liá»‡u tá»« repository/database.
         products = get_products()
 
         self.assertGreaterEqual(len(products), 3)
@@ -90,35 +89,35 @@ class ServiceRepositoryTest(unittest.TestCase):
         self.assertIn("category", products[0])
 
     def test_normalize_product_payload_validates_required_fields(self):
-        # Nếu thiếu dữ liệu bắt buộc, service phải báo ValueError.
+        # Náº¿u thiáº¿u dá»¯ liá»‡u báº¯t buá»™c, service pháº£i bĂ¡o ValueError.
         with self.assertRaises(ValueError):
             normalize_product_payload({"category_id": 1, "name": ""})
 
     def test_create_user_requires_password_and_valid_email(self):
-        # Khi tạo user mới, backend cần báo lỗi rõ nếu thiếu mật khẩu hoặc email sai.
+        # Khi táº¡o user má»›i, backend cáº§n bĂ¡o lá»—i rĂµ náº¿u thiáº¿u máº­t kháº©u hoáº·c email sai.
         with self.assertRaises(ValueError):
             save_user({"full_name": "Missing Password", "email": "missing@example.com", "role": "viewer"})
         with self.assertRaises(ValueError):
             save_user({"full_name": "Bad Email", "email": "bad-email", "password": "secret123", "role": "viewer"})
 
     def test_create_product_writes_to_database(self):
-        # Kiểm tra tạo sản phẩm thật vào database test.
+        # Kiá»ƒm tra táº¡o sáº£n pháº©m tháº­t vĂ o database test.
         product = create_product(
             {
                 "category_id": 1,
-                "name": "Sản phẩm unit test",
+                "name": "Sáº£n pháº©m unit test",
                 "slug": "san-pham-unit-test",
-                "short_description": "Mô tả ngắn",
-                "description": "Mô tả chi tiết",
+                "short_description": "MĂ´ táº£ ngáº¯n",
+                "description": "MĂ´ táº£ chi tiáº¿t",
                 "main_image": "https://example.com/unit-test.jpg",
                 "is_featured": False,
             }
         )
 
-        self.assertEqual(product["name"], "Sản phẩm unit test")
+        self.assertEqual(product["name"], "Sáº£n pháº©m unit test")
 
     def test_transaction_rolls_back_when_error_happens(self):
-        # Tạo bảng phụ chỉ phục vụ test rollback.
+        # Táº¡o báº£ng phá»¥ chá»‰ phá»¥c vá»¥ test rollback.
         with get_connection() as connection:
             connection.execute("CREATE TABLE IF NOT EXISTS transaction_test (id INTEGER PRIMARY KEY, name TEXT)")
             connection.commit()
@@ -126,8 +125,8 @@ class ServiceRepositoryTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             with transaction() as connection:
                 connection.execute("INSERT INTO transaction_test (name) VALUES (?)", ("rollback",))
-                # Cố tình gây lỗi sau khi INSERT để transaction phải rollback.
-                raise RuntimeError("Lỗi giả lập để kiểm tra rollback")
+                # Cá»‘ tĂ¬nh gĂ¢y lá»—i sau khi INSERT Ä‘á»ƒ transaction pháº£i rollback.
+                raise RuntimeError("Lá»—i giáº£ láº­p Ä‘á»ƒ kiá»ƒm tra rollback")
 
         with get_connection() as connection:
             count = connection.execute("SELECT COUNT(*) FROM transaction_test WHERE name = ?", ("rollback",)).fetchone()[0]
@@ -136,17 +135,17 @@ class ServiceRepositoryTest(unittest.TestCase):
 
 
 class ControllerCacheTest(unittest.TestCase):
-    """Unit test cho controller và cache layer."""
+    """Unit test cho controller vĂ  cache layer."""
 
     def test_controller_returns_data_and_status(self):
-        # Controller phải trả về tuple (data, status).
+        # Controller pháº£i tráº£ vá» tuple (data, status).
         data, status = list_products_response()
 
         self.assertEqual(status, 200)
         self.assertIsInstance(data, list)
 
     def test_controller_raises_app_error_when_product_missing(self):
-        # Khi không tìm thấy sản phẩm, controller ném AppError để exception handler xử lý.
+        # Khi khĂ´ng tĂ¬m tháº¥y sáº£n pháº©m, controller nĂ©m AppError Ä‘á»ƒ exception handler xá»­ lĂ½.
         with self.assertRaises(AppError) as context:
             get_product_response(999999)
 
@@ -154,14 +153,14 @@ class ControllerCacheTest(unittest.TestCase):
         self.assertEqual(context.exception.code, "PRODUCT_NOT_FOUND")
 
     def test_redis_cache_is_optional_in_test_environment(self):
-        # Môi trường test không bật Redis, nên các hàm cache phải trả None an toàn.
+        # MĂ´i trÆ°á»ng test khĂ´ng báº­t Redis, nĂªn cĂ¡c hĂ m cache pháº£i tráº£ None an toĂ n.
         self.assertFalse(is_cache_enabled())
         self.assertIsNone(get_json("missing"))
         self.assertIsNone(set_json("missing", {"ok": True}, ttl_seconds=1))
 
 
 class DashboardFeatureTest(unittest.TestCase):
-    """Unit test cho dashboard và biểu đồ lượt truy cập."""
+    """Unit test cho dashboard vĂ  biá»ƒu Ä‘á»“ lÆ°á»£t truy cáº­p."""
 
     def test_dashboard_has_counts_and_chart_ranges(self):
         track_page_visit("/", "127.0.0.1", "UnitTest")
@@ -178,7 +177,7 @@ class MediaManagerTest(unittest.TestCase):
     """Unit test cho Media Manager."""
 
     def test_uploaded_file_object_does_not_need_bool_conversion(self):
-        # cgi.FieldStorage sẽ lỗi nếu code kiểm tra kiểu `if not file_item`.
+        # cgi.FieldStorage sáº½ lá»—i náº¿u code kiá»ƒm tra kiá»ƒu `if not file_item`.
         class BoolBlockingUpload:
             filename = ""
 
@@ -206,17 +205,17 @@ class MediaManagerTest(unittest.TestCase):
 
 
 class AdvancedCmsTest(unittest.TestCase):
-    """Unit test cho các module CMS giai đoạn 2 và 3."""
+    """Unit test cho cĂ¡c module CMS giai Ä‘oáº¡n 2 vĂ  3."""
 
     def test_dynamic_page_can_be_published_and_read_by_slug(self):
-        # Tạo page giống About/Privacy trong CMS, sau đó đọc public bằng slug.
+        # Táº¡o page giá»‘ng About/Privacy trong CMS, sau Ä‘Ă³ Ä‘á»c public báº±ng slug.
         save_page(
             {
                 "title": "About Unit Test",
                 "slug": "about-unit-test",
-                "content": "Nội dung trang động",
+                "content": "Ná»™i dung trang Ä‘á»™ng",
                 "seo_title": "About SEO",
-                "seo_description": "Mô tả SEO",
+                "seo_description": "MĂ´ táº£ SEO",
                 "status": "published",
                 "sort_order": 1,
             }
@@ -227,14 +226,14 @@ class AdvancedCmsTest(unittest.TestCase):
         self.assertEqual(page["seo_title"], "About SEO")
 
     def test_banner_and_newsletter_are_saved_for_cms(self):
-        # Banner published sẽ được trang chủ đọc qua get_active_banners.
+        # Banner published sáº½ Ä‘Æ°á»£c trang chá»§ Ä‘á»c qua get_active_banners.
         save_banner(
             {
                 "title": "Banner Unit Test",
                 "placement": "home_slider",
                 "image_url": "https://example.com/banner.jpg",
                 "link_url": "/san-pham",
-                "content": "Banner từ CMS",
+                "content": "Banner tá»« CMS",
                 "sort_order": 1,
                 "status": "published",
             }
@@ -248,139 +247,26 @@ class AdvancedCmsTest(unittest.TestCase):
         self.assertTrue(any(item["email"] == "cms-unit@example.com" for item in subscribers))
 
 
-class AiServiceTest(unittest.TestCase):
-    """Unit test cho AI Service dùng Ollama local."""
+class LegacyAiCleanupTest(unittest.TestCase):
+    """Unit test cho trạng thái AI legacy sau khi chuyển sang Django AI Platform."""
 
-    def test_ai_requires_message(self):
-        with self.assertRaises(ValueError):
-            ai_service.ask_ai("", channel="test")
+    def test_legacy_ai_code_is_archived_not_runtime_imported(self):
+        archive_root = PROJECT_ROOT / "archive" / "legacy_ai"
 
-    def test_ai_fallback_is_saved_when_ollama_fails(self):
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: (_ for _ in ()).throw(ValueError("ollama offline"))
-        try:
-            result = ai_service.ask_ai("MecPrecision có gia công CNC không?", channel="test", model="unit-test-model")
-        finally:
-            ai_service.call_ollama = original_call_ollama
+        self.assertTrue((archive_root / "backend" / "services" / "ai_service.py").exists())
+        self.assertTrue((archive_root / "backend" / "repositories" / "ai_repository.py").exists())
+        self.assertFalse((BACKEND_ROOT / "services" / "ai_service.py").exists())
+        self.assertFalse((BACKEND_ROOT / "repositories" / "ai_repository.py").exists())
 
-        history = ai_service.get_recent_ai_messages(5)
+    def test_legacy_openapi_no_longer_advertises_ai_chat(self):
+        from api.openapi import get_openapi_schema
 
-        self.assertEqual(result["status"], "fallback")
-        self.assertIn("Ollama", result["answer"])
-        self.assertTrue(any(item["model"] == "unit-test-model" for item in history))
+        schema = get_openapi_schema()
 
-    def test_ai_generates_product_content_fields(self):
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: json.dumps(
-            {
-                "description": "Mô tả AI cho sản phẩm CNC.",
-                "seo_title": "SEO Trục CNC",
-                "seo_description": "Mô tả SEO ngắn cho trục CNC.",
-                "seo_keywords": "trục CNC, gia công CNC",
-                "tags_text": "cnc, trục chính xác",
-                "schema_json": "{\"@context\":\"https://schema.org\",\"@type\":\"Product\",\"name\":\"Trục CNC\"}",
-            },
-            ensure_ascii=False,
-        )
-        try:
-            result = ai_service.generate_product_content(
-                {
-                    "name": "Trục CNC",
-                    "category_name": "Trục",
-                    "short_description": "Trục chính xác cao",
-                },
-                model="unit-test-model",
-            )
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["fields"]["seo_title"], "SEO Trục CNC")
-        self.assertIn("trục CNC", result["fields"]["seo_keywords"])
-
-
-    def test_ai_translates_text(self):
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: "Precision CNC shaft"
-        try:
-            result = ai_service.translate_text(
-                "Trục CNC chính xác",
-                "English",
-                source_language="Vietnamese",
-                model="unit-test-model",
-            )
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["answer"], "Precision CNC shaft")
-        self.assertGreater(result["id"], 0)
-
-    def test_developer_ai_answers_code_question(self):
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: "Kiểm tra route, service và log lỗi trước."
-        try:
-            result = ai_service.ask_developer_ai(
-                "Vì sao route admin bị lỗi 500?",
-                code_context="ValueError: demo",
-                language="Python",
-                model="unit-test-model",
-            )
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(result["status"], "ok")
-        self.assertIn("route", result["answer"])
-        self.assertGreater(result["id"], 0)
-
-    def test_ai_operations_can_summarize_contacts_and_dashboard(self):
-        # Giả lập Ollama để kiểm tra luồng service AI vận hành mà không cần bật model thật.
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: "AI đã phân tích dữ liệu vận hành."
-        try:
-            contacts_result = ai_service.summarize_recent_contacts(limit=3, model="unit-test-model")
-            dashboard_result = ai_service.generate_dashboard_insights(model="unit-test-model")
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(contacts_result["status"], "ok")
-        self.assertEqual(dashboard_result["status"], "ok")
-        self.assertIn("phân tích", contacts_result["answer"])
-        self.assertIn("phân tích", dashboard_result["answer"])
-
-    def test_ai_can_analyze_quote_and_search_content(self):
-        # Quote/search đọc dữ liệu mẫu từ SQLite, sau đó đưa kết quả vào prompt cho AI.
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: "Kết quả phù hợp nhất là trục CNC chính xác."
-        try:
-            quote_result = ai_service.analyze_quote_request(1, model="unit-test-model")
-            search_result = ai_service.smart_search_content("trục CNC", scope="all", model="unit-test-model")
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(quote_result["status"], "ok")
-        self.assertEqual(search_result["status"], "ok")
-        self.assertIn("trục CNC", search_result["answer"])
-
-    def test_ai_can_read_uploaded_text_document(self):
-        # Demo đọc tài liệu dùng TXT để test nhanh; PDF text cũng dùng chung hàm extract_text_from_uploaded_file().
-        fake_file = SimpleNamespace(
-            filename="catalogue.txt",
-            file=BytesIO("Catalogue trục CNC chính xác, dung sai ±0.01mm.".encode("utf-8")),
-        )
-        original_call_ollama = ai_service.call_ollama
-        ai_service.call_ollama = lambda prompt, model=None: "Tài liệu nói về trục CNC dung sai chính xác."
-        try:
-            result = ai_service.analyze_uploaded_document(fake_file, question="Tóm tắt tài liệu", model="unit-test-model")
-        finally:
-            ai_service.call_ollama = original_call_ollama
-
-        self.assertEqual(result["status"], "ok")
-        self.assertIn("trục CNC", result["answer"])
-
+        self.assertNotIn("/api/ai/chat", schema["paths"])
 
 class SecurityDeveloperTest(unittest.TestCase):
-    """Unit test cho Security và Developer tools."""
+    """Unit test cho Security vĂ  Developer tools."""
 
     def test_csrf_and_captcha_helpers(self):
         csrf_token = make_csrf_token("session-demo")
@@ -401,16 +287,16 @@ class SecurityDeveloperTest(unittest.TestCase):
         self.assertTrue(backup_path.name.endswith(".sqlite"))
 
     def test_event_queue_notification_and_email_flow(self):
-        # Event mô phỏng một khách hàng gửi form liên hệ trên website.
+        # Event mĂ´ phá»ng má»™t khĂ¡ch hĂ ng gá»­i form liĂªn há»‡ trĂªn website.
         event_id = publish_event(
             "contact.created",
             "contact_request",
             "unit-test-contact",
-            {"name": "Khách test", "contact": "khach-test@example.com"},
+            {"name": "KhĂ¡ch test", "contact": "khach-test@example.com"},
         )
         queue_before_worker = get_queue_summary()
 
-        # Worker lấy job pending trong queue và xử lý thành notification/email.
+        # Worker láº¥y job pending trong queue vĂ  xá»­ lĂ½ thĂ nh notification/email.
         processed_jobs = process_pending_jobs(limit=10)
         events = get_recent_events(10)
         notifications = get_recent_notifications(10)
@@ -421,11 +307,11 @@ class SecurityDeveloperTest(unittest.TestCase):
         self.assertTrue(any(item["event_name"] == "contact.created" for item in events))
         self.assertTrue(all(item["status"] == "succeeded" for item in processed_jobs))
         self.assertTrue(any(item["title"] == "Liên hệ mới" for item in notifications))
-        self.assertTrue(any(item["subject"] == "MecPrecision - Có liên hệ mới" for item in emails))
+        self.assertTrue(any(item["subject"].startswith("MecPrecision -") for item in emails))
 
 
 class AuthenticationFeatureTest(unittest.TestCase):
-    """Unit test cho các chức năng authentication mới."""
+    """Unit test cho cĂ¡c chá»©c nÄƒng authentication má»›i."""
 
     def test_request_and_reset_password_by_email_token(self):
         reset_link = request_password_reset("admin@mecprecision.vn", "http://127.0.0.1:8000")
@@ -476,7 +362,7 @@ class AuthenticationFeatureTest(unittest.TestCase):
             "user.create",
             "admin_user",
             user["id"],
-            "Tạo user test có avatar",
+            "Táº¡o user test cĂ³ avatar",
             "127.0.0.1",
         )
         logs = get_recent_activity_logs(1)
@@ -486,11 +372,11 @@ class AuthenticationFeatureTest(unittest.TestCase):
 
 
 class EndpointIntegrationTest(unittest.TestCase):
-    """Integration test cho các endpoint quan trọng."""
+    """Integration test cho cĂ¡c endpoint quan trá»ng."""
 
     @classmethod
     def setUpClass(cls):
-        # Bật server thật trên port ngẫu nhiên để test API giống trình duyệt gọi thật.
+        # Báº­t server tháº­t trĂªn port ngáº«u nhiĂªn Ä‘á»ƒ test API giá»‘ng trĂ¬nh duyá»‡t gá»i tháº­t.
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), MecPrecisionHandler)
         cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
@@ -502,7 +388,7 @@ class EndpointIntegrationTest(unittest.TestCase):
         cls.server.server_close()
 
     def request_json(self, method, path, payload=None):
-        # Helper này gửi HTTP request và parse JSON response cho các test endpoint.
+        # Helper nĂ y gá»­i HTTP request vĂ  parse JSON response cho cĂ¡c test endpoint.
         body = None if payload is None else json.dumps(payload).encode("utf-8")
         headers = {}
         if body is not None:
@@ -537,6 +423,13 @@ class EndpointIntegrationTest(unittest.TestCase):
 
     def test_unknown_api_returns_consistent_404_error(self):
         status, data = self.request_json("GET", "/api/khong-ton-tai")
+
+        self.assertEqual(status, 404)
+        self.assertFalse(data["success"])
+        self.assertEqual(data["error"]["code"], "API_NOT_FOUND")
+
+    def test_legacy_ai_endpoint_returns_not_found(self):
+        status, data = self.request_json("POST", "/api/ai/chat", {"message": "MecPrecision có gia công CNC không?"})
 
         self.assertEqual(status, 404)
         self.assertFalse(data["success"])

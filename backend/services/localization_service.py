@@ -1,15 +1,13 @@
 import hashlib
 import html
 import logging
-import urllib.error
 from html.parser import HTMLParser
 
-from config.settings import OLLAMA_MODEL
 from repositories import translation_repository
-from services.ai_service import AI_PROVIDER, call_ollama
 
 
 LOGGER = logging.getLogger("mecprecision.localization")
+LEGACY_TRANSLATION_PROVIDER = "django-ai-platform"
 
 # Ngôn ngữ public site hỗ trợ trong demo này.
 # vi không cần dịch vì nội dung gốc của website đang là tiếng Việt.
@@ -22,8 +20,8 @@ SUPPORTED_LANGUAGES = {
 # Các thẻ này chứa code/script/style, nếu dịch sẽ dễ làm hỏng website.
 SKIP_TRANSLATION_TAGS = {"script", "style", "code", "pre", "textarea"}
 
-# Nếu Ollama lỗi trong một lần render, ta tạm tắt auto-translate để trang không bị chậm vì nhiều timeout.
-AUTO_TRANSLATION_AVAILABLE = True
+# Legacy backend no longer calls Ollama directly. AI translation belongs to the Django AI Platform.
+AUTO_TRANSLATION_AVAILABLE = False
 
 # Một số nhãn menu quan trọng nên có bản dịch cố định.
 # Lý do: menu là phần khách nhìn thấy đầu tiên, không nên phụ thuộc hoàn toàn vào câu trả lời ngẫu nhiên của AI.
@@ -123,13 +121,13 @@ def should_translate_text(text):
 
 
 def translate_visible_text(text, target_language, model=None):
-    """Dịch một đoạn chữ hiển thị và lưu cache SQLite."""
+    """Translate visible text using manual/cache data only in the legacy backend."""
     global AUTO_TRANSLATION_AVAILABLE
     target_language = normalize_language(target_language)
     if target_language == "vi" or not should_translate_text(text):
         return text
 
-    model = model or OLLAMA_MODEL
+    model = model or LEGACY_TRANSLATION_PROVIDER
     stripped = text.strip()
     manual_translation = get_manual_translation(text, target_language)
     if manual_translation:
@@ -139,54 +137,12 @@ def translate_visible_text(text, target_language, model=None):
     if cached:
         return text.replace(stripped, cached["translated_text"], 1)
 
-    if not AUTO_TRANSLATION_AVAILABLE:
-        return text
-
-    target_name = SUPPORTED_LANGUAGES[target_language]["ollama_name"]
-    prompt = f"""
-You are translating visible website text for MecPrecision VIETNAM.
-Translate from Vietnamese to {target_name}.
-Keep company names, product codes, URLs, numbers, measurement units, HTML entities, CNC terms, and brand names unchanged when appropriate.
-Return only the translated text, no explanation.
-
-Text:
-{stripped}
-"""
-    status = "ok"
-    error = ""
-    try:
-        translated = call_ollama(prompt, model).strip()
-        translated = clean_translated_text(translated)
-        if not translated:
-            raise ValueError("Ollama returned empty translation.")
-    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
-        # Nếu AI lỗi, giữ nguyên tiếng Việt để trang không bị hỏng.
-        translated = stripped
-        AUTO_TRANSLATION_AVAILABLE = False
-        status = "fallback"
-        error = str(exc)
-        LOGGER.warning(
-            "AI_TRANSLATION_FALLBACK target=%s model=%s source=%r error=%s",
-            target_language,
-            model,
-            stripped[:120],
-            error,
-        )
-
-    if status == "ok":
-        translation_repository.save_cached_translation(
-            {
-                "source_hash": source_hash(stripped),
-                "source_text": stripped,
-                "target_language": target_language,
-                "translated_text": translated,
-                "provider": AI_PROVIDER,
-                "model": model,
-                "status": status,
-                "error": error,
-            }
-        )
-    return text.replace(stripped, translated, 1)
+    LOGGER.info(
+        "LEGACY_AI_TRANSLATION_SKIPPED target=%s source=%r replacement=django_ai_platform",
+        target_language,
+        stripped[:120],
+    )
+    return text
 
 
 class PublicHtmlTranslator(HTMLParser):
@@ -250,7 +206,7 @@ class PublicHtmlTranslator(HTMLParser):
 def translate_public_html(html_text, target_language):
     """Dịch toàn bộ HTML public sang ngôn ngữ được chọn."""
     global AUTO_TRANSLATION_AVAILABLE
-    AUTO_TRANSLATION_AVAILABLE = True
+    AUTO_TRANSLATION_AVAILABLE = False
     target_language = normalize_language(target_language)
     if target_language == "vi":
         return html_text

@@ -1,90 +1,75 @@
 {
-  "phase": "business-sales-crm-ai",
-  "created_at": "2026-07-30T14:57:42+00:00",
+  "phase": "ai-cleanup",
+  "created_at": "2026-07-30T15:25:49+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
   "notes": [],
   "checked_files": [
     {
-      "path": "docs\\codex-prompts\\BUSINESS_WAVE_1_SALES_CRM_AI_PLATFORM.md",
+      "path": "docs\\codex-prompts\\AI_LEGACY_CLEANUP.md",
       "exists": true,
-      "size_bytes": 1366
+      "size_bytes": 868
     },
     {
-      "path": "django_backend\\apps\\sales\\models.py",
+      "path": "archive\\legacy_ai\\backend\\services\\ai_service.py",
       "exists": true,
-      "size_bytes": 11226
+      "size_bytes": 30383
     },
     {
-      "path": "django_backend\\apps\\sales\\services\\sales_platform_service.py",
+      "path": "archive\\legacy_ai\\backend\\repositories\\ai_repository.py",
       "exists": true,
-      "size_bytes": 7320
+      "size_bytes": 1485
     },
     {
-      "path": "django_backend\\apps\\sales\\migrations\\0001_sales_platform.py",
+      "path": "archive\\legacy_ai\\backend\\config\\legacy_ai_settings.md",
       "exists": true,
-      "size_bytes": 12500
+      "size_bytes": 351
     },
     {
-      "path": "django_backend\\apps\\crm\\models.py",
+      "path": "docs\\ai\\LEGACY_AI_INVENTORY.md",
       "exists": true,
-      "size_bytes": 6321
+      "size_bytes": 2608
     },
     {
-      "path": "django_backend\\apps\\crm\\services\\crm_platform_service.py",
+      "path": "docs\\ai\\LEGACY_AI_ARCHIVE.md",
       "exists": true,
-      "size_bytes": 4118
+      "size_bytes": 1222
     },
     {
-      "path": "django_backend\\apps\\crm\\migrations\\0001_crm_platform.py",
+      "path": "docs\\codex-prompts\\AI_LEGACY_CLEANUP.md",
       "exists": true,
-      "size_bytes": 7801
+      "size_bytes": 868
     },
     {
-      "path": "django_backend\\apps\\api\\views\\sales.py",
+      "path": "ai-factory\\evidence\\ai_cleanup.json",
       "exists": true,
-      "size_bytes": 8711
+      "size_bytes": 1248
     },
     {
-      "path": "django_backend\\apps\\api\\views\\crm.py",
+      "path": "docs\\reviews\\AI_LEGACY_CLEANUP_REVIEW.md",
       "exists": true,
-      "size_bytes": 6212
+      "size_bytes": 857
     },
     {
-      "path": "django_backend\\apps\\api\\urls.py",
+      "path": "docs\\reviews\\AI_LEGACY_CLEANUP_FINAL_REPORT.md",
       "exists": true,
-      "size_bytes": 7391
+      "size_bytes": 1419
     },
     {
-      "path": "django_backend\\apps\\ai_agent\\services\\sales_assistant.py",
+      "path": "tests\\test_ai_legacy_cleanup.py",
       "exists": true,
-      "size_bytes": 10717
+      "size_bytes": 2312
     },
     {
-      "path": "django_backend\\apps\\ai_agent\\views.py",
+      "path": "tests\\test_ai_legacy_cleanup.py",
       "exists": true,
-      "size_bytes": 4203
+      "size_bytes": 2312
     },
     {
-      "path": "django_backend\\apps\\foundation\\migrations\\0004_seed_sales_crm_permissions.py",
+      "path": "tests\\test_ai_knowledge_assistant.py",
       "exists": true,
-      "size_bytes": 2011
-    },
-    {
-      "path": "ai-factory\\evidence\\business_wave_1.json",
-      "exists": true,
-      "size_bytes": 1261
-    },
-    {
-      "path": "docs\\reviews\\BUSINESS_WAVE_1_SALES_CRM_AI_REVIEW.md",
-      "exists": true,
-      "size_bytes": 1968
-    },
-    {
-      "path": "docs\\reviews\\BUSINESS_WAVE_1_SALES_CRM_AI_FINAL_REPORT.md",
-      "exists": true,
-      "size_bytes": 1440
+      "size_bytes": 8547
     },
     {
       "path": "tests\\test_sales_crm_ai.py",
@@ -93,9 +78,9 @@
     }
   ],
   "git": {
-    "branch": "feature/sales-platform",
+    "branch": "feature/ai-legacy-cleanup",
     "status_short": "?? docs.zip",
-    "expected_tag": "business-wave-1-complete",
+    "expected_tag": "ai-cleanup-complete",
     "expected_tag_present": true
   },
   "safety": {

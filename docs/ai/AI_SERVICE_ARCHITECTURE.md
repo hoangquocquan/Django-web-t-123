@@ -50,3 +50,16 @@ logging that avoids prompt content.
 - AI write permission is required.
 - Prompt content is not persisted in Phase 1.
 
+## Legacy Cleanup
+
+The old custom backend AI service has been archived and removed from runtime.
+Active AI calls must go through Django AI Platform endpoints only:
+
+- `/api/v1/ai/chat/`
+- `/api/v1/knowledge/chat/`
+- `/api/v1/ai/sales-assistant/`
+
+Archive references:
+
+- `docs/ai/LEGACY_AI_INVENTORY.md`
+- `docs/ai/LEGACY_AI_ARCHIVE.md`

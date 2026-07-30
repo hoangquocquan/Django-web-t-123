@@ -152,6 +152,27 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "business-wave-1-complete",
     },
+    "ai-cleanup": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AI_LEGACY_CLEANUP.md",
+        "documents": [
+            PROJECT_ROOT / "archive" / "legacy_ai" / "backend" / "services" / "ai_service.py",
+            PROJECT_ROOT / "archive" / "legacy_ai" / "backend" / "repositories" / "ai_repository.py",
+            PROJECT_ROOT / "archive" / "legacy_ai" / "backend" / "config" / "legacy_ai_settings.md",
+            PROJECT_ROOT / "docs" / "ai" / "LEGACY_AI_INVENTORY.md",
+            PROJECT_ROOT / "docs" / "ai" / "LEGACY_AI_ARCHIVE.md",
+            PROJECT_ROOT / "docs" / "codex-prompts" / "AI_LEGACY_CLEANUP.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "ai_cleanup.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_LEGACY_CLEANUP_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_LEGACY_CLEANUP_FINAL_REPORT.md",
+            PROJECT_ROOT / "tests" / "test_ai_legacy_cleanup.py",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_ai_legacy_cleanup.py",
+            PROJECT_ROOT / "tests" / "test_ai_knowledge_assistant.py",
+            PROJECT_ROOT / "tests" / "test_sales_crm_ai.py",
+        ],
+        "expected_tag": "ai-cleanup-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

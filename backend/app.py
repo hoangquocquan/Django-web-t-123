@@ -1,4 +1,4 @@
-﻿from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -50,7 +50,6 @@ from config.settings import (
     ENVIRONMENT,
     FRONTEND_ROOT,
     HOST,
-    OLLAMA_MODEL,
     PORT,
     SESSION_COOKIE_NAME,
     SESSION_TTL_SECONDS,
@@ -107,19 +106,6 @@ from services.auth_service import (
     set_account_active,
 )
 from services.activity_service import get_recent_activity_logs, log_admin_activity
-from services.ai_service import (
-    analyze_quote_request,
-    analyze_uploaded_document,
-    ask_ai,
-    ask_developer_ai,
-    generate_dashboard_insights,
-    generate_product_content,
-    get_ai_status,
-    get_recent_ai_messages,
-    smart_search_content,
-    summarize_recent_contacts,
-    translate_text,
-)
 from services.developer_service import (
     API_VERSION,
     clear_runtime_cache,
@@ -1126,7 +1112,6 @@ def render_admin_nav(active_module):
         ("newsletter", "Newsletter", "/admin/newsletter"),
         ("users", "Người dùng", "/admin/users"),
         ("settings", "Cài đặt", "/admin/settings"),
-        ("ai", "AI", "/admin/ai"),
         ("developer", "Developer", "/admin/developer"),
         ("account", "Tài khoản", "/admin/account"),
     ]
@@ -1306,8 +1291,7 @@ def render_admin_products_page(admin_user, params, form_product=None, message=""
           <label>Upload ảnh mới<input type="file" name="image_file" accept="image/*" data-image-preview-input /></label>
           <img class="image-preview" src="{h(image_value)}" alt="Xem trước ảnh" data-image-preview />
           <label>Tag<input name="tags_text" value="{h(form_product.get("tags_text", ""))}" placeholder="cnc, inox, linh kiện chính xác" /></label>
-          <button class="btn btn-secondary" type="submit" formaction="/admin/products/ai-generate" formnovalidate>AI tạo nội dung & SEO</button>
-          <p class="form-hint">AI chỉ điền gợi ý vào form, chưa lưu database. Kiểm tra lại rồi bấm Lưu sản phẩm.</p>
+          <p class="form-hint">AI tạo nội dung & SEO đã chuyển sang Django AI Platform để tránh trùng kiến trúc legacy.</p>
           <label>SEO title<input name="seo_title" value="{h(form_product.get("seo_title", ""))}" /></label>
           <label>SEO description<textarea name="seo_description" rows="2">{h(form_product.get("seo_description", ""))}</textarea></label>
           <label>SEO keyword<input name="seo_keywords" value="{h(form_product.get("seo_keywords", ""))}" /></label>
@@ -2167,9 +2151,8 @@ def render_admin_settings_page(admin_user, message="", error=""):
     return render_admin_shell("Cài đặt hệ thống", "settings", admin_user, content)
 
 
-def render_admin_developer_page(admin_user, message="", error="", ai_result="", ai_form=None):
+def render_admin_developer_page(admin_user, message="", error=""):
     """Render Developer tools: health, version, system info, logs, backup."""
-    ai_form = ai_form or {}
     health = get_health_status()
     system_info = get_system_info()
     backups = list_database_backups()
@@ -2200,29 +2183,19 @@ def render_admin_developer_page(admin_user, message="", error="", ai_result="", 
         for item in emails
     ) or '<tr><td colspan="4">Chưa có email outbox.</td></tr>'
     log_html = "\n".join(h(line) for line in log_lines) or "Chưa có log."
-    ai_result_html = (
-        f'<div class="admin-message success"><strong>Developer AI trả lời:</strong><br>{h(ai_result)}</div>'
-        if ai_result
-        else ""
-    )
     content = f"""
       {render_admin_message(message, error)}
-      {ai_result_html}
       <div class="admin-stats-grid">
         <article><span>Health</span><strong>{h(health["status"])}</strong><p>Database: {h(health["database"])}</p></article>
         <article><span>API Version</span><strong>{h(API_VERSION)}</strong><p>OpenAPI: /api/openapi.json</p></article>
         <article><span>Environment</span><strong>{h(health["environment"])}</strong><p>Redis: {h(health["redis_enabled"])}</p></article>
         <article><span>Queue</span><strong>{h(queue["counts"].get("pending", 0))}</strong><p>Pending jobs</p></article>
       </div>
-      <form class="admin-form" method="post" action="/admin/developer/ai-code">
-        <h2>Developer AI</h2>
-        <p class="form-hint">Dùng để hỏi AI giải thích code, đọc lỗi, gợi ý cách debug hoặc viết ví dụ nhỏ. AI chỉ trả lời gợi ý, không tự sửa file.</p>
-        <label>Câu hỏi<textarea name="question" rows="4" required>{h(ai_form.get("question", ""))}</textarea></label>
-        <label>Ngôn ngữ/khu vực code<input name="language" value="{h(ai_form.get("language", "Python/HTML/CSS/SQL"))}" /></label>
-        <label>Code hoặc log liên quan<textarea name="code_context" rows="8" placeholder="Dán lỗi Python, SQL, đoạn app.py, hoặc log cần phân tích...">{h(ai_form.get("code_context", ""))}</textarea></label>
-        <label>Model<input name="model" value="{h(ai_form.get("model", OLLAMA_MODEL))}" /></label>
-        <button class="btn btn-primary" type="submit">Hỏi Developer AI</button>
-      </form>
+      <div class="admin-form">
+        <h2>Django AI Platform</h2>
+        <p class="form-hint">Legacy Developer AI đã được archive. AI mới nằm trong Django: apps.ai, apps.knowledge và apps.ai_agent.</p>
+        <p>Dùng các endpoint Django mới như <code>/api/v1/ai/chat/</code>, <code>/api/v1/knowledge/chat/</code> và <code>/api/v1/ai/sales-assistant/</code>.</p>
+      </div>
       <div class="admin-module-grid">
         <form class="admin-form" method="post" action="/admin/developer/demo-event">
           <h2>Demo Event</h2>
@@ -2278,131 +2251,17 @@ def render_admin_developer_page(admin_user, message="", error="", ai_result="", 
     return render_admin_shell("Developer Tools", "developer", admin_user, content)
 
 
-def render_admin_ai_page(admin_user, form=None, answer="", error="", translation_result="", translation_form=None, ops_result="", ops_form=None):
-    """Render trang AI trong Admin: hỏi Ollama và xem lịch sử."""
-    form = form or {}
-    translation_form = translation_form or {}
-    ops_form = ops_form or {}
-    # status cho admin biết backend đang gọi provider nào, model nào, URL Ollama nào.
-    status = get_ai_status()
-    # messages là lịch sử hỏi đáp đã lưu trong bảng ai_conversations.
-    messages = get_recent_ai_messages(12)
-    rows = "\n".join(
-        f"""
-        <tr>
-          <td>{h(item["created_at"])}</td>
-          <td>{h(item["channel"])}</td>
-          <td>{h(item["model"])}</td>
-          <td>{h(item["status"])}</td>
-          <td>{h(item["user_message"])}</td>
-          <td>{h(item["assistant_message"])}</td>
-        </tr>
-        """
-        for item in messages
-    ) or '<tr><td colspan="6">Chưa có lịch sử AI.</td></tr>'
-    answer_html = f'<div class="admin-message success"><strong>AI trả lời:</strong>{format_ai_result_html(answer)}</div>' if answer else ""
-    translation_html = (
-        f'<div class="admin-message success"><strong>Bản dịch AI:</strong>{format_ai_result_html(translation_result)}</div>'
-        if translation_result
-        else ""
-    )
-    ops_html = (
-        f'<div class="admin-message success"><strong>AI vận hành trả lời:</strong>{format_ai_result_html(ops_result)}</div>'
-        if ops_result
-        else ""
-    )
-    content = f"""
-      {render_admin_message("", error)}
-      {answer_html}
-      {translation_html}
-      {ops_html}
-      <div class="admin-stats-grid">
-        <article><span>Provider</span><strong>{h(status["provider"])}</strong><p>Local AI service</p></article>
-        <article><span>Model</span><strong>{h(status["model"])}</strong><p>Đổi bằng MEC_OLLAMA_MODEL</p></article>
-        <article><span>Ollama URL</span><strong>{h(status["ollama_url"])}</strong><p>Máy local hoặc AI server riêng</p></article>
-        <article><span>Timeout</span><strong>{h(status["timeout_seconds"])}s</strong><p>Nếu Ollama tắt sẽ dùng fallback demo</p></article>
-      </div>
-      <div class="admin-module-grid">
-        <form class="admin-form" method="post" action="/admin/ai/ask">
-          <h2>AI Assistant</h2>
-          <label>Câu hỏi<textarea name="message" rows="7" required>{h(form.get("message", ""))}</textarea></label>
-          <label>Model<input name="model" value="{h(form.get("model", status["model"]))}" /></label>
-          <p class="form-hint">Ví dụ: hỏi AI phân tích khách hàng, gợi ý SEO sản phẩm, hoặc soạn nội dung mô tả kỹ thuật.</p>
-          <button class="btn btn-primary" type="submit">Hỏi AI</button>
-        </form>
-        <div class="admin-form">
-          <h2>Ví dụ câu hỏi</h2>
-          <p>Viết mô tả SEO cho sản phẩm trục CNC chính xác cao.</p>
-          <p>Khách hàng hỏi báo giá fixture, cần thu thập thông tin gì?</p>
-          <p>Tóm tắt năng lực sản xuất của MecPrecision trong 5 ý.</p>
-          <p>Gợi ý email phản hồi khách hàng gửi bản vẽ STEP.</p>
-        </div>
-      </div>
-      <form class="admin-form" method="post" action="/admin/ai/translate">
-        <h2>AI dịch đa ngôn ngữ</h2>
-        <p class="form-hint">Dịch nội dung sản phẩm, tin tức hoặc email kỹ thuật. AI sẽ cố giữ nguyên mã sản phẩm, đơn vị, URL và thuật ngữ CNC.</p>
-        <label>Nội dung cần dịch<textarea name="source_text" rows="7" required>{h(translation_form.get("source_text", ""))}</textarea></label>
-        <div class="form-grid">
-          <label>Ngôn ngữ nguồn<input name="source_language" value="{h(translation_form.get("source_language", "Tự động nhận diện"))}" /></label>
-          <label>Ngôn ngữ đích<input name="target_language" value="{h(translation_form.get("target_language", "English"))}" required /></label>
-        </div>
-        <div class="form-grid">
-          <label>Giọng văn<input name="tone" value="{h(translation_form.get("tone", "chuyên nghiệp, dễ hiểu"))}" /></label>
-          <label>Model<input name="model" value="{h(translation_form.get("model", status["model"]))}" /></label>
-        </div>
-        <button class="btn btn-primary" type="submit">Dịch bằng AI</button>
-      </form>
-      <div class="admin-module-grid">
-        <form class="admin-form" method="post" action="/admin/ai/contacts-summary">
-          <h2>AI tóm tắt liên hệ mới</h2>
-          <p class="form-hint">Đọc các liên hệ gần nhất và gợi ý khách nào cần xử lý trước.</p>
-          <label>Số liên hệ<input type="number" name="limit" value="{h(ops_form.get("limit", "8"))}" min="1" max="20" /></label>
-          <label>Model<input name="model" value="{h(ops_form.get("model", status["model"]))}" /></label>
-          <button class="btn btn-primary" type="submit">Tóm tắt liên hệ</button>
-        </form>
-        <form class="admin-form" method="post" action="/admin/ai/quote-analysis">
-          <h2>AI phân tích báo giá</h2>
-          <p class="form-hint">Nhập ID báo giá hoặc để trống để phân tích yêu cầu mới nhất.</p>
-          <label>Quote ID<input name="quote_id" value="{h(ops_form.get("quote_id", ""))}" placeholder="Ví dụ: 15" /></label>
-          <label>Model<input name="model" value="{h(ops_form.get("model", status["model"]))}" /></label>
-          <button class="btn btn-primary" type="submit">Phân tích báo giá</button>
-        </form>
-        <form class="admin-form" method="post" action="/admin/ai/smart-search">
-          <h2>AI tìm kiếm thông minh</h2>
-          <p class="form-hint">Tìm trong sản phẩm/tin tức rồi nhờ AI tóm tắt kết quả phù hợp.</p>
-          <label>Câu hỏi / từ khóa<input name="query" value="{h(ops_form.get("query", ""))}" placeholder="trục CNC chính xác, đồ gá nhôm..." required /></label>
-          <label>Phạm vi<select name="scope">
-            <option value="all" {"selected" if ops_form.get("scope", "all") == "all" else ""}>Sản phẩm + Tin tức</option>
-            <option value="products" {"selected" if ops_form.get("scope") == "products" else ""}>Chỉ sản phẩm</option>
-            <option value="news" {"selected" if ops_form.get("scope") == "news" else ""}>Chỉ tin tức</option>
-          </select></label>
-          <label>Model<input name="model" value="{h(ops_form.get("model", status["model"]))}" /></label>
-          <button class="btn btn-primary" type="submit">Tìm bằng AI</button>
-        </form>
-        <form class="admin-form" method="post" action="/admin/ai/dashboard-insights">
-          <h2>AI Dashboard</h2>
-          <p class="form-hint">Trả lời câu hỏi: Hôm nay website có gì cần chú ý?</p>
-          <label>Model<input name="model" value="{h(ops_form.get("model", status["model"]))}" /></label>
-          <button class="btn btn-primary" type="submit">Xem AI dashboard</button>
-        </form>
-      </div>
-      <form class="admin-form" method="post" action="/admin/ai/document-read" enctype="multipart/form-data">
-        <h2>AI đọc PDF / catalogue / tài liệu</h2>
-        <p class="form-hint">Upload PDF có text, TXT, MD hoặc CSV. PDF scan ảnh cần OCR nâng cao nên demo này có thể chưa đọc được.</p>
-        <label>Câu hỏi về tài liệu<input name="question" value="{h(ops_form.get("question", "Tóm tắt tài liệu này và chỉ ra thông tin kỹ thuật quan trọng."))}" /></label>
-        <label>File tài liệu<input type="file" name="document_file" accept=".pdf,.txt,.md,.csv" required /></label>
-        <label>Model<input name="model" value="{h(ops_form.get("model", status["model"]))}" /></label>
-        <button class="btn btn-primary" type="submit">Đọc tài liệu bằng AI</button>
-      </form>
-      <div class="admin-table-wrap">
-        <table class="admin-table">
-          <thead><tr><th>Thời gian</th><th>Kênh</th><th>Model</th><th>Status</th><th>Câu hỏi</th><th>Trả lời</th></tr></thead>
-          <tbody>{rows}</tbody>
-        </table>
+def render_admin_ai_removed_page(admin_user):
+    """Render a learning note that legacy AI has moved to Django."""
+    content = """
+      <div class="admin-form">
+        <h2>Legacy AI đã được archive</h2>
+        <p class="form-hint">Các chức năng AI cũ trong backend custom đã được gỡ khỏi runtime để kiến trúc dễ học và dễ bảo trì hơn.</p>
+        <p>AI mới nằm trong Django: <code>apps.ai</code>, <code>apps.knowledge</code>, <code>apps.ai_agent</code> và AI Sales Assistant.</p>
+        <p>Dùng Django API mới: <code>/api/v1/ai/chat/</code>, <code>/api/v1/knowledge/chat/</code>, <code>/api/v1/ai/sales-assistant/</code>.</p>
       </div>
     """
-    return render_admin_shell("AI Assistant", "ai", admin_user, content)
-
+    return render_admin_shell("Django AI Platform", "developer", admin_user, content)
 
 def render_bar_chart(title, chart_items):
     """Render biểu đồ cột đơn giản bằng HTML/CSS."""
@@ -2713,13 +2572,6 @@ class MecPrecisionHandler(BaseHTTPRequestHandler):
                     self.send_json({"error": "Bạn không có quyền xem Developer Tools."}, status=403)
                     return
                 self.send_html(render_admin_developer_page(admin_user))
-                return
-
-            if path == "/admin/ai":
-                if not has_admin_permission(admin_user, "ai", "read"):
-                    self.send_json({"error": "Bạn không có quyền xem AI."}, status=403)
-                    return
-                self.send_html(render_admin_ai_page(admin_user))
                 return
 
             if path == "/admin/account":
@@ -3079,115 +2931,6 @@ class MecPrecisionHandler(BaseHTTPRequestHandler):
                     self.redirect("/admin/developer")
                     return
 
-                if parsed_url.path == "/admin/developer/ai-code":
-                    if not has_admin_permission(admin_user, "developer", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng Developer AI."}, status=403)
-                        return
-                    try:
-                        result = ask_developer_ai(
-                            form.get("question"),
-                            code_context=form.get("code_context"),
-                            language=form.get("language"),
-                            model=form.get("model"),
-                        )
-                    except ValueError as error:
-                        self.send_html(render_admin_developer_page(admin_user, error=str(error), ai_form=form))
-                        return
-                    log_admin_activity(admin_user, "developer.ai_code", "ai_conversation", result["id"], f"Developer AI bằng model {result['model']}", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_developer_page(admin_user, ai_result=result["answer"], ai_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/ask":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI."}, status=403)
-                        return
-                    # Form Admin AI gửi câu hỏi vào đây.
-                    # ask_ai sẽ gọi Ollama, lưu lịch sử, rồi trả câu trả lời để render lại trang.
-                    result = ask_ai(form.get("message"), channel="admin", model=form.get("model"))
-                    log_admin_activity(admin_user, "ai.ask", "ai_conversation", result["id"], f"Hỏi AI bằng model {result['model']}", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, form, answer=result["answer"]))
-                    return
-
-                if parsed_url.path == "/admin/ai/translate":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI dịch thuật."}, status=403)
-                        return
-                    try:
-                        result = translate_text(
-                            form.get("source_text"),
-                            form.get("target_language"),
-                            source_language=form.get("source_language"),
-                            tone=form.get("tone"),
-                            model=form.get("model"),
-                        )
-                    except ValueError as error:
-                        self.send_html(render_admin_ai_page(admin_user, translation_form=form, error=str(error)))
-                        return
-                    log_admin_activity(admin_user, "ai.translate", "ai_conversation", result["id"], f"Dịch AI sang {form.get('target_language', '')}", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, translation_result=result["answer"], translation_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/contacts-summary":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI tóm tắt liên hệ."}, status=403)
-                        return
-                    try:
-                        result = summarize_recent_contacts(form.get("limit", 8), model=form.get("model"))
-                    except ValueError as error:
-                        self.send_html(render_admin_ai_page(admin_user, ops_form=form, error=str(error)))
-                        return
-                    log_admin_activity(admin_user, "ai.contacts_summary", "ai_conversation", result["id"], "AI tóm tắt liên hệ mới", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, ops_result=result["answer"], ops_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/quote-analysis":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI phân tích báo giá."}, status=403)
-                        return
-                    try:
-                        result = analyze_quote_request(form.get("quote_id"), model=form.get("model"))
-                    except ValueError as error:
-                        self.send_html(render_admin_ai_page(admin_user, ops_form=form, error=str(error)))
-                        return
-                    log_admin_activity(admin_user, "ai.quote_analysis", "ai_conversation", result["id"], f"AI phân tích báo giá {form.get('quote_id', '')}", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, ops_result=result["answer"], ops_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/smart-search":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI tìm kiếm."}, status=403)
-                        return
-                    try:
-                        result = smart_search_content(form.get("query"), scope=form.get("scope"), model=form.get("model"))
-                    except ValueError as error:
-                        self.send_html(render_admin_ai_page(admin_user, ops_form=form, error=str(error)))
-                        return
-                    log_admin_activity(admin_user, "ai.smart_search", "ai_conversation", result["id"], f"AI tìm kiếm {form.get('query', '')}", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, ops_result=result["answer"], ops_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/dashboard-insights":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI dashboard."}, status=403)
-                        return
-                    result = generate_dashboard_insights(model=form.get("model"))
-                    log_admin_activity(admin_user, "ai.dashboard_insights", "ai_conversation", result["id"], "AI dashboard hôm nay", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, ops_result=result["answer"], ops_form=form))
-                    return
-
-                if parsed_url.path == "/admin/ai/document-read":
-                    if not has_admin_permission(admin_user, "ai", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI đọc tài liệu."}, status=403)
-                        return
-                    try:
-                        result = analyze_uploaded_document(files.get("document_file"), question=form.get("question"), model=form.get("model"))
-                    except ValueError as error:
-                        self.send_html(render_admin_ai_page(admin_user, ops_form=form, error=str(error)))
-                        return
-                    log_admin_activity(admin_user, "ai.document_read", "ai_conversation", result["id"], "AI đọc tài liệu upload", self.client_address[0] if self.client_address else "")
-                    self.send_html(render_admin_ai_page(admin_user, ops_result=result["answer"], ops_form=form))
-                    return
-
                 if parsed_url.path == "/admin/media/upload":
                     if not has_admin_permission(admin_user, "media", "write"):
                         self.send_json({"error": "Bạn không có quyền upload media."}, status=403)
@@ -3224,27 +2967,6 @@ class MecPrecisionHandler(BaseHTTPRequestHandler):
                     deleted_url = delete_media(form.get("url"))
                     log_admin_activity(admin_user, "media.delete", "media", deleted_url, f"Xóa media {deleted_url}", self.client_address[0] if self.client_address else "")
                     self.redirect("/admin/media")
-                    return
-
-                if parsed_url.path == "/admin/products/ai-generate":
-                    if not has_admin_permission(admin_user, "products", "write"):
-                        self.send_json({"error": "Bạn không có quyền dùng AI cho sản phẩm."}, status=403)
-                        return
-                    category_id = parse_positive_int(form.get("category_id"), 0)
-                    category_name = ""
-                    for category in get_product_categories():
-                        if category["id"] == category_id:
-                            category_name = category["name"]
-                            break
-                    form["category_name"] = category_name
-                    result = generate_product_content(form, model=form.get("ai_model"))
-                    generated_fields = result["fields"]
-                    # AI chỉ điền lại các field nội dung/SEO vào form, chưa lưu database.
-                    for key, value in generated_fields.items():
-                        form[key] = value
-                    log_admin_activity(admin_user, "product.ai_generate", "ai_conversation", result["id"], f"AI tạo nội dung SEO cho {form.get('name', '')}", self.client_address[0] if self.client_address else "")
-                    message = f"AI đã tạo gợi ý nội dung & SEO bằng model {result['model']} ({result['status']}). Kiểm tra lại rồi bấm Lưu sản phẩm."
-                    self.send_html(render_admin_products_page(admin_user, {}, form, message=message))
                     return
 
                 if parsed_url.path == "/admin/products/save":
@@ -3578,17 +3300,6 @@ class MecPrecisionHandler(BaseHTTPRequestHandler):
                 {"project_name": quote.get("project_name", f"Quote #{quote['id']}")},
             )
             self.send_json({"id": quote["id"], "message": "Đã tạo yêu cầu báo giá trong CMS."}, status=201)
-            return
-
-        if parsed_url.path == "/api/ai/chat":
-            # API public cho chatbot hoặc frontend gọi bằng JSON.
-            # Ví dụ body: {"message": "MecPrecision có gia công CNC không?"}
-            payload = self.read_json_body()
-            try:
-                result = ask_ai(payload.get("message"), channel="public", model=payload.get("model"))
-                self.send_json(result, status=200)
-            except ValueError as error:
-                self.send_json({"success": False, "error": {"code": "AI_VALIDATION_ERROR", "message": str(error)}}, status=400)
             return
 
         if parsed_url.path == "/api/products":

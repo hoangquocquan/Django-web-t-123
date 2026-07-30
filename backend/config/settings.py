@@ -56,8 +56,3 @@ PASSWORD_SALT = os.environ.get("MEC_PASSWORD_SALT", "mecprecision-demo-salt")
 # Khi production cần cache/session nhanh hơn, bật MEC_REDIS_URL trong .env.
 REDIS_URL = os.environ.get("MEC_REDIS_URL", "")
 REDIS_CACHE_ENABLED = get_bool_env("MEC_REDIS_CACHE_ENABLED", False)
-
-# Ollama local AI. Khi production có AI server riêng, chỉ cần đổi các biến này trong .env.
-OLLAMA_URL = os.environ.get("MEC_OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("MEC_OLLAMA_MODEL", "llama3:latest")
-OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("MEC_OLLAMA_TIMEOUT_SECONDS", "20"))
