@@ -30,7 +30,7 @@ from .views.business_core import (
 )
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
-from .views.crm import contact_requests, customer_detail, customers
+from .views.crm import contact_requests, crm_customer_interactions, customer_detail, customers
 from .views.foundation import (
     foundation_login,
     foundation_logout,
@@ -50,9 +50,18 @@ from .views.replacement import (
     version,
 )
 from apps.ai.views import ai_chat
-from apps.ai_agent.views import agent_run
+from apps.ai_agent.views import agent_run, sales_assistant
 from apps.knowledge.views import knowledge_chat, knowledge_documents, knowledge_search
-from .views.sales import quote_detail, quote_files, quotes
+from .views.sales import (
+    quote_detail,
+    quote_files,
+    quotes,
+    sales_dashboard,
+    sales_lead_transition,
+    sales_leads,
+    sales_opportunities,
+    sales_quotations,
+)
 from .views.transaction_domain import (
     order_detail as transaction_order_detail,
     orders as transaction_orders,
@@ -89,6 +98,11 @@ urlpatterns = [
     ),
     path("crm/customers/", customers, name="api-crm-customers"),
     path("crm/customers/<int:customer_id>/", customer_detail, name="api-crm-customer-detail"),
+    path(
+        "crm/customers/<int:customer_id>/interactions/",
+        crm_customer_interactions,
+        name="api-crm-customer-interactions",
+    ),
     path("crm/contact-requests/", contact_requests, name="api-crm-contact-requests"),
     path("business/customers/", business_customers, name="api-business-customers"),
     path(
@@ -102,6 +116,11 @@ urlpatterns = [
     path("sales/quotes/", quotes, name="api-sales-quotes"),
     path("sales/quotes/<int:quote_id>/", quote_detail, name="api-sales-quote-detail"),
     path("sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"),
+    path("sales/leads/", sales_leads, name="api-sales-leads"),
+    path("sales/leads/<int:lead_id>/transition/", sales_lead_transition, name="api-sales-lead-transition"),
+    path("sales/opportunities/", sales_opportunities, name="api-sales-opportunities"),
+    path("sales/quotations/", sales_quotations, name="api-sales-quotations"),
+    path("sales/dashboard/", sales_dashboard, name="api-sales-dashboard"),
     path("orders/", transaction_orders, name="api-transaction-orders"),
     path("orders/<int:order_id>/", transaction_order_detail, name="api-transaction-order-detail"),
     path("workflows/", workflows, name="api-transaction-workflows"),
@@ -137,4 +156,5 @@ urlpatterns = [
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
     path("agent/run/", agent_run, name="api-agent-run"),
+    path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
 ]

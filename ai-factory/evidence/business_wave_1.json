@@ -1,0 +1,50 @@
+{
+  "wave": "business-sales-crm-ai",
+  "project": "mecprecision-vietnam",
+  "status": "MEC_SALES_CRM_AI_PLATFORM_COMPLETE",
+  "scope": {
+    "sales": [
+      "lead_management",
+      "pipeline_transition",
+      "opportunity_management",
+      "quotation_management",
+      "sales_dashboard"
+    ],
+    "crm": [
+      "customer_profile",
+      "interaction_history",
+      "timeline",
+      "segmentation"
+    ],
+    "ai": [
+      "lead_analysis",
+      "customer_summary",
+      "email_draft",
+      "weekly_recommendation",
+      "rag_context"
+    ]
+  },
+  "api_endpoints": [
+    "/api/v1/sales/leads/",
+    "/api/v1/sales/opportunities/",
+    "/api/v1/sales/quotations/",
+    "/api/v1/sales/dashboard/",
+    "/api/v1/crm/customers/",
+    "/api/v1/crm/customers/{id}/interactions/",
+    "/api/v1/ai/sales-assistant/"
+  ],
+  "safety": {
+    "external_ai_api_used": false,
+    "permission_bypass": false,
+    "ai_autonomous_business_actions": false,
+    "human_approval_required": true,
+    "production_deployed": false
+  },
+  "validation": {
+    "python_manage_check": "PASS",
+    "targeted_tests": "PASS",
+    "full_pytest": "PASS_304_TESTS",
+    "ai_factory": "AI_SOFTWARE_FACTORY_COMPLETE",
+    "ai_review_decision": "WARNING_HUMAN_APPROVAL_REQUIRED"
+  }
+}

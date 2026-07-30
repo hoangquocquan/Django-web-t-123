@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.ai_agent.services.agent_controller import AgentController
+from apps.ai_agent.services.sales_assistant import SalesAssistantService
 from apps.api.views.helpers import ok
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
 
@@ -17,6 +18,15 @@ class AgentRunSerializer(serializers.Serializer):
     """Validate an agent execution request."""
 
     request = serializers.CharField(max_length=2000, allow_blank=False, trim_whitespace=True)
+
+
+class SalesAssistantSerializer(serializers.Serializer):
+    """Validate a safe AI Sales Assistant request."""
+
+    action = serializers.ChoiceField(
+        choices=["lead_analysis", "customer_summary", "email_draft", "weekly_recommendation"]
+    )
+    payload = serializers.DictField(required=False, default=dict)
 
 
 def _authorization_header(request):
@@ -45,6 +55,28 @@ def _require_agent_user(request):
     return user
 
 
+def _require_ai_sales_user(request):
+    """Authenticate and enforce AI sales read permission."""
+    user = FoundationAuthService().user_from_authorization_header(_authorization_header(request))
+    FoundationPermissionService().require_permission(user, "ai_sales", "read")
+    return user
+
+
+def _validation_error_response(exc):
+    """Return validation errors without exposing stack traces."""
+    messages = getattr(exc, "messages", [str(exc)])
+    return Response(
+        {
+            "success": False,
+            "error": {
+                "code": "validation_error",
+                "message": "; ".join(str(message) for message in messages),
+            },
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def agent_run(request):
@@ -59,3 +91,35 @@ def agent_run(request):
     result = AgentController().run(serializer.validated_data["request"], user=user)
     return ok(result)
 
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def sales_assistant(request):
+    """Run AI sales suggestions while keeping all business actions human-approved."""
+    try:
+        user = _require_ai_sales_user(request)
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+
+    serializer = SalesAssistantSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    try:
+        result = SalesAssistantService().handle(
+            action=serializer.validated_data["action"],
+            payload=serializer.validated_data.get("payload", {}),
+            user=user,
+        )
+    except ValidationError as exc:
+        return _validation_error_response(exc)
+    except ObjectDoesNotExist:
+        return Response(
+            {
+                "success": False,
+                "error": {
+                    "code": "not_found",
+                    "message": "Requested sales or CRM record was not found.",
+                },
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    return ok(result)

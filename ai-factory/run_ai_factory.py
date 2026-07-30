@@ -37,6 +37,7 @@ def load_phase_spec(phase):
         "ai-knowledge-assistant": "AI_PROJECT_1_MEC_KNOWLEDGE_ASSISTANT.md",
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
         "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
+        "business-sales-crm-ai": "BUSINESS_WAVE_1_SALES_CRM_AI_PLATFORM.md",
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
         "django-wave-2": "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
         "django-wave-3": "WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
@@ -126,6 +127,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_ai_wave_1.py"]
     if phase == "ai-knowledge-assistant":
         return [sys.executable, "-m", "pytest", "tests/test_ai_knowledge_assistant.py"]
+    if phase == "business-sales-crm-ai":
+        return [sys.executable, "-m", "pytest", "tests/test_sales_crm_ai.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [

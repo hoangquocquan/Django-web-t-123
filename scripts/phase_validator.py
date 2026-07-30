@@ -128,6 +128,30 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-project-1-complete",
     },
+    "business-sales-crm-ai": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "BUSINESS_WAVE_1_SALES_CRM_AI_PLATFORM.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "sales" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "sales" / "services" / "sales_platform_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "sales" / "migrations" / "0001_sales_platform.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "crm" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "crm" / "services" / "crm_platform_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "crm" / "migrations" / "0001_crm_platform.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "sales.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "views" / "crm.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "api" / "urls.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "services" / "sales_assistant.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "foundation" / "migrations" / "0004_seed_sales_crm_permissions.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "business_wave_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "BUSINESS_WAVE_1_SALES_CRM_AI_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "BUSINESS_WAVE_1_SALES_CRM_AI_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_sales_crm_ai.py",
+        ],
+        "expected_tag": "business-wave-1-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

@@ -2,15 +2,15 @@
 
 ## Phase Name
 
-ai-knowledge-assistant
+business-sales-crm-ai
 
 ## Created At
 
-2026-07-30T14:07:30+00:00
+2026-07-30T14:56:31+00:00
 
 ## Final Decision
 
-PASS
+WARNING
 
 ## Requirement Status
 
@@ -23,7 +23,7 @@ PASS
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.205
+- Duration seconds: 4.39
 
 ## Security Status
 
@@ -34,9 +34,9 @@ PASS
 
 ## AI Analysis
 
-- Status: PASS
+- Status: WARNING
 - Summary: AI review completed.
-- Issues: []
+- Issues: ['Review requires human attention.', 'AI response contained production-approval-like wording.']
 - Recommendation: Proceed to human review; do not auto approve production.
 - Ollama available: True
 - Ollama model: llama3
