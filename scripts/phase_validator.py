@@ -107,6 +107,27 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-wave-1-complete",
     },
+    "ai-knowledge-assistant": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AI_PROJECT_1_MEC_KNOWLEDGE_ASSISTANT.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "document_processor.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "knowledge_indexer.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "search_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "assistant_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "business_connector.py",
+            PROJECT_ROOT / "docs" / "ai" / "MEC_KNOWLEDGE_MODEL.md",
+            PROJECT_ROOT / "docs" / "ai" / "DOCUMENT_PIPELINE.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "ai_project_1.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_PROJECT_1_KNOWLEDGE_ASSISTANT_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_PROJECT_1_KNOWLEDGE_ASSISTANT_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_ai_knowledge_assistant.py",
+        ],
+        "expected_tag": "ai-project-1-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

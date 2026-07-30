@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from django.db import transaction
 
-from apps.knowledge.models import KnowledgeChunk, KnowledgeDocument, KnowledgeEmbedding
+from apps.knowledge.models import DocumentCategory, KnowledgeChunk, KnowledgeDocument, KnowledgeEmbedding
 from apps.knowledge.services.embedding_service import LocalEmbeddingService
+from apps.knowledge.services.knowledge_indexer import KnowledgeIndexer
 from apps.knowledge.services.text_processing import TextProcessor
 
 
@@ -14,10 +15,16 @@ def document_to_dict(document):
     return {
         "id": document.id,
         "title": document.title,
+        "description": document.description,
+        "category": document.category.name if document.category else None,
         "source_type": document.source_type,
         "source_path": document.source_path,
+        "version": document.version,
+        "created_by_email": document.created_by_email,
+        "permission_level": document.permission_level,
         "metadata": document.metadata,
         "created_at": document.created_at.isoformat() if document.created_at else None,
+        "updated_at": document.updated_at.isoformat() if document.updated_at else None,
     }
 
 
@@ -44,28 +51,56 @@ class KnowledgeService:
         self.embedding_service = embedding_service or LocalEmbeddingService()
 
     @transaction.atomic
-    def ingest_text(self, title, content, source_type="text", source_path="", metadata=None):
-        """Create a document, chunks, and local embeddings."""
+    def create_document(
+        self,
+        title,
+        content,
+        description="",
+        category_name="",
+        source_type="text",
+        source_path="",
+        permission_level="internal",
+        created_by_email="",
+        metadata=None,
+    ):
+        """Create a managed document and index it for semantic search."""
+        category = self._category_from_name(category_name)
         document = KnowledgeDocument.objects.create(
             title=str(title or "").strip() or "Untitled document",
+            description=description or "",
+            category=category,
             content=content,
             source_type=source_type,
             source_path=source_path,
+            permission_level=permission_level or "internal",
+            created_by_email=created_by_email or "",
             metadata=metadata or {},
         )
-        chunks = self.text_processor.chunk_text(content)
-        for index, chunk_text in enumerate(chunks):
-            chunk = KnowledgeChunk.objects.create(
-                document=document,
-                content=chunk_text,
-                chunk_index=index,
-            )
-            KnowledgeEmbedding.objects.create(
-                chunk=chunk,
-                vector=self.embedding_service.embed(chunk_text),
-                model_name=self.embedding_service.model_name,
-            )
+        KnowledgeIndexer(
+            text_processor=self.text_processor,
+            embedding_service=self.embedding_service,
+        ).reindex(document, created_by_email=created_by_email, change_note="Initial ingestion")
         return document
+
+    def list_documents(self, user=None):
+        """Return documents visible to the current user."""
+        queryset = KnowledgeDocument.objects.select_related("category").all()
+        if not user:
+            return queryset.none()
+        if getattr(getattr(user, "role", None), "name", "") == "admin":
+            return queryset
+        return queryset.filter(permission_level__in=["public", "internal"])
+
+    @transaction.atomic
+    def ingest_text(self, title, content, source_type="text", source_path="", metadata=None):
+        """Create a document, chunks, and local embeddings."""
+        return self.create_document(
+            title=title,
+            content=content,
+            source_type=source_type,
+            source_path=source_path,
+            metadata=metadata,
+        )
 
     def ingest_file(self, file_path, title=None, metadata=None):
         """Ingest a local document path into the knowledge database."""
@@ -80,7 +115,7 @@ class KnowledgeService:
         )
 
     def search(self, query, limit=5):
-        """Search knowledge chunks by local vector similarity."""
+        """Search chunks for internal service callers without API permission filtering."""
         query_vector = self.embedding_service.embed(query)
         hits = []
         queryset = KnowledgeChunk.objects.select_related("document", "embedding").all()
@@ -90,3 +125,14 @@ class KnowledgeService:
                 hits.append({"chunk": chunk, "score": score})
         return sorted(hits, key=lambda item: item["score"], reverse=True)[:limit]
 
+    def _category_from_name(self, category_name):
+        """Create or reuse a document category from a display name."""
+        normalized = str(category_name or "").strip()
+        if not normalized:
+            return None
+        slug = normalized.lower().replace(" ", "-")
+        category, _created = DocumentCategory.objects.get_or_create(
+            slug=slug,
+            defaults={"name": normalized},
+        )
+        return category

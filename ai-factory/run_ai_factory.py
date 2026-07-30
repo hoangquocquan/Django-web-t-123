@@ -34,6 +34,7 @@ def load_phase_spec(phase):
     wave_prompt_map = {
         "ai-1": "AI_PHASE_1_OLLAMA_DJANGO_INTEGRATION.md",
         "ai-complete-1": "AI_WAVE_1_COMPLETE_INTELLIGENCE_PLATFORM.md",
+        "ai-knowledge-assistant": "AI_PROJECT_1_MEC_KNOWLEDGE_ASSISTANT.md",
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
         "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
@@ -123,6 +124,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_ai_ollama.py"]
     if phase == "ai-complete-1":
         return [sys.executable, "-m", "pytest", "tests/test_ai_wave_1.py"]
+    if phase == "ai-knowledge-assistant":
+        return [sys.executable, "-m", "pytest", "tests/test_ai_knowledge_assistant.py"]
 
     normalized_phase = phase.replace(".", "_")
     candidates = [
@@ -198,9 +201,10 @@ def main():
     parser = argparse.ArgumentParser(description="Run the AI Software Factory workflow.")
     parser.add_argument("--phase", default="13.8")
     parser.add_argument("--wave", default=None)
+    parser.add_argument("--project", default=None)
     args = parser.parse_args()
 
-    result = run_factory(phase=args.wave or args.phase)
+    result = run_factory(phase=args.project or args.wave or args.phase)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result["status"] == "AI_SOFTWARE_FACTORY_COMPLETE" else 1
 
