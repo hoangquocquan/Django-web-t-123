@@ -1,0 +1,481 @@
+{
+  "created_at": "2026-07-30T16:14:34+00:00",
+  "status": "MEC_BUSINESS_SIMULATION_COMPLETE",
+  "fictional_data_only": true,
+  "master_data": {
+    "users": [
+      "ceo.demo@mecprecision.vn",
+      "sales.manager.demo@mecprecision.vn",
+      "sales.staff.demo@mecprecision.vn",
+      "technical.engineer.demo@mecprecision.vn"
+    ],
+    "customers": [
+      "ABC Automotive Manufacturing",
+      "XYZ Mechanical",
+      "Global Parts Co"
+    ],
+    "products": [
+      "CNC Precision Shaft",
+      "Aluminum Housing",
+      "Steel Component"
+    ],
+    "documents": [
+      {
+        "title": "MEC Product Catalogue",
+        "document_id": 1,
+        "classification": "technical",
+        "confidence": 0.6,
+        "approval_status": "pending_review"
+      },
+      {
+        "title": "CNC Precision Shaft Technical Specification",
+        "document_id": 2,
+        "classification": "technical",
+        "confidence": 0.61,
+        "approval_status": "pending_review"
+      },
+      {
+        "title": "MEC Quality Procedure",
+        "document_id": 3,
+        "classification": "quality",
+        "confidence": 0.61,
+        "approval_status": "pending_review"
+      },
+      {
+        "title": "Manufacturing Guideline",
+        "document_id": 4,
+        "classification": "technical",
+        "confidence": 0.61,
+        "approval_status": "pending_review"
+      }
+    ]
+  },
+  "crm": {
+    "customer_id": 4,
+    "interactions": 4,
+    "notes": 1,
+    "tasks": 1,
+    "timeline": 4
+  },
+  "sales": {
+    "lead_id": 1,
+    "lead_status": "won",
+    "opportunity_id": 1,
+    "opportunity_status": "won",
+    "quotation_id": 1,
+    "quotation_number": "SIM-ABC-2026-001",
+    "quotation_status": "accepted",
+    "approval_status": "approved",
+    "quotation_total": "16400.00"
+  },
+  "ai": {
+    "knowledge": {
+      "material_question": {
+        "answer": "Có tài liệu liên quan: MEC Product Catalogue, CNC Precision Shaft Technical Specification, MEC Quality Procedure, Manufacturing Guideline. Vui lòng kiểm tra các nguồn được trích dẫn.",
+        "sources": [
+          {
+            "id": 1,
+            "title": "MEC Product Catalogue",
+            "description": "Document Intelligence import: technical",
+            "category": "technical",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/product-catalogue.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "technical",
+                "confidence": 0.6,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "product-catalogue.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.924512+00:00",
+            "updated_at": "2026-07-30T16:11:54.925517+00:00"
+          },
+          {
+            "id": 2,
+            "title": "CNC Precision Shaft Technical Specification",
+            "description": "Document Intelligence import: technical",
+            "category": "technical",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/cnc-shaft-technical-specification.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "technical",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "cnc-shaft-technical-specification.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.942003+00:00",
+            "updated_at": "2026-07-30T16:11:54.942003+00:00"
+          },
+          {
+            "id": 3,
+            "title": "MEC Quality Procedure",
+            "description": "Document Intelligence import: quality",
+            "category": "quality",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/quality-procedure.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "quality",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "quality-procedure.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.944064+00:00",
+            "updated_at": "2026-07-30T16:11:54.944064+00:00"
+          },
+          {
+            "id": 4,
+            "title": "Manufacturing Guideline",
+            "description": "Document Intelligence import: technical",
+            "category": "technical",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/manufacturing-guideline.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "technical",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "manufacturing-guideline.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.944064+00:00",
+            "updated_at": "2026-07-30T16:11:54.944064+00:00"
+          }
+        ],
+        "confidence": 0.7048,
+        "warning": "Ollama is unavailable; returned source-based fallback answer."
+      },
+      "qc_question": {
+        "answer": "Có tài liệu liên quan: MEC Quality Procedure, CNC Precision Shaft Technical Specification, Manufacturing Guideline. Vui lòng kiểm tra các nguồn được trích dẫn.",
+        "sources": [
+          {
+            "id": 3,
+            "title": "MEC Quality Procedure",
+            "description": "Document Intelligence import: quality",
+            "category": "quality",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/quality-procedure.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "quality",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "quality-procedure.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.944064+00:00",
+            "updated_at": "2026-07-30T16:11:54.944064+00:00"
+          },
+          {
+            "id": 2,
+            "title": "CNC Precision Shaft Technical Specification",
+            "description": "Document Intelligence import: technical",
+            "category": "technical",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/cnc-shaft-technical-specification.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "technical",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "cnc-shaft-technical-specification.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.942003+00:00",
+            "updated_at": "2026-07-30T16:11:54.942003+00:00"
+          },
+          {
+            "id": 4,
+            "title": "Manufacturing Guideline",
+            "description": "Document Intelligence import: technical",
+            "category": "technical",
+            "source_type": "txt",
+            "source_path": "knowledge/uploads/manufacturing-guideline.txt",
+            "version": 1,
+            "created_by_email": "technical.engineer.demo@mecprecision.vn",
+            "permission_level": "internal",
+            "metadata": {
+              "document_intelligence": {
+                "classification": "technical",
+                "confidence": 0.61,
+                "approval_status": "pending_review",
+                "version_status": "current",
+                "source_citation": "manufacturing-guideline.txt",
+                "extraction_method": "plain_text_extraction",
+                "human_approval_required": true
+              }
+            },
+            "created_at": "2026-07-30T16:11:54.944064+00:00",
+            "updated_at": "2026-07-30T16:11:54.944064+00:00"
+          }
+        ],
+        "confidence": 0.5713,
+        "warning": "Ollama is unavailable; returned source-based fallback answer."
+      }
+    },
+    "sales_assistant": {
+      "customer_summary": {
+        "customer": {
+          "id": 4,
+          "company_name": "ABC Automotive Manufacturing",
+          "contact_name": "Ms. Anna Tran",
+          "email": "anna.tran@abc-auto.example",
+          "status": "active"
+        },
+        "summary": {
+          "interactions": 4,
+          "notes": 1,
+          "tasks": 1,
+          "open_opportunities": 0,
+          "open_quotations": 0
+        },
+        "recommendations": [
+          "Kiem tra nhu cau hien tai truoc khi gui bao gia moi.",
+          "Uu tien lien he lai neu co co hoi dang mo hoac bao gia chua phan hoi."
+        ],
+        "knowledge": {
+          "confidence": 0.3462,
+          "sources": [
+            {
+              "id": 4,
+              "title": "Manufacturing Guideline"
+            },
+            {
+              "id": 1,
+              "title": "MEC Product Catalogue"
+            },
+            {
+              "id": 2,
+              "title": "CNC Precision Shaft Technical Specification"
+            }
+          ]
+        },
+        "action": "customer_summary",
+        "human_approval_required": true,
+        "autonomous_action": false,
+        "safety_note": "AI chi dua ra goi y. Nhan vien phai duyet truoc khi gui email, sua CRM hoac duyet bao gia."
+      },
+      "email_draft": {
+        "draft": {
+          "subject": "MecPrecision VIETNAM - Trao doi ve CNC Precision Shaft quotation",
+          "body": "Xin chao Ms. Anna Tran,\n\nCam on ABC Automotive Manufacturing da quan tam den CNC Precision Shaft quotation. Doi ngu MecPrecision co the ho tro gia cong CNC, do ga va kiem tra chat luong theo yeu cau.\n\nNeu anh/chi co ban ve ky thuat, so luong du kien hoac thoi han can giao, vui long gui lai de chung toi tu van phuong an phu hop.\n\nTran trong,\nMecPrecision VIETNAM",
+          "purpose": "follow_up"
+        },
+        "knowledge": {
+          "confidence": 0.5829,
+          "sources": [
+            {
+              "id": 1,
+              "title": "MEC Product Catalogue"
+            },
+            {
+              "id": 2,
+              "title": "CNC Precision Shaft Technical Specification"
+            }
+          ]
+        },
+        "delivery_status": "draft_only_not_sent",
+        "action": "email_draft",
+        "human_approval_required": true,
+        "autonomous_action": false,
+        "safety_note": "AI chi dua ra goi y. Nhan vien phai duyet truoc khi gui email, sua CRM hoac duyet bao gia."
+      }
+    }
+  },
+  "automation": {
+    "website_lead": {
+      "status": "N8N_LOCAL_AUTOMATION_READY",
+      "created_at": "2026-07-30T16:14:34+00:00",
+      "result": {
+        "workflow": "website_lead_to_sales_notification",
+        "steps": [
+          {
+            "name": "Website Lead",
+            "status": "RECEIVED"
+          },
+          {
+            "name": "Django CRM",
+            "status": "READY_TO_CREATE_RECORD"
+          },
+          {
+            "name": "AI Lead Analysis",
+            "status": "SUGGESTION_ONLY"
+          },
+          {
+            "name": "Sales Notification",
+            "status": "DRAFT_NOTIFICATION"
+          }
+        ],
+        "lead": {
+          "company": "ABC Automotive Manufacturing",
+          "need": "precision CNC components"
+        },
+        "human_approval_required": true
+      },
+      "safety": {
+        "local_only": true,
+        "production_deployed": false,
+        "external_email_sent": false,
+        "human_approval_required": true
+      }
+    },
+    "document_update": {
+      "status": "N8N_LOCAL_AUTOMATION_READY",
+      "created_at": "2026-07-30T16:14:34+00:00",
+      "result": {
+        "workflow": "document_to_knowledge_update",
+        "steps": [
+          {
+            "name": "New Document",
+            "status": "RECEIVED"
+          },
+          {
+            "name": "OCR/Text Extraction",
+            "status": "LOCAL_EXTRACTION"
+          },
+          {
+            "name": "Knowledge Update",
+            "status": "PENDING_HUMAN_REVIEW"
+          }
+        ],
+        "document": {
+          "title": "CNC Precision Shaft Technical Specification"
+        },
+        "human_approval_required": true
+      },
+      "safety": {
+        "local_only": true,
+        "production_deployed": false,
+        "external_email_sent": false,
+        "human_approval_required": true
+      }
+    },
+    "sales_follow_up": {
+      "status": "N8N_LOCAL_AUTOMATION_READY",
+      "created_at": "2026-07-30T16:14:34+00:00",
+      "result": {
+        "workflow": "sales_follow_up_reminder",
+        "steps": [
+          {
+            "name": "Sales Follow-up",
+            "status": "SCHEDULED"
+          },
+          {
+            "name": "Reminder",
+            "status": "LOCAL_ONLY"
+          },
+          {
+            "name": "Notification",
+            "status": "DRAFT_NOTIFICATION"
+          }
+        ],
+        "follow_up": {
+          "customer": "ABC Automotive Manufacturing",
+          "task": "Confirm production kickoff"
+        },
+        "human_approval_required": true
+      },
+      "safety": {
+        "local_only": true,
+        "production_deployed": false,
+        "external_email_sent": false,
+        "human_approval_required": true
+      }
+    }
+  },
+  "executive_dashboard": {
+    "sales_overview": {
+      "lead_count": 1,
+      "pipeline_value": "0",
+      "conversion_rate": 100.0,
+      "quotation_status": {
+        "draft": 0,
+        "review": 0,
+        "approved": 0,
+        "sent": 0,
+        "accepted": 1,
+        "lost": 0
+      },
+      "revenue_forecast": "17575.00"
+    },
+    "pipeline_value": "0",
+    "customer_status": {
+      "active": 5,
+      "lead": 1
+    },
+    "crm_activity": {
+      "customer_id": 4,
+      "interactions": 4,
+      "notes": 1,
+      "tasks": 1,
+      "timeline": 4
+    },
+    "sales_flow": {
+      "lead_id": 1,
+      "lead_status": "won",
+      "opportunity_id": 1,
+      "opportunity_status": "won",
+      "quotation_id": 1,
+      "quotation_number": "SIM-ABC-2026-001",
+      "quotation_status": "accepted",
+      "approval_status": "approved",
+      "quotation_total": "16400.00"
+    },
+    "ai_activity": {
+      "material_confidence": 0.7048,
+      "qc_confidence": 0.5713,
+      "sales_human_approval_required": true
+    },
+    "automation_status": {
+      "website_lead": "N8N_LOCAL_AUTOMATION_READY",
+      "document_update": "N8N_LOCAL_AUTOMATION_READY",
+      "sales_follow_up": "N8N_LOCAL_AUTOMATION_READY"
+    }
+  },
+  "safety": {
+    "production_deployed": false,
+    "real_customer_data_used": false,
+    "external_ai_api_used": false,
+    "human_approval_required": true
+  }
+}

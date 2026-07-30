@@ -39,6 +39,7 @@ def load_phase_spec(phase):
         "aws-1": "AWS_PHASE_1_ARCHITECTURE_AUDIT.md",
         "aws-learning-2": "AWS_PHASE_2_CLOUD_ARCHITECTURE_LEARNING_LAB.md",
         "business-sales-crm-ai": "BUSINESS_WAVE_1_SALES_CRM_AI_PLATFORM.md",
+        "business-simulation": "MEC_BUSINESS_SIMULATION_PHASE.md",
         "django-wave-1": "WAVE_1_DJANGO_FOUNDATION_MIGRATION.md",
         "django-wave-2": "WAVE_2_DJANGO_BUSINESS_CORE_MIGRATION.md",
         "django-wave-3": "WAVE_3_DJANGO_TRANSACTION_MIGRATION.md",
@@ -133,6 +134,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_ai_legacy_cleanup.py"]
     if phase == "business-sales-crm-ai":
         return [sys.executable, "-m", "pytest", "tests/test_sales_crm_ai.py"]
+    if phase == "business-simulation":
+        return [sys.executable, "-m", "pytest", "tests/test_business_simulation.py"]
     if phase == "business-ai-wave-2":
         return [sys.executable, "-m", "pytest", "tests/test_business_ui.py", "tests/test_ai_document_intelligence.py", "tests/test_n8n_automation.py", "tests/test_ai_factory_v2.py"]
 

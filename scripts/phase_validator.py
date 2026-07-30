@@ -200,6 +200,20 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "business-ai-wave-2-complete",
     },
+    "business-simulation": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "MEC_BUSINESS_SIMULATION_PHASE.md",
+        "documents": [
+            PROJECT_ROOT / "scripts" / "business_simulation.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "business_simulation.json",
+            PROJECT_ROOT / "docs" / "reviews" / "business_simulation_executive_dashboard.json",
+            PROJECT_ROOT / "docs" / "reviews" / "MEC_BUSINESS_SIMULATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "BUSINESS_SIMULATION_AI_REVIEW.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_business_simulation.py",
+        ],
+        "expected_tag": "business-simulation-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

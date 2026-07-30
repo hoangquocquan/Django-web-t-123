@@ -1,0 +1,49 @@
+{
+  "sales_overview": {
+    "lead_count": 1,
+    "pipeline_value": "0",
+    "conversion_rate": 100.0,
+    "quotation_status": {
+      "draft": 0,
+      "review": 0,
+      "approved": 0,
+      "sent": 0,
+      "accepted": 1,
+      "lost": 0
+    },
+    "revenue_forecast": "17575.00"
+  },
+  "pipeline_value": "0",
+  "customer_status": {
+    "active": 5,
+    "lead": 1
+  },
+  "crm_activity": {
+    "customer_id": 4,
+    "interactions": 4,
+    "notes": 1,
+    "tasks": 1,
+    "timeline": 4
+  },
+  "sales_flow": {
+    "lead_id": 1,
+    "lead_status": "won",
+    "opportunity_id": 1,
+    "opportunity_status": "won",
+    "quotation_id": 1,
+    "quotation_number": "SIM-ABC-2026-001",
+    "quotation_status": "accepted",
+    "approval_status": "approved",
+    "quotation_total": "16400.00"
+  },
+  "ai_activity": {
+    "material_confidence": 0.7048,
+    "qc_confidence": 0.5713,
+    "sales_human_approval_required": true
+  },
+  "automation_status": {
+    "website_lead": "N8N_LOCAL_AUTOMATION_READY",
+    "document_update": "N8N_LOCAL_AUTOMATION_READY",
+    "sales_follow_up": "N8N_LOCAL_AUTOMATION_READY"
+  }
+}
