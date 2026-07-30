@@ -173,6 +173,33 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-cleanup-complete",
     },
+    "business-ai-wave-2": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "BUSINESS_AI_WAVE_2_PLATFORM_COMPLETION.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "business_ui" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_ui" / "urls.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "business_ui" / "templates" / "business_ui" / "dashboard.html",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "document_intelligence.py",
+            PROJECT_ROOT / "scripts" / "n8n_business_wave2.py",
+            PROJECT_ROOT / "n8n" / "workflows" / "business_wave2_automation.json",
+            PROJECT_ROOT / "n8n" / "config" / "business_wave2_local.yml",
+            PROJECT_ROOT / "ai-factory" / "v2_roles.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "business_ai_wave_2.json",
+            PROJECT_ROOT / "docs" / "reviews" / "BUSINESS_UI_COMPLETION_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_DOCUMENT_INTELLIGENCE_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "N8N_AUTOMATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_FACTORY_V2_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "BUSINESS_AI_WAVE_2_FINAL_REVIEW.md",
+            PROJECT_ROOT / "docs" / "reviews" / "MEC_PRECISION_PLATFORM_COMPLETION_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_business_ui.py",
+            PROJECT_ROOT / "tests" / "test_ai_document_intelligence.py",
+            PROJECT_ROOT / "tests" / "test_n8n_automation.py",
+            PROJECT_ROOT / "tests" / "test_ai_factory_v2.py",
+        ],
+        "expected_tag": "business-ai-wave-2-complete",
+    },
     "12.4": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "PHASE_12.4_AI_DEVOPS_CONTROL_CENTER.md",
         "documents": [

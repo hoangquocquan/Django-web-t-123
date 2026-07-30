@@ -1,0 +1,41 @@
+{% extends "business_ui/base.html" %}
+{% block title %}AI Sales Assistant{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">AI Sales Assistant</p>
+      <h1>Trợ lý bán hàng cần con người duyệt</h1>
+    </div>
+  </section>
+  <section class="split">
+    <form class="panel form" method="post">
+      {% csrf_token %}
+      <label>Chức năng
+        <select name="action">
+          <option value="lead_analysis">Phân tích lead</option>
+          <option value="weekly_recommendation">Gợi ý tuần</option>
+          <option value="email_draft">Soạn email nháp</option>
+          <option value="customer_summary">Tóm tắt khách hàng</option>
+        </select>
+      </label>
+      <label>Lead ID <input name="lead_id" placeholder="Có thể bỏ trống" /></label>
+      <label>Customer ID <input name="customer_id" placeholder="Có thể bỏ trống" /></label>
+      <label>Công ty <input name="company" placeholder="ABC Manufacturing" /></label>
+      <label>Người liên hệ <input name="contact_person" placeholder="Nguyễn Văn A" /></label>
+      <label>Ngành <input name="industry" placeholder="CNC, fixture, automation" /></label>
+      <label>Sản phẩm quan tâm <input name="product_interest" value="gia công CNC chính xác" /></label>
+      <label>Ghi chú <textarea name="notes"></textarea></label>
+      <button class="button" type="submit">Tạo gợi ý</button>
+    </form>
+    <article class="panel">
+      <h2>Kết quả AI</h2>
+      {% if error %}<p class="error">{{ error }}</p>{% endif %}
+      {% if result %}
+        <pre>{{ result }}</pre>
+      {% else %}
+        <p class="muted">AI chỉ tạo đề xuất. Nhân viên phải kiểm tra trước khi gửi email hoặc cập nhật CRM.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}
+

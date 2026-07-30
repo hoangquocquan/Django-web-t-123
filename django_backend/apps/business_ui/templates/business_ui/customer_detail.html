@@ -1,0 +1,39 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Customer Profile{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Customer profile</p>
+      <h1>{{ customer.company_name|default:customer.contact_name }}</h1>
+    </div>
+    <a class="button secondary" href="{% url 'business_ui:customers' %}">Quay lại</a>
+  </section>
+  <section class="split">
+    <article>
+      <h2>Thông tin</h2>
+      <dl class="details">
+        <dt>Người liên hệ</dt><dd>{{ customer.contact_name }}</dd>
+        <dt>Email</dt><dd>{{ customer.email|default:"-" }}</dd>
+        <dt>Điện thoại</dt><dd>{{ customer.phone|default:"-" }}</dd>
+        <dt>Quốc gia</dt><dd>{{ customer.country }}</dd>
+        <dt>Segment</dt><dd>{% if profile %}{{ profile.segment }}{% else %}-{% endif %}</dd>
+      </dl>
+    </article>
+    <article>
+      <h2>Timeline</h2>
+      <ul class="timeline">
+        {% for event in timeline %}
+          <li><strong>{{ event.title }}</strong><span>{{ event.event_type }}</span></li>
+        {% empty %}
+          <li>Chưa có timeline.</li>
+        {% endfor %}
+      </ul>
+    </article>
+  </section>
+  <section class="three-cols">
+    <article><h2>Interactions</h2>{% for item in interactions %}<p>{{ item.subject }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
+    <article><h2>Notes</h2>{% for item in notes %}<p>{{ item.note }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
+    <article><h2>Tasks</h2>{% for item in tasks %}<p>{{ item.title }} · {{ item.status }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
+  </section>
+{% endblock %}
+

@@ -1,0 +1,30 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Quotations{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Quotation</p>
+      <h1>Danh sách báo giá</h1>
+    </div>
+  </section>
+  <section class="panel">
+    <table>
+      <thead><tr><th>Số báo giá</th><th>Khách hàng</th><th>Status</th><th>Approval</th><th>Total</th><th></th></tr></thead>
+      <tbody>
+        {% for quotation in quotations %}
+          <tr>
+            <td>{{ quotation.quotation_number }}</td>
+            <td>{% if quotation.customer %}{{ quotation.customer }}{% else %}-{% endif %}</td>
+            <td>{{ quotation.status }}</td>
+            <td>{{ quotation.approval_status }}</td>
+            <td>{{ quotation.total }}</td>
+            <td><a href="{% url 'business_ui:quotation-detail' quotation.id %}">Chi tiết</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">Chưa có báo giá.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
+

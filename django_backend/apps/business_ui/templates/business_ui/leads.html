@@ -1,0 +1,27 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Lead Pipeline{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Lead Pipeline</p>
+      <h1>Kanban cơ hội bán hàng</h1>
+    </div>
+  </section>
+  <section class="kanban">
+    {% for column in columns %}
+      <article class="kanban-column">
+        <h2>{{ column.label }}</h2>
+        {% for lead in column.leads %}
+          <div class="lead-card">
+            <strong>{{ lead.company }}</strong>
+            <span>{{ lead.contact_person }}</span>
+            <small>{{ lead.industry }} · {{ lead.priority }}</small>
+          </div>
+        {% empty %}
+          <p class="muted">Không có lead.</p>
+        {% endfor %}
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}
+

@@ -1,0 +1,29 @@
+{% extends "business_ui/base.html" %}
+{% block title %}CRM Customers{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">CRM</p>
+      <h1>Khách hàng</h1>
+    </div>
+  </section>
+  <section class="panel">
+    <table>
+      <thead><tr><th>Công ty</th><th>Liên hệ</th><th>Email</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+        {% for customer in customers %}
+          <tr>
+            <td>{{ customer.company_name|default:"-" }}</td>
+            <td>{{ customer.contact_name }}</td>
+            <td>{{ customer.email|default:"-" }}</td>
+            <td>{{ customer.status }}</td>
+            <td><a href="{% url 'business_ui:customer-detail' customer.id %}">Xem</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5">Chưa có khách hàng.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
+

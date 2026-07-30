@@ -1,0 +1,47 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Sales Dashboard{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Sales Dashboard</p>
+      <h1>Tổng quan kinh doanh</h1>
+    </div>
+    <a class="button" href="{% url 'business_ui:ai-sales' %}">AI Sales</a>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric"><span>Lead count</span><strong>{{ metrics.lead_count }}</strong></article>
+    <article class="metric"><span>Pipeline value</span><strong>{{ metrics.pipeline_value }}</strong></article>
+    <article class="metric"><span>Conversion rate</span><strong>{{ metrics.conversion_rate }}%</strong></article>
+    <article class="metric"><span>Revenue forecast</span><strong>{{ metrics.revenue_forecast }}</strong></article>
+  </section>
+
+  <section class="split">
+    <article>
+      <h2>Sales performance</h2>
+      <div class="status-bars">
+        {% for item in metrics.performance %}
+          <div class="bar-row">
+            <span>{{ item.status }}</span>
+            <div><i style="width: {% widthratio item.count metrics.lead_count 100 %}%"></i></div>
+            <b>{{ item.count }}</b>
+          </div>
+        {% endfor %}
+      </div>
+    </article>
+    <article>
+      <h2>Lead mới cập nhật</h2>
+      <table>
+        <thead><tr><th>Công ty</th><th>Trạng thái</th><th>Ưu tiên</th></tr></thead>
+        <tbody>
+          {% for lead in recent_leads %}
+            <tr><td>{{ lead.company }}</td><td>{{ lead.status }}</td><td>{{ lead.priority }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3">Chưa có lead.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </article>
+  </section>
+{% endblock %}
+
