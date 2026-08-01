@@ -41,11 +41,20 @@ class AIGovernanceEvent(models.Model):
     DECISION_RATE_LIMITED = "rate_limited"
 
     user_email = models.EmailField(blank=True)
+    role_name = models.CharField(max_length=80, blank=True)
+    organization_id = models.CharField(max_length=120, blank=True)
+    module = models.CharField(max_length=80, blank=True)
     endpoint = models.CharField(max_length=160)
     action = models.CharField(max_length=80, default="unknown")
+    tool_name = models.CharField(max_length=120, blank=True)
+    request_source = models.CharField(max_length=80, default="api")
     decision = models.CharField(max_length=40)
     reason = models.CharField(max_length=240, blank=True)
     request_hash = models.CharField(max_length=64, blank=True)
+    policy_version = models.CharField(max_length=80, default="ai-policy-v2.0")
+    matched_rule_ids = models.JSONField(default=list, blank=True)
+    redaction_summary = models.JSONField(default=dict, blank=True)
+    correlation_id = models.CharField(max_length=64, blank=True, db_index=True)
     metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

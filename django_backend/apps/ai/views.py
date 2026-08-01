@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from apps.ai.services.health_service import OllamaHealthService
 from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
+from apps.ai.models import AIGovernanceEvent
 from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 from apps.ai.services.prompt_manager import PromptManager
 from apps.api.views.helpers import bad_request, ok
@@ -81,6 +82,9 @@ def ai_chat(request):
             endpoint="ai/chat",
             action="chat",
             text=message,
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="ai",
+            request_source="api",
         )
     except AIGovernanceError as exc:
         return _governance_error_response(exc)
@@ -123,3 +127,38 @@ def ai_chat(request):
 def ai_health(request):
     """Return local Ollama runtime health for monitoring screens."""
     return Response(OllamaHealthService().check())
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def ai_governance_events(request):
+    """Cho quản trị viên xem audit AI đã được redaction, không trả full prompt."""
+    try:
+        user = FoundationAuthService().user_from_authorization_header(_authorization_header(request))
+        FoundationPermissionService().require_permission(user, "ai", "read")
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+
+    events = AIGovernanceEvent.objects.all()[:100]
+    return ok(
+        [
+            {
+                "id": event.id,
+                "user_email": event.user_email,
+                "role": event.role_name,
+                "organization_id": event.organization_id,
+                "module": event.module,
+                "endpoint": event.endpoint,
+                "action": event.action,
+                "tool": event.tool_name,
+                "decision": event.decision,
+                "reason": event.reason,
+                "policy_version": event.policy_version,
+                "matched_rule_ids": event.matched_rule_ids,
+                "redaction_summary": event.redaction_summary,
+                "correlation_id": event.correlation_id,
+                "created_at": event.created_at.isoformat(),
+            }
+            for event in events
+        ]
+    )

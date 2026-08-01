@@ -1,0 +1,51 @@
+{
+  "phase": "AI-02",
+  "branch": "codex/ai-02-governance-v2",
+  "baseline_commit": "3bbd6b6f609a984b062f7059104c07d9b8edd2f1",
+  "status": "PASS",
+  "actual_git_diff": {
+    "files": 41,
+    "insertions": 1097,
+    "deletions": 80,
+    "sha256": "b866f1c64caf9f2d2db3bb4160064cf2a3e026b142c341ca75016e39859d142a"
+  },
+  "policy_version": "ai-policy-v2.0",
+  "controls": {
+    "multilingual_policy": true,
+    "unicode_normalization": true,
+    "pii_secret_redaction": true,
+    "redis_atomic_backend": true,
+    "redis_runtime_available": true,
+    "development_fallback_warning": true,
+    "audit_versioning": true
+  },
+  "tests": {"focused_passed": 18, "regression_passed": 367, "failed": 0},
+  "demo": {
+    "knowledge_search_status": 200,
+    "sales_assistant_status": 200,
+    "dangerous_prompt_status": 400,
+    "governance_events_created": 3
+  },
+  "redis_integration": {
+    "backend": "redis-atomic",
+    "available": true,
+    "distributed": true,
+    "first_request_allowed": true,
+    "second_request_blocked_scopes": ["user", "endpoint", "action", "ip", "organization"]
+  },
+  "ollama_review": {
+    "attempts": 2,
+    "model": "llama3:latest",
+    "status": "PASS",
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "output_sha256": "29d83adcca279c6830e30c4830058ba943daada191dd0bbd9fafe8188e1ea834"
+  },
+  "safety": {
+    "full_prompt_stored": false,
+    "external_ai_used": false,
+    "human_approval_required": true,
+    "autonomous_action": false
+  }
+}

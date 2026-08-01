@@ -148,6 +148,8 @@ def knowledge_search(request):
             action="search",
             text=query,
             metadata={"limit": serializer.validated_data["limit"]},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="knowledge",
         )
     except AIGovernanceError as exc:
         return _governance_error_response(exc)
@@ -184,6 +186,8 @@ def knowledge_chat(request):
             action="chat",
             text=question,
             metadata={"limit": serializer.validated_data["limit"]},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="knowledge",
         )
     except AIGovernanceError as exc:
         return _governance_error_response(exc)

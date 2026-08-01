@@ -1,0 +1,8 @@
+Baseline: 3bbd6b6f609a984b062f7059104c07d9b8edd2f1
+Branch: codex/ai-02-governance-v2
+Policy: ai-policy-v2.0
+Redis package: 5.3.1
+Redis runtime: available through local Redis 7 container
+Rate limit integration backend: redis-atomic
+Ollama generation: llama3:latest available
+External AI: false

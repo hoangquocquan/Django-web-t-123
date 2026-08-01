@@ -1,0 +1,16 @@
+{
+  "phase": "AI-02",
+  "owned_paths": [
+    "django_backend/apps/ai/**",
+    "django_backend/apps/ai_agent/views.py",
+    "django_backend/apps/knowledge/views.py",
+    "django_backend/apps/api/urls.py",
+    "django_backend/config/settings/base.py",
+    "django_backend/.env.example",
+    "django_backend/requirements.txt",
+    "tests/test_ai_governance_v2.py",
+    "docs/**/AI_02_*",
+    "docs/evidence/ai-02/**"
+  ],
+  "serialized": true
+}
