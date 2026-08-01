@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
+from apps.ai_agent.services.sales_facts import SalesFactsService
+from apps.ai_agent.services.sales_synthesis import GroundedSalesSynthesisService
 from apps.business_core.models import BusinessCustomer
 from apps.crm.services.crm_platform_service import CrmPlatformService
 from apps.knowledge.services.search_service import KnowledgeSearchService
@@ -13,9 +15,11 @@ from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
 class SalesAssistantService:
     """Read sales/CRM/knowledge data and return human-approved suggestions."""
 
-    def __init__(self, knowledge_search=None):
+    def __init__(self, knowledge_search=None, facts_service=None, synthesis_service=None):
         """Allow tests to inject a deterministic knowledge search service."""
         self.knowledge_search = knowledge_search or KnowledgeSearchService()
+        self.facts_service = facts_service or SalesFactsService()
+        self.synthesis_service = synthesis_service or GroundedSalesSynthesisService()
 
     def handle(self, action, payload, user=None):
         """Dispatch one supported AI sales action."""
@@ -45,13 +49,19 @@ class SalesAssistantService:
         query = " ".join([lead.company, lead.industry, lead.notes, "CNC quotation product fit"])
         knowledge = self.knowledge_search.search(query, limit=3, user=user)
         score = self._lead_score(lead, knowledge)
+        grade = self._grade(score)
+        facts = self.facts_service.build_lead_facts(lead, score, grade, knowledge)
+        synthesis = self.synthesis_service.synthesize(facts, task="lead_analysis")
         return {
             "lead": self._lead_snapshot(lead),
             "score": score,
-            "grade": self._grade(score),
+            "grade": grade,
             "analysis": self._lead_analysis_text(lead, score),
             "recommendations": self._lead_recommendations(lead, score),
             "knowledge": self._knowledge_snapshot(knowledge),
+            "facts": facts,
+            "synthesis": synthesis,
+            "generation_mode": synthesis["generation_mode"],
             "response_quality": self._response_quality(knowledge),
         }
 
@@ -95,19 +105,20 @@ class SalesAssistantService:
         company = payload.get("company") or self._company_name(lead, customer)
         product_interest = payload.get("product_interest", "giai phap gia cong co khi chinh xac")
         knowledge = self.knowledge_search.search(f"{company} {product_interest}", limit=2, user=user)
+        facts = self.facts_service.build_email_facts(
+            lead=lead,
+            customer=customer,
+            product_interest=product_interest,
+            purpose=purpose,
+            knowledge=knowledge,
+        )
+        synthesis = self.synthesis_service.synthesize(facts, task="email_draft")
         return {
-            "draft": {
-                "subject": f"MecPrecision VIETNAM - Trao doi ve {product_interest}",
-                "body": (
-                    f"Xin chao {recipient_name},\n\n"
-                    f"Cam on {company} da quan tam den {product_interest}. "
-                    "Doi ngu MecPrecision co the ho tro gia cong CNC, do ga va kiem tra chat luong theo yeu cau.\n\n"
-                    "Neu anh/chi co ban ve ky thuat, so luong du kien hoac thoi han can giao, vui long gui lai de chung toi tu van phuong an phu hop.\n\n"
-                    "Tran trong,\nMecPrecision VIETNAM"
-                ),
-                "purpose": purpose,
-            },
+            "draft": {**synthesis["draft_email"], "purpose": purpose},
             "knowledge": self._knowledge_snapshot(knowledge),
+            "facts": facts,
+            "synthesis": synthesis,
+            "generation_mode": synthesis["generation_mode"],
             "delivery_status": "draft_only_not_sent",
             "response_quality": self._response_quality(knowledge),
         }

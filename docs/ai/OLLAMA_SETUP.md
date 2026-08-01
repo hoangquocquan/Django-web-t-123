@@ -23,7 +23,7 @@ Recommended local models:
 
 Example local command:
 
-`ollama run llama3.1`
+`ollama run llama3`
 
 ## Django Configuration
 
@@ -31,7 +31,7 @@ Set these values in `django_backend/.env`:
 
 ```env
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=llama3.1
+OLLAMA_MODEL=llama3
 OLLAMA_TIMEOUT_SECONDS=30
 AI_CHAT_MAX_MESSAGE_LENGTH=2000
 ```
@@ -41,4 +41,3 @@ AI_CHAT_MAX_MESSAGE_LENGTH=2000
 Small models can run on CPU, but responses are slower. Larger models need more
 RAM and benefit from GPU acceleration. Keep Ollama private and do not expose the
 Ollama port directly to the public internet.
-

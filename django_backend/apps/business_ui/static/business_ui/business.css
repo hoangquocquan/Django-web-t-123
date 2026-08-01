@@ -285,6 +285,72 @@ pre {
   gap: 12px;
 }
 
+.ai-sales-layout {
+  align-items: start;
+}
+
+.ai-result-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.result-heading,
+.score-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.status-label {
+  background: #e8f1fa;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.score-row {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.score-row strong {
+  color: var(--success);
+  font-size: 24px;
+}
+
+.clean-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.email-body {
+  line-height: 1.6;
+}
+
+.approval-note {
+  border-left: 3px solid var(--warning);
+  color: var(--warning);
+  font-weight: 700;
+  padding-left: 10px;
+}
+
+.source-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.source-list span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .bar-row {
   align-items: center;
   display: grid;
@@ -321,4 +387,3 @@ pre {
     overflow-x: auto;
   }
 }
-

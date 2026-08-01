@@ -14,8 +14,8 @@ Recommended local commands:
 
 ```powershell
 ollama serve
-ollama pull llama3.1
-ollama run llama3.1
+ollama pull llama3
+ollama run llama3
 ```
 
 ## Environment Variables
@@ -24,7 +24,7 @@ ollama run llama3.1
 : Local Ollama endpoint. Default: `http://localhost:11434`.
 
 `OLLAMA_MODEL`
-: Selected local model. Default: `llama3.1`.
+: Selected local model. Default: `llama3`.
 
 `OLLAMA_TEMPERATURE`
 : Controls how creative the answer is. Lower values are safer for business Q&A. Default: `0.2`.

@@ -1,0 +1,12 @@
+{
+  "phase": "AI-03",
+  "execution": "serialized_shared_service_integration",
+  "dependencies": {
+    "facts_layer": ["AI-01 retrieval"],
+    "synthesis_layer": ["facts_layer", "local Ollama"],
+    "validation_layer": ["synthesis_layer", "AI-02 safety principles"],
+    "business_ui": ["validated synthesis contract"],
+    "tests_and_review": ["all implementation tasks"]
+  },
+  "reason_not_parallel": "Sales service, output contract and shared test fixtures are tightly coupled."
+}

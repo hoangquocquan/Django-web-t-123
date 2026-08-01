@@ -80,7 +80,7 @@ def test_health_service_reports_ready_model():
 
     assert result["status"] == "ready"
     assert result["available"] is True
-    assert result["model"] == "llama3.1"
+    assert result["model"] == "llama3"
     assert result["model_available"] is True
 
 

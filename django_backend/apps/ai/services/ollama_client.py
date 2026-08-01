@@ -34,7 +34,7 @@ class OllamaClient:
     def __init__(self, host=None, model=None, timeout=None, retries=1, temperature=None, token_limit=None):
         """Configure the local endpoint without using any external AI service."""
         self.host = (host or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
-        self.model = model or getattr(settings, "OLLAMA_MODEL", "llama3.1")
+        self.model = model or getattr(settings, "OLLAMA_MODEL", "llama3")
         self.timeout = timeout or getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 30)
         self.retries = max(0, int(retries))
         self.temperature = float(temperature if temperature is not None else getattr(settings, "OLLAMA_TEMPERATURE", 0.2))
@@ -76,7 +76,7 @@ class OllamaClient:
             "model_available": model_available,
         }
 
-    def generate_response(self, prompt, options=None):
+    def generate_response(self, prompt, options=None, response_format=None):
         """Generate one non-streaming answer from the configured local model."""
         payload = {
             "model": self.model,
@@ -87,6 +87,8 @@ class OllamaClient:
                 "num_predict": self.token_limit,
             },
         }
+        if response_format:
+            payload["format"] = response_format
         attempts = self.retries + 1
         last_error = None
         for attempt in range(attempts):

@@ -29,7 +29,7 @@ The user must have `ai:write` permission or a wildcard admin permission.
   "success": true,
   "data": {
     "answer": "AI response",
-    "model": "llama3.1",
+    "model": "llama3",
     "provider": "ollama-local",
     "user": {
       "id": 1,
@@ -64,4 +64,3 @@ Ollama unavailable:
   }
 }
 ```
-
