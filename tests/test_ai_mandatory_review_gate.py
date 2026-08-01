@@ -243,6 +243,19 @@ def test_correction_loop_metadata_cannot_be_reported_as_product_finding():
     assert "correction-loop metadata" in transport.calls[1]["prompt"]
 
 
+def test_pass_with_placeholder_high_findings_is_retried():
+    placeholder = valid_review(high=["High finding 1"])
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(placeholder)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert "generic placeholder findings" in transport.calls[1]["prompt"]
+
+
 @pytest.mark.parametrize(
     "decision,expected_gate",
     [

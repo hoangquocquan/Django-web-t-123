@@ -269,6 +269,11 @@ def validate_review_consistency(payload, evidence, rules, tests):
         marker in findings for marker in ("required tests failed", "test validation failed", "tests are failing")
     ):
         raise ReviewSchemaError("Review contradicts passing required tests.")
+    if tests.get("status") == "PASS" and any("fail" in item.casefold() for item in payload["test_findings"]):
+        raise ReviewSchemaError("Review test findings contradict passing required tests.")
+    placeholder_markers = ("finding 1", "finding 2", "requirement 1", "requirement 2", "recommended action 1")
+    if any(marker in findings for marker in placeholder_markers):
+        raise ReviewSchemaError("Review contains generic placeholder findings instead of evidence-based findings.")
     reviewer_self_reference = (
         "previous response",
         "re-run the ai model",
