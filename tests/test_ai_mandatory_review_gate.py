@@ -159,7 +159,7 @@ def test_schema_retry_includes_specific_correction_feedback():
 
     assert result["status"] == "PASS"
     assert result["attempts"] == 2
-    assert "CORRECTION REQUIRED" in transport.calls[1]["prompt"]
+    assert "CORRECTION FEEDBACK" in transport.calls[1]["prompt"]
     assert "source-code leakage" in transport.calls[1]["prompt"]
 
 
@@ -173,6 +173,8 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     assert '"patch_preview": "+fail closed"' in prompt
     assert '"review_mode": "PRE_COMMIT_STAGED_DIFF"' in prompt
     assert '"diff_evidence_complete": true' in prompt
+    assert "+fail closed" not in prompt.system
+    assert "actual_git_diff" in prompt.user
 
 
 def test_pass_cannot_recommend_deployment_and_gets_correction_retry():
