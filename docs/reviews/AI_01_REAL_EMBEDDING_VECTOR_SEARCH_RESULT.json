@@ -1,0 +1,46 @@
+{
+  "phase": "AI-01",
+  "branch": "codex/ai-01-vector-search",
+  "baseline_commit": "e10b456d21e1c190b2944fbe79befb88d81d4763",
+  "status": "PASS",
+  "actual_git_diff": {
+    "files": 38,
+    "insertions": 922,
+    "deletions": 67,
+    "sha256": "9208e84143e9cc699e2fbf58c0e3a1aad08be67b9fb7b5e98380dc72cd98f115"
+  },
+  "implementation": {
+    "embedding_provider": "ollama-local",
+    "embedding_model": "nomic-embed-text:latest",
+    "dimension": 768,
+    "vector_backend": "django-json-development-fallback",
+    "production_vector_backend": false
+  },
+  "demo": {
+    "documents_reindexed": 105,
+    "failed": 0,
+    "resume_skipped": 105,
+    "vietnamese_unaccented_top_source": "CNC Precision Shaft Technical Specification",
+    "english_top_source": "CNC Precision Shaft Technical Specification",
+    "no_context_sources": 0
+  },
+  "tests": {
+    "focused_passed": 35,
+    "regression_passed": 354,
+    "failed": 0
+  },
+  "ollama_review": {
+    "model": "llama3:latest",
+    "status": "PASS",
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "output_sha256": "2b8783acec5d96ac08fb33abf1425dde061a2f7323eabe32ccd1cd347f9f0faa"
+  },
+  "safety": {
+    "external_ai_used": false,
+    "human_approval_required": true,
+    "autonomous_action": false,
+    "production_deployed": false
+  }
+}

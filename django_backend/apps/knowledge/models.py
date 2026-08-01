@@ -121,8 +121,13 @@ class KnowledgeEmbedding(models.Model):
 
     chunk = models.OneToOneField(KnowledgeChunk, on_delete=models.CASCADE, related_name="embedding")
     vector = models.JSONField(default=list)
+    provider = models.CharField(max_length=80, default="development-hash-fallback")
     model_name = models.CharField(max_length=120, default="local-hash-embedding")
+    dimension = models.PositiveIntegerField(default=32)
+    embedding_version = models.CharField(max_length=40, default="v1")
+    content_hash = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    indexed_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "knowledge_embeddings"

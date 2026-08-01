@@ -3,29 +3,30 @@
 from __future__ import annotations
 
 from apps.knowledge.models import KnowledgeChunk
-from apps.knowledge.services.embedding_service import LocalEmbeddingService
+from apps.knowledge.services.embedding_service import get_embedding_provider
 from apps.knowledge.services.knowledge_service import document_to_dict, search_result_to_dict
+from apps.knowledge.services.vector_store import DjangoJSONVectorStore
 
 
 class KnowledgeSearchService:
     """Search local knowledge vectors and format RAG evidence."""
 
-    def __init__(self, embedding_service=None):
+    def __init__(self, embedding_service=None, vector_store=None):
         """Allow tests to inject a deterministic embedding service."""
-        self.embedding_service = embedding_service or LocalEmbeddingService()
+        self.embedding_service = embedding_service or get_embedding_provider()
+        self.vector_store = vector_store or DjangoJSONVectorStore()
 
     def search(self, query, limit=5, user=None):
         """Return ranked chunks, source documents, and confidence."""
         query_vector = self.embedding_service.embed(query)
-        hits = []
         queryset = KnowledgeChunk.objects.select_related("document", "embedding", "document__category").all()
-        for chunk in queryset:
-            if not self._can_read(chunk.document, user):
-                continue
-            score = self.embedding_service.similarity(query_vector, chunk.embedding.vector)
-            if score > 0:
-                hits.append({"chunk": chunk, "score": score})
-        results = sorted(hits, key=lambda item: item["score"], reverse=True)[:limit]
+        readable = [chunk for chunk in queryset if self._can_read(chunk.document, user)]
+        results = self.vector_store.search(
+            query_vector=query_vector,
+            queryset=readable,
+            limit=limit,
+            provider=self.embedding_service,
+        )
         sources = self.sources_from_results(results)
         return {
             "results": [search_result_to_dict(result) for result in results],

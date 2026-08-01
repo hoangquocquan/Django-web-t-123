@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = No enforced mypy/pyright configuration was identified.
+RETRY_COMMAND = mypy .
+IMPACT = Static type coverage is not asserted.

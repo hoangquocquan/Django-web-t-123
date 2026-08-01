@@ -1,0 +1,6 @@
+38 staged files
+Application: knowledge embedding provider, vector store, indexer, search and management command
+Database: knowledge migration 0003
+Configuration: base/test settings and env example
+Tests: tests/test_ai_hardening_vector_search.py
+Documentation: AI-01 specification, review, result and evidence

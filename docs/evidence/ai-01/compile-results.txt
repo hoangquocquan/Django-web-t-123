@@ -1,0 +1,2 @@
+STATUS = PASS
+COMMAND = python -m compileall django_backend/apps/knowledge tests/test_ai_hardening_vector_search.py

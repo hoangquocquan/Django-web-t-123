@@ -1,0 +1,9 @@
+{
+  "provider": [],
+  "vector_store": ["provider_contract"],
+  "metadata_migration": ["provider_contract"],
+  "indexer": ["provider", "vector_store", "metadata_migration"],
+  "search": ["provider", "vector_store"],
+  "management_command": ["indexer"],
+  "tests": ["provider", "vector_store", "indexer", "search"]
+}
