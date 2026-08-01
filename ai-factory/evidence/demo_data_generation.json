@@ -1,0 +1,44 @@
+{
+  "phase": "demo-data-generation",
+  "objective": "Generate fictional enterprise demo data for full MEC Precision platform testing.",
+  "real_customer_data_used": false,
+  "production_modified": false,
+  "commands": [
+    "python django_backend/manage.py generate_demo_data",
+    "python django_backend/manage.py clear_demo_data"
+  ],
+  "default_volumes": {
+    "users": 7,
+    "customers": 500,
+    "products": 200,
+    "leads": 1000,
+    "activities": 5000,
+    "opportunities": 300,
+    "quotations": 500,
+    "orders": 200,
+    "knowledge_documents": 100
+  },
+  "generated_local_dataset": {
+    "users": 7,
+    "customers": 500,
+    "products": 200,
+    "warehouses": 2,
+    "leads": 1000,
+    "opportunities": 300,
+    "quotations": 500,
+    "orders": 200,
+    "knowledge_documents": 100,
+    "sales_activities": 4500,
+    "crm_interactions": 500,
+    "total_activity_history": 5000,
+    "pipeline_value": "23428927.00"
+  },
+  "validation": {
+    "django_check": "PASS",
+    "focused_tests": "5 passed",
+    "full_pytest": "337 passed",
+    "ai_factory": "AI_SOFTWARE_FACTORY_COMPLETE",
+    "ai_review_decision": "PASS"
+  },
+  "status": "MEC_DEMO_DATA_READY"
+}

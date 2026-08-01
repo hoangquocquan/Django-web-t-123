@@ -49,6 +49,7 @@ def load_phase_spec(phase):
         "django-wave-7": "WAVE_7_DJANGO_PUBLIC_WEBSITE_MIGRATION.md",
         "business-ai-wave-2": "BUSINESS_AI_WAVE_2_PLATFORM_COMPLETION.md",
         "ai-core-upgrade": "AI_CORE_UPGRADE_OLLAMA_REAL_INFERENCE.md",
+        "demo-data-generation": "DEMO_DATA_GENERATION_PHASE.md",
     }
     if phase in wave_prompt_map:
         prompt_path = PROJECT_ROOT / "docs" / "codex-prompts" / wave_prompt_map[phase]
@@ -139,6 +140,8 @@ def default_test_command_for_phase(phase):
         return [sys.executable, "-m", "pytest", "tests/test_business_simulation.py"]
     if phase == "ai-core-upgrade":
         return [sys.executable, "-m", "pytest", "tests/test_ollama_real_inference.py"]
+    if phase == "demo-data-generation":
+        return [sys.executable, "-m", "pytest", "tests/test_demo_data_generation.py"]
     if phase == "business-ai-wave-2":
         return [sys.executable, "-m", "pytest", "tests/test_business_ui.py", "tests/test_ai_document_intelligence.py", "tests/test_n8n_automation.py", "tests/test_ai_factory_v2.py"]
 

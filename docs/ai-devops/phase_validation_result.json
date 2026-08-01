@@ -1,6 +1,6 @@
 {
   "phase": "13.5",
-  "created_at": "2026-08-01T00:33:19+00:00",
+  "created_at": "2026-08-01T00:49:28+00:00",
   "status": "PASS",
   "missing": [],
   "warnings": [],
@@ -60,7 +60,7 @@
     }
   ],
   "git": {
-    "branch": "feature/business-ai-wave-2-platform-completion",
+    "branch": "feature/demo-data-generation",
     "status_short": "M ai-review/evidence/current_phase.json\n M ai-review/results/rule_validation.json\n M docs/ai-devops/phase_validation_result.json\n?? docs.zip",
     "expected_tag": "phase-13.5-ai-review-ready",
     "expected_tag_present": true

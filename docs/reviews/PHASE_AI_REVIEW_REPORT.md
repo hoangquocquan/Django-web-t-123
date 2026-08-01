@@ -2,11 +2,11 @@
 
 ## Phase Name
 
-ai-core-upgrade
+demo-data-generation
 
 ## Created At
 
-2026-08-01T00:33:27+00:00
+2026-08-01T00:49:36+00:00
 
 ## Final Decision
 
@@ -23,7 +23,7 @@ PASS
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.714
+- Duration seconds: 4.437
 
 ## Security Status
 

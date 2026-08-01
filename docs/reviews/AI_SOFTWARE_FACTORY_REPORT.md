@@ -3,7 +3,7 @@
 ## Phase
 
 ```text
-ai-core-upgrade
+demo-data-generation
 ```
 
 ## Implementation Result
@@ -14,9 +14,9 @@ WAITING_FOR_HUMAN_APPROVAL
 
 ## Test Result
 
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase ai-core-upgrade`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_ollama_real_inference.py`: PASS
-- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase ai-core-upgrade --skip-migration`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe scripts/phase_validator.py --phase demo-data-generation`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe -m pytest tests/test_demo_data_generation.py`: PASS
+- `C:\Users\hoang\AppData\Local\Programs\Python\Python312\python.exe ai-review/run_phase_review.py --phase demo-data-generation --skip-migration`: PASS
 
 ## Correction History
 

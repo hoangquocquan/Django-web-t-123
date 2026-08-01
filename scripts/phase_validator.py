@@ -195,6 +195,21 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-core-upgrade-complete",
     },
+    "demo-data-generation": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "DEMO_DATA_GENERATION_PHASE.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "core" / "management" / "commands" / "demo_data.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "core" / "management" / "commands" / "generate_demo_data.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "core" / "management" / "commands" / "clear_demo_data.py",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "demo_data_generation.json",
+            PROJECT_ROOT / "docs" / "reviews" / "DEMO_DATA_GENERATION_REPORT.md",
+            PROJECT_ROOT / "docs" / "reviews" / "DEMO_DATA_GENERATION_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_demo_data_generation.py",
+        ],
+        "expected_tag": "demo-data-complete",
+    },
     "business-ai-wave-2": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "BUSINESS_AI_WAVE_2_PLATFORM_COMPLETION.md",
         "documents": [
