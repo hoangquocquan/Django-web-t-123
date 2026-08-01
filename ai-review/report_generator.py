@@ -38,9 +38,13 @@ def final_decision(rule_validation, test_result, ai_review):
         return "BLOCKED"
     if ai_review.get("status") == "BLOCKED":
         return "BLOCKED"
+    if not ai_review.get("review_completed") or ai_review.get("fallback_used"):
+        return "BLOCKED"
     if ai_review.get("status") == "WARNING":
         return "WARNING"
-    return "PASS"
+    if ai_review.get("status") == "PASS" and ai_review.get("gate_state") == "WAITING_HUMAN_APPROVAL":
+        return "PASS"
+    return "BLOCKED"
 
 
 def render_report(evidence, rule_validation, test_result, ai_review):
@@ -88,6 +92,10 @@ def render_report(evidence, rule_validation, test_result, ai_review):
 - Recommendation: {ai_review.get("recommendation")}
 - Ollama available: {(ai_review.get("ollama") or {}).get("available")}
 - Ollama model: {(ai_review.get("ollama") or {}).get("model")}
+- Review completed: {ai_review.get("review_completed")}
+- Schema valid: {ai_review.get("schema_valid")}
+- Fallback used: {ai_review.get("fallback_used")}
+- Gate state: {ai_review.get("gate_state")}
 
 ## Production Safety
 

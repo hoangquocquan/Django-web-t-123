@@ -45,7 +45,7 @@
           "conditions": [
             {
               "leftValue": "={{ $json.status }}",
-              "rightValue": "AI_PHASE_REVIEW_ENGINE_COMPLETE",
+              "rightValue": "WAITING_HUMAN_APPROVAL",
               "operator": {
                 "type": "string",
                 "operation": "equals"
@@ -96,6 +96,14 @@
       }
     },
     {
+      "id": "human-approval-gate",
+      "name": "Human Approval Gate",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1440, -120],
+      "parameters": {}
+    },
+    {
       "id": "notification",
       "name": "Notification",
       "type": "n8n-nodes-base.noOp",
@@ -130,6 +138,9 @@
       "main": [[{ "node": "Report Generator", "type": "main", "index": 0 }]]
     },
     "Report Generator": {
+      "main": [[{ "node": "Human Approval Gate", "type": "main", "index": 0 }]]
+    },
+    "Human Approval Gate": {
       "main": [[{ "node": "Notification", "type": "main", "index": 0 }]]
     }
   },
@@ -140,6 +151,8 @@
     "phase": "13.7",
     "productionDeploymentIncluded": false,
     "autoMergeIncluded": false,
-    "humanApprovalRequired": true
+    "humanApprovalRequired": true,
+    "mandatoryOllamaReview": true,
+    "allowedAdvanceState": "WAITING_HUMAN_APPROVAL"
   }
 }

@@ -97,6 +97,15 @@ def run_command(args, timeout=900):
     }
 
 
+def parse_command_json(command_result):
+    """Decode a subprocess JSON contract instead of trusting exit code alone."""
+    text = str(command_result.get("stdout_tail", "")).strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+
+
 def prepare_codex_task(phase_spec):
     """Record task preparation; Codex implementation happens in the workspace."""
     return {
@@ -179,12 +188,23 @@ def run_factory(phase="13.8", test_command=None):
 
     ai_review = run_command([sys.executable, "ai-review/run_phase_review.py", "--phase", phase, "--skip-migration"], timeout=900)
     commands.append(ai_review)
+    ai_review_contract = parse_command_json(ai_review)
 
-    evidence = build_evidence_package(phase=phase, command_results=commands, correction_result=correction)
+    build_evidence_package(phase=phase, command_results=commands, correction_result=correction)
     final_report = generate_final_report()
 
-    required_ok = validation["returncode"] == 0 and tests["returncode"] == 0 and ai_review["returncode"] == 0
-    status = "AI_SOFTWARE_FACTORY_COMPLETE" if required_ok else "AI_SOFTWARE_FACTORY_BLOCKED"
+    review_gate_passed = (
+        ai_review["returncode"] == 0
+        and ai_review_contract.get("status") == "WAITING_HUMAN_APPROVAL"
+        and ai_review_contract.get("decision") == "PASS"
+    )
+    required_ok = validation["returncode"] == 0 and tests["returncode"] == 0 and review_gate_passed
+    if required_ok:
+        status = "WAITING_HUMAN_APPROVAL"
+    elif ai_review_contract.get("status") == "WAITING_HUMAN_REVIEW":
+        status = "WAITING_HUMAN_REVIEW"
+    else:
+        status = "AI_SOFTWARE_FACTORY_BLOCKED"
     result = {
         "phase": phase,
         "created_at": utc_now(),
@@ -195,6 +215,8 @@ def run_factory(phase="13.8", test_command=None):
         "tests": tests,
         "correction": correction,
         "ai_review": ai_review,
+        "ai_review_contract": ai_review_contract,
+        "review_gate_passed": review_gate_passed,
         "evidence_package": "ai-factory/evidence/package.json",
         "final_report": final_report,
         "safety": {
@@ -224,7 +246,7 @@ def main():
 
     result = run_factory(phase=args.project or args.wave or args.phase)
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0 if result["status"] == "AI_SOFTWARE_FACTORY_COMPLETE" else 1
+    return 0 if result["status"] == "WAITING_HUMAN_APPROVAL" else 1
 
 
 if __name__ == "__main__":

@@ -125,7 +125,7 @@ def test_n8n_ai_review_is_advisory(tmp_path):
         ollama_url="http://127.0.0.1:1",
     )
 
-    assert review["decision"] == "PASS_WITH_WARNING"
+    assert review["decision"] == "BLOCKED"
     assert review["auto_deploy"] is False
     assert review["auto_approve_production"] is False
     assert output_path.exists()

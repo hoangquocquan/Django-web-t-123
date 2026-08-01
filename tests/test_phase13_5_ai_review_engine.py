@@ -87,7 +87,7 @@ def test_ollama_unavailable_handling(tmp_path):
         ollama_url="http://127.0.0.1:1",
     )
 
-    assert result["status"] == "WARNING"
+    assert result["status"] == "BLOCKED"
     assert result["safety"]["production_approved"] is False
     assert result["safety"]["code_modified_by_ai"] is False
     assert result["safety"]["failed_tests_skipped"] is False
@@ -108,7 +108,7 @@ def test_report_generation(tmp_path):
     evidence_path.write_text(json.dumps({"phase": "13.5"}), encoding="utf-8")
     rule_path.write_text(json.dumps({"status": "PASS", "missing": [], "warnings": [], "forbidden_changes": []}), encoding="utf-8")
     test_path.write_text(json.dumps({"status": "PASS", "failed_required": [], "duration_seconds": 0}), encoding="utf-8")
-    ai_path.write_text(json.dumps({"status": "WARNING", "summary": "fallback", "issues": [], "recommendation": "review", "ollama": {}}), encoding="utf-8")
+    ai_path.write_text(json.dumps({"status": "WARNING", "gate_state": "WAITING_HUMAN_REVIEW", "review_completed": True, "fallback_used": False, "summary": "warning", "issues": [], "recommendation": "review", "ollama": {}}), encoding="utf-8")
 
     result = generate_report(
         evidence_path=evidence_path,

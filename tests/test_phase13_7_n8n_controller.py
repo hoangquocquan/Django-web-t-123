@@ -70,7 +70,7 @@ def test_configuration_has_allowed_commands_and_restrictions():
 def test_trigger_works_without_real_n8n(monkeypatch, tmp_path):
     def fake_controller(phase="13.7"):
         return {
-            "status": "N8N_AUTOMATION_COMPLETE",
+            "status": "WAITING_HUMAN_APPROVAL",
             "phase_validation": {"status": "PASS"},
             "ai_review": {"status": "PASS"},
             "self_correction": {"status": "PASS"},
@@ -79,7 +79,7 @@ def test_trigger_works_without_real_n8n(monkeypatch, tmp_path):
     monkeypatch.setattr(n8n_phase_trigger, "run_local_controller", fake_controller)
     result = n8n_phase_trigger.create_automation_history(output_path=tmp_path / "execution_history.json", local_only=True)
 
-    assert result["status"] == "N8N_AUTOMATION_COMPLETE"
+    assert result["status"] == "WAITING_HUMAN_APPROVAL"
     assert result["mode"] == "local_controller"
     assert result["safety"]["production_deployed"] is False
     assert result["safety"]["code_auto_merged"] is False

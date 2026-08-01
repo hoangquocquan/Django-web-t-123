@@ -74,6 +74,14 @@ def run_command(args, timeout=900):
     }
 
 
+def parse_command_json(command_result):
+    """Read the review gate contract; a successful process alone cannot advance n8n."""
+    try:
+        return json.loads(str(command_result.get("stdout_tail", "")).strip())
+    except json.JSONDecodeError:
+        return {}
+
+
 def load_json(path):
     """Load JSON evidence if it exists."""
     target = Path(path)
@@ -200,14 +208,32 @@ def create_controller_event(phase="13.7"):
 def run_local_controller(phase="13.7"):
     """Run the local controller path using existing systems."""
     phase_validation = run_command([sys.executable, "scripts/phase_validator.py", "--phase", phase], timeout=120)
+    if phase_validation["returncode"] != 0:
+        return {
+            "status": "BLOCKED",
+            "state": "BLOCKED",
+            "phase_validation": phase_validation,
+            "ai_review": {},
+            "ai_review_contract": {},
+            "self_correction": {},
+        }
     ai_review = run_command([sys.executable, "ai-review/run_phase_review.py", "--phase", phase, "--skip-migration"], timeout=900)
-    self_correction = run_command([sys.executable, "ai-review/retry_controller.py"], timeout=900)
-
-    required_ok = all(item["returncode"] == 0 for item in [phase_validation, ai_review, self_correction])
+    contract = parse_command_json(ai_review)
+    review_status = contract.get("status", "BLOCKED")
+    self_correction = {}
+    if review_status == "WAITING_HUMAN_APPROVAL":
+        status = "WAITING_HUMAN_APPROVAL"
+    elif review_status == "WAITING_HUMAN_REVIEW":
+        status = "WAITING_HUMAN_REVIEW"
+    else:
+        self_correction = run_command([sys.executable, "ai-review/retry_controller.py"], timeout=900)
+        status = "CORRECTION_REQUIRED" if self_correction.get("returncode") == 0 else "BLOCKED"
     return {
-        "status": "N8N_AUTOMATION_COMPLETE" if required_ok else "N8N_AUTOMATION_BLOCKED",
+        "status": status,
+        "state": status,
         "phase_validation": phase_validation,
         "ai_review": ai_review,
+        "ai_review_contract": contract,
         "self_correction": self_correction,
     }
 
@@ -222,7 +248,7 @@ def create_automation_history(output_path=None, webhook_url=DEFAULT_WEBHOOK_URL,
         else {"sent": False, "status_code": None, "response_body": "", "error": "Local controller mode."}
     )
     local_result = (
-        {"status": "N8N_WEBHOOK_TRIGGERED", "phase_validation": {}, "ai_review": {}, "self_correction": {}}
+        {"status": "CODEX_RUNNING", "phase_validation": {}, "ai_review": {}, "ai_review_contract": {}, "self_correction": {}}
         if webhook_configured and webhook_result["sent"]
         else run_local_controller(phase=phase)
     )
@@ -231,7 +257,7 @@ def create_automation_history(output_path=None, webhook_url=DEFAULT_WEBHOOK_URL,
         "phase": phase,
         "created_at": utc_now(),
         "mode": "webhook" if webhook_configured else "local_controller",
-        "status": local_result["status"] if not webhook_configured else ("N8N_AUTOMATION_COMPLETE" if webhook_result["sent"] else "N8N_AUTOMATION_BLOCKED"),
+        "status": local_result["status"] if not webhook_configured else ("CODEX_RUNNING" if webhook_result["sent"] else "BLOCKED"),
         "event": event,
         "webhook_result": webhook_result,
         "execution_result": local_result,
@@ -280,7 +306,7 @@ def main():
             phase=args.phase,
         )
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 0 if report["status"] in {"N8N_ORCHESTRATION_COMPLETE", "N8N_AUTOMATION_COMPLETE"} else 1
+    return 0 if report["status"] in {"N8N_ORCHESTRATION_COMPLETE", "WAITING_HUMAN_APPROVAL"} else 1
 
 
 if __name__ == "__main__":

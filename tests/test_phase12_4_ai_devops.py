@@ -35,7 +35,7 @@ def test_ollama_connection_handling(monkeypatch, tmp_path):
 
     result = generate_review(validation_path=validation_path, output_path=tmp_path / "review.md")
 
-    assert result["decision"] == "PASS_WITH_WARNING"
+    assert result["decision"] == "BLOCKED"
     assert result["ollama_available"] is False
     assert result["auto_deploy"] is False
     assert result["auto_approve_production"] is False

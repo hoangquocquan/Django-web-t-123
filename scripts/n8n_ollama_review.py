@@ -1,7 +1,7 @@
 """Generate an Ollama advisory review for the n8n CI/CD workflow.
 
-The review is local and advisory. It cannot approve production and it continues
-with a warning if Ollama is unavailable.
+The review is local and advisory. It cannot approve production and it blocks
+the automation gate when mandatory Ollama evidence is unavailable.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ def decide(execution_report, pipeline_result, ollama_result):
     if pipeline_result.get("summary", {}).get("status") != "TEST_PIPELINE_COMPLETE":
         return "BLOCKED"
     if not ollama_result.get("available"):
-        return "PASS_WITH_WARNING"
+        return "BLOCKED"
     ai_decision = parse_ai_decision(ollama_result.get("response"))
     if ai_decision == "BLOCKED":
         return "BLOCKED"
@@ -160,6 +160,13 @@ def generate_review(execution_path=None, pipeline_path=None, output_path=None, o
         "auto_deploy": False,
         "auto_approve_production": False,
         "human_review_required": True,
+        "gate_state": (
+            "WAITING_HUMAN_APPROVAL"
+            if decision == "PASS"
+            else "WAITING_HUMAN_REVIEW"
+            if decision == "PASS_WITH_WARNING"
+            else "BLOCKED"
+        ),
     }
 
 
@@ -184,7 +191,7 @@ def main():
         model=args.model,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0
+    return 0 if result["decision"] == "PASS" and result["ollama_available"] else 1
 
 
 if __name__ == "__main__":

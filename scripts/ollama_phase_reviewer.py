@@ -219,7 +219,8 @@ def decide(validation, ollama_result):
     if validation.get("status") != "PASS":
         return "BLOCKED"
     if not ollama_result.get("available"):
-        return "PASS_WITH_WARNING"
+        required = os.getenv("AI_REVIEW_REQUIRED", "true").strip().casefold() in {"1", "true", "yes", "on"}
+        return "BLOCKED" if required else "PASS_WITH_WARNING"
     ai_decision = parse_ai_decision(ollama_result.get("response"))
     if ai_decision == "BLOCKED":
         return "BLOCKED"
@@ -337,7 +338,7 @@ def main():
         prompt_file=args.prompt_file,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0
+    return 0 if result["decision"] == "PASS" and result["ollama_available"] else 1
 
 
 if __name__ == "__main__":

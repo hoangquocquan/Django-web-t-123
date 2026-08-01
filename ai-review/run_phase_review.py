@@ -21,14 +21,19 @@ from test_executor import execute_tests
 
 def run_phase_review(phase="13.5", skip_migration=False):
     """Coordinate evidence, rules, tests, AI review, and report generation."""
-    evidence = collect_evidence(phase=phase)
+    collect_evidence(phase=phase)
     rules = validate_requirements()
     tests = execute_tests(include_migration=not skip_migration)
     ai_review = review_phase()
     report = generate_report()
-    status = "AI_PHASE_REVIEW_ENGINE_COMPLETE"
     if rules.get("status") != "PASS" or tests.get("status") != "PASS" or ai_review.get("status") == "BLOCKED":
-        status = "AI_PHASE_REVIEW_ENGINE_BLOCKED"
+        status = "BLOCKED"
+    elif ai_review.get("status") == "WARNING":
+        status = "WAITING_HUMAN_REVIEW"
+    elif ai_review.get("status") == "PASS" and ai_review.get("gate_state") == "WAITING_HUMAN_APPROVAL":
+        status = "WAITING_HUMAN_APPROVAL"
+    else:
+        status = "BLOCKED"
 
     result = {
         "phase": phase,
@@ -61,7 +66,7 @@ def main():
 
     result = run_phase_review(phase=args.phase, skip_migration=args.skip_migration)
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0 if result["status"] == "AI_PHASE_REVIEW_ENGINE_COMPLETE" else 1
+    return 0 if result["status"] == "WAITING_HUMAN_APPROVAL" else 1
 
 
 if __name__ == "__main__":

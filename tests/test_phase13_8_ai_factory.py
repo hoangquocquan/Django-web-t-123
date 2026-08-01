@@ -77,11 +77,15 @@ def test_workflow_execution(monkeypatch, tmp_path):
     runner = load_module("factory_runner", FACTORY_DIR / "run_ai_factory.py")
 
     def fake_run_command(args, timeout=900):
+        if any(str(arg).endswith("run_phase_review.py") for arg in args):
+            stdout = json.dumps({"status": "WAITING_HUMAN_APPROVAL", "decision": "PASS"})
+        else:
+            stdout = json.dumps({"status": "PASS"})
         return {
             "command": " ".join(str(arg) for arg in args),
             "returncode": 0,
             "duration_seconds": 0.01,
-            "stdout_tail": "ok",
+            "stdout_tail": stdout,
             "stderr_tail": "",
             "status": "PASS",
         }
@@ -110,7 +114,7 @@ def test_workflow_execution(monkeypatch, tmp_path):
     monkeypatch.setattr(runner, "DEFAULT_RESULT", tmp_path / "factory_result.json")
     result = runner.run_factory(phase="13.8")
 
-    assert result["status"] == "AI_SOFTWARE_FACTORY_COMPLETE"
+    assert result["status"] == "WAITING_HUMAN_APPROVAL"
     assert result["correction"]["status"] == "NOT_REQUIRED"
     assert result["safety"]["production_deployed"] is False
     assert result["safety"]["code_auto_merged"] is False

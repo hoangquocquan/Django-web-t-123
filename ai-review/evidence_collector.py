@@ -7,9 +7,12 @@ code, approve production, or call external services.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import subprocess
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -52,7 +55,12 @@ def read_text(path, limit=12000):
 def find_phase_requirement(phase):
     """Find the saved Codex prompt for a phase."""
     prompt_dir = PROJECT_ROOT / "docs" / "codex-prompts"
+    normalized = str(phase).replace("-", "_").replace(".", ".")
     matches = sorted(prompt_dir.glob(f"PHASE_{phase}*.md"))
+    if not matches:
+        matches = sorted(prompt_dir.glob(f"{normalized}*.md"))
+    if not matches and normalized.startswith("AI_"):
+        matches = sorted(prompt_dir.glob(f"{normalized}_*.md"))
     return matches[0] if matches else None
 
 
@@ -72,14 +80,31 @@ def list_existing(paths):
     return result
 
 
+def git_diff_args(base_commit, current_commit):
+    """Review commit range sau task commit, hoặc staged/worktree diff trước commit."""
+    return [base_commit, "HEAD"] if base_commit and base_commit != current_commit else ["HEAD"]
+
+
 def collect_evidence(phase="13.5", output_path=None):
     """Collect phase evidence and write JSON output."""
     requirement_path = find_phase_requirement(phase)
-    changed_files = run_git(["status", "--short"])["stdout"]
-    diff_files = run_git(["diff", "--name-only", "HEAD"])["stdout"]
-    branch = run_git(["branch", "--show-current"])["stdout"]
     commit = run_git(["rev-parse", "HEAD"])["stdout"]
+    base_commit = os.getenv("AI_REVIEW_BASE_COMMIT") or commit
+    diff_target = git_diff_args(base_commit, commit)
+    changed_files = run_git(["status", "--short"])["stdout"]
+    diff_files = run_git(["diff", "--name-only", *diff_target])["stdout"]
+    name_status = run_git(["diff", "--name-status", *diff_target])["stdout"]
+    diff_stat = run_git(["diff", "--stat", *diff_target])["stdout"]
+    actual_diff = run_git(["diff", "--binary", *diff_target])["stdout"]
+    branch = run_git(["branch", "--show-current"])["stdout"]
     latest_commit = run_git(["log", "-1", "--oneline"])["stdout"]
+    diff_hash = hashlib.sha256(actual_diff.encode("utf-8")).hexdigest() if actual_diff else ""
+    migration_files = [line.split("\t")[-1] for line in name_status.splitlines() if "/migrations/" in line.replace("\\", "/")]
+    test_result_files = list_existing(["ai-review/results/test_result.json", "docs/cicd/test_pipeline_result.json"])
+    test_hashes = {
+        item["path"]: hashlib.sha256((PROJECT_ROOT / item["path"]).read_bytes()).hexdigest()
+        for item in test_result_files
+    }
 
     generated_reports = list_existing(
         [
@@ -104,15 +129,31 @@ def collect_evidence(phase="13.5", output_path=None):
     evidence = {
         "phase": phase,
         "created_at": utc_now(),
+        "correlation_id": str(uuid.uuid4()),
         "requirement_file": str(requirement_path.relative_to(PROJECT_ROOT)) if requirement_path else "",
         "requirement_text": read_text(requirement_path) if requirement_path else "",
+        "phase_specification": {
+            "path": str(requirement_path.relative_to(PROJECT_ROOT)) if requirement_path else "",
+            "content": read_text(requirement_path) if requirement_path else "",
+        },
         "git": {
             "branch": branch,
             "commit": commit,
+            "base_commit": base_commit,
+            "current_commit": commit,
             "latest_commit": latest_commit,
             "changed_files": changed_files.splitlines() if changed_files else [],
             "diff_files": diff_files.splitlines() if diff_files else [],
         },
+        "actual_git_diff": {
+            "sha256": diff_hash,
+            "changed_files": name_status.splitlines() if name_status else [],
+            "stat": diff_stat,
+            "patch_preview": actual_diff[:24000],
+            "truncated": len(actual_diff) > 24000,
+        },
+        "migrations": migration_files,
+        "test_result_hashes": test_hashes,
         "generated_reports": generated_reports,
         "logs": logs,
         "safety": {
