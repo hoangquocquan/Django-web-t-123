@@ -2,8 +2,8 @@
 
 | Phase | State | Gate |
 | --- | --- | --- |
-| AI-00 | READY_FOR_NEXT_PHASE | Tests PASS, Ollama review PASS, commit pending |
-| AI-01 | SPECIFIED_NEXT | Requires AI-00 commit/integration |
+| AI-00 | READY_FOR_NEXT_PHASE | Commit `dbea8b2`, tests PASS, Ollama review PASS |
+| AI-01 | SPECIFIED_NEXT | Requires AI-00 integration |
 | AI-02 | DRAFT | Requires AI-00 and AI-01 contract |
 | AI-03 | DRAFT | Requires AI-01 and AI-02 PASS |
 | AI-04 | DRAFT | Requires AI-03 PASS |
