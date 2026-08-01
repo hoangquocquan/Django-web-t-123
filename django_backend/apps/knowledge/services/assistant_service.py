@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from django.db import transaction
 
-from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
+from apps.ai.services.ollama_client import OllamaClient
 from apps.knowledge.models import KnowledgeAssistantLog, KnowledgeDocument
 from apps.knowledge.services.business_connector import BusinessKnowledgeConnector
+from apps.knowledge.services.rag_pipeline import AIRequestLogService, RagGenerationPipeline, RagPromptTemplate
 from apps.knowledge.services.search_service import KnowledgeSearchService
 
 
@@ -30,13 +31,36 @@ class KnowledgeAssistantService:
         if KnowledgeDocument.objects.exists() and not sources:
             answer = "Không tìm thấy tài liệu phù hợp để trả lời chắc chắn."
             warning = "No relevant source context found. The assistant did not ask the model to invent an answer."
+            model = getattr(self.ollama_client, "model", "local-model")
+            response_time_ms = 0
+            generation_status = "blocked_no_context"
+            source_relevance_score = 0
+            hallucination_warning = warning
+            AIRequestLogService().log(
+                user=user,
+                question=question,
+                retrieval=retrieval,
+                model=model,
+                response_time_ms=response_time_ms,
+                confidence=confidence,
+                warning=warning,
+                status=generation_status,
+            )
         else:
-            prompt = self._build_prompt(question, retrieval)
-            try:
-                answer = self.ollama_client.generate_response(prompt).answer
-            except OllamaClientError:
-                answer = self._fallback_answer(question, retrieval)
-                warning = "Ollama is unavailable; returned source-based fallback answer."
+            result = RagGenerationPipeline(ollama_client=self.ollama_client).generate(
+                question,
+                retrieval,
+                user=user,
+                fallback_builder=self._fallback_answer,
+            )
+            answer = result["answer"]
+            warning = result["warning"]
+            confidence = result["confidence"]
+            model = result["model"]
+            response_time_ms = result["response_time_ms"]
+            generation_status = result["generation_status"]
+            source_relevance_score = result["source_relevance_score"]
+            hallucination_warning = result["hallucination_warning"]
 
         if confidence < 0.35:
             warning = warning or "Low confidence. Please verify the cited sources."
@@ -54,23 +78,24 @@ class KnowledgeAssistantService:
             "sources": sources,
             "confidence": confidence,
             "warning": warning,
+            "model": model,
+            "provider": "ollama-local" if generation_status == "generated" else "source-fallback",
+            "response_time_ms": response_time_ms,
+            "generation_status": generation_status,
+            "source_relevance_score": source_relevance_score,
+            "hallucination_warning": hallucination_warning,
         }
 
     def _build_prompt(self, question, retrieval):
         """Build a source-grounded prompt for the local model."""
-        context_lines = []
-        for index, result in enumerate(retrieval["results"], start=1):
-            source = result["document"]["title"]
-            context_lines.append(f"[{index}] {source}: {result['chunk']['content']}")
-        business_context = self.business_connector.build_context(question)
-        return (
-            "You are MEC Precision internal knowledge assistant. "
-            "Answer only from the provided context. Cite source titles. "
-            "If context is insufficient, say so.\n\n"
-            f"Question: {question}\n\n"
-            f"Knowledge context:\n{chr(10).join(context_lines)}\n\n"
-            f"Read-only business context:\n{business_context}"
-        )
+        context = {
+            "knowledge_context": "\n".join(
+                f"[{index}] {result['document']['title']}: {result['chunk']['content']}"
+                for index, result in enumerate(retrieval["results"], start=1)
+            ),
+            "business_context": self.business_connector.build_context(question),
+        }
+        return RagPromptTemplate().build(question, context)
 
     def _fallback_answer(self, question, retrieval):
         """Return a deterministic answer when Ollama is offline."""

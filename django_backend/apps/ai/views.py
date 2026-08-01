@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from apps.ai.services.health_service import OllamaHealthService
 from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 from apps.ai.services.prompt_manager import PromptManager
 from apps.api.views.helpers import bad_request, ok
@@ -82,6 +83,7 @@ def ai_chat(request):
             "answer": ai_response.answer,
             "model": ai_response.model,
             "provider": "ollama-local",
+            "response_time_ms": ai_response.response_time_ms,
             "user": {
                 "id": user.id,
                 "email": user.email,
@@ -89,3 +91,9 @@ def ai_chat(request):
         }
     )
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def ai_health(request):
+    """Return local Ollama runtime health for monitoring screens."""
+    return Response(OllamaHealthService().check())

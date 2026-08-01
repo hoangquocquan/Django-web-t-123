@@ -2,11 +2,11 @@
 
 ## Phase Name
 
-business-simulation
+ai-core-upgrade
 
 ## Created At
 
-2026-07-30T16:15:17+00:00
+2026-08-01T00:33:27+00:00
 
 ## Final Decision
 
@@ -23,7 +23,7 @@ PASS
 
 - Status: PASS
 - Failed required checks: []
-- Duration seconds: 4.264
+- Duration seconds: 4.714
 
 ## Security Status
 

@@ -28,6 +28,7 @@ class SalesAssistantService:
         if action not in handlers:
             raise ValidationError("Unsupported AI sales action.")
         result = handlers[action](payload, user=user)
+        result.setdefault("response_quality", self._response_quality(result.get("knowledge")))
         result.update(
             {
                 "action": action,
@@ -51,6 +52,7 @@ class SalesAssistantService:
             "analysis": self._lead_analysis_text(lead, score),
             "recommendations": self._lead_recommendations(lead, score),
             "knowledge": self._knowledge_snapshot(knowledge),
+            "response_quality": self._response_quality(knowledge),
         }
 
     def customer_summary(self, payload, user=None):
@@ -77,6 +79,7 @@ class SalesAssistantService:
                 "Uu tien lien he lai neu co co hoi dang mo hoac bao gia chua phan hoi.",
             ],
             "knowledge": self._knowledge_snapshot(knowledge),
+            "response_quality": self._response_quality(knowledge),
         }
 
     def email_draft(self, payload, user=None):
@@ -106,6 +109,7 @@ class SalesAssistantService:
             },
             "knowledge": self._knowledge_snapshot(knowledge),
             "delivery_status": "draft_only_not_sent",
+            "response_quality": self._response_quality(knowledge),
         }
 
     def weekly_recommendation(self, payload, user=None):
@@ -128,6 +132,12 @@ class SalesAssistantService:
                 "Lien he truoc voi lead uu tien cao hoac da chuyen sang Contacted/Meeting.",
                 "Kiem tra cac co hoi co gia tri lon nhung xac suat con thap de bo sung thong tin ky thuat.",
             ],
+            "response_quality": {
+                "confidence": 0.7,
+                "source_relevance_score": 0,
+                "hallucination_warning": "",
+                "evaluation": "Operational recommendation from CRM and Sales database, not autonomous execution.",
+            },
         }
 
     def _lead_from_payload(self, payload):
@@ -193,9 +203,33 @@ class SalesAssistantService:
         return {
             "confidence": knowledge.get("confidence", 0),
             "sources": [
-                {"id": source.get("id"), "title": source.get("title")}
+                {
+                    "id": source.get("id"),
+                    "title": source.get("title"),
+                    "relevance_score": source.get("relevance_score", 0),
+                }
                 for source in knowledge.get("sources", [])
             ],
+        }
+
+    def _response_quality(self, knowledge):
+        """Explain how reliable an AI sales suggestion is."""
+        if not knowledge:
+            return {
+                "confidence": 0.5,
+                "source_relevance_score": 0,
+                "hallucination_warning": "",
+                "evaluation": "No RAG source was required for this operational suggestion.",
+            }
+        sources = knowledge.get("sources", [])
+        best_relevance = max([source.get("relevance_score", 0) for source in sources] or [0])
+        confidence = knowledge.get("confidence", 0)
+        warning = "" if sources else "No knowledge source found; sales user should verify manually."
+        return {
+            "confidence": confidence,
+            "source_relevance_score": best_relevance,
+            "hallucination_warning": warning,
+            "evaluation": "Suggestion is advisory only and still requires human approval.",
         }
 
     def _lead_snapshot(self, lead):

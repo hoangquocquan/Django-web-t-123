@@ -49,7 +49,7 @@ from .views.replacement import (
     openapi_schema,
     version,
 )
-from apps.ai.views import ai_chat
+from apps.ai.views import ai_chat, ai_health
 from apps.ai_agent.views import agent_run, sales_assistant
 from apps.knowledge.views import knowledge_chat, knowledge_documents, knowledge_search
 from .views.sales import (
@@ -151,6 +151,7 @@ urlpatterns = [
     path("version/", version, name="api-version"),
     path("demo/aws/", aws_demo, name="api-demo-aws"),
     path("demo/external/weather/", external_weather, name="api-demo-external-weather"),
+    path("ai/health/", ai_health, name="api-ai-health"),
     path("ai/chat/", ai_chat, name="api-ai-chat"),
     path("knowledge/documents/", knowledge_documents, name="api-knowledge-documents"),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),

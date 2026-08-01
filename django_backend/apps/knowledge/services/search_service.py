@@ -42,7 +42,9 @@ class KnowledgeSearchService:
             if document.id in seen:
                 continue
             seen.add(document.id)
-            sources.append(document_to_dict(document))
+            source = document_to_dict(document)
+            source["relevance_score"] = round(result.get("score", 0), 4)
+            sources.append(source)
         return sources
 
     def confidence(self, results):
@@ -64,4 +66,3 @@ class KnowledgeSearchService:
         explicit = document.permissions.filter(can_read=True).filter(user_email=getattr(user, "email", "")).exists()
         role_allowed = document.permissions.filter(can_read=True, role_name=role_name).exists()
         return document.permission_level == "internal" or explicit or role_allowed
-

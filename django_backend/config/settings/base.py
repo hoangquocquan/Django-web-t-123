@@ -41,6 +41,17 @@ def env_int(name, default):
         return default
 
 
+def env_float(name, default):
+    """Read a float value from environment variables."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
 def database_from_url(database_url):
     """Convert DATABASE_URL into a Django database configuration.
 
@@ -231,4 +242,6 @@ CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
 OLLAMA_TIMEOUT_SECONDS = env_int("OLLAMA_TIMEOUT_SECONDS", 30)
+OLLAMA_TEMPERATURE = env_float("OLLAMA_TEMPERATURE", 0.2)
+OLLAMA_NUM_PREDICT = env_int("OLLAMA_NUM_PREDICT", 512)
 AI_CHAT_MAX_MESSAGE_LENGTH = env_int("AI_CHAT_MAX_MESSAGE_LENGTH", 2000)

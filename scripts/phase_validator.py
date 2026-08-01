@@ -173,6 +173,28 @@ PHASE_REQUIREMENTS = {
         ],
         "expected_tag": "ai-cleanup-complete",
     },
+    "ai-core-upgrade": {
+        "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "AI_CORE_UPGRADE_OLLAMA_REAL_INFERENCE.md",
+        "documents": [
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "models.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "migrations" / "0001_ai_request_log.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "services" / "health_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "services" / "model_config.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "services" / "ollama_client.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai" / "views.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "rag_pipeline.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "assistant_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "knowledge" / "services" / "search_service.py",
+            PROJECT_ROOT / "django_backend" / "apps" / "ai_agent" / "services" / "sales_assistant.py",
+            PROJECT_ROOT / "docs" / "ai" / "OLLAMA_MODEL_GUIDE.md",
+            PROJECT_ROOT / "ai-factory" / "evidence" / "ai_core_upgrade.json",
+            PROJECT_ROOT / "docs" / "reviews" / "AI_CORE_UPGRADE_FINAL_REPORT.md",
+        ],
+        "tests": [
+            PROJECT_ROOT / "tests" / "test_ollama_real_inference.py",
+        ],
+        "expected_tag": "ai-core-upgrade-complete",
+    },
     "business-ai-wave-2": {
         "prompt": PROJECT_ROOT / "docs" / "codex-prompts" / "BUSINESS_AI_WAVE_2_PLATFORM_COMPLETION.md",
         "documents": [

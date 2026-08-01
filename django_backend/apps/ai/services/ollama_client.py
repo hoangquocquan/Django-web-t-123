@@ -25,17 +25,20 @@ class OllamaResponse:
     answer: str
     model: str
     endpoint: str
+    response_time_ms: int = 0
 
 
 class OllamaClient:
     """Call the local Ollama API with timeout, retry, and safe errors."""
 
-    def __init__(self, host=None, model=None, timeout=None, retries=1):
+    def __init__(self, host=None, model=None, timeout=None, retries=1, temperature=None, token_limit=None):
         """Configure the local endpoint without using any external AI service."""
         self.host = (host or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
         self.model = model or getattr(settings, "OLLAMA_MODEL", "llama3.1")
         self.timeout = timeout or getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 30)
         self.retries = max(0, int(retries))
+        self.temperature = float(temperature if temperature is not None else getattr(settings, "OLLAMA_TEMPERATURE", 0.2))
+        self.token_limit = int(token_limit if token_limit is not None else getattr(settings, "OLLAMA_NUM_PREDICT", 512))
 
     def _json_request(self, method, path, payload=None):
         """Send one JSON request to Ollama and decode the JSON response."""
@@ -64,30 +67,42 @@ class OllamaClient:
         """Return local Ollama availability and installed model names."""
         data = self._json_request("GET", "/api/tags")
         models = [item.get("name", "") for item in data.get("models", []) if item.get("name")]
+        model_available = any(name == self.model or name.split(":", 1)[0] == self.model for name in models)
         return {
             "available": True,
             "host": self.host,
             "selected_model": self.model,
             "models": models,
-            "model_available": self.model in models,
+            "model_available": model_available,
         }
 
-    def generate_response(self, prompt):
+    def generate_response(self, prompt, options=None):
         """Generate one non-streaming answer from the configured local model."""
         payload = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "options": options or {
+                "temperature": self.temperature,
+                "num_predict": self.token_limit,
+            },
         }
         attempts = self.retries + 1
         last_error = None
         for attempt in range(attempts):
             try:
+                started = time.perf_counter()
                 data = self._json_request("POST", "/api/generate", payload)
+                response_time_ms = int((time.perf_counter() - started) * 1000)
                 answer = str(data.get("response", "")).strip()
                 if not answer:
                     raise OllamaClientError("Ollama response is empty.")
-                return OllamaResponse(answer=answer, model=self.model, endpoint=self.host)
+                return OllamaResponse(
+                    answer=answer,
+                    model=self.model,
+                    endpoint=self.host,
+                    response_time_ms=response_time_ms,
+                )
             except OllamaClientError as exc:
                 last_error = exc
                 if attempt < attempts - 1:
@@ -95,4 +110,3 @@ class OllamaClient:
 
         logger.warning("Ollama request failed without logging prompt content: %s", last_error)
         raise last_error or OllamaClientError("Ollama request failed.")
-
