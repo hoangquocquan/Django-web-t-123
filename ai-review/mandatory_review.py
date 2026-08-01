@@ -211,6 +211,8 @@ def build_review_prompt(evidence, rules, tests, model):
         "Never recommend deployment, merging, release, or production readiness in recommended_actions or summary. "
         "Leave every finding array empty when evidence does not support a concrete finding. Never invent numbered "
         "placeholder findings, requirements, tests, migrations, or actions. "
+        "Evaluate technical quality only. Missing human approval is an expected later gate, not a technical finding "
+        "and not a reason to choose BLOCKED; requires_human_review must still remain true. "
         "This is a pre-commit review: base_commit and current_commit may intentionally be equal while the staged "
         "actual_git_diff contains the pending implementation. If diff_evidence_complete is true and the diff SHA "
         "and changed files are present, do not report the Git evidence as incomplete. "
@@ -291,6 +293,9 @@ def validate_review_consistency(payload, evidence, rules, tests):
     )
     if any(marker in findings for marker in reviewer_self_reference):
         raise ReviewSchemaError("Review reports correction-loop metadata as a product finding.")
+    human_gate_markers = ("not approved by a human", "get approval from a human", "human approval is missing")
+    if payload["decision"] == "BLOCKED" and any(marker in findings for marker in human_gate_markers):
+        raise ReviewSchemaError("Review treats the expected later human gate as a technical finding.")
     return payload
 
 

@@ -258,6 +258,21 @@ def test_pass_with_placeholder_high_findings_is_retried():
     assert "generic placeholder findings" in transport.calls[1]["prompt"]
 
 
+def test_missing_human_approval_is_not_a_technical_blocker():
+    human_gate = valid_review(decision="BLOCKED")
+    human_gate["summary"] = "The code modification is not approved by a human reviewer."
+    human_gate["medium_findings"] = ["Get approval from a human reviewer."]
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(human_gate)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert "expected later human gate" in transport.calls[1]["prompt"]
+
+
 @pytest.mark.parametrize(
     "decision,expected_gate",
     [
