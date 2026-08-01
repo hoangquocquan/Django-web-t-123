@@ -1,0 +1,36 @@
+{
+  "status": "N8N_LOCAL_AUTOMATION_READY",
+  "created_at": "2026-08-01T01:06:59+00:00",
+  "result": {
+    "workflow": "website_lead_to_sales_notification",
+    "steps": [
+      {
+        "name": "Website Lead",
+        "status": "RECEIVED"
+      },
+      {
+        "name": "Django CRM",
+        "status": "READY_TO_CREATE_RECORD"
+      },
+      {
+        "name": "AI Lead Analysis",
+        "status": "SUGGESTION_ONLY"
+      },
+      {
+        "name": "Sales Notification",
+        "status": "DRAFT_NOTIFICATION"
+      }
+    ],
+    "lead": {
+      "company": "QA Automation Lead",
+      "need": "CNC shaft quotation"
+    },
+    "human_approval_required": true
+  },
+  "safety": {
+    "local_only": true,
+    "production_deployed": false,
+    "external_email_sent": false,
+    "human_approval_required": true
+  }
+}

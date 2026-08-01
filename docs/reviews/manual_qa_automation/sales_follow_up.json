@@ -1,0 +1,32 @@
+{
+  "status": "N8N_LOCAL_AUTOMATION_READY",
+  "created_at": "2026-08-01T01:06:59+00:00",
+  "result": {
+    "workflow": "sales_follow_up_reminder",
+    "steps": [
+      {
+        "name": "Sales Follow-up",
+        "status": "SCHEDULED"
+      },
+      {
+        "name": "Reminder",
+        "status": "LOCAL_ONLY"
+      },
+      {
+        "name": "Notification",
+        "status": "DRAFT_NOTIFICATION"
+      }
+    ],
+    "follow_up": {
+      "customer": "QA Automation Lead",
+      "due": "2026-08-05"
+    },
+    "human_approval_required": true
+  },
+  "safety": {
+    "local_only": true,
+    "production_deployed": false,
+    "external_email_sent": false,
+    "human_approval_required": true
+  }
+}

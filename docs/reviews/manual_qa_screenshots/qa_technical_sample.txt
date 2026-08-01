@@ -1,0 +1,6 @@
+Manual QA technical sample.
+
+MecPrecision demo document for CNC shaft inspection.
+Material: SUS304.
+Quality process: incoming material check, CNC machining, dimensional inspection, final quality report.
+Tolerance reference: +/-0.01mm for precision demo parts.
