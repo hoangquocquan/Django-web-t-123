@@ -1,0 +1,3 @@
+STATUS = PASS
+COMMAND = pytest
+RESULT = 342 passed in 57.12s.

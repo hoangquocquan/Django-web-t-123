@@ -1,0 +1,3 @@
+STATUS = PASS
+COMMAND = git diff --check
+RESULT = No whitespace errors.

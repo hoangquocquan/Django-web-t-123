@@ -1,0 +1,48 @@
+{
+  "phase": "AI-00",
+  "baseline_commit": "e0af74650ca3670589f482ff7fe44804d6ff41f7",
+  "branch": "codex/ai-00-baseline",
+  "status": "PASS",
+  "actual_git_diff": {
+    "staged_files": 29,
+    "insertions": 2175,
+    "deletions": 0,
+    "sha256": "823b175d678154368ef8281a081680fd49dc851122214e65f0af328c83af421b",
+    "scope": "AI-00 specifications, baseline reports and evidence"
+  },
+  "python": "3.12.10",
+  "django": "5.2.16",
+  "ollama": {
+    "endpoint": "http://localhost:11434",
+    "generation_model": "llama3:latest",
+    "embedding_model": "nomic-embed-text:latest",
+    "generation_available": true,
+    "embedding_available": true,
+    "embedding_dimensions": 768,
+    "fallback_used": false
+  },
+  "docker": {
+    "cli_available": true,
+    "daemon_available": false,
+    "status": "BLOCKED_BY_ENVIRONMENT"
+  },
+  "tests": {
+    "focused_passed": 21,
+    "regression_passed": 342,
+    "failed": 0
+  },
+  "ollama_review": {
+    "model": "llama3:latest",
+    "status": "PASS",
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "output_sha256": "75304e598ef438686d1135fc928048fdbf2e27e7894cad94877e3e9a43eeee12"
+  },
+  "safety": {
+    "human_approval_required": true,
+    "autonomous_action": false,
+    "external_ai_used": false,
+    "production_deployed": false
+  }
+}

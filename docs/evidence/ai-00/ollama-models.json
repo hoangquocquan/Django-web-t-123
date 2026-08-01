@@ -1,0 +1,6 @@
+{
+  "models": [
+    {"name": "llama3:latest", "purpose": "generation and review"},
+    {"name": "nomic-embed-text:latest", "purpose": "semantic embedding"}
+  ]
+}

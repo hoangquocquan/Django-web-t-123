@@ -1,0 +1,3 @@
+STATUS = PASS
+COMMAND = python -m compileall django_backend ai-factory ai-review scripts
+RESULT = Python sources compiled without error.

@@ -1,0 +1,3 @@
+823b175d678154368ef8281a081680fd49dc851122214e65f0af328c83af421b
+
+This is the SHA-256 of the staged AI-00 diff summarized in the review input before generated review evidence was added.
