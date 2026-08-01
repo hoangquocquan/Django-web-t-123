@@ -1,0 +1,6 @@
+{
+  "available": true,
+  "endpoint": "http://localhost:11434",
+  "review_model": "llama3:latest",
+  "fallback_used": false
+}

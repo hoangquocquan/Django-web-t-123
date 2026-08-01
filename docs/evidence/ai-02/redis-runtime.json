@@ -1,0 +1,10 @@
+{
+  "url": "redis://127.0.0.1:6379/0",
+  "available": true,
+  "runtime_backend": "redis-atomic",
+  "distributed": true,
+  "first_request_allowed": true,
+  "second_request_blocked_scopes": ["user", "endpoint", "action", "ip", "organization"],
+  "atomic_redis_contract_test": "PASS",
+  "production_deployed": false
+}

@@ -1,0 +1,5 @@
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+Pre-existing user ZIP files remain outside scope.

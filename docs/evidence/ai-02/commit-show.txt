@@ -1,0 +1,5 @@
+5e10202 feat(ai): add multilingual governance v2 controls
+48 files changed, 1202 insertions(+), 80 deletions(-)
+
+Scope: multilingual policy enforcement, recursive redaction, atomic Redis rate limiting,
+governance audit records, read-only governance API, migrations, tests and review evidence.

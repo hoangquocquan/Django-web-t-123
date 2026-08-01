@@ -1,0 +1,4 @@
+STATUS = PASS
+MIGRATION = ai.0003 applied locally.
+CONSISTENCY = No changes detected.
+RUNTIME_DATABASE_COMMITTED = false

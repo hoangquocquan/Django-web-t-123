@@ -1,0 +1,2 @@
+STATUS = PASS
+COMMAND = python -m compileall django_backend/apps/ai django_backend/apps/knowledge django_backend/apps/ai_agent tests/test_ai_governance_v2.py

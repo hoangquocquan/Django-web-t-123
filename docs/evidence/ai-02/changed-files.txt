@@ -1,0 +1,5 @@
+41 staged files
+AI: normalization, policy, redaction, rate limit, governance orchestrator, model migration, admin and API
+Integration: AI, Knowledge and Agent views plus API URL registry
+Tests: governance V2 security and compatibility
+Documentation: specification, review, result and evidence

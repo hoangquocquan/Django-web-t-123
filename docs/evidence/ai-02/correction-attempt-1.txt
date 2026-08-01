@@ -1,0 +1,6 @@
+ATTEMPT = 1
+FAILURE = Ollama review returned WARNING because Redis runtime was unavailable.
+ROOT_CAUSE = Docker Desktop was stopped and no native Redis service was installed.
+CORRECTION = Started Docker Desktop, ran Redis 7 local container, enabled Redis backend in an isolated command.
+VALIDATION = redis-atomic health PASS; first request allowed; second request blocked in five scopes.
+PRODUCTION_DEPLOYED = false

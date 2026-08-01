@@ -1,0 +1,12 @@
+{
+  "status": "AI_ENTERPRISE_DEMO_COMPLETE",
+  "knowledge_documents": 105,
+  "sales_lead_used": 1020,
+  "governance_events_created": 3,
+  "knowledge_search_status": 200,
+  "sales_assistant_status": 200,
+  "dangerous_prompt_status": 400,
+  "dangerous_prompt_error": "ai_policy_blocked",
+  "human_approval_required": true,
+  "external_ai_used": false
+}

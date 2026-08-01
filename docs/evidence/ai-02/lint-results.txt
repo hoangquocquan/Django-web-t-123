@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = Ruff is not repository-enforced.
+RETRY_COMMAND = ruff check .
+IMPACT = Compile and tests pass; lint is not asserted.

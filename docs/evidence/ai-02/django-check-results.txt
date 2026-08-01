@@ -1,0 +1,2 @@
+STATUS = PASS
+RESULT = System check identified no issues (0 silenced).

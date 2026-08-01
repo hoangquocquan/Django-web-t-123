@@ -110,6 +110,9 @@ def agent_run(request):
             endpoint="agent/run",
             action="agent_run",
             text=request_text,
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="ai_agent",
+            tool="agent-controller",
         )
     except AIGovernanceError as exc:
         return _governance_error_response(exc)
@@ -137,6 +140,8 @@ def sales_assistant(request):
             action=serializer.validated_data["action"],
             text=" ".join(str(value) for value in payload.values()),
             metadata={"action": serializer.validated_data["action"]},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="ai_sales",
         )
     except AIGovernanceError as exc:
         return _governance_error_response(exc)

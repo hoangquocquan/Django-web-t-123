@@ -1,0 +1,4 @@
+STATUS = PASS_WITH_LIMITATIONS
+RESULT = Multilingual injection, Unicode bypass, secret extraction, PII redaction, request size and permission tests pass.
+LIMITATION = Real Redis integration unavailable.
+NOT_RUN = bandit
