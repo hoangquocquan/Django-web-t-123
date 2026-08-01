@@ -1,0 +1,6 @@
+a5175d9 feat(ai-agent): add safe structured read-only agent controller
+25 files changed, 1288 insertions(+), 127 deletions(-)
+
+Tests: 27 focused PASS; 395 regression PASS.
+Real demo: local llama3 plan, two read-only tool calls and two audit records PASS.
+Ollama review: PASS; fallback not used; Critical 0; High 0.

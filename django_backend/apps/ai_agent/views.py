@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from apps.ai_agent.services.agent_controller import AgentController
+from apps.ai_agent.services.agent_controller import AgentControlError, AgentController
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
 from apps.api.views.helpers import ok
 from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
@@ -117,7 +117,13 @@ def agent_run(request):
     except AIGovernanceError as exc:
         return _governance_error_response(exc)
 
-    result = AgentController().run(request_text, user=user)
+    try:
+        result = AgentController().run(request_text, user=user)
+    except AgentControlError as exc:
+        return Response(
+            {"success": False, "error": {"code": exc.code, "message": str(exc)}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     return ok(result)
 
 

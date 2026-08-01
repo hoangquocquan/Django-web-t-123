@@ -11,6 +11,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 KNOWLEDGE_EMBEDDING_PROVIDER = "development-hash"
 KNOWLEDGE_MIN_RELEVANCE_SCORE = 0.0
 AI_SALES_OLLAMA_ENABLED = False
+AI_AGENT_OLLAMA_PLANNER_ENABLED = False
 
 DATABASES = {
     "default": {
