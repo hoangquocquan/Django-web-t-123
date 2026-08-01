@@ -90,6 +90,7 @@ class ReviewPrompt:
 
     system: str
     user: str
+    output_schema: dict
 
     def __contains__(self, text):
         return text in self.system or text in self.user
@@ -98,6 +99,7 @@ class ReviewPrompt:
         return ReviewPrompt(
             system=self.system + "\nCORRECTION FEEDBACK: " + feedback,
             user=self.user,
+            output_schema=self.output_schema,
         )
 
 
@@ -121,7 +123,7 @@ class LocalOllamaReviewTransport:
                     {"role": "user", "content": prompt.user},
                 ],
                 "stream": False,
-                "format": review_json_schema(model),
+                "format": prompt.output_schema,
                 "options": {"num_predict": 900, "temperature": 0.0},
             }
         else:
@@ -207,6 +209,8 @@ def build_review_prompt(evidence, rules, tests, model):
         "'production is not approved', and 'human approval required' are required safety controls, not production "
         "approval attempts; report only affirmative bypasses or executable deployment behavior as violations. "
         "Never recommend deployment, merging, release, or production readiness in recommended_actions or summary. "
+        "Leave every finding array empty when evidence does not support a concrete finding. Never invent numbered "
+        "placeholder findings, requirements, tests, migrations, or actions. "
         "This is a pre-commit review: base_commit and current_commit may intentionally be equal while the staged "
         "actual_git_diff contains the pending implementation. If diff_evidence_complete is true and the diff SHA "
         "and changed files are present, do not report the Git evidence as incomplete. "
@@ -222,7 +226,12 @@ def build_review_prompt(evidence, rules, tests, model):
         f"Tests: {json.dumps(tests, ensure_ascii=False, default=str)[:6000]}\n"
         f"Evidence: {json.dumps(evidence_for_review, ensure_ascii=False, default=str)}"
     )
-    return ReviewPrompt(system=system_prompt, user=user_prompt)
+    output_schema = review_json_schema(model)
+    if tests.get("status") == "PASS":
+        output_schema["properties"]["test_findings"]["maxItems"] = 0
+    if not evidence.get("migrations"):
+        output_schema["properties"]["migration_findings"]["maxItems"] = 0
+    return ReviewPrompt(system=system_prompt, user=user_prompt, output_schema=output_schema)
 
 
 def validate_review_payload(payload, selected_model):

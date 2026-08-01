@@ -175,6 +175,8 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     assert '"diff_evidence_complete": true' in prompt
     assert "+fail closed" not in prompt.system
     assert "actual_git_diff" in prompt.user
+    assert prompt.output_schema["properties"]["test_findings"]["maxItems"] == 0
+    assert prompt.output_schema["properties"]["migration_findings"]["maxItems"] == 0
 
 
 def test_review_evidence_json_is_complete_when_raw_patch_is_large():
