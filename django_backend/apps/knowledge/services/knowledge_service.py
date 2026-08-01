@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from django.db import transaction
 
-from apps.knowledge.models import DocumentCategory, KnowledgeChunk, KnowledgeDocument, KnowledgeEmbedding
-from apps.knowledge.services.embedding_service import LocalEmbeddingService
+from apps.knowledge.models import DocumentCategory, KnowledgeChunk, KnowledgeDocument
+from apps.knowledge.services.embedding_service import get_embedding_provider
 from apps.knowledge.services.knowledge_indexer import KnowledgeIndexer
 from apps.knowledge.services.text_processing import TextProcessor
+from apps.knowledge.services.vector_store import DjangoJSONVectorStore
 
 
 def document_to_dict(document):
@@ -45,10 +46,11 @@ def search_result_to_dict(result):
 class KnowledgeService:
     """Own document ingestion and local RAG search."""
 
-    def __init__(self, text_processor=None, embedding_service=None):
+    def __init__(self, text_processor=None, embedding_service=None, vector_store=None):
         """Allow tests to inject deterministic doubles if needed."""
         self.text_processor = text_processor or TextProcessor()
-        self.embedding_service = embedding_service or LocalEmbeddingService()
+        self.embedding_service = embedding_service or get_embedding_provider()
+        self.vector_store = vector_store or DjangoJSONVectorStore()
 
     @transaction.atomic
     def create_document(
@@ -117,13 +119,13 @@ class KnowledgeService:
     def search(self, query, limit=5):
         """Search chunks for internal service callers without API permission filtering."""
         query_vector = self.embedding_service.embed(query)
-        hits = []
         queryset = KnowledgeChunk.objects.select_related("document", "embedding").all()
-        for chunk in queryset:
-            score = self.embedding_service.similarity(query_vector, chunk.embedding.vector)
-            if score > 0:
-                hits.append({"chunk": chunk, "score": score})
-        return sorted(hits, key=lambda item: item["score"], reverse=True)[:limit]
+        return self.vector_store.search(
+            query_vector=query_vector,
+            queryset=queryset,
+            limit=limit,
+            provider=self.embedding_service,
+        )
 
     def _category_from_name(self, category_name):
         """Create or reuse a document category from a display name."""

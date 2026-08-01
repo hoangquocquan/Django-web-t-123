@@ -1,0 +1,3 @@
+STATUS = PASS_WITH_LIMITATIONS
+RESULT = No prompt/document content is logged by the provider; no external AI; old index preserved on failure; no autonomous action.
+NOT_RUN = bandit

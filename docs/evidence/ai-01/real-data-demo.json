@@ -1,0 +1,26 @@
+{
+  "database": "local demo database",
+  "documents_reindexed": 105,
+  "embeddings": 105,
+  "models": ["nomic-embed-text"],
+  "dimensions": [768],
+  "queries": [
+    {
+      "language": "vi-no-diacritics",
+      "query": "gia cong truc CNC chinh xac",
+      "top_source": "CNC Precision Shaft Technical Specification",
+      "score": 0.5124
+    },
+    {
+      "language": "en",
+      "query": "precision CNC shaft machining capability",
+      "top_source": "CNC Precision Shaft Technical Specification",
+      "score": 0.8106
+    },
+    {
+      "language": "out-of-domain",
+      "query": "dự báo thời tiết sao Hỏa",
+      "source_count": 0
+    }
+  ]
+}

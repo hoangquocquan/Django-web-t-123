@@ -1,0 +1,5 @@
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+Pre-existing user ZIP artifacts remain untracked and outside scope.
