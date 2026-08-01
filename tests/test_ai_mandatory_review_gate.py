@@ -177,6 +177,16 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     assert "actual_git_diff" in prompt.user
 
 
+def test_review_evidence_json_is_complete_when_raw_patch_is_large():
+    evidence = review_evidence()
+    evidence["actual_git_diff"]["patch_preview"] = "+safe code\n" * 5000
+    prompt = build_review_prompt(evidence, {"status": "PASS"}, {"status": "PASS"}, "llama3")
+    evidence_text = prompt.user.split("Evidence: ", 1)[1]
+    projected = json.loads(evidence_text)
+    assert projected["actual_git_diff"]["review_projection_truncated"] is True
+    assert len(projected["actual_git_diff"]["patch_preview"]) == 12000
+
+
 def test_pass_cannot_recommend_deployment_and_gets_correction_retry():
     unsafe = valid_review()
     unsafe["summary"] = "The change is safe for deployment after the automated review."
