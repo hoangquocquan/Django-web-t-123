@@ -1,0 +1,12 @@
+{
+  "phase": "AI-04",
+  "execution": "serialized_shared_registry_and_controller",
+  "dependencies": {
+    "schema_validator": [],
+    "tool_registry": ["Django ORM", "Foundation permissions"],
+    "structured_planner": ["tool_registry metadata", "local Ollama"],
+    "controller": ["schema_validator", "tool_registry", "structured_planner"],
+    "audit_migration": ["controller audit contract"],
+    "tests_and_review": ["all implementation tasks"]
+  }
+}

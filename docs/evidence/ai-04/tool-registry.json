@@ -1,0 +1,21 @@
+{
+  "read_only_tools": [
+    "knowledge_search",
+    "customer_summary",
+    "lead_summary",
+    "sales_pipeline_summary",
+    "inventory_summary",
+    "system_health",
+    "database_summary",
+    "report_generator",
+    "system_information"
+  ],
+  "forbidden_tools_present": [],
+  "arbitrary_shell": false,
+  "arbitrary_sql": false,
+  "business_write": false,
+  "email_send": false,
+  "quotation_approval": false,
+  "deployment": false,
+  "deletion": false
+}

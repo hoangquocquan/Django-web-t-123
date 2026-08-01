@@ -1,0 +1,25 @@
+{
+  "phase": "AI-04",
+  "branch": "codex/ai-04-agent-controller",
+  "baseline_commit": "d06f2f382bc8c26580d775b157ae10d4a70b53cb",
+  "status": "PASS",
+  "tests": {"focused_passed": 27, "regression_passed": 395, "failed": 0},
+  "real_demo": {"planner": "ollama", "model": "llama3", "tool_calls": 2, "audits": 2, "failed": 0},
+  "safety": {
+    "read_only_registry": true,
+    "arbitrary_shell": false,
+    "arbitrary_sql": false,
+    "business_write": false,
+    "email_send": false,
+    "deployment": false,
+    "autonomous_action": false
+  },
+  "ollama_review": {
+    "status": "PASS",
+    "model": "llama3",
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "output_sha256": "89728a6ca7d5003cbaa8dcc6e99ad281228802e8582530d4f9503b61716701c1"
+  }
+}
