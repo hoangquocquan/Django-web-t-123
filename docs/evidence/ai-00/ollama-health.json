@@ -1,0 +1,15 @@
+{
+  "endpoint": "http://localhost:11434",
+  "available": true,
+  "generation": {
+    "model": "llama3:latest",
+    "status": "PASS",
+    "fallback_used": false
+  },
+  "embedding": {
+    "model": "nomic-embed-text:latest",
+    "status": "PASS",
+    "batch_size": 2,
+    "dimension": 768
+  }
+}

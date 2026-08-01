@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = No repository-enforced ruff command was identified during baseline.
+RETRY_COMMAND = ruff check .
+IMPACT = Lint quality remains a known limitation; compile and tests passed.

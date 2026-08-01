@@ -1,0 +1,16 @@
+Repository root: C:/Users/hoang/Documents/Codex/mecprecision-vietnam
+Baseline commit: e0af74650ca3670589f482ff7fe44804d6ff41f7
+Phase branch: codex/ai-00-baseline
+Python: 3.12.10
+Django: 5.2.16
+Database: Django local SQLite fallback plus configured legacy router
+Redis: placeholder configured; runtime validation pending AI-02
+Ollama endpoint: http://localhost:11434
+Generation model: llama3:latest
+Embedding model: nomic-embed-text:latest
+Embedding dimensions: 768
+Docker CLI: available
+Docker daemon: unavailable
+External AI: not used
+Human approval required: true
+Autonomous action: false

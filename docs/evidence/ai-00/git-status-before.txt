@@ -1,0 +1,5 @@
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+All three files are pre-existing user artifacts and are excluded from phase commits.

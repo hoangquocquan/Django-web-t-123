@@ -1,0 +1,6 @@
+dbea8b2 docs(ai): establish hardening v2 reproducible baseline
+34 files changed, 2258 insertions(+)
+Branch: codex/ai-00-baseline
+Ollama review: PASS, no fallback
+Focused tests: 21 passed
+Regression tests: 342 passed
