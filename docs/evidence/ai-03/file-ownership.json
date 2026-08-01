@@ -1,0 +1,9 @@
+{
+  "phase": "AI-03",
+  "owners": {
+    "facts_and_scoring": ["django_backend/apps/ai_agent/services/sales_facts.py", "django_backend/apps/ai_agent/services/sales_assistant.py"],
+    "ollama_and_validation": ["django_backend/apps/ai_agent/services/sales_synthesis.py", "django_backend/apps/ai/services/ollama_client.py"],
+    "business_ui": ["django_backend/apps/business_ui/templates/business_ui/ai_sales.html", "django_backend/apps/business_ui/static/business_ui/business.css"],
+    "tests": ["tests/test_ai_sales_grounded_synthesis.py"]
+  }
+}

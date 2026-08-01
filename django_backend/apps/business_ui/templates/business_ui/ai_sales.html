@@ -4,10 +4,10 @@
   <section class="page-head">
     <div>
       <p class="eyebrow">AI Sales Assistant</p>
-      <h1>Trợ lý bán hàng cần con người duyệt</h1>
+      <h1>Trợ lý bán hàng có kiểm soát</h1>
     </div>
   </section>
-  <section class="split">
+  <section class="split ai-sales-layout">
     <form class="panel form" method="post">
       {% csrf_token %}
       <label>Chức năng
@@ -27,15 +27,65 @@
       <label>Ghi chú <textarea name="notes"></textarea></label>
       <button class="button" type="submit">Tạo gợi ý</button>
     </form>
-    <article class="panel">
-      <h2>Kết quả AI</h2>
-      {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <div class="ai-result-stack">
+      {% if error %}<p class="panel error">{{ error }}</p>{% endif %}
       {% if result %}
-        <pre>{{ result }}</pre>
+        {% if result.synthesis %}
+          <article class="panel">
+            <div class="result-heading">
+              <h2>Tóm tắt lead</h2>
+              <span class="status-label">{{ result.generation_mode }}</span>
+            </div>
+            <p>{{ result.synthesis.summary }}</p>
+            {% if result.score != None %}
+              <div class="score-row"><strong>{{ result.score }}/100</strong><span>Hạng {{ result.grade }}</span></div>
+            {% endif %}
+          </article>
+          <article class="panel">
+            <h2>Lý do và bước tiếp theo</h2>
+            <ul class="clean-list">
+              {% for item in result.synthesis.reasoning_summary %}<li>{{ item }}</li>{% endfor %}
+              {% for item in result.synthesis.recommended_next_steps %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </article>
+          <article class="panel">
+            <h2>Email nháp</h2>
+            <strong>{{ result.synthesis.draft_email.subject }}</strong>
+            <p class="email-body">{{ result.synthesis.draft_email.body|linebreaksbr }}</p>
+            <p class="approval-note" data-control="human_approval_required">Chưa gửi. Nhân viên phải kiểm tra và phê duyệt.</p>
+          </article>
+          <article class="panel">
+            <h2>Rủi ro và nguồn</h2>
+            <ul class="clean-list">
+              {% for risk in result.synthesis.risks %}<li>{{ risk }}</li>{% empty %}<li>Không có cảnh báo bổ sung.</li>{% endfor %}
+            </ul>
+            <div class="source-list">
+              {% for source in result.knowledge.sources %}
+                <span>#{{ source.id }} {{ source.title }}</span>
+              {% empty %}
+                <span>Không có nguồn kiến thức phù hợp.</span>
+              {% endfor %}
+            </div>
+          </article>
+        {% else %}
+          <article class="panel">
+            <h2>Kết quả vận hành</h2>
+            {% if result.summary %}
+              <dl class="details">
+                {% for key, value in result.summary.items %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endfor %}
+              </dl>
+            {% endif %}
+            <ul class="clean-list">
+              {% for item in result.recommendations %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </article>
+        {% endif %}
       {% else %}
-        <p class="muted">AI chỉ tạo đề xuất. Nhân viên phải kiểm tra trước khi gửi email hoặc cập nhật CRM.</p>
+        <article class="panel">
+          <h2>Kết quả AI</h2>
+          <p class="muted">AI chỉ tạo đề xuất và email nháp. Hệ thống không tự gửi email, sửa CRM hoặc duyệt báo giá.</p>
+        </article>
       {% endif %}
-    </article>
+    </div>
   </section>
 {% endblock %}
-

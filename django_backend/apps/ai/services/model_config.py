@@ -31,10 +31,9 @@ class AIModelConfigService:
     def current(self):
         """Return the active local model configuration."""
         return AIModelConfig(
-            model_name=getattr(settings, "OLLAMA_MODEL", "llama3.1"),
+            model_name=getattr(settings, "OLLAMA_MODEL", "llama3"),
             temperature=float(getattr(settings, "OLLAMA_TEMPERATURE", 0.2)),
             token_limit=int(getattr(settings, "OLLAMA_NUM_PREDICT", 512)),
             timeout_seconds=int(getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 30)),
             endpoint=getattr(settings, "OLLAMA_HOST", "http://localhost:11434"),
         )
-
