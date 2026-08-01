@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from apps.ai_agent.services.agent_controller import AgentController
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
 from apps.api.views.helpers import ok
+from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
 
 
@@ -77,6 +78,20 @@ def _validation_error_response(exc):
     )
 
 
+def _governance_error_response(exc):
+    """Return a consistent AI governance error payload."""
+    return Response(
+        {
+            "success": False,
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+            },
+        },
+        status=exc.status_code,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def agent_run(request):
@@ -88,7 +103,18 @@ def agent_run(request):
 
     serializer = AgentRunSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    result = AgentController().run(serializer.validated_data["request"], user=user)
+    request_text = serializer.validated_data["request"]
+    try:
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="agent/run",
+            action="agent_run",
+            text=request_text,
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
+    result = AgentController().run(request_text, user=user)
     return ok(result)
 
 
@@ -103,10 +129,22 @@ def sales_assistant(request):
 
     serializer = SalesAssistantSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    payload = serializer.validated_data.get("payload", {})
+    try:
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="ai/sales-assistant",
+            action=serializer.validated_data["action"],
+            text=" ".join(str(value) for value in payload.values()),
+            metadata={"action": serializer.validated_data["action"]},
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
     try:
         result = SalesAssistantService().handle(
             action=serializer.validated_data["action"],
-            payload=serializer.validated_data.get("payload", {}),
+            payload=payload,
             user=user,
         )
     except ValidationError as exc:

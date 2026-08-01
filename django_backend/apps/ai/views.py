@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.ai.services.health_service import OllamaHealthService
+from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
 from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 from apps.ai.services.prompt_manager import PromptManager
 from apps.api.views.helpers import bad_request, ok
@@ -47,6 +48,20 @@ def _require_ai_user(request):
     return user
 
 
+def _governance_error_response(exc):
+    """Return a consistent AI governance error payload."""
+    return Response(
+        {
+            "success": False,
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+            },
+        },
+        status=exc.status_code,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def ai_chat(request):
@@ -58,9 +73,20 @@ def ai_chat(request):
 
     serializer = AiChatRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    message = serializer.validated_data["message"]
 
     try:
-        prompt = PromptManager().prepare_chat_prompt(serializer.validated_data["message"])
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="ai/chat",
+            action="chat",
+            text=message,
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
+    try:
+        prompt = PromptManager().prepare_chat_prompt(message)
     except ValidationError as exc:
         return bad_request("validation_error", "; ".join(str(message) for message in exc.messages))
 

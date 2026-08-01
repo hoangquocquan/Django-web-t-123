@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.api.views.helpers import created, ok
+from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
 from apps.knowledge.services.assistant_service import KnowledgeAssistantService
 from apps.knowledge.services.document_processor import DocumentProcessor
@@ -72,6 +73,20 @@ def _require_knowledge_user(request, action="read"):
     return user
 
 
+def _governance_error_response(exc):
+    """Return a consistent AI governance error payload."""
+    return Response(
+        {
+            "success": False,
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+            },
+        },
+        status=exc.status_code,
+    )
+
+
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 def knowledge_documents(request):
@@ -125,8 +140,20 @@ def knowledge_search(request):
 
     serializer = KnowledgeSearchSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    query = serializer.validated_data["query"]
+    try:
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="knowledge/search",
+            action="search",
+            text=query,
+            metadata={"limit": serializer.validated_data["limit"]},
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
     result = KnowledgeSearchService().search(
-        serializer.validated_data["query"],
+        query,
         limit=serializer.validated_data["limit"],
         user=user,
     )
@@ -149,8 +176,20 @@ def knowledge_chat(request):
 
     serializer = KnowledgeChatSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    question = serializer.validated_data["question"]
+    try:
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="knowledge/chat",
+            action="chat",
+            text=question,
+            metadata={"limit": serializer.validated_data["limit"]},
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
     result = KnowledgeAssistantService().answer(
-        serializer.validated_data["question"],
+        question,
         user=user,
         limit=serializer.validated_data["limit"],
     )
