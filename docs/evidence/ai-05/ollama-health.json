@@ -1,0 +1,9 @@
+{
+  "available": true,
+  "endpoint": "http://localhost:11434",
+  "version": "0.32.5",
+  "review_model": "llama3:latest",
+  "review_model_id": "365c0bd3c000",
+  "embedding_model": "nomic-embed-text:latest",
+  "embedding_model_id": "0a109f422b47"
+}

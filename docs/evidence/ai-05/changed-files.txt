@@ -1,0 +1,2 @@
+21 implementation/test/spec files changed between baseline and AI-05 task commits.
+See actual-review-evidence.json actual_git_diff.changed_files for the machine-readable inventory.

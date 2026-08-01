@@ -1,0 +1,6 @@
+fbf594f feat(ai-factory): enforce mandatory ollama phase review
+30577b3 fix(ai-review): isolate system rules from untrusted diff
+781bafb fix(ai-review): preserve valid structured review evidence
+23bf1e1 fix(ai-review): reject contradictory placeholder findings
+4a04587 fix(ai-review): constrain deterministic test findings
+2c3b3a2 fix(ai-review): separate technical verdict from human gate

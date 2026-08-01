@@ -1,0 +1,3 @@
+STATUS = PASS
+Command: mypy ai-review/mandatory_review.py ai-review/ollama_phase_reviewer.py scripts/n8n_phase_trigger.py
+Result: Success, no issues found in 3 source files.

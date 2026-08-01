@@ -7,7 +7,7 @@
 | AI-02 | READY_FOR_NEXT_PHASE | Commit `5e10202`, tests PASS, Redis validation PASS, Ollama review PASS |
 | AI-03 | READY_FOR_NEXT_PHASE | Commit `03b17e4`, tests PASS, real synthesis PASS, Ollama review PASS |
 | AI-04 | READY_FOR_NEXT_PHASE | Commit `a5175d9`, tests, migration, real tools and Ollama review PASS |
-| AI-05 | SPECIFIED_NEXT | AI-01 through AI-04 review evidence is ready |
-| AI-06 | DRAFT | Requires all prior commits and evidence |
+| AI-05 | BLOCKED_REQUIRES_HUMAN | Code/tests PASS; local `llama3` review exhausted 3 retries without a valid technical PASS |
+| AI-06 | BLOCKED_BY_DEPENDENCY | AI-05 mandatory Ollama gate has not passed |
 
 Final program state remains `WAITING_FOR_HUMAN_APPROVAL`; no merge, push, release or deployment is authorized.

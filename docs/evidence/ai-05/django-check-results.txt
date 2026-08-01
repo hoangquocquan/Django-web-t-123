@@ -1,0 +1,3 @@
+STATUS = PASS
+Command: python django_backend/manage.py check
+Result: System check identified no issues (0 silenced).
