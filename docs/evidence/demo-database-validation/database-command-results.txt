@@ -1,0 +1,343 @@
+python : CommandError: Demo database validation found blocking issues. Review the JSON output.
+At line:2 char:1
++ python django_backend\manage.py validate_demo_database --json-output  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CommandError: D...he JSON output.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+{
+  "database": {
+    "engine": "django.db.backends.sqlite3",
+    "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\\db.sqlite3",
+    "exists": true,
+    "in_memory": false,
+    "size_bytes": 5087232,
+    "last_modified_epoch": 1785672211.9228296,
+    "readable": true,
+    "writable": true,
+    "sqlite_header_valid": true,
+    "sha256": "a9f0a9ad2e43a8f8023ca6f99345cd5a1ae6cc5bdd7578a44006f7966f51114d"
+  },
+  "expected_counts": {
+    "products": 214,
+    "customers": 501,
+    "leads": 1003,
+    "quotations": 503,
+    "knowledge_documents": 105,
+    "users": 17
+  },
+  "orm_counts": {
+    "products": 214,
+    "customers": 501,
+    "leads": 1003,
+    "quotations": 503,
+    "knowledge_documents": 105,
+    "users": 17
+  },
+  "sqlite_counts": {
+    "products": 214,
+    "customers": 501,
+    "leads": 1003,
+    "quotations": 503,
+    "knowledge_documents": 105,
+    "users": 17
+  },
+  "count_status": {
+    "products": "PASS",
+    "customers": "PASS",
+    "leads": "PASS",
+    "quotations": "PASS",
+    "knowledge_documents": "PASS",
+    "users": "PASS"
+  },
+  "orm_sqlite_consistent": true,
+  "table_inventory": [
+    {
+      "table": "ai_agent_runs",
+      "rows": 1
+    },
+    {
+      "table": "ai_agent_tool_audits",
+      "rows": 2
+    },
+    {
+      "table": "ai_governance_events",
+      "rows": 6
+    },
+    {
+      "table": "ai_request_logs",
+      "rows": 0
+    },
+    {
+      "table": "auth_group",
+      "rows": 0
+    },
+    {
+      "table": "auth_group_permissions",
+      "rows": 0
+    },
+    {
+      "table": "auth_permission",
+      "rows": 296
+    },
+    {
+      "table": "auth_user",
+      "rows": 1
+    },
+    {
+      "table": "auth_user_groups",
+      "rows": 0
+    },
+    {
+      "table": "auth_user_user_permissions",
+      "rows": 0
+    },
+    {
+      "table": "business_customers",
+      "rows": 509
+    },
+    {
+      "table": "business_products",
+      "rows": 214
+    },
+    {
+      "table": "crm_platform_customer_profiles",
+      "rows": 501
+    },
+    {
+      "table": "crm_platform_interactions",
+      "rows": 505
+    },
+    {
+      "table": "crm_platform_notes",
+      "rows": 502
+    },
+    {
+      "table": "crm_platform_tasks",
+      "rows": 502
+    },
+    {
+      "table": "crm_platform_timeline_events",
+      "rows": 505
+    },
+    {
+      "table": "django_admin_log",
+      "rows": 0
+    },
+    {
+      "table": "django_content_type",
+      "rows": 74
+    },
+    {
+      "table": "django_migrations",
+      "rows": 40
+    },
+    {
+      "table": "django_session",
+      "rows": 6
+    },
+    {
+      "table": "foundation_auth_tokens",
+      "rows": 16
+    },
+    {
+      "table": "foundation_login_attempts",
+      "rows": 2
+    },
+    {
+      "table": "foundation_permissions",
+      "rows": 43
+    },
+    {
+      "table": "foundation_role_permissions",
+      "rows": 93
+    },
+    {
+      "table": "foundation_roles",
+      "rows": 10
+    },
+    {
+      "table": "foundation_two_factor_challenges",
+      "rows": 0
+    },
+    {
+      "table": "foundation_user_profiles",
+      "rows": 17
+    },
+    {
+      "table": "foundation_users",
+      "rows": 17
+    },
+    {
+      "table": "inventory_items",
+      "rows": 85
+    },
+    {
+      "table": "inventory_transactions",
+      "rows": 85
+    },
+    {
+      "table": "inventory_warehouses",
+      "rows": 3
+    },
+    {
+      "table": "knowledge_assistant_logs",
+      "rows": 6
+    },
+    {
+      "table": "knowledge_chunks",
+      "rows": 105
+    },
+    {
+      "table": "knowledge_document_categories",
+      "rows": 7
+    },
+    {
+      "table": "knowledge_document_permissions",
+      "rows": 0
+    },
+    {
+      "table": "knowledge_document_versions",
+      "rows": 105
+    },
+    {
+      "table": "knowledge_documents",
+      "rows": 105
+    },
+    {
+      "table": "knowledge_embeddings",
+      "rows": 105
+    },
+    {
+      "table": "newsletter_subscribers",
+      "rows": 1
+    },
+    {
+      "table": "order_status_history",
+      "rows": 201
+    },
+    {
+      "table": "sales_platform_activities",
+      "rows": 4507
+    },
+    {
+      "table": "sales_platform_follow_ups",
+      "rows": 501
+    },
+    {
+      "table": "sales_platform_leads",
+      "rows": 1003
+    },
+    {
+      "table": "sales_platform_opportunities",
+      "rows": 302
+    },
+    {
+      "table": "sales_platform_quotation_lines",
+      "rows": 983
+    },
+    {
+      "table": "sales_platform_quotations",
+      "rows": 503
+    },
+    {
+      "table": "transaction_history",
+      "rows": 204
+    },
+    {
+      "table": "transaction_order_items",
+      "rows": 408
+    },
+    {
+      "table": "transaction_orders",
+      "rows": 201
+    },
+    {
+      "table": "workflow_approvals",
+      "rows": 200
+    }
+  ],
+  "integrity_findings": {
+    "checks": {
+      "products_empty_name": 0,
+      "products_negative_price": 0,
+      "products_missing_category": 0,
+      "products_invalid_status": 0,
+      "customers_empty_contact": 0,
+      "customers_missing_company": 2,
+      "leads_missing_company": 0,
+      "leads_missing_source": 0,
+      "leads_missing_owner": 0,
+      "leads_invalid_status": 0,
+      "opportunities_invalid_status": 0,
+      "opportunities_probability_over_100": 0,
+      "quotations_negative_total": 1,
+      "quotations_invalid_status": 0,
+      "quotations_without_customer_or_opportunity": 0,
+      "documents_without_chunks": 0,
+      "chunks_without_embedding": 0,
+      "users_without_role": 0,
+      "roles_without_permissions": 0
+    },
+    "critical": [],
+    "high": [
+      {
+        "code": "quotations_negative_total",
+        "count": 1
+      }
+    ],
+    "medium": [],
+    "low": [
+      {
+        "code": "customers_missing_company",
+        "count": 2
+      }
+    ],
+    "informational": [
+      {
+        "code": "default_demo_admin_password",
+        "count": 1,
+        "message": "Local demo credential must never be reused in production."
+      }
+    ]
+  },
+  "performance": {
+    "products_page": {
+      "records": 25,
+      "queries": 1,
+      "elapsed_ms": 1.482,
+      "n_plus_one_detected": false,
+      "paginated": true
+    },
+    "customers_page": {
+      "records": 25,
+      "queries": 1,
+      "elapsed_ms": 0.901,
+      "n_plus_one_detected": false,
+      "paginated": true
+    },
+    "leads_page": {
+      "records": 25,
+      "queries": 1,
+      "elapsed_ms": 1.462,
+      "n_plus_one_detected": false,
+      "paginated": true
+    },
+    "quotations_page": {
+      "records": 25,
+      "queries": 1,
+      "elapsed_ms": 2.035,
+      "n_plus_one_detected": false,
+      "paginated": true
+    },
+    "knowledge_page": {
+      "records": 25,
+      "queries": 2,
+      "elapsed_ms": 3.033,
+      "n_plus_one_detected": false,
+      "paginated": true
+    }
+  },
+  "decision": "DEMO_DATABASE_VALIDATION_FAILED",
+  "read_only_validation": true
+}

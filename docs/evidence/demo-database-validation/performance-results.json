@@ -1,0 +1,37 @@
+﻿{
+    "products_page":  {
+                          "records":  25,
+                          "queries":  1,
+                          "elapsed_ms":  1.482,
+                          "n_plus_one_detected":  false,
+                          "paginated":  true
+                      },
+    "customers_page":  {
+                           "records":  25,
+                           "queries":  1,
+                           "elapsed_ms":  0.901,
+                           "n_plus_one_detected":  false,
+                           "paginated":  true
+                       },
+    "leads_page":  {
+                       "records":  25,
+                       "queries":  1,
+                       "elapsed_ms":  1.462,
+                       "n_plus_one_detected":  false,
+                       "paginated":  true
+                   },
+    "quotations_page":  {
+                            "records":  25,
+                            "queries":  1,
+                            "elapsed_ms":  2.035,
+                            "n_plus_one_detected":  false,
+                            "paginated":  true
+                        },
+    "knowledge_page":  {
+                           "records":  25,
+                           "queries":  2,
+                           "elapsed_ms":  3.033,
+                           "n_plus_one_detected":  false,
+                           "paginated":  true
+                       }
+}

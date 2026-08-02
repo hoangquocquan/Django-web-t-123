@@ -1,0 +1,8 @@
+?? django_backend/apps/core/demo_database_validation.py
+?? django_backend/apps/core/management/commands/validate_demo_database.py
+?? docs.zip
+?? docs/codex-prompts/DEMO_DATABASE_VALIDATION_PHASE.md
+?? docs/evidence/demo-database-validation/
+?? docs/reviews.zip
+?? mecprecision.zip
+?? tests/test_demo_database_validation.py

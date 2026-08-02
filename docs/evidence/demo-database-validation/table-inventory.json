@@ -1,0 +1,206 @@
+﻿[
+    {
+        "table":  "ai_agent_runs",
+        "rows":  1
+    },
+    {
+        "table":  "ai_agent_tool_audits",
+        "rows":  2
+    },
+    {
+        "table":  "ai_governance_events",
+        "rows":  6
+    },
+    {
+        "table":  "ai_request_logs",
+        "rows":  0
+    },
+    {
+        "table":  "auth_group",
+        "rows":  0
+    },
+    {
+        "table":  "auth_group_permissions",
+        "rows":  0
+    },
+    {
+        "table":  "auth_permission",
+        "rows":  296
+    },
+    {
+        "table":  "auth_user",
+        "rows":  1
+    },
+    {
+        "table":  "auth_user_groups",
+        "rows":  0
+    },
+    {
+        "table":  "auth_user_user_permissions",
+        "rows":  0
+    },
+    {
+        "table":  "business_customers",
+        "rows":  509
+    },
+    {
+        "table":  "business_products",
+        "rows":  214
+    },
+    {
+        "table":  "crm_platform_customer_profiles",
+        "rows":  501
+    },
+    {
+        "table":  "crm_platform_interactions",
+        "rows":  505
+    },
+    {
+        "table":  "crm_platform_notes",
+        "rows":  502
+    },
+    {
+        "table":  "crm_platform_tasks",
+        "rows":  502
+    },
+    {
+        "table":  "crm_platform_timeline_events",
+        "rows":  505
+    },
+    {
+        "table":  "django_admin_log",
+        "rows":  0
+    },
+    {
+        "table":  "django_content_type",
+        "rows":  74
+    },
+    {
+        "table":  "django_migrations",
+        "rows":  40
+    },
+    {
+        "table":  "django_session",
+        "rows":  6
+    },
+    {
+        "table":  "foundation_auth_tokens",
+        "rows":  16
+    },
+    {
+        "table":  "foundation_login_attempts",
+        "rows":  2
+    },
+    {
+        "table":  "foundation_permissions",
+        "rows":  43
+    },
+    {
+        "table":  "foundation_role_permissions",
+        "rows":  93
+    },
+    {
+        "table":  "foundation_roles",
+        "rows":  10
+    },
+    {
+        "table":  "foundation_two_factor_challenges",
+        "rows":  0
+    },
+    {
+        "table":  "foundation_user_profiles",
+        "rows":  17
+    },
+    {
+        "table":  "foundation_users",
+        "rows":  17
+    },
+    {
+        "table":  "inventory_items",
+        "rows":  85
+    },
+    {
+        "table":  "inventory_transactions",
+        "rows":  85
+    },
+    {
+        "table":  "inventory_warehouses",
+        "rows":  3
+    },
+    {
+        "table":  "knowledge_assistant_logs",
+        "rows":  6
+    },
+    {
+        "table":  "knowledge_chunks",
+        "rows":  105
+    },
+    {
+        "table":  "knowledge_document_categories",
+        "rows":  7
+    },
+    {
+        "table":  "knowledge_document_permissions",
+        "rows":  0
+    },
+    {
+        "table":  "knowledge_document_versions",
+        "rows":  105
+    },
+    {
+        "table":  "knowledge_documents",
+        "rows":  105
+    },
+    {
+        "table":  "knowledge_embeddings",
+        "rows":  105
+    },
+    {
+        "table":  "newsletter_subscribers",
+        "rows":  1
+    },
+    {
+        "table":  "order_status_history",
+        "rows":  201
+    },
+    {
+        "table":  "sales_platform_activities",
+        "rows":  4507
+    },
+    {
+        "table":  "sales_platform_follow_ups",
+        "rows":  501
+    },
+    {
+        "table":  "sales_platform_leads",
+        "rows":  1003
+    },
+    {
+        "table":  "sales_platform_opportunities",
+        "rows":  302
+    },
+    {
+        "table":  "sales_platform_quotation_lines",
+        "rows":  983
+    },
+    {
+        "table":  "sales_platform_quotations",
+        "rows":  503
+    },
+    {
+        "table":  "transaction_history",
+        "rows":  204
+    },
+    {
+        "table":  "transaction_order_items",
+        "rows":  408
+    },
+    {
+        "table":  "transaction_orders",
+        "rows":  201
+    },
+    {
+        "table":  "workflow_approvals",
+        "rows":  200
+    }
+]

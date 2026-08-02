@@ -1,0 +1,48 @@
+﻿{
+    "checks":  {
+                   "products_empty_name":  0,
+                   "products_negative_price":  0,
+                   "products_missing_category":  0,
+                   "products_invalid_status":  0,
+                   "customers_empty_contact":  0,
+                   "customers_missing_company":  2,
+                   "leads_missing_company":  0,
+                   "leads_missing_source":  0,
+                   "leads_missing_owner":  0,
+                   "leads_invalid_status":  0,
+                   "opportunities_invalid_status":  0,
+                   "opportunities_probability_over_100":  0,
+                   "quotations_negative_total":  1,
+                   "quotations_invalid_status":  0,
+                   "quotations_without_customer_or_opportunity":  0,
+                   "documents_without_chunks":  0,
+                   "chunks_without_embedding":  0,
+                   "users_without_role":  0,
+                   "roles_without_permissions":  0
+               },
+    "critical":  [
+
+                 ],
+    "high":  [
+                 {
+                     "code":  "quotations_negative_total",
+                     "count":  1
+                 }
+             ],
+    "medium":  [
+
+               ],
+    "low":  [
+                {
+                    "code":  "customers_missing_company",
+                    "count":  2
+                }
+            ],
+    "informational":  [
+                          {
+                              "code":  "default_demo_admin_password",
+                              "count":  1,
+                              "message":  "Local demo credential must never be reused in production."
+                          }
+                      ]
+}

@@ -1,0 +1,83 @@
+{
+  "database_path": "django_backend/db.sqlite3",
+  "database_verified": true,
+  "original_database_modified": false,
+  "expected_counts": {
+    "products": 214,
+    "customers": 501,
+    "leads": 1003,
+    "quotations": 503,
+    "knowledge_documents": 105,
+    "users": 17
+  },
+  "actual_counts": {
+    "products": 214,
+    "customers": 501,
+    "leads": 1003,
+    "quotations": 503,
+    "knowledge_documents": 105,
+    "users": 17
+  },
+  "count_status": {
+    "products": "PASS",
+    "customers": "PASS",
+    "leads": "PASS",
+    "quotations": "PASS",
+    "knowledge_documents": "PASS",
+    "users": "PASS"
+  },
+  "integrity_findings": {
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 1,
+    "blocking_record": "SQ-DEMO-000208",
+    "blocking_reason": "subtotal=56.00, discount_total=94.00, total=-38.00"
+  },
+  "crud_tests": {
+    "status": "PASS",
+    "database": "isolated Django test database"
+  },
+  "ui_tests": {
+    "status": "PASS",
+    "admin_login": "GET 200, POST 302, dashboard 200"
+  },
+  "api_tests": {
+    "status": "PASS",
+    "orm_response_consistent": true
+  },
+  "ai_rag_tests": {
+    "status": "PASS",
+    "human_approval_required": true,
+    "autonomous_action": false,
+    "documents": 105,
+    "chunks": 105,
+    "embeddings": 105
+  },
+  "performance": {
+    "n_plus_one_detected": false,
+    "maximum_query_count": 2,
+    "maximum_observed_elapsed_ms": 3.033
+  },
+  "full_regression": {
+    "status": "PASS",
+    "passed": 554,
+    "failed": 0
+  },
+  "ollama_review": {
+    "status": "BLOCKED",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "fallback_used": false,
+    "model": "llama3",
+    "critical_findings": 0,
+    "high_findings": 1,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "decision": "DEMO_DATABASE_VALIDATION_FAILED",
+  "final_state": "WAITING_FOR_HUMAN_APPROVAL"
+}
