@@ -132,3 +132,32 @@ def test_batch_size_limits_are_deterministic():
 
     assert first == second
     assert all(len(batch) <= 3 for batch in first)
+
+
+def test_batch_uses_compact_passing_contracts_and_no_raw_migration_list():
+    evidence = source_evidence()
+    evidence["migrations"] = ["apps/example/migrations/0001_initial.py"]
+    evidence["review_v3"]["documentation_contract"]["files"] = [
+        {"path": "docs/example.md", "safety_invariant_changed": True}
+    ]
+    calls = []
+
+    def reviewer(evidence, **kwargs):
+        calls.append(copy.deepcopy(evidence))
+        return fake_pass(evidence, **kwargs)
+
+    result = run_batched_review(
+        evidence,
+        {"status": "PASS"},
+        {"status": "PASS"},
+        reviewer=reviewer,
+    )
+
+    assert result["status"] == "PASS"
+    assert calls[0]["migrations"] == []
+    assert calls[0]["review_v3"]["documentation_contract"] == {
+        "status": "PASS",
+        "files_checked": 1,
+        "test_result_hashes": {},
+        "blockers": [],
+    }

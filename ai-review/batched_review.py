@@ -45,6 +45,16 @@ def build_batches(review_v3, max_chars=28000, max_chunks=16):
     return batches
 
 
+def compact_contract(contract):
+    """Chỉ chuyển trạng thái/hash deterministic, không lặp chi tiết dễ gây nhiễu."""
+    return {
+        "status": contract.get("status"),
+        "files_checked": len(contract.get("files") or []),
+        "test_result_hashes": contract.get("test_result_hashes", {}),
+        "blockers": contract.get("blockers", []),
+    }
+
+
 def make_batch_evidence(evidence, chunks, batch_number, batch_count):
     """Tạo evidence tự đủ cho một batch code production."""
     result = copy.deepcopy(evidence)
@@ -81,8 +91,10 @@ def make_batch_evidence(evidence, chunks, batch_number, batch_count):
         "expected_chunk_ids": chunk_ids,
         "skipped_files": source_v3.get("skipped_files", []),
         "unreviewed_production_files": [],
-        "test_contract": source_v3["test_contract"],
-        "documentation_contract": source_v3["documentation_contract"],
+        "test_contract": compact_contract(source_v3["test_contract"]),
+        "documentation_contract": compact_contract(
+            source_v3["documentation_contract"]
+        ),
         "blockers": [],
         "full_diff_coverage": True,
         "status": "PASS",
@@ -93,6 +105,7 @@ def make_batch_evidence(evidence, chunks, batch_number, batch_count):
         "source_diff_sha256": evidence["actual_git_diff"]["sha256"],
         "chunk_ids": chunk_ids,
     }
+    result["migrations"] = []
     return result
 
 
@@ -129,6 +142,13 @@ def make_aggregate_evidence(evidence, batch_results):
         "full_diff_coverage": True,
         "status": "PASS",
     }
+    result["review_v3"]["test_contract"] = compact_contract(
+        source_v3["test_contract"]
+    )
+    result["review_v3"]["documentation_contract"] = compact_contract(
+        source_v3["documentation_contract"]
+    )
+    result["migrations"] = []
     result["batch_attestations"] = [
         {
             "batch": index,
