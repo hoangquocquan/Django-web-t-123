@@ -1,0 +1,2 @@
+PASS
+No changes detected. No migration was created.

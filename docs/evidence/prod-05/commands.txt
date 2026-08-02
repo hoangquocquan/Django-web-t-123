@@ -1,0 +1,13 @@
+python -m compileall -q django_backend scripts tests
+python django_backend/manage.py check --settings=config.settings.test
+python django_backend/manage.py makemigrations --check --dry-run --settings=config.settings.test
+python -m pytest tests/test_prod05_operations.py tests/test_prod02_production_infrastructure.py tests/test_phase12_1_security.py -q
+python -m pytest -q
+powershell -ExecutionPolicy Bypass -File scripts/run_migration_test.ps1
+python -m ruff check <PROD-05 Python files>
+python -m ruff format --check <PROD-05 Python files>
+python -m mypy --explicit-package-bases --ignore-missing-imports <PROD-05 Python files>
+python -m bandit -q <PROD-05 Python files>
+python -m pip_audit --disable-pip --no-deps -r django_backend/requirements-prod.txt
+python scripts/prod05_backup.py
+python ai-review/ollama_phase_reviewer.py --evidence docs/evidence/prod-05/review-input.json --rules docs/evidence/prod-05/review-rules.json --tests docs/evidence/prod-05/review-tests.json --output docs/evidence/prod-05/ollama-review-output.json --url http://localhost:11434 --model llama3

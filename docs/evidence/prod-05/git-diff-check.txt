@@ -1,0 +1,3 @@
+PASS
+git diff --cached --check returned no errors.
+No unmerged path was found.

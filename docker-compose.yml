@@ -19,6 +19,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mecprecision}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@database:5432/${POSTGRES_DB:-mecprecision}
       DATABASE_SSLMODE: disable
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+      METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN:?METRICS_BEARER_TOKEN is required}
+      N8N_HEALTH_URL: http://n8n:5678/healthz
       SECURE_SSL_REDIRECT: "true"
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}

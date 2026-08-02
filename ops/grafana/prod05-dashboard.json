@@ -1,0 +1,15 @@
+{
+  "title": "MEC Precision Production Operations",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "tags": ["mecprecision", "prod-05"],
+  "panels": [
+    {"id": 1, "title": "Dependency availability", "type": "stat", "targets": [{"expr": "mecprecision_dependency_up"}]},
+    {"id": 2, "title": "HTTP request rate", "type": "timeseries", "targets": [{"expr": "sum(rate(mecprecision_http_requests_total[5m])) by (status)"}]},
+    {"id": 3, "title": "HTTP response time", "type": "timeseries", "targets": [{"expr": "sum(rate(mecprecision_http_response_seconds_sum[5m])) by (route) / clamp_min(sum(rate(mecprecision_http_response_seconds_count[5m])) by (route), 1)"}]},
+    {"id": 4, "title": "Host capacity", "type": "timeseries", "targets": [{"expr": "mecprecision_host_disk_usage_ratio"}, {"expr": "mecprecision_host_memory_usage_ratio"}, {"expr": "mecprecision_host_cpu_load_ratio"}]},
+    {"id": 5, "title": "Security and governance", "type": "timeseries", "targets": [{"expr": "mecprecision_login_failures_5m"}, {"expr": "mecprecision_ai_governance_blocks_5m"}]},
+    {"id": 6, "title": "Uploads and extraction", "type": "stat", "targets": [{"expr": "mecprecision_knowledge_uploads"}, {"expr": "mecprecision_knowledge_extractions"}]},
+    {"id": 7, "title": "Queue depth", "type": "timeseries", "targets": [{"expr": "mecprecision_queue_depth"}]}
+  ]
+}

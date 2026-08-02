@@ -134,6 +134,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.common.middleware.ObservabilityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.common.middleware.SecurityHeadersMiddleware",
@@ -212,6 +213,9 @@ LOGGING = {
         "standard": {
             "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         },
+        "json": {
+            "()": "apps.common.logging.JsonLogFormatter",
+        },
     },
     "handlers": {
         "console": {
@@ -236,6 +240,11 @@ LOGGING = {
         "apps": {
             "handlers": ["console", "file"],
             "level": os.getenv("APP_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "apps.operations": {
+            "handlers": ["console", "file"],
+            "level": os.getenv("OPERATIONS_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
     },
@@ -302,3 +311,5 @@ UPLOAD_ARCHIVE_MAX_UNCOMPRESSED_BYTES = env_int(
 )
 UPLOAD_ARCHIVE_MAX_RATIO = env_int("UPLOAD_ARCHIVE_MAX_RATIO", 100)
 ALLOWED_EXTERNAL_HOSTS = env_list("ALLOWED_EXTERNAL_HOSTS", "")
+METRICS_BEARER_TOKEN = os.getenv("METRICS_BEARER_TOKEN", "")
+N8N_HEALTH_URL = os.getenv("N8N_HEALTH_URL", "http://localhost:5679/healthz")

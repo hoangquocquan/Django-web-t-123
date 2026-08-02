@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "phase_gate_status": "BLOCKED",
+  "focused": "23 passed",
+  "full_regression": "500 passed",
+  "migration_regression": "238 passed",
+  "django_check": "PASS",
+  "migration_drift": "PASS",
+  "ruff": "PASS",
+  "mypy": "PASS",
+  "bandit_high_critical": "PASS",
+  "backup_unit_contract": "PASS",
+  "restore_unit_contract": "PASS",
+  "live_backup": "NOT_RUN_DOCKER_PERMISSION_DENIED",
+  "live_isolated_restore": "NOT_RUN_DOCKER_PERMISSION_DENIED",
+  "fallback_used": false
+}

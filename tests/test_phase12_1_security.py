@@ -102,6 +102,7 @@ def test_security_configuration_validation(monkeypatch):
         "DATABASE_URL", "postgresql://user:password@database:5432/mecprecision"
     )
     monkeypatch.setenv("REDIS_URL", "redis://:password@redis:6379/0")
+    monkeypatch.setenv("METRICS_BEARER_TOKEN", "metrics-test-token-not-for-runtime")
     production = importlib.import_module("config.settings.production")
 
     assert production.DEBUG is False

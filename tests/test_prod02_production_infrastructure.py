@@ -15,7 +15,13 @@ ROOT = Path(__file__).resolve().parents[1]
 def run_production_settings(overrides=None):
     """Import production settings in an isolated process with a clean contract."""
     environment = os.environ.copy()
-    for key in ("SECRET_KEY", "ALLOWED_HOSTS", "DATABASE_URL", "REDIS_URL"):
+    for key in (
+        "SECRET_KEY",
+        "ALLOWED_HOSTS",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "METRICS_BEARER_TOKEN",
+    ):
         environment.pop(key, None)
     environment.update(overrides or {})
     settings_probe = (
@@ -45,11 +51,18 @@ def valid_environment():
         "ALLOWED_HOSTS": "example.test",
         "DATABASE_URL": "postgresql://user:password@database:5432/mecprecision",
         "REDIS_URL": "redis://:password@redis:6379/0",
+        "METRICS_BEARER_TOKEN": "metrics-test-token-not-for-runtime",
     }
 
 
 def test_production_settings_fail_fast_for_each_required_value():
-    for missing in ("SECRET_KEY", "ALLOWED_HOSTS", "DATABASE_URL", "REDIS_URL"):
+    for missing in (
+        "SECRET_KEY",
+        "ALLOWED_HOSTS",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "METRICS_BEARER_TOKEN",
+    ):
         environment = valid_environment()
         environment.pop(missing)
         result = run_production_settings(environment)
@@ -108,6 +121,7 @@ def test_compose_requires_secrets_and_private_postgres_redis():
     assert "config.settings.production" in compose
     assert "POSTGRES_PASSWORD:?" in compose
     assert "REDIS_PASSWORD:?" in compose
+    assert "METRICS_BEARER_TOKEN:?" in compose
     assert "postgresql://" in compose
     assert "redis://:" in compose
     assert '"5432:5432"' not in compose

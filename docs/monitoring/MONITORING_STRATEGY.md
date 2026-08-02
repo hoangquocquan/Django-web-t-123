@@ -89,8 +89,9 @@ Warning alerts:
 4. Operator follows rollback or mitigation runbook if production impact is confirmed.
 5. Incident summary is recorded in docs/reviews or the production incident system.
 
-## Current Phase Boundary
+## PROD-05 Runtime Contract
 
-Phase 12.3 creates the monitoring foundation only. It does not deploy Prometheus,
-Grafana, Sentry, CloudWatch, IIS changes, Nginx changes, or production agents.
-
+PROD-05 implements a protected Prometheus endpoint, Redis-backed request counters,
+live dependency gauges, JSON application logs, alert rules, and an importable
+dashboard contract. Prometheus/Grafana hosting remains an operator-controlled
+infrastructure action and is not automatically deployed by this repository.

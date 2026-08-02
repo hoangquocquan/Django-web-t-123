@@ -1,0 +1,8 @@
+{
+  "django_runtime": ["django_backend/apps/common", "django_backend/apps/core", "django_backend/config/settings"],
+  "operations_scripts": ["scripts/prod05_backup.py", "scripts/prod05_restore_test.py"],
+  "monitoring_contracts": ["ops/prometheus", "ops/grafana", "docs/monitoring", "docs/operations"],
+  "operator_guidance": ["docs/runbooks"],
+  "tests": ["tests/test_prod05_operations.py"],
+  "excluded_user_artifacts": ["docs.zip", "docs/reviews.zip", "mecprecision.zip"]
+}

@@ -1,0 +1,4 @@
+BLOCKED
+Docker API access was denied in the sandbox. An escalation request for the exact
+backup command was rejected because the execution environment usage limit was
+reached. No workaround, build, backup, restore, push, or deployment was attempted.

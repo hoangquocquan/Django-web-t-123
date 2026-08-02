@@ -23,14 +23,17 @@ Recommended structured JSON fields:
 - level
 - environment
 - service
-- request_id
-- user_id
+- correlation_id
 - method
 - path
 - status_code
 - latency_ms
 - message
 - error_code
+
+Application runtime logs deliberately omit client IP and user identity by default.
+Security audit tables retain hashed identifiers under their own access and retention
+policy.
 
 ## Sensitive Data Rules
 
@@ -68,4 +71,3 @@ production deployment.
 2. Search logs by endpoint, request ID, or time window.
 3. Compare application logs with database and web server logs.
 4. Record findings in the incident or review package.
-

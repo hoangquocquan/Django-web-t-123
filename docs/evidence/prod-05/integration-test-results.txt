@@ -1,0 +1,3 @@
+PASS
+Migration test standard completed with module suites and 238 Django migrated-module tests.
+Final line: MIGRATION TEST PASSED.

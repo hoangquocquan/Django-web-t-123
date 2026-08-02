@@ -1,0 +1,7 @@
+Ruff changed scope: PASS
+Ruff format changed scope: PASS
+Mypy changed scope: PASS
+Bandit changed scope: no Medium, High, or Critical findings
+Secret scan: PASS; only a clearly named test-only metrics token fixture matched
+Artifact scan: PASS; no ZIP/database/dump/backup/cache artifact staged
+Safety gates: human approval required; auto merge/deploy disabled; no bypass detected

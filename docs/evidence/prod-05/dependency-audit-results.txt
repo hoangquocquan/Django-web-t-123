@@ -1,0 +1,7 @@
+Status: NOT_RERUN_NETWORK_RESTRICTED
+
+pip-audit first encountered a denied default Windows cache path. It was rerun with
+a writable temporary cache and --disable-pip --no-deps, then the sandbox denied
+network access to pypi.org. PROD-05 changes no requirements file and adds no package.
+The immediately preceding PROD-04 audit passed for the same pinned requirements.
+This evidence does not claim a new PASS.

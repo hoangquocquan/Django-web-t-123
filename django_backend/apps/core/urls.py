@@ -2,8 +2,13 @@
 
 from django.urls import path, re_path
 
-from .views import api_cutover_status, health_check, health_rollback_status
-
+from .views import (
+    api_cutover_status,
+    health_check,
+    health_rollback_status,
+    operations_health,
+    prometheus_metrics,
+)
 
 urlpatterns = [
     re_path(r"^health/?$", health_check, name="health"),
@@ -14,4 +19,6 @@ urlpatterns = [
         name="health-rollback-status",
     ),
     path("cutover/", api_cutover_status, name="api-cutover-status"),
+    path("metrics/", prometheus_metrics, name="prometheus-metrics"),
+    path("operations/health/", operations_health, name="operations-health"),
 ]
