@@ -252,6 +252,48 @@ td {
   font-weight: 700;
 }
 
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compact-form {
+  margin-top: 16px;
+}
+
+.compact-form textarea {
+  min-height: 72px;
+}
+
+.button.small {
+  padding: 8px 12px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+details {
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+details form {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 input,
 select,
 textarea {
@@ -377,6 +419,10 @@ pre {
   .three-cols,
   .metric-grid,
   .page-head {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

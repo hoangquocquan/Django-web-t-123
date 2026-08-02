@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 2,
+  "review": {
+    "decision": "PASS",
+    "summary": "The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.",
+    "high_findings": [],
+    "medium_findings": [],
+    "recommended_actions": [],
+    "requirements_checked": [
+      "module_permission_mapping",
+      "sales_workflow",
+      "crm_workflow",
+      "approval_permission",
+      "csrf",
+      "server_validation",
+      "structured_ai_output",
+      "browser_e2e"
+    ],
+    "security_findings": [],
+    "test_findings": [],
+    "critical_findings": [],
+    "missing_requirements": [],
+    "migration_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_deploy": false,
+      "auto_merge": false,
+      "human_approval_required": true,
+      "approval_bypass_detected": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\"decision\": \"PASS\", \"summary\": \"The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.\",\"high_findings\": [],\"medium_findings\": [],\"recommended_actions\": [],\"requirements_checked\": [\"module_permission_mapping\", \"sales_workflow\", \"crm_workflow\", \"approval_permission\", \"csrf\", \"server_validation\", \"structured_ai_output\", \"browser_e2e\"],\"security_findings\": [],\"test_findings\": [],\"critical_findings\": [],\"missing_requirements\": [],\"migration_findings\": [],\"requires_human_review\": true,\"safety_gates\": {\"auto_deploy\": false, \"auto_merge\": false, \"human_approval_required\": true, \"approval_bypass_detected\": false}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "f66bdd1e44d9e54ff996d20aba4de71e90ebe9d4e465d4b03b952f08a4a139d4",
+    "review_output_sha256": "9f755be4f1305fab59c010455699609e50807c8c77d59dfc1fc720e56756b2a2",
+    "actual_diff_sha256": "6f5a9554a8866d5853376d16ac620b707382d3479b4a58b54bbff0de085dcdb9",
+    "base_commit": "da5030ee1ac69d2eb21d666a562d249064736a28",
+    "current_commit": "da5030ee1ac69d2eb21d666a562d249064736a28",
+    "correlation_id": "48b702f7-cd80-4ef1-8795-2dc065c7092d"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-01",
+  "created_at": "2026-08-02T03:31:44+00:00"
+}

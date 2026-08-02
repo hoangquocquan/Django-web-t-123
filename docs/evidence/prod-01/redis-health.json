@@ -1,0 +1,7 @@
+{
+  "status": "NOT_VERIFIED",
+  "available": false,
+  "reason": "redis-cli is not installed or not available on PATH",
+  "impact": "Not required for PROD-01; blocks a production distributed-cache claim in PROD-02/04",
+  "retry_command": "redis-cli ping"
+}

@@ -708,6 +708,7 @@ def production_language_detected(payload):
         "approved for production",
         "deploy to production",
         "safe for deployment",
+        "ready for deployment",
         "deploy the code",
         "proceed with deployment",
         "deployment approved",

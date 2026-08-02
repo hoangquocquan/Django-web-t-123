@@ -1,0 +1,9 @@
+{
+  "phase": "PROD-01",
+  "depends_on": ["PROD-00"],
+  "required_by": ["PROD-02"],
+  "internal_dependencies": {
+    "business_ui": ["foundation", "sales", "crm", "business_core", "knowledge", "ai_agent"],
+    "sales_approval": ["foundation permissions", "sales service", "human session"]
+  }
+}

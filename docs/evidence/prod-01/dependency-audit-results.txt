@@ -1,0 +1,4 @@
+COMMAND=python -m pip_audit --cache-dir <temporary-cache> -r django_backend/requirements.txt
+STATUS=PASS
+RESULT=No known vulnerabilities found.
+SCOPE=Project Django requirements only.

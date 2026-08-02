@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "endpoint_reachable": true,
+  "model_available": true,
+  "response_received": true,
+  "schema_valid": true,
+  "endpoint": "http://127.0.0.1:11434",
+  "models": ["llama3:latest", "nomic-embed-text:latest"],
+  "mandatory_review": "PASS",
+  "review_attempts": 2,
+  "fallback_used": false
+}

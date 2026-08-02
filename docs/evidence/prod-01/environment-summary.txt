@@ -1,0 +1,9 @@
+PHASE=PROD-01
+COLLECTED_AT=2026-08-02T12:24:20+09:00
+BRANCH=codex/production-readiness-full
+PYTHON=3.12.10
+DJANGO=5.2.16
+PLATFORM=Windows
+BASELINE_COMMIT=da5030ee1ac69d2eb21d666a562d249064736a28
+SCOPE=Business UI role permissions, Sales/CRM workflows, structured AI output, UAT
+LOCAL_TEST_SERVER=http://127.0.0.1:8011 (stopped after browser test)

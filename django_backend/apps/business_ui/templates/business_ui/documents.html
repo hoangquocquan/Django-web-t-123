@@ -33,26 +33,42 @@
   {% if result %}
     <section class="panel">
       <h2>Kết quả phân tích</h2>
-      <pre>{{ result }}</pre>
+      <dl class="details">
+        <dt>Tài liệu</dt><dd>{{ result.document.title }}</dd>
+        <dt>Phân loại</dt><dd>{{ result.classification }}</dd>
+        <dt>Độ tin cậy</dt><dd>{{ result.confidence }}</dd>
+        <dt>Trạng thái</dt><dd>{{ result.approval_status }}</dd>
+      </dl>
+      <div class="source-list">
+        {% for citation in result.citations %}<span>#{{ citation.chunk_id }} {{ citation.title }}</span>{% empty %}<span>Chưa có citation.</span>{% endfor %}
+      </div>
     </section>
   {% endif %}
   {% if answer %}
     <section class="panel">
       <h2>Câu trả lời có nguồn</h2>
-      <pre>{{ answer }}</pre>
+      <p>{{ answer.answer }}</p>
+      <dl class="details">
+        <dt>Câu hỏi</dt><dd>{{ answer.question }}</dd>
+        <dt>Độ tin cậy</dt><dd>{{ answer.confidence }}</dd>
+      </dl>
+      <div class="source-list">
+        {% for source in answer.sources %}<span>#{{ source.id }} {{ source.title }}</span>{% empty %}<span>Chưa có nguồn phù hợp.</span>{% endfor %}
+      </div>
+      <p class="approval-note">Nhân viên phải kiểm tra citation trước khi sử dụng.</p>
     </section>
   {% endif %}
   <section class="panel">
     <h2>Tài liệu đã nạp</h2>
     <table>
-      <thead><tr><th>Tiêu đề</th><th>Loại</th><th>Version</th><th>Metadata</th></tr></thead>
+      <thead><tr><th>Tiêu đề</th><th>Loại</th><th>Version</th><th>Phân loại</th></tr></thead>
       <tbody>
         {% for document in documents %}
           <tr>
             <td>{{ document.title }}</td>
             <td>{{ document.source_type }}</td>
             <td>{{ document.version }}</td>
-            <td>{{ document.metadata }}</td>
+            <td>{{ document.metadata.document_intelligence.classification|default:"-" }}</td>
           </tr>
         {% empty %}
           <tr><td colspan="4">Chưa có tài liệu.</td></tr>
@@ -61,4 +77,3 @@
     </table>
   </section>
 {% endblock %}
-

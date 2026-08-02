@@ -7,15 +7,80 @@
       <h1>Kanban cơ hội bán hàng</h1>
     </div>
   </section>
+  {% if can_write %}
+    <form class="panel form compact-form" method="post" action="{% url 'business_ui:lead-create' %}">
+      {% csrf_token %}
+      <h2>Thêm lead</h2>
+      <div class="form-grid">
+        <label>Công ty <input name="company" required /></label>
+        <label>Người liên hệ <input name="contact_person" required /></label>
+        <label>Email <input name="email" type="email" /></label>
+        <label>Điện thoại <input name="phone" /></label>
+        <label>Ngành <input name="industry" /></label>
+        <label>Ưu tiên
+          <select name="priority"><option>medium</option><option>high</option><option>low</option></select>
+        </label>
+      </div>
+      <label>Ghi chú <textarea name="notes"></textarea></label>
+      <button class="button" type="submit">Lưu lead</button>
+    </form>
+  {% endif %}
   <section class="kanban">
     {% for column in columns %}
       <article class="kanban-column">
-        <h2>{{ column.label }}</h2>
+        <h2>{{ column.label }} <small>{{ column.total }}</small></h2>
+        {% if column.total > pipeline_column_limit %}
+          <p class="muted">Hiển thị {{ pipeline_column_limit }} lead cập nhật gần nhất.</p>
+        {% endif %}
         {% for lead in column.leads %}
           <div class="lead-card">
             <strong>{{ lead.company }}</strong>
             <span>{{ lead.contact_person }}</span>
             <small>{{ lead.industry }} · {{ lead.priority }}</small>
+            {% if lead.owner %}<small>{{ lead.owner.full_name }}</small>{% endif %}
+            {% if can_write %}
+              <details>
+                <summary>Cập nhật</summary>
+                <form method="post" action="{% url 'business_ui:lead-transition' lead.id %}">
+                  {% csrf_token %}
+                  <label>Trạng thái
+                    <select name="status">
+                      {% for value, label in lead.STATUS_CHOICES %}<option value="{{ value }}" {% if value == lead.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                  </label>
+                  <button class="button small" type="submit">Cập nhật</button>
+                </form>
+                <form method="post" action="{% url 'business_ui:lead-assign' lead.id %}">
+                  {% csrf_token %}
+                  <label>Phụ trách
+                    <select name="owner_id" required>
+                      {% for owner in owners %}<option value="{{ owner.id }}">{{ owner.full_name }}</option>{% endfor %}
+                    </select>
+                  </label>
+                  <button class="button small" type="submit">Phân công</button>
+                </form>
+              </details>
+              <details>
+                <summary>Tạo opportunity</summary>
+                <form method="post" action="{% url 'business_ui:opportunity-create' lead.id %}">
+                  {% csrf_token %}
+                  <label>Tiêu đề <input name="title" required /></label>
+                  <label>Giá trị <input name="value" type="number" min="0" step="0.01" /></label>
+                  <label>Xác suất <input name="probability" type="number" min="0" max="100" value="10" /></label>
+                  <button class="button small" type="submit">Tạo</button>
+                </form>
+              </details>
+              <details>
+                <summary>Follow-up</summary>
+                <form method="post" action="{% url 'business_ui:follow-up-create' lead.id %}">
+                  {% csrf_token %}
+                  <label>Công việc <input name="title" required /></label>
+                  <label>Hạn <input name="due_date" type="date" /></label>
+                  <label>Ghi chú <textarea name="note"></textarea></label>
+                  <button class="button small" type="submit">Lưu</button>
+                </form>
+              </details>
+            {% endif %}
           </div>
         {% empty %}
           <p class="muted">Không có lead.</p>
@@ -24,4 +89,3 @@
     {% endfor %}
   </section>
 {% endblock %}
-

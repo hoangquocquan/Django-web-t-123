@@ -1,0 +1,7 @@
+COMMAND=python tests/e2e/prod01_browser_smoke.py
+STATUS=PASS
+RESULT=PROD01_BROWSER_E2E_PASS
+BROWSER=Google Chrome headless via Selenium
+FLOW=admin login -> Business Lead Pipeline -> CSRF lead form submit -> persisted lead rendered
+PERFORMANCE_CORRECTION=Lead response reduced from about 32 MB to 667 KB by bounded Kanban columns and removal of repeated customer options.
+SECRET_HANDLING=Credentials were supplied through process environment and were not printed or stored.

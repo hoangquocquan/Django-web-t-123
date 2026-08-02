@@ -1,0 +1,7 @@
+STATUS=PASS_WITH_WARNINGS
+COMPOSE_CONFIG=PASS
+DOCKER_CLIENT=29.4.3
+DOCKER_SERVER=NOT_AVAILABLE
+CONFIG_WARNING=C:\Users\hoang\.docker\config.json access denied
+IMPACT=No container build or runtime claim is made in PROD-01. Production container ownership belongs to PROD-02.
+RETRY_COMMAND=docker version; docker info; docker compose config

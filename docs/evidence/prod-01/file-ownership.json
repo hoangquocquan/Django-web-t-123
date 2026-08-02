@@ -1,0 +1,11 @@
+{
+  "phase": "PROD-01",
+  "owners": {
+    "business_ui": "role-filtered pages, forms, and POST controllers",
+    "sales": "transactional lead assignment, quotation approval, and handoff",
+    "foundation": "sales:approve permission definition",
+    "tests": "role matrix, workflow, validation, CSRF, and Chrome smoke"
+  },
+  "shared_settings_modified": false,
+  "legacy_modified": false
+}

@@ -16,6 +16,20 @@
         <dt>Approval</dt><dd>{{ quotation.approval_status }}</dd>
         <dt>Total</dt><dd>{{ quotation.total }}</dd>
       </dl>
+      <div class="action-row">
+        {% if can_approve_sales and quotation.approval_status != "approved" %}
+          <form method="post" action="{% url 'business_ui:quotation-approve' quotation.id %}">
+            {% csrf_token %}
+            <button class="button" type="submit">Phê duyệt</button>
+          </form>
+        {% endif %}
+        {% if can_write and quotation.approval_status == "approved" and quotation.status != "accepted" %}
+          <form method="post" action="{% url 'business_ui:quotation-handoff' quotation.id %}">
+            {% csrf_token %}
+            <button class="button secondary" type="submit">Order handoff</button>
+          </form>
+        {% endif %}
+      </div>
     </article>
     <article>
       <h2>Dòng báo giá</h2>
@@ -32,4 +46,3 @@
     </article>
   </section>
 {% endblock %}
-

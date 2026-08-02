@@ -31,9 +31,44 @@
     </article>
   </section>
   <section class="three-cols">
-    <article><h2>Interactions</h2>{% for item in interactions %}<p>{{ item.subject }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
-    <article><h2>Notes</h2>{% for item in notes %}<p>{{ item.note }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
-    <article><h2>Tasks</h2>{% for item in tasks %}<p>{{ item.title }} · {{ item.status }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}</article>
+    <article>
+      <h2>Interactions</h2>
+      {% for item in interactions %}<p>{{ item.subject }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}
+      {% if can_write %}
+        <form class="form compact-form" method="post" action="{% url 'business_ui:customer-interaction-create' customer.id %}">
+          {% csrf_token %}
+          <label>Loại <select name="interaction_type"><option>call</option><option>email</option><option>meeting</option><option>note</option></select></label>
+          <label>Tiêu đề <input name="subject" required /></label>
+          <label>Nội dung <textarea name="content"></textarea></label>
+          <button class="button small" type="submit">Thêm</button>
+        </form>
+      {% endif %}
+    </article>
+    <article>
+      <h2>Notes</h2>
+      {% for item in notes %}<p>{{ item.note }}</p>{% empty %}<p>Chưa có.</p>{% endfor %}
+      {% if can_write %}
+        <form class="form compact-form" method="post" action="{% url 'business_ui:customer-note-create' customer.id %}">
+          {% csrf_token %}
+          <label>Ghi chú <textarea name="note" required></textarea></label>
+          <button class="button small" type="submit">Thêm</button>
+        </form>
+      {% endif %}
+    </article>
+    <article>
+      <h2>Tasks</h2>
+      {% for item in tasks %}<p>{{ item.title }} · {{ item.status }}{% if item.owner %} · {{ item.owner.full_name }}{% endif %}</p>{% empty %}<p>Chưa có.</p>{% endfor %}
+      {% if can_write %}
+        <form class="form compact-form" method="post" action="{% url 'business_ui:customer-task-create' customer.id %}">
+          {% csrf_token %}
+          <label>Công việc <input name="title" required /></label>
+          <label>Hạn <input name="due_date" type="date" /></label>
+          <label>Phụ trách
+            <select name="owner_id"><option value="">Tôi</option>{% for owner in owners %}<option value="{{ owner.id }}">{{ owner.full_name }}</option>{% endfor %}</select>
+          </label>
+          <button class="button small" type="submit">Tạo task</button>
+        </form>
+      {% endif %}
+    </article>
   </section>
 {% endblock %}
-
