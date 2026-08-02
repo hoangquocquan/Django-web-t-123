@@ -11,4 +11,5 @@ Baseline: `65b77beefbb80f715baf5d30f2a70c22d7bb5d44`
 | PROD-04 | `38ebfe3fcd7b03652764bee311fc5c99fb631270` | `feat(ai-runtime): productionize ollama redis and n8n orchestration` | PASS_WITH_WARNINGS |
 | PROD-05 | `c11cb4e59151a49a32dae791461977299af8a31c` | `feat(operations): add monitoring backup restore and disaster recovery` | PASS |
 | PROD-06 | `3aa911026eeef07d0dccff42588505380d0baea4` | `test(platform): complete staging uat and production readiness validation` | PASS |
-| PROD-07 | PENDING | `docs(platform): finalize controlled production deployment handover` | PENDING |
+| PROD-07 RC | `791a44da6e10d4bdaee11b29e1ed1cbb881ce353` | `docs(platform): finalize controlled production deployment handover` | BLOCKED |
+| PROD-07 review fix | `4470334455198c7e248ef77b67572ce8c4495af7` | `fix(ai-review): reject no-finding placeholders in final gate` | BLOCKED |

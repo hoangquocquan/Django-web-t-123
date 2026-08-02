@@ -2,6 +2,11 @@
 
 ## Release Warnings
 
+- Mandatory cumulative Ollama review is BLOCKED because the model emitted
+  negative placeholder prose into Critical/High arrays. A future reviewed
+  correction phase must harden this semantic pattern and rerun the cumulative
+  gate; this run may not be manually promoted to PASS.
+
 - Docker Scout was blocked in this environment because it may transmit image
   metadata externally. Run the approved private-registry image scanner before
   production approval.

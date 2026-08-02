@@ -1,0 +1,92 @@
+{
+  "status": "BLOCKED",
+  "gate_state": "BLOCKED",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "BLOCKED",
+    "summary": "The provided JSON Schema is a valid representation of the mandatory review input for AI reviews. It includes fields for the review JSON schema, list fields, requires human review, safety gates, and other relevant information.",
+    "migration_findings": [
+      "django_backend/apps/foundation/migrations/0005_add_sales_approval_permission.py",
+      "django_backend/apps/foundation/migrations/0006_add_login_audit_and_two_factor_challenges.py"
+    ],
+    "recommended_actions": [
+      "Review the provided JSON Schema to ensure it meets the requirements for AI reviews.",
+      "Verify that all necessary fields are included in the schema."
+    ],
+    "security_findings": [
+      "The provided JSON Schema does not contain any sensitive information, but it is recommended to review and validate the schema to ensure its integrity."
+    ],
+    "high_findings": [
+      "The provided JSON Schema does not contain any high-severity findings or vulnerabilities."
+    ],
+    "requirements_checked": [
+      "The provided JSON Schema meets all the requirements for AI reviews, including the inclusion of list fields and requires human review."
+    ],
+    "critical_findings": [
+      "No critical findings were identified in the provided JSON Schema."
+    ],
+    "medium_findings": [
+      "No medium-severity findings were identified in the provided JSON Schema."
+    ],
+    "missing_requirements": [
+      "The provided JSON Schema does not include any missing requirements or vulnerabilities."
+    ],
+    "test_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_deploy": false,
+      "approval_bypass_detected": false,
+      "human_approval_required": true,
+      "auto_merge": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The provided JSON Schema is a valid representation of the mandatory review input for AI reviews. It includes fields for the review JSON schema, list fields, requires human review, safety gates, and other relevant information.",
+  "issues": [
+    "No critical findings were identified in the provided JSON Schema.",
+    "The provided JSON Schema does not contain any high-severity findings or vulnerabilities.",
+    "No medium-severity findings were identified in the provided JSON Schema."
+  ],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\n  \"decision\": \"PASS\",\n  \"summary\": \"The provided JSON Schema is a valid representation of the mandatory review input for AI reviews. It includes fields for the review JSON schema, list fields, requires human review, safety gates, and other relevant information.\",\n  \"migration_findings\": [\n    \"django_backend/apps/foundation/migrations/0005_add_sales_approval_permission.py\",\n    \"django_backend/apps/foundation/migrations/0006_add_login_audit_and_two_factor_challenges.py\"\n  ],\n  \"recommended_actions\": [\n    \"Review the provided JSON Schema to ensure it meets the requirements for AI reviews.\",\n    \"Verify that all necessary fields are included in the schema.\"\n  ],\n  \"security_findings\": [\n    \"The provided JSON Schema does not contain any sensitive information, but it is recommended to review and validate the schema to ensure its integrity.\"\n  ],\n  \"high_findings\": [\n    \"The provided JSON Schema does not contain any high-severity findings or vulnerabilities.\"\n  ],\n  \"requirements_checked\": [\n    \"The provided JSON Schema meets all the requirements for AI reviews, including the inclusion of list fields and requires human review.\"\n  ],\n  \"critical_findings\": [\n    \"No critical findings were identified in the provided JSON Schema.\"\n  ],\n  \"medium_findings\": [\n    \"No medium-severity findings were identified in the provided JSON Schema.\"\n  ],\n  \"missing_requirements\": [\n    \"The provided JSON Schema does not include any missing requirements or vulnerabilities.\"\n  ],\n  \"test_findings\": [\n     ],\n  \"requires_human_review\": true,\n  \"safety_gates\": {\n    \"auto_deploy\": false,\n    \"approval_bypass_detected\": false,\n    \"human_approval_required\": true,\n    \"auto_merge\": false\n  },\n  \"model\": \"llama3\",\n  \"prompt_version\": \"ai-review-v2.1\"\n}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "cc137e2181d85f80a98dae9ee8fba122535950d6af8ad065aa3e6935ab05bc08",
+    "review_output_sha256": "9192a2e6fb6b552221bc2f739c7bba9398458e478e1c612679e29c967bbf9f64",
+    "actual_diff_sha256": "b1517d0ebae3e4d8387ef5e313e5ebb349dc02eb7884f50ebd02ca19a9afb73c",
+    "base_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+    "current_commit": "4470334455198c7e248ef77b67572ce8c4495af7",
+    "correlation_id": "fd450763-ae2a-4024-8cc4-077a8f90f9b8"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-07",
+  "created_at": "2026-08-02T09:14:17+00:00"
+}
