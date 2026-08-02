@@ -6,6 +6,8 @@
 
 Trạng thái: `WAITING_FOR_HUMAN_APPROVAL`.
 
+Implementation commit: `a3214a862eba39fafa905710199534787f4d999e`.
+
 ## Database
 
 - Path: `django_backend/db.sqlite3`.

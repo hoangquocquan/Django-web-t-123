@@ -1,8 +1,8 @@
-bandit : [tester]	WARNING	nosec encountered (B608), but no failed test on file 
+bandit : [tester]	WARNING	nosec encountered (B608), but no failed test on file
 .\django_backend\apps\core\demo_database_validation.py:96
 At line:2 char:1
 + bandit -q -r django_backend\apps\core\demo_database_validation.py dja ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: ([tester]	WARNIN...alidation.py:96:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
+

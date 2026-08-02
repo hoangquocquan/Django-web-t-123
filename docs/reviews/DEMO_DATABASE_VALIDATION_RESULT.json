@@ -79,5 +79,6 @@
     "auto_deploy": false
   },
   "decision": "DEMO_DATABASE_VALIDATION_FAILED",
+  "implementation_commit": "a3214a862eba39fafa905710199534787f4d999e",
   "final_state": "WAITING_FOR_HUMAN_APPROVAL"
 }

@@ -4,7 +4,7 @@ At line:2 char:1
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (CommandError: D...he JSON output.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
+
 {
   "database": {
     "engine": "django.db.backends.sqlite3",
