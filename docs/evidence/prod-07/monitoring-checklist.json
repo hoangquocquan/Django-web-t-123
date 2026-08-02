@@ -1,0 +1,10 @@
+{
+  "authenticated_metrics": true,
+  "structured_redacted_logs": true,
+  "dependency_health": true,
+  "error_rate_alert": true,
+  "latency_alert": true,
+  "capacity_alert": true,
+  "login_and_governance_metrics": true,
+  "target_alert_destinations_require_human_configuration": true
+}

@@ -1,0 +1,11 @@
+{
+  "fresh_prod06_backup": "PASS",
+  "checksum_manifest": "PASS",
+  "postgres_isolated_restore": "PASS",
+  "migration_check_after_restore": "PASS",
+  "media_restore": "PASS",
+  "n8n_runtime_restore": "PASS",
+  "n8n_workflow_restore": "PASS",
+  "production_restore_executed": false,
+  "off_host_backup_required_before_deployment": true
+}

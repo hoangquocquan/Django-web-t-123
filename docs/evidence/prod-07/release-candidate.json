@@ -1,0 +1,11 @@
+{
+  "phase": "PROD-07",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+  "prod06_commit": "3aa911026eeef07d0dccff42588505380d0baea4",
+  "release_candidate_commit": "PENDING",
+  "docker_image": "mecprecision-vietnam:prod-local",
+  "docker_image_id": "sha256:ea7db5bc7cf4765bd5eba9fcfcca8385eda7b33a4c70593eb4c1d7ecf842aa31",
+  "external_push": false,
+  "production_deployment": false
+}
