@@ -2,12 +2,14 @@ import json
 from unittest.mock import patch
 
 import pytest
-from django.core.exceptions import ValidationError
-
-from apps.ai.services.ollama_client import OllamaClient, OllamaClientError, OllamaResponse
+from apps.ai.services.ollama_client import (
+    OllamaClient,
+    OllamaClientError,
+    OllamaResponse,
+)
 from apps.ai.services.prompt_manager import PromptManager
-from apps.foundation.models import FoundationRole
 from apps.foundation.services import FoundationAuthService, FoundationUserService
+from django.core.exceptions import ValidationError
 
 
 class FakeHttpResponse:
@@ -110,13 +112,43 @@ def test_ollama_generate_response_returns_answer():
     assert result.model == "llama3.1"
 
 
+@pytest.mark.parametrize(
+    "host",
+    [
+        "file:///tmp/ollama.json",
+        "ftp://localhost:11434",
+        "https://api.external-ai.example",
+        "http://user:password@localhost:11434",
+        "http://localhost:11434?token=secret",
+    ],
+)
+def test_ollama_client_rejects_non_local_or_unsafe_endpoint(host):
+    with pytest.raises(OllamaClientError, match="approved local HTTP"):
+        OllamaClient(host=host)
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "http://localhost:11434",
+        "http://127.0.0.1:11434/",
+        "http://host.docker.internal:11434",
+        "http://ollama:11434",
+    ],
+)
+def test_ollama_client_accepts_approved_local_endpoint(host):
+    assert OllamaClient(host=host).host == host.rstrip("/")
+
+
 def test_ollama_generate_response_handles_empty_answer():
-    with patch(
-        "apps.ai.services.ollama_client.request.urlopen",
-        return_value=FakeHttpResponse({"response": ""}),
+    with (
+        patch(
+            "apps.ai.services.ollama_client.request.urlopen",
+            return_value=FakeHttpResponse({"response": ""}),
+        ),
+        pytest.raises(OllamaClientError),
     ):
-        with pytest.raises(OllamaClientError):
-            OllamaClient(retries=0).generate_response("Hello")
+        OllamaClient(retries=0).generate_response("Hello")
 
 
 @pytest.mark.django_db
@@ -162,7 +194,9 @@ def test_ai_chat_api_returns_ollama_answer(client, foundation_user):
 
 
 @pytest.mark.django_db
-def test_ai_chat_api_returns_service_unavailable_when_ollama_is_down(client, foundation_user):
+def test_ai_chat_api_returns_service_unavailable_when_ollama_is_down(
+    client, foundation_user
+):
     with patch("apps.ai.views.OllamaClient", return_value=FailingOllamaClient()):
         response = client.post(
             "/api/v1/ai/chat/",

@@ -7,9 +7,9 @@ import logging
 import time
 from dataclasses import dataclass
 from urllib import error, request
+from urllib.parse import urlparse
 
 from django.conf import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +31,58 @@ class OllamaResponse:
 class OllamaClient:
     """Call the local Ollama API with timeout, retry, and safe errors."""
 
-    def __init__(self, host=None, model=None, timeout=None, retries=1, temperature=None, token_limit=None):
+    def __init__(
+        self,
+        host=None,
+        model=None,
+        timeout=None,
+        retries=1,
+        temperature=None,
+        token_limit=None,
+    ):
         """Configure the local endpoint without using any external AI service."""
-        self.host = (host or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
+        self.host = self._validated_local_host(
+            host or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")
+        )
         self.model = model or getattr(settings, "OLLAMA_MODEL", "llama3")
         self.timeout = timeout or getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 30)
         self.retries = max(0, int(retries))
-        self.temperature = float(temperature if temperature is not None else getattr(settings, "OLLAMA_TEMPERATURE", 0.2))
-        self.token_limit = int(token_limit if token_limit is not None else getattr(settings, "OLLAMA_NUM_PREDICT", 512))
+        self.temperature = float(
+            temperature
+            if temperature is not None
+            else getattr(settings, "OLLAMA_TEMPERATURE", 0.2)
+        )
+        self.token_limit = int(
+            token_limit
+            if token_limit is not None
+            else getattr(settings, "OLLAMA_NUM_PREDICT", 512)
+        )
+
+    @staticmethod
+    def _validated_local_host(host):
+        """Allow only explicit HTTP(S) endpoints intended for the local Ollama service."""
+        normalized = str(host or "").strip().rstrip("/")
+        parsed = urlparse(normalized)
+        allowed_names = {
+            "localhost",
+            "127.0.0.1",
+            "::1",
+            "host.docker.internal",
+            "ollama",
+        }
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.hostname.casefold() not in allowed_names
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise OllamaClientError(
+                "OLLAMA_HOST must be an approved local HTTP(S) endpoint."
+            )
+        return normalized
 
     def _json_request(self, method, path, payload=None):
         """Send one JSON request to Ollama and decode the JSON response."""
@@ -51,7 +95,8 @@ class OllamaClient:
         url = f"{self.host}{path}"
         req = request.Request(url, data=body, headers=headers, method=method)
         try:
-            with request.urlopen(req, timeout=self.timeout) as response:
+            # The URL is constrained by _validated_local_host before this call.
+            with request.urlopen(req, timeout=self.timeout) as response:  # nosec B310
                 raw_body = response.read().decode("utf-8")
         except error.HTTPError as exc:
             raise OllamaClientError(f"Ollama API returned HTTP {exc.code}.") from exc
@@ -66,8 +111,12 @@ class OllamaClient:
     def health_check(self):
         """Return local Ollama availability and installed model names."""
         data = self._json_request("GET", "/api/tags")
-        models = [item.get("name", "") for item in data.get("models", []) if item.get("name")]
-        model_available = any(name == self.model or name.split(":", 1)[0] == self.model for name in models)
+        models = [
+            item.get("name", "") for item in data.get("models", []) if item.get("name")
+        ]
+        model_available = any(
+            name == self.model or name.split(":", 1)[0] == self.model for name in models
+        )
         return {
             "available": True,
             "host": self.host,
@@ -82,7 +131,8 @@ class OllamaClient:
             "model": self.model,
             "prompt": prompt,
             "stream": False,
-            "options": options or {
+            "options": options
+            or {
                 "temperature": self.temperature,
                 "num_predict": self.token_limit,
             },
@@ -110,5 +160,7 @@ class OllamaClient:
                 if attempt < attempts - 1:
                     time.sleep(0.1 * (attempt + 1))
 
-        logger.warning("Ollama request failed without logging prompt content: %s", last_error)
+        logger.warning(
+            "Ollama request failed without logging prompt content: %s", last_error
+        )
         raise last_error or OllamaClientError("Ollama request failed.")
