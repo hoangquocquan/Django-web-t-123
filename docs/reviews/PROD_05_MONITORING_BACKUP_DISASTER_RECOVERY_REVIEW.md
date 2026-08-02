@@ -5,7 +5,7 @@
 - State: `BLOCKED_SAFELY`
 - Decision: `BLOCKED`
 - Baseline: `f84dd708531754efce43317cb99a0ad5174e5297`
-- Phase commit: `PENDING_UNTIL_COMMIT`
+- Phase commit: `c11cb4e59151a49a32dae791461977299af8a31c`
 
 ## Implemented
 
