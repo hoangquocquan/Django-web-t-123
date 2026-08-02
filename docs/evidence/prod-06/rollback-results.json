@@ -1,0 +1,21 @@
+{
+  "phase": "13.4",
+  "created_at": "2026-08-02T07:58:12+00:00",
+  "status": "ROLLBACK_SIMULATION_COMPLETE",
+  "deployment_failed": false,
+  "current_artifact": "mecprecision-vietnam:phase-13.1",
+  "restored_artifact_reference": "mecprecision-vietnam:previous-safe",
+  "cleanup": {
+    "skipped": false,
+    "returncode": 0,
+    "stdout": "dry-run cleanup",
+    "stderr": ""
+  },
+  "safety": {
+    "production_rollback_executed": false,
+    "production_deployed": false,
+    "cloud_infrastructure_modified": false,
+    "rollback_capability_preserved": true,
+    "human_approval_required": true
+  }
+}

@@ -1,0 +1,9 @@
+SETTINGS=config.settings.production (config.settings.staging safely inherits this contract)
+DEBUG=false
+DATABASE_URL=PostgreSQL scheme verified; value not recorded
+REDIS_URL=Redis scheme verified; value not recorded
+SECRET_VALUES_RECORDED=false
+WEB_USER=non-root
+WEB_FILESYSTEM=read-only with tmpfs
+HEALTHCHECK=healthy
+HTTPS_MODE=local trusted reverse-proxy equivalent

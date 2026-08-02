@@ -1,0 +1,3 @@
+BASE_COMMIT=81c0d2ecd2f9e533718bfe5b2c86cf66af24260b
+DEDICATED_COMMIT=RECORDED_AFTER_MANDATORY_REVIEW
+MESSAGE=test(platform): complete staging uat and production readiness validation

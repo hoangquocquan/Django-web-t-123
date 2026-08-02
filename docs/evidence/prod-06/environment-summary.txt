@@ -1,0 +1,12 @@
+PHASE=PROD-06
+ENVIRONMENT=production-like-local-staging
+DJANGO_RUNTIME=Gunicorn
+DJANGO_DEBUG=false
+DATABASE=PostgreSQL 16 Alpine
+CACHE_AND_RATE_LIMIT=Redis 7 Alpine
+AI_RUNTIME=Ollama local/private, llama3 and nomic-embed-text detected
+AUTOMATION=n8n 2.21.7
+FILE_STORAGE=production-like Docker volume
+TLS_EQUIVALENT=trusted local proxy contract with X-Forwarded-Proto=https
+ANONYMIZED_DATA=test and demo fixtures only
+PRODUCTION_DEPLOYED=false

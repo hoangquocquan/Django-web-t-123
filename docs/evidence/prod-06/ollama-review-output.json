@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The review mode is PRE_COMMIT_STAGED_DIFF. The phase specification is present, and the base and current commits are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with various extensions. The rules indicate a phase status of PASS, with all checks passing. The tests also show a PASS status for compile, django check, migration consistency, focused tests, full regression, load test, and critical findings. There are no high or critical findings reported. The safety gates require human approval, and there is no automatic merge or deployment allowed.",
+    "test_findings": [],
+    "requirements_checked": [
+      "compile",
+      "django_check",
+      "migration_drift",
+      "focused_uat",
+      "full_regression",
+      "staging_runtime",
+      "load_test",
+      "n8n_live",
+      "backup_restore",
+      "rollback_simulation",
+      "dependency_audit"
+    ],
+    "recommended_actions": [],
+    "high_findings": [],
+    "security_findings": [],
+    "missing_requirements": [],
+    "critical_findings": [],
+    "migration_findings": [],
+    "medium_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "human_approval_required": true,
+      "auto_deploy": false,
+      "approval_bypass_detected": false,
+      "auto_merge": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The review mode is PRE_COMMIT_STAGED_DIFF. The phase specification is present, and the base and current commits are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with various extensions. The rules indicate a phase status of PASS, with all checks passing. The tests also show a PASS status for compile, django check, migration consistency, focused tests, full regression, load test, and critical findings. There are no high or critical findings reported. The safety gates require human approval, and there is no automatic merge or deployment allowed.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\"decision\": \"PASS\", \"summary\": \"The review mode is PRE_COMMIT_STAGED_DIFF. The phase specification is present, and the base and current commits are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with various extensions. The rules indicate a phase status of PASS, with all checks passing. The tests also show a PASS status for compile, django check, migration consistency, focused tests, full regression, load test, and critical findings. There are no high or critical findings reported. The safety gates require human approval, and there is no automatic merge or deployment allowed.\",\"test_findings\": [], \"requirements_checked\": [\"compile\", \"django_check\", \"migration_drift\", \"focused_uat\", \"full_regression\", \"staging_runtime\", \"load_test\", \"n8n_live\", \"backup_restore\", \"rollback_simulation\", \"dependency_audit\"], \"recommended_actions\": [],\"high_findings\": [],\"security_findings\": [],\"missing_requirements\": [],\"critical_findings\": [],\"migration_findings\": [],\"medium_findings\": [],\"requires_human_review\": true,\"safety_gates\": {\"human_approval_required\": true, \"auto_deploy\": false, \"approval_bypass_detected\": false,\"auto_merge\": false}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "b4ebafb094a6719d011223d1eaefb19a698adbfda7e342dfbdd609deaf1bbe62",
+    "review_output_sha256": "67067033b41a3d4636b5d25046010a105bca059bcf8f1a321b6ed8ac98281769",
+    "actual_diff_sha256": "8aaaff889c7a57268b09ca7a87a76cd8021e66275985c784492f3085f535932e",
+    "base_commit": "81c0d2ecd2f9e533718bfe5b2c86cf66af24260b",
+    "current_commit": "81c0d2ecd2f9e533718bfe5b2c86cf66af24260b",
+    "correlation_id": "9fdb9cb6-6fcc-40e2-8af5-37e3812d3679"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-06",
+  "created_at": "2026-08-02T08:58:01+00:00"
+}
