@@ -1,0 +1,6 @@
+919f168 (codex/ai-06-final-integration) docs(ai): hoàn tất tích hợp và bàn giao AI hardening v2
+42 files changed, 2517 insertions(+), 9 deletions(-)
+
+Evidence, final review, handover, phase status, known issues, approval queue,
+and commit manifest were recorded. No ZIP, runtime database, secret, cache,
+merge, push, tag, or deployment was included.

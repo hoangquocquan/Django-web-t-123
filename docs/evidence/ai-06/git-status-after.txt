@@ -1,0 +1,9 @@
+STATUS: USER_ARTIFACTS_REMAIN_UNTRACKED
+COMMAND: git status --short
+OUTPUT:
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+The three ZIP files predated AI-06 work and were intentionally not staged,
+modified, deleted, or committed.

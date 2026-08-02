@@ -9,6 +9,7 @@
 - Baseline: `e10b456d21e1c190b2944fbe79befb88d81d4763`
 - AI-05 V2: `81232332776fd30f22d607b61ac8aec9706d7f38`
 - Integration security fix: `8e4a592e8b11ac21d18ccfe4598585f64737ec3c`
+- AI-06 documentation commit: `919f16854f5cee5fb2da42d770bec7558ad6b715`
 
 The required AI-06 technical gates pass. Warnings are environmental or inherited
 and do not permit merge, deployment, or AI self-approval.
