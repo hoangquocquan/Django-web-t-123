@@ -1,6 +1,6 @@
 {
   "phase": "PROD-06",
-  "created_at": "2026-08-02T07:54:50+00:00",
+  "created_at": "2026-08-02T11:12:06+00:00",
   "status": "PASS",
   "environment": "production-like-local-staging",
   "tls_equivalent": "X-Forwarded-Proto=https through trusted proxy contract",
@@ -44,31 +44,31 @@
     "django_health": {
       "ok": true,
       "status_code": 200,
-      "latency_ms": 68.62,
+      "latency_ms": 36.64,
       "body_preview": "{\"status\":\"ok\",\"api_version\":\"1.1.0\",\"environment\":\"production\",\"database\":\"ok\",\"sqlite_version\":\"3.46.1\",\"redis_enabled\":true}"
     },
     "operations_health": {
       "ok": true,
       "status_code": 200,
-      "latency_ms": 123.25,
-      "body_preview": "{\"success\":true,\"data\":{\"status\":\"ready\",\"hostname\":\"dfd724919eb2\",\"checked_at\":\"2026-08-02T07:54:50.186145+00:00\",\"dependencies\":{\"database\":{\"available\":true,\"latency_ms\":10.212,\"detail\":\"query_ok\"},\"redis\":{\"available\":true,\"latency_ms\":2.342,\"detail\":\"ping_ok\"},\"ollama\":{\"available\":true,\"latenc"
+      "latency_ms": 51.31,
+      "body_preview": "{\"success\":true,\"data\":{\"status\":\"ready\",\"hostname\":\"dfd724919eb2\",\"checked_at\":\"2026-08-02T11:12:06.720080+00:00\",\"dependencies\":{\"database\":{\"available\":true,\"latency_ms\":1.258,\"detail\":\"query_ok\"},\"redis\":{\"available\":true,\"latency_ms\":9.159,\"detail\":\"ping_ok\"},\"ollama\":{\"available\":true,\"latency"
     },
     "ai_health": {
       "ok": true,
       "status_code": 200,
-      "latency_ms": 13.56,
+      "latency_ms": 14.85,
       "body_preview": "{\"status\":\"ready\",\"available\":true,\"endpoint_reachable\":true,\"response_received\":true,\"model\":\"llama3\",\"model_available\":true,\"endpoint\":\"http://host.docker.internal:11434\",\"models\":[\"nomic-embed-text:latest\",\"llama3:latest\"]}"
     },
     "n8n_health": {
       "ok": true,
       "status_code": 200,
-      "latency_ms": 2.63,
+      "latency_ms": 2.67,
       "body_preview": "{\"status\":\"ok\"}"
     },
     "ollama_models": {
       "ok": true,
       "status_code": 200,
-      "latency_ms": 3.2,
+      "latency_ms": 4.26,
       "body_preview": "{\"models\":[{\"name\":\"nomic-embed-text:latest\",\"model\":\"nomic-embed-text:latest\",\"modified_at\":\"2026-08-01T23:52:22.9112405+09:00\",\"size\":274302450,\"digest\":\"0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"nomic-bert\",\"families\":"
     }
   },

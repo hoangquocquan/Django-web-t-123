@@ -1,0 +1,35 @@
+{
+  "phase": "PROD-06",
+  "status": "PASS",
+  "results": {
+    "django_check": "PASS",
+    "migration_drift": "PASS",
+    "focused_uat": {"passed": 100, "failed": 0},
+    "full_regression": {"passed": 538, "failed": 0},
+    "staging_runtime": "PASS",
+    "n8n_live_hmac": "PASS",
+    "ollama_runtime": {
+      "endpoint_reachable": true,
+      "model_list_received": true,
+      "models": ["nomic-embed-text:latest", "llama3:latest"],
+      "selected_model": "llama3",
+      "selected_model_available": true
+    },
+    "load_smoke": {"requests": 140, "errors": 0, "p95_ms": 55.01},
+    "backup_restore": "RESTORE_TEST_PASS",
+    "review_v3_focused": {"passed": 82, "failed": 0},
+    "mypy": "PASS",
+    "bandit": "PASS"
+  },
+  "critical_findings": 0,
+  "high_findings": 0,
+  "failed_required": [],
+  "safety": {
+    "production_modified": false,
+    "deployment_executed": false,
+    "phase_advanced": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

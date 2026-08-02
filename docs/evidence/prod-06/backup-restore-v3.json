@@ -1,0 +1,15 @@
+{
+  "status": "RESTORE_TEST_PASS",
+  "manifest_schema": 1,
+  "database": {
+    "migration_check": "PASS",
+    "database_smoke": "PASS"
+  },
+  "files": {
+    "media": 0,
+    "n8n_runtime": 7,
+    "n8n_workflows": 5
+  },
+  "isolated_restore": true,
+  "production_data_modified": false
+}
