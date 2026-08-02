@@ -3,23 +3,29 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mecprecision-vietnam:local
-    container_name: mecprecision-web-local
+    image: mecprecision-vietnam:prod-local
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
     ports:
-      - "8000:8000"
+      - "${WEB_PORT:-8000}:8000"
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.development
-      SECRET_KEY: docker-local-build-only-secret
-      DEBUG: "False"
-      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,web
-      DATABASE_URL: sqlite:////app/django_backend/db.sqlite3
-      LEGACY_DATABASE_URL: file:/app/backend/database/mecprecision.sqlite?mode=ro
-      REDIS_URL: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://localhost}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mecprecision}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@database:5432/${POSTGRES_DB:-mecprecision}
+      DATABASE_SSLMODE: disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+      SECURE_SSL_REDIRECT: "true"
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
     depends_on:
       database:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - mecprecision-local
     volumes:
@@ -27,11 +33,16 @@ services:
 
   database:
     image: postgres:16-alpine
-    container_name: mecprecision-postgres-local
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: mecprecision_local
-      POSTGRES_USER: mecprecision
-      POSTGRES_PASSWORD: local-dev-password-only
+      POSTGRES_DB: ${POSTGRES_DB:-mecprecision}
+      POSTGRES_USER: ${POSTGRES_USER:-mecprecision}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mecprecision} -d ${POSTGRES_DB:-mecprecision}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - mecprecision-local
     volumes:
@@ -39,7 +50,13 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: mecprecision-redis-local
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a '${REDIS_PASSWORD:?REDIS_PASSWORD is required}' ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - mecprecision-local
     volumes:

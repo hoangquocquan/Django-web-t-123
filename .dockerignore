@@ -11,6 +11,17 @@ venv/
 .env
 .env.*
 docs.zip
+*.zip
+*.sqlite
+*.sqlite3
+*.db
+**/*.zip
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+backups/
+archive/
+docs/migration/production_evidence/input/
 *.log
 **/*.log
 

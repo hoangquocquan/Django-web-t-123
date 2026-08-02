@@ -15,6 +15,7 @@ venv/
 .env.*
 !.env.example
 !.env.dryrun.example
+!.env.production.example
 
 # Django
 db.sqlite3

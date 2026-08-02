@@ -1,0 +1,9 @@
+Branch: codex/production-readiness-full
+Baseline: 97c8f2265e5c6ca4a5bcb000b65996b46bc23cc9
+
+Before PROD-02, the working tree contained only these explained user artifacts:
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+They remain unmodified, unstaged, and uncommitted.

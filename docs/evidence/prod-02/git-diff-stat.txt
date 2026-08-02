@@ -1,0 +1,5 @@
+PROD-02 changes cover fail-fast production settings, PostgreSQL/Redis Compose,
+non-root Gunicorn image, WhiteNoise static delivery, pinned runtime/development
+dependencies, production health probes, and deterministic infrastructure tests.
+
+Exact final stat is captured by `git show --stat` after the dedicated commit.

@@ -1,0 +1,5 @@
+DRIFT_COMMAND=python django_backend/manage.py makemigrations --check --dry-run
+DRIFT_STATUS=PASS
+POSTGRES_COMMAND=docker compose run --rm web python manage.py migrate --noinput
+POSTGRES_STATUS=PASS
+DATABASE_STATE=Empty PostgreSQL volume initialized and every managed migration applied, including foundation.0005.

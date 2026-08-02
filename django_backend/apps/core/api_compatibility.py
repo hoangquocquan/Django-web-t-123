@@ -5,13 +5,14 @@ This module keeps the response compatible with the legacy `/api/health`
 contract while Django begins serving the route.
 """
 
-from pathlib import Path
 import os
 import sqlite3
+from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from django.conf import settings
-
+from django.core.cache import cache
+from django.db import connections
 
 LEGACY_HEALTH_ENDPOINT = "/api/health"
 DJANGO_HEALTH_ENDPOINT = "/api/v1/health"
@@ -55,6 +56,26 @@ def is_legacy_database_available():
     return bool(database_path and database_path.exists())
 
 
+def is_default_database_available():
+    """Probe the Django-owned database without leaking connection details."""
+    try:
+        with connections["default"].cursor() as cursor:
+            cursor.execute("SELECT 1")
+            return cursor.fetchone() == (1,)
+    except Exception:  # noqa: BLE001 - health must degrade instead of exposing internals
+        return False
+
+
+def is_default_cache_available():
+    """Probe the configured cache using a short-lived non-sensitive value."""
+    try:
+        key = "health:cache"
+        cache.set(key, "ok", timeout=5)
+        return cache.get(key) == "ok"
+    except Exception:  # noqa: BLE001 - health must degrade instead of exposing internals
+        return False
+
+
 def build_legacy_health_response():
     """Build the same public health payload shape used by legacy backend.
 
@@ -62,14 +83,28 @@ def build_legacy_health_response():
     `status`, `api_version`, `database`, or `redis_enabled`, it can continue
     reading those keys after the route is served by Django.
     """
-    database_ok = is_legacy_database_available()
+    production_runtime = getattr(settings, "ENVIRONMENT", "development") == "production"
+    database_ok = (
+        is_default_database_available()
+        if production_runtime
+        else is_legacy_database_available()
+    )
+    redis_enabled = (
+        is_default_cache_available()
+        if production_runtime
+        else _env_bool("MEC_REDIS_CACHE_ENABLED", False)
+    )
     return {
-        "status": "ok" if database_ok else "degraded",
+        "status": "ok"
+        if database_ok and (redis_enabled or not production_runtime)
+        else "degraded",
         "api_version": LEGACY_API_VERSION,
-        "environment": os.getenv("MEC_ENV", "development"),
+        "environment": getattr(
+            settings, "ENVIRONMENT", os.getenv("MEC_ENV", "development")
+        ),
         "database": "ok" if database_ok else "missing",
         "sqlite_version": sqlite3.sqlite_version,
-        "redis_enabled": _env_bool("MEC_REDIS_CACHE_ENABLED", False),
+        "redis_enabled": redis_enabled,
     }
 
 

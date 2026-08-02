@@ -1,18 +1,17 @@
+import importlib
 import json
 import sys
 from pathlib import Path
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from config.settings import production
-from scripts.phase12_1_dependency_audit import build_audit
 from apps.accounts.services.auth_compatibility_service import PermissionMatrix
 from apps.api.permissions import ReadOnlyApiPermission
 from apps.api.serializers.auth import profile_to_dict
 
+from scripts.phase12_1_dependency_audit import build_audit
 
 SECURITY_DOCUMENTS = [
     PROJECT_ROOT / "docs" / "reviews" / "PHASE_12.1_SECURITY_ASSESSMENT.md",
@@ -83,7 +82,9 @@ def test_authorization_matrix_boundaries():
 
 def test_secret_exposure_detection_policy():
     gitignore = read_text(PROJECT_ROOT / ".gitignore")
-    secrets_policy = read_text(PROJECT_ROOT / "docs" / "security" / "SECRETS_MANAGEMENT_POLICY.md")
+    secrets_policy = read_text(
+        PROJECT_ROOT / "docs" / "security" / "SECRETS_MANAGEMENT_POLICY.md"
+    )
 
     assert ".env" in gitignore
     assert ".env.*" in gitignore
@@ -92,7 +93,17 @@ def test_secret_exposure_detection_policy():
     assert "session IDs" in secrets_policy
 
 
-def test_security_configuration_validation():
+def test_security_configuration_validation(monkeypatch):
+    from config.settings import base
+
+    monkeypatch.setenv("SECRET_KEY", "phase12-test-key-not-for-runtime")
+    monkeypatch.setenv("ALLOWED_HOSTS", "example.test")
+    monkeypatch.setenv(
+        "DATABASE_URL", "postgresql://user:password@database:5432/mecprecision"
+    )
+    monkeypatch.setenv("REDIS_URL", "redis://:password@redis:6379/0")
+    production = importlib.import_module("config.settings.production")
+
     assert production.DEBUG is False
     assert production.SECURE_SSL_REDIRECT is True
     assert production.SESSION_COOKIE_SECURE is True
@@ -100,6 +111,7 @@ def test_security_configuration_validation():
     assert production.SECURE_CONTENT_TYPE_NOSNIFF is True
     assert production.X_FRAME_OPTIONS == "DENY"
     assert production.SECURE_HSTS_SECONDS >= 31536000
+    assert "whitenoise.middleware.WhiteNoiseMiddleware" not in base.MIDDLEWARE
 
 
 def test_dependency_audit_reports_unpinned_dependencies():
@@ -107,5 +119,8 @@ def test_dependency_audit_reports_unpinned_dependencies():
 
     assert audit["dependency_count"] > 0
     assert audit["cve_scan_status"] == "NOT_RUN_NETWORK_DISABLED"
-    assert audit["status"] in {"DEPENDENCY_AUDIT_COMPLETE", "DEPENDENCY_AUDIT_COMPLETE_WITH_WARNINGS"}
+    assert audit["status"] in {
+        "DEPENDENCY_AUDIT_COMPLETE",
+        "DEPENDENCY_AUDIT_COMPLETE_WITH_WARNINGS",
+    }
     assert any(item["package"] == "django" for item in audit["dependencies"])

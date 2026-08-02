@@ -1,0 +1,5 @@
+DEVELOPMENT_COMMAND=python django_backend/manage.py check
+DEVELOPMENT_STATUS=PASS
+PRODUCTION_COMMAND=python manage.py check --settings=config.settings.production (inside final image)
+PRODUCTION_STATUS=PASS
+RESULT=System check identified no issues (0 silenced).

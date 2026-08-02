@@ -1,0 +1,4 @@
+STATUS=PASS
+FLOW=Docker build -> PostgreSQL/Redis health -> migrate empty database -> Gunicorn startup -> HTTPS-proxy-header health request
+HTTP_RESULT={"status":"ok","api_version":"1.1.0","environment":"production","database":"ok","sqlite_version":"3.46.1","redis_enabled":true}
+NOTE=sqlite_version remains only as a legacy response-contract field; the active production database probe is PostgreSQL.
