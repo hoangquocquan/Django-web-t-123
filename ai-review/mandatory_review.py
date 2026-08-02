@@ -19,7 +19,7 @@ from review_v3 import validate_review_v3_evidence
 PROMPT_VERSION = os.getenv("AI_REVIEW_PROMPT_VERSION", "ai-review-v3.0")
 MAX_RETRIES = 3
 DEFAULT_CONTEXT_TOKENS = 8192
-NUM_PREDICT = 1200
+DEFAULT_NUM_PREDICT = 1200
 TEMPERATURE = 0.0
 WAITING_HUMAN_APPROVAL = "_".join(("WAITING", "HUMAN", "APPROVAL"))
 SAFETY_GATE_FIELDS = {
@@ -256,7 +256,7 @@ class LocalOllamaReviewTransport:
                 "stream": False,
                 "format": prompt.output_schema,
                 "options": {
-                    "num_predict": NUM_PREDICT,
+                    "num_predict": review_num_predict(),
                     "num_ctx": review_context_tokens(),
                     "temperature": TEMPERATURE,
                 },
@@ -269,7 +269,7 @@ class LocalOllamaReviewTransport:
                 "stream": False,
                 "format": review_json_schema(model),
                 "options": {
-                    "num_predict": NUM_PREDICT,
+                    "num_predict": review_num_predict(),
                     "num_ctx": review_context_tokens(),
                     "temperature": TEMPERATURE,
                 },
@@ -312,6 +312,17 @@ def review_context_tokens():
     except ValueError:
         configured = DEFAULT_CONTEXT_TOKENS
     return min(32768, max(4096, configured))
+
+
+def review_num_predict():
+    """Giới hạn output local để aggregate lớn đủ JSON nhưng không chạy vô hạn."""
+    try:
+        configured = int(
+            os.getenv("AI_REVIEW_NUM_PREDICT", str(DEFAULT_NUM_PREDICT))
+        )
+    except ValueError:
+        configured = DEFAULT_NUM_PREDICT
+    return min(8192, max(512, configured))
 
 
 def build_review_prompt(evidence, rules, tests, model):
@@ -1012,7 +1023,7 @@ def run_mandatory_review(
                 "prompt_version": PROMPT_VERSION,
                 "context_tokens": review_context_tokens(),
                 "temperature": TEMPERATURE,
-                "num_predict": NUM_PREDICT,
+                "num_predict": review_num_predict(),
                 "error": "",
                 "response": last_transport.response,
             },
@@ -1116,7 +1127,7 @@ def blocked_result(model, url, input_hash, reason, errors, attempts=0, transport
             "prompt_version": PROMPT_VERSION,
             "context_tokens": review_context_tokens(),
             "temperature": TEMPERATURE,
-            "num_predict": NUM_PREDICT,
+            "num_predict": review_num_predict(),
             "error": "; ".join(errors),
             "response": "",
         },

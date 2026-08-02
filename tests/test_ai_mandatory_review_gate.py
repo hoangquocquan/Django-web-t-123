@@ -19,6 +19,7 @@ from mandatory_review import (
     TransportResult,
     build_review_prompt,
     review_context_tokens,
+    review_num_predict,
     review_json_schema,
     run_mandatory_review,
     safe_patch_projection,
@@ -969,6 +970,15 @@ def test_valid_pass_preserves_required_human_approval_gate():
         "error": "",
         "response": json.dumps(valid_review()),
     }
+
+
+def test_review_num_predict_is_configurable_and_bounded(monkeypatch):
+    monkeypatch.setenv("AI_REVIEW_NUM_PREDICT", "4096")
+    assert review_num_predict() == 4096
+    monkeypatch.setenv("AI_REVIEW_NUM_PREDICT", "99999")
+    assert review_num_predict() == 8192
+    monkeypatch.setenv("AI_REVIEW_NUM_PREDICT", "invalid")
+    assert review_num_predict() == 1200
 
 
 @pytest.mark.parametrize(
