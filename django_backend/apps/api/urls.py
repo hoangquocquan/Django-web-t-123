@@ -2,7 +2,15 @@
 
 from django.urls import path
 
-from .views.auth import permissions, profile
+from apps.ai.views import ai_chat, ai_governance_events, ai_health
+from apps.ai_agent.views import agent_run, sales_assistant
+from apps.knowledge.views import (
+    knowledge_chat,
+    knowledge_document_download,
+    knowledge_documents,
+    knowledge_search,
+)
+
 from .views.admin_interface import (
     admin_customer_detail,
     admin_customers,
@@ -19,6 +27,7 @@ from .views.admin_interface import (
     admin_transactions,
     admin_workflows,
 )
+from .views.auth import permissions, profile
 from .views.business_core import (
     business_customer_detail,
     business_customers,
@@ -30,12 +39,18 @@ from .views.business_core import (
 )
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
-from .views.crm import contact_requests, crm_customer_interactions, customer_detail, customers
+from .views.crm import (
+    contact_requests,
+    crm_customer_interactions,
+    customer_detail,
+    customers,
+)
 from .views.foundation import (
     foundation_login,
     foundation_logout,
     foundation_permission_check,
     foundation_roles,
+    foundation_rotate_token,
     foundation_user_profile,
     foundation_users,
 )
@@ -49,9 +64,6 @@ from .views.replacement import (
     openapi_schema,
     version,
 )
-from apps.ai.views import ai_chat, ai_governance_events, ai_health
-from apps.ai_agent.views import agent_run, sales_assistant
-from apps.knowledge.views import knowledge_chat, knowledge_documents, knowledge_search
 from .views.sales import (
     quote_detail,
     quote_files,
@@ -64,29 +76,60 @@ from .views.sales import (
 )
 from .views.transaction_domain import (
     order_detail as transaction_order_detail,
+)
+from .views.transaction_domain import (
     orders as transaction_orders,
+)
+from .views.transaction_domain import (
     transactions,
     workflows,
 )
-
 
 urlpatterns = [
     path("admin/login/", admin_login, name="api-admin-login"),
     path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
     path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
     path("admin/products/", admin_products, name="api-admin-products"),
-    path("admin/products/<int:product_id>/", admin_product_detail, name="api-admin-product-detail"),
+    path(
+        "admin/products/<int:product_id>/",
+        admin_product_detail,
+        name="api-admin-product-detail",
+    ),
     path("admin/customers/", admin_customers, name="api-admin-customers"),
-    path("admin/customers/<int:customer_id>/", admin_customer_detail, name="api-admin-customer-detail"),
-    path("admin/inventory/warehouses/", admin_inventory_warehouses, name="api-admin-inventory-warehouses"),
-    path("admin/inventory/items/", admin_inventory_items, name="api-admin-inventory-items"),
-    path("admin/inventory/items/<int:item_id>/adjust/", admin_inventory_adjust, name="api-admin-inventory-adjust"),
+    path(
+        "admin/customers/<int:customer_id>/",
+        admin_customer_detail,
+        name="api-admin-customer-detail",
+    ),
+    path(
+        "admin/inventory/warehouses/",
+        admin_inventory_warehouses,
+        name="api-admin-inventory-warehouses",
+    ),
+    path(
+        "admin/inventory/items/",
+        admin_inventory_items,
+        name="api-admin-inventory-items",
+    ),
+    path(
+        "admin/inventory/items/<int:item_id>/adjust/",
+        admin_inventory_adjust,
+        name="api-admin-inventory-adjust",
+    ),
     path("admin/orders/", admin_orders, name="api-admin-orders"),
-    path("admin/orders/<int:order_id>/", admin_order_detail, name="api-admin-order-detail"),
+    path(
+        "admin/orders/<int:order_id>/",
+        admin_order_detail,
+        name="api-admin-order-detail",
+    ),
     path("admin/workflows/", admin_workflows, name="api-admin-workflows"),
     path("admin/transactions/", admin_transactions, name="api-admin-transactions"),
     path("catalog/products/", products, name="api-catalog-products"),
-    path("catalog/products/<int:product_id>/", product_detail, name="api-catalog-product-detail"),
+    path(
+        "catalog/products/<int:product_id>/",
+        product_detail,
+        name="api-catalog-product-detail",
+    ),
     path("catalog/categories/", categories, name="api-catalog-categories"),
     path("catalog/materials/", materials, name="api-catalog-materials"),
     path("catalog/capabilities/", capabilities, name="api-catalog-capabilities"),
@@ -97,7 +140,11 @@ urlpatterns = [
         name="api-business-product-detail",
     ),
     path("crm/customers/", customers, name="api-crm-customers"),
-    path("crm/customers/<int:customer_id>/", customer_detail, name="api-crm-customer-detail"),
+    path(
+        "crm/customers/<int:customer_id>/",
+        customer_detail,
+        name="api-crm-customer-detail",
+    ),
     path(
         "crm/customers/<int:customer_id>/interactions/",
         crm_customer_interactions,
@@ -110,36 +157,61 @@ urlpatterns = [
         business_customer_detail,
         name="api-business-customer-detail",
     ),
-    path("inventory/warehouses/", inventory_warehouses, name="api-inventory-warehouses"),
+    path(
+        "inventory/warehouses/", inventory_warehouses, name="api-inventory-warehouses"
+    ),
     path("inventory/items/", inventory_items, name="api-inventory-items"),
-    path("inventory/items/<int:item_id>/adjust/", inventory_adjust, name="api-inventory-adjust"),
+    path(
+        "inventory/items/<int:item_id>/adjust/",
+        inventory_adjust,
+        name="api-inventory-adjust",
+    ),
     path("sales/quotes/", quotes, name="api-sales-quotes"),
     path("sales/quotes/<int:quote_id>/", quote_detail, name="api-sales-quote-detail"),
-    path("sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"),
+    path(
+        "sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"
+    ),
     path("sales/leads/", sales_leads, name="api-sales-leads"),
-    path("sales/leads/<int:lead_id>/transition/", sales_lead_transition, name="api-sales-lead-transition"),
+    path(
+        "sales/leads/<int:lead_id>/transition/",
+        sales_lead_transition,
+        name="api-sales-lead-transition",
+    ),
     path("sales/opportunities/", sales_opportunities, name="api-sales-opportunities"),
     path("sales/quotations/", sales_quotations, name="api-sales-quotations"),
     path("sales/dashboard/", sales_dashboard, name="api-sales-dashboard"),
     path("orders/", transaction_orders, name="api-transaction-orders"),
-    path("orders/<int:order_id>/", transaction_order_detail, name="api-transaction-order-detail"),
+    path(
+        "orders/<int:order_id>/",
+        transaction_order_detail,
+        name="api-transaction-order-detail",
+    ),
     path("workflows/", workflows, name="api-transaction-workflows"),
     path("transactions/", transactions, name="api-transaction-history"),
     path("cms/pages/", pages, name="api-cms-pages"),
     path("cms/pages/<slug:slug>/", page_detail, name="api-cms-page-detail"),
     path("cms/menu/", menu, name="api-cms-menu"),
-    path("newsletter/subscribers/", newsletter_subscribers, name="api-newsletter-subscribers"),
+    path(
+        "newsletter/subscribers/",
+        newsletter_subscribers,
+        name="api-newsletter-subscribers",
+    ),
     path("auth/profile/", profile, name="api-auth-profile"),
     path("auth/permissions/", permissions, name="api-auth-permissions"),
     path("foundation/auth/login/", foundation_login, name="api-foundation-login"),
     path("foundation/auth/logout/", foundation_logout, name="api-foundation-logout"),
+    path(
+        "foundation/auth/rotate/", foundation_rotate_token, name="api-foundation-rotate"
+    ),
     path("foundation/users/", foundation_users, name="api-foundation-users"),
     path(
         "foundation/users/<int:user_id>/profile/",
         foundation_user_profile,
         name="api-foundation-user-profile",
     ),
-    path("foundation/permissions/roles/", foundation_roles, name="api-foundation-roles"),
+    path(
+        "foundation/permissions/roles/", foundation_roles, name="api-foundation-roles"
+    ),
     path(
         "foundation/permissions/check/",
         foundation_permission_check,
@@ -153,8 +225,15 @@ urlpatterns = [
     path("demo/external/weather/", external_weather, name="api-demo-external-weather"),
     path("ai/health/", ai_health, name="api-ai-health"),
     path("ai/chat/", ai_chat, name="api-ai-chat"),
-    path("ai/governance/events/", ai_governance_events, name="api-ai-governance-events"),
+    path(
+        "ai/governance/events/", ai_governance_events, name="api-ai-governance-events"
+    ),
     path("knowledge/documents/", knowledge_documents, name="api-knowledge-documents"),
+    path(
+        "knowledge/documents/<int:document_id>/download/",
+        knowledge_document_download,
+        name="api-knowledge-document-download",
+    ),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
     path("agent/run/", agent_run, name="api-agent-run"),

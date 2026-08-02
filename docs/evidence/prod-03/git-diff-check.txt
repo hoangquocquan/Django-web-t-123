@@ -1,0 +1,3 @@
+Command: git diff --check
+Result: PASS
+Whitespace errors: 0

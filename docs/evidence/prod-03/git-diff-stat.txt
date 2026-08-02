@@ -1,0 +1,4 @@
+Baseline: 02a79c4b882f3f7cabeb8463e422048d8346668d
+Status: PASS
+The final staged stat is captured in ollama-review-input.json and the dedicated commit show.
+No ZIP, runtime database, backup, cache, log, or secret is included.

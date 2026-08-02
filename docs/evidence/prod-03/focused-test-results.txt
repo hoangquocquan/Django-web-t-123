@@ -1,0 +1,5 @@
+Command: pytest focused PROD-03 and adjacent auth/knowledge/security suites
+Result: PASS
+Passed: 42
+Failed: 0
+Duration: 3.15 seconds

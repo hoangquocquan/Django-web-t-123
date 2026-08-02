@@ -1,0 +1,5 @@
+Command: pytest -q
+Result: PASS
+Passed: 479
+Failed: 0
+Duration: 55.87 seconds

@@ -18,6 +18,10 @@ from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.knowledge_service import KnowledgeService, document_to_dict
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.text_processing import TextProcessor
+from apps.knowledge.services.upload_security import (
+    UploadSecurityService,
+    stored_file_cleanup,
+)
 
 
 @dataclass(frozen=True)
@@ -44,45 +48,67 @@ class DocumentIntelligenceResult:
 class DocumentIntelligenceService:
     """Xu ly tai lieu ky thuat thanh tri thuc co the tim kiem."""
 
-    def __init__(self, knowledge_service=None, text_processor=None, search_service=None):
+    def __init__(
+        self,
+        knowledge_service=None,
+        text_processor=None,
+        search_service=None,
+        upload_security=None,
+    ):
         """Cho phep test inject service gia lap neu can."""
         self.knowledge_service = knowledge_service or KnowledgeService()
         self.text_processor = text_processor or TextProcessor()
         self.search_service = search_service or KnowledgeSearchService()
+        self.upload_security = upload_security or UploadSecurityService()
 
     @transaction.atomic
-    def ingest_uploaded_document(self, uploaded_file, *, title="", created_by_email="", permission_level="internal"):
+    def ingest_uploaded_document(
+        self,
+        uploaded_file,
+        *,
+        title="",
+        created_by_email="",
+        permission_level="internal",
+    ):
         """Luu file upload, trich text, phan loai va nap vao Knowledge Base."""
-        safe_name = Path(uploaded_file.name or "uploaded-document.txt").name
-        storage_path = default_storage.save(f"knowledge/uploads/{safe_name}", uploaded_file)
-        absolute_path = Path(settings.MEDIA_ROOT) / storage_path
-        extracted_text = self.text_processor.extract_text(absolute_path)
-        cleaned_text = self.text_processor.clean_text(extracted_text)
-        classification = self.classify_document(safe_name, cleaned_text)
-        confidence = self.confidence_score(cleaned_text, classification)
-        approval_status = "pending_review" if confidence < 0.65 else "ready_for_review"
-        metadata = {
-            "document_intelligence": {
-                "classification": classification,
-                "confidence": confidence,
-                "approval_status": approval_status,
-                "version_status": "current",
-                "source_citation": safe_name,
-                "extraction_method": self.extraction_method(safe_name, cleaned_text),
-                "human_approval_required": True,
-            }
-        }
-        document = self.knowledge_service.create_document(
-            title=title or safe_name,
-            content=cleaned_text,
-            description=f"Document Intelligence import: {classification}",
-            category_name=classification,
-            source_type=Path(safe_name).suffix.lower().lstrip(".") or "text",
-            source_path=storage_path,
-            permission_level=permission_level,
-            created_by_email=created_by_email,
-            metadata=metadata,
+        validation = self.upload_security.validate(uploaded_file)
+        safe_name = validation["filename"]
+        storage_path = default_storage.save(
+            f"knowledge/uploads/{safe_name}", uploaded_file
         )
+        with stored_file_cleanup(storage_path):
+            absolute_path = Path(settings.MEDIA_ROOT) / storage_path
+            extracted_text = self.text_processor.extract_text(absolute_path)
+            cleaned_text = self.text_processor.clean_text(extracted_text)
+            classification = self.classify_document(safe_name, cleaned_text)
+            confidence = self.confidence_score(cleaned_text, classification)
+            approval_status = (
+                "pending_review" if confidence < 0.65 else "ready_for_review"
+            )
+            metadata = {
+                "document_intelligence": {
+                    "classification": classification,
+                    "confidence": confidence,
+                    "approval_status": approval_status,
+                    "version_status": "current",
+                    "source_citation": safe_name,
+                    "extraction_method": self.extraction_method(
+                        safe_name, cleaned_text
+                    ),
+                    "human_approval_required": True,
+                }
+            }
+            document = self.knowledge_service.create_document(
+                title=title or safe_name,
+                content=cleaned_text,
+                description=f"Document Intelligence import: {classification}",
+                category_name=classification,
+                source_type=Path(safe_name).suffix.lower().lstrip(".") or "text",
+                source_path=storage_path,
+                permission_level=permission_level,
+                created_by_email=created_by_email,
+                metadata=metadata,
+            )
         citations = self.build_citations(document)
         return DocumentIntelligenceResult(
             document=document,
@@ -96,8 +122,22 @@ class DocumentIntelligenceService:
         """Phan loai tai lieu bang keyword de minh bach va de giai thich."""
         text = f"{filename} {content}".lower()
         rules = [
-            ("quality", ["quality", "iso", "inspection", "kiem tra", "qc", "procedure"]),
-            ("technical", ["drawing", "tolerance", "specification", "cnc", "fixture", "ban ve", "dung sai"]),
+            (
+                "quality",
+                ["quality", "iso", "inspection", "kiem tra", "qc", "procedure"],
+            ),
+            (
+                "technical",
+                [
+                    "drawing",
+                    "tolerance",
+                    "specification",
+                    "cnc",
+                    "fixture",
+                    "ban ve",
+                    "dung sai",
+                ],
+            ),
             ("product", ["product", "sku", "catalogue", "catalog", "san pham"]),
         ]
         for label, keywords in rules:
@@ -154,4 +194,3 @@ class DocumentIntelligenceService:
             "sources": sources,
             "human_approval_required": True,
         }
-

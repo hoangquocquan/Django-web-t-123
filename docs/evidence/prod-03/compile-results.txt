@@ -1,0 +1,3 @@
+Command: python -m compileall -q django_backend ai-factory ai-review scripts
+Result: PASS
+Compilation errors: 0

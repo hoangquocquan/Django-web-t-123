@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The provided JSON schema is valid and meets the requirements for a PROD-03 security upload hardening phase.",
+    "high_findings": [],
+    "security_findings": [],
+    "requirements_checked": [
+      "central_authentication",
+      "module_permission",
+      "login_lockout_audit",
+      "password_policy",
+      "token_lifecycle",
+      "two_factor_architecture",
+      "upload_validation",
+      "private_download",
+      "transaction_cleanup",
+      "unsafe_url_blocked",
+      "security_headers"
+    ],
+    "critical_findings": [],
+    "medium_findings": [],
+    "migration_findings": [],
+    "test_findings": [],
+    "recommended_actions": [
+      "human_approval_required"
+    ],
+    "missing_requirements": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_merge": false,
+      "approval_bypass_detected": false,
+      "human_approval_required": true,
+      "auto_deploy": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The provided JSON schema is valid and meets the requirements for a PROD-03 security upload hardening phase.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{ \"decision\": \"PASS\", \"summary\": \"The provided JSON schema is valid and meets the requirements for a PROD-03 security upload hardening phase.\",\"high_findings\": [],\"security_findings\": [],\"requirements_checked\": [\"central_authentication\", \"module_permission\", \"login_lockout_audit\", \"password_policy\", \"token_lifecycle\", \"two_factor_architecture\", \"upload_validation\", \"private_download\", \"transaction_cleanup\", \"unsafe_url_blocked\", \"security_headers\"],\"critical_findings\": [],\"medium_findings\": [],\"migration_findings\": [],\"test_findings\": [],\"recommended_actions\": [\"human_approval_required\"],\"missing_requirements\": [],\"requires_human_review\": true,\"safety_gates\": {\"auto_merge\": false, \"approval_bypass_detected\": false, \"human_approval_required\": true, \"auto_deploy\": false}, \"model\": \"llama3\",\"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "642bdd128eb9f7b2876f6820f473145ac94a0a706c77170160da1510bad31eee",
+    "review_output_sha256": "304a4cf5efda4fa1724f4e3a37e00aa1230b9ea822e761d2e8767af9eab99a9d",
+    "actual_diff_sha256": "a1a46d33b4d19ee9c7f159c5e668c2913038bb306891dbc9ead499de4e631afd",
+    "base_commit": "02a79c4b882f3f7cabeb8463e422048d8346668d",
+    "current_commit": "02a79c4b882f3f7cabeb8463e422048d8346668d",
+    "correlation_id": "e517d86a-9d14-48e4-af7f-b8e9a69d18b8"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

@@ -2,6 +2,13 @@
 
 from rest_framework import serializers
 
+from apps.common.security import validate_safe_url
+
+
+def validate_avatar_url(value):
+    """Allow local media paths or explicitly allowlisted HTTPS hosts only."""
+    return validate_safe_url(value, allow_relative=True)
+
 
 class FoundationLoginSerializer(serializers.Serializer):
     """Validate a login request before the service checks credentials."""
@@ -17,7 +24,9 @@ class FoundationUserCreateSerializer(serializers.Serializer):
     full_name = serializers.CharField(max_length=160)
     password = serializers.CharField(trim_whitespace=False)
     role = serializers.CharField(default="viewer", max_length=50)
-    avatar_url = serializers.CharField(required=False, allow_blank=True)
+    avatar_url = serializers.CharField(
+        required=False, allow_blank=True, validators=[validate_avatar_url]
+    )
     phone = serializers.CharField(required=False, allow_blank=True, max_length=50)
     language = serializers.CharField(required=False, allow_blank=True, max_length=10)
     timezone = serializers.CharField(required=False, allow_blank=True, max_length=80)
@@ -27,7 +36,9 @@ class FoundationUserCreateSerializer(serializers.Serializer):
 class FoundationProfileUpdateSerializer(serializers.Serializer):
     """Validate profile fields that can be edited by the foundation API."""
 
-    avatar_url = serializers.CharField(required=False, allow_blank=True)
+    avatar_url = serializers.CharField(
+        required=False, allow_blank=True, validators=[validate_avatar_url]
+    )
     phone = serializers.CharField(required=False, allow_blank=True, max_length=50)
     language = serializers.CharField(required=False, allow_blank=True, max_length=10)
     timezone = serializers.CharField(required=False, allow_blank=True, max_length=80)

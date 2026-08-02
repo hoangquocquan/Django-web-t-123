@@ -1,0 +1,6 @@
+Authentication: centralized DRF adapter, foundation security policy, token lifecycle, 2FA challenge, login audit.
+Authorization: reusable module permission adapter.
+Upload: verified MIME/signature/size/archive/malware contract, private download, rollback cleanup.
+Platform: security headers, environment knobs, recursive .env image exclusion.
+Database: foundation migration 0006 creates login audit and 2FA challenge tables.
+Tests: focused PROD-03 security suite plus realistic MIME metadata in an existing upload test.

@@ -1,0 +1,6 @@
+{
+  "status": "NOT_RUN",
+  "reason": "Live n8n is not a PROD-03 dependency and is a mandatory PROD-04 gate.",
+  "retry_command": "Run the PROD-04 n8n live integration workflow.",
+  "impact": "PROD-03 makes no n8n production-readiness claim."
+}

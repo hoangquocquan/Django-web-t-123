@@ -2,29 +2,40 @@
 
 from __future__ import annotations
 
-from django.core.exceptions import PermissionDenied
+from pathlib import PurePosixPath
+
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.storage import default_storage
+from django.http import FileResponse, Http404
 from rest_framework import serializers, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from apps.api.views.helpers import created, ok
 from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
+from apps.api.views.helpers import created, ok
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
+from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.assistant_service import KnowledgeAssistantService
 from apps.knowledge.services.document_processor import DocumentProcessor
 from apps.knowledge.services.knowledge_service import KnowledgeService, document_to_dict
 from apps.knowledge.services.search_service import KnowledgeSearchService
+from apps.knowledge.services.upload_security import stored_file_cleanup
 
 
 class KnowledgeDocumentSerializer(serializers.Serializer):
     """Validate document create requests."""
 
-    title = serializers.CharField(max_length=240, allow_blank=False, trim_whitespace=True)
+    title = serializers.CharField(
+        max_length=240, allow_blank=False, trim_whitespace=True
+    )
     description = serializers.CharField(required=False, allow_blank=True)
     content = serializers.CharField(required=False, allow_blank=True)
     category = serializers.CharField(required=False, allow_blank=True, max_length=120)
-    source_type = serializers.CharField(required=False, allow_blank=True, max_length=32, default="text")
+    source_type = serializers.CharField(
+        required=False, allow_blank=True, max_length=32, default="text"
+    )
     permission_level = serializers.ChoiceField(
         required=False,
         choices=["public", "internal", "restricted"],
@@ -36,15 +47,23 @@ class KnowledgeDocumentSerializer(serializers.Serializer):
 class KnowledgeSearchSerializer(serializers.Serializer):
     """Validate semantic search input."""
 
-    query = serializers.CharField(max_length=1000, allow_blank=False, trim_whitespace=True)
-    limit = serializers.IntegerField(required=False, min_value=1, max_value=20, default=5)
+    query = serializers.CharField(
+        max_length=1000, allow_blank=False, trim_whitespace=True
+    )
+    limit = serializers.IntegerField(
+        required=False, min_value=1, max_value=20, default=5
+    )
 
 
 class KnowledgeChatSerializer(serializers.Serializer):
     """Validate source-grounded assistant questions."""
 
-    question = serializers.CharField(max_length=1200, allow_blank=False, trim_whitespace=True)
-    limit = serializers.IntegerField(required=False, min_value=1, max_value=10, default=5)
+    question = serializers.CharField(
+        max_length=1200, allow_blank=False, trim_whitespace=True
+    )
+    limit = serializers.IntegerField(
+        required=False, min_value=1, max_value=10, default=5
+    )
 
 
 def _authorization_header(request):
@@ -68,7 +87,9 @@ def _permission_error_response(exc):
 
 def _require_knowledge_user(request, action="read"):
     """Authenticate and enforce knowledge permission."""
-    user = FoundationAuthService().user_from_authorization_header(_authorization_header(request))
+    user = FoundationAuthService().user_from_authorization_header(
+        _authorization_header(request)
+    )
     FoundationPermissionService().require_permission(user, "knowledge", action)
     return user
 
@@ -89,6 +110,7 @@ def _governance_error_response(exc):
 
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
+@parser_classes([JSONParser, MultiPartParser, FormParser])
 def knowledge_documents(request):
     """List or create internal knowledge documents."""
     action = "write" if request.method == "POST" else "read"
@@ -99,34 +121,86 @@ def knowledge_documents(request):
 
     service = KnowledgeService()
     if request.method == "GET":
-        return ok([document_to_dict(document) for document in service.list_documents(user=user)])
+        return ok(
+            [
+                document_to_dict(document)
+                for document in service.list_documents(user=user)
+            ]
+        )
 
     serializer = KnowledgeDocumentSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
     uploaded_file = request.FILES.get("file")
     if uploaded_file:
-        processed = DocumentProcessor().process_uploaded_file(uploaded_file)
+        try:
+            processed = DocumentProcessor().process_uploaded_file(uploaded_file)
+        except (ValidationError, ValueError) as exc:
+            message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+            return Response(
+                {
+                    "success": False,
+                    "error": {"code": "unsafe_upload", "message": message},
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         content = processed["text"]
         source_type = processed["source_type"]
-        source_path = processed["source_path"]
+        storage_path = default_storage.save(
+            f"knowledge/uploads/{processed['source_path']}",
+            uploaded_file,
+        )
+        source_path = storage_path
     else:
         content = data.get("content", "")
         source_type = data.get("source_type") or "text"
         source_path = ""
 
-    document = service.create_document(
-        title=data["title"],
-        description=data.get("description", ""),
-        category_name=data.get("category", ""),
-        content=content,
-        source_type=source_type,
-        source_path=source_path,
-        permission_level=data.get("permission_level", "internal"),
-        created_by_email=user.email,
-        metadata=data.get("metadata") or {},
+    cleanup_context = (
+        stored_file_cleanup(source_path) if uploaded_file else stored_file_cleanup("")
     )
+    with cleanup_context:
+        document = service.create_document(
+            title=data["title"],
+            description=data.get("description", ""),
+            category_name=data.get("category", ""),
+            content=content,
+            source_type=source_type,
+            source_path=source_path,
+            permission_level=data.get("permission_level", "internal"),
+            created_by_email=user.email,
+            metadata=data.get("metadata") or {},
+        )
     return created(document_to_dict(document))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def knowledge_document_download(request, document_id):
+    """Stream an authorized private upload without exposing its filesystem path."""
+    try:
+        user = _require_knowledge_user(request)
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+    try:
+        document = KnowledgeService().list_documents(user=user).get(id=document_id)
+    except KnowledgeDocument.DoesNotExist as exc:
+        raise Http404("Knowledge document not found.") from exc
+    source_path = str(document.source_path or "").replace("\\", "/")
+    path = PurePosixPath(source_path)
+    if (
+        path.is_absolute()
+        or ".." in path.parts
+        or path.parts[:2] != ("knowledge", "uploads")
+    ):
+        raise Http404("Private upload is unavailable.")
+    if not default_storage.exists(source_path):
+        raise Http404("Private upload is unavailable.")
+    return FileResponse(
+        default_storage.open(source_path, "rb"),
+        as_attachment=True,
+        filename=path.name,
+    )
 
 
 @api_view(["POST"])

@@ -38,7 +38,9 @@ def _authorization_header(request):
 
 def _authenticated_user(request):
     """Resolve the current Django-owned user from a Bearer token."""
-    return FoundationAuthService().user_from_authorization_header(_authorization_header(request))
+    return FoundationAuthService().user_from_authorization_header(
+        _authorization_header(request)
+    )
 
 
 def _require_foundation_permission(request, module, action="read"):
@@ -100,6 +102,23 @@ def foundation_logout(request):
     return ok({"logged_out": True})
 
 
+@api_view(["POST"])
+def foundation_rotate_token(request):
+    """Rotate the current token and revoke the previous credential atomically."""
+    try:
+        user = _authenticated_user(request)
+        FoundationPermissionService().require_permission(user, "auth", "read")
+        authorization = _authorization_header(request)
+        raw_token = authorization.replace("Bearer ", "", 1).strip()
+        replacement, token = FoundationAuthService().rotate_token(
+            raw_token,
+            **_request_context(request),
+        )
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+    return ok({"token": replacement, "expires_at": token.expires_at.isoformat()})
+
+
 @api_view(["GET", "POST"])
 def foundation_users(request):
     """List or create Django-owned foundation users."""
@@ -140,7 +159,9 @@ def foundation_users(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    return Response({"success": True, "data": user_to_dict(user)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {"success": True, "data": user_to_dict(user)}, status=status.HTTP_201_CREATED
+    )
 
 
 @api_view(["GET", "PUT"])

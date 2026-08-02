@@ -1,0 +1,10 @@
+Result: PASS
+Image: mecprecision-vietnam:prod-local
+Image ID: sha256:201e9c0dfa32863f85b4f044da4978c1089aa18527f0cc6ec3ef71999ea8c854
+Size: 68058473 bytes
+User: appuser (uid 1000)
+Health: HTTP 200, application status ok
+Production Django deploy check: PASS
+Forbidden runtime artifacts: []
+Build: no-cache final rebuild PASS
+External push/deployment: false

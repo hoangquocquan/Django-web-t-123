@@ -1,5 +1,7 @@
 """Managed Django models for foundation ownership."""
 
+# ruff: noqa: RUF012 - Django Meta attributes are declarative ORM configuration.
+
 from django.db import models
 
 
@@ -59,7 +61,9 @@ class FoundationUser(models.Model):
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=160)
     password_hash = models.CharField(max_length=256)
-    role = models.ForeignKey(FoundationRole, on_delete=models.PROTECT, related_name="users")
+    role = models.ForeignKey(
+        FoundationRole, on_delete=models.PROTECT, related_name="users"
+    )
     is_active = models.BooleanField(default=True)
     legacy_admin_id = models.IntegerField(blank=True, null=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -73,11 +77,23 @@ class FoundationUser(models.Model):
         """Return the user email."""
         return self.email
 
+    @property
+    def is_authenticated(self):
+        """Let DRF treat a valid foundation user as authenticated."""
+        return True
+
+    @property
+    def is_anonymous(self):
+        """Foundation users returned by token auth are never anonymous."""
+        return False
+
 
 class FoundationUserProfile(models.Model):
     """Django-owned profile data for a foundation user."""
 
-    user = models.OneToOneField(FoundationUser, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(
+        FoundationUser, on_delete=models.CASCADE, related_name="profile"
+    )
     avatar_url = models.TextField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
     language = models.CharField(max_length=10, default="vi")
@@ -96,7 +112,9 @@ class FoundationUserProfile(models.Model):
 class FoundationAuthToken(models.Model):
     """Django-owned API session token metadata."""
 
-    user = models.ForeignKey(FoundationUser, on_delete=models.CASCADE, related_name="tokens")
+    user = models.ForeignKey(
+        FoundationUser, on_delete=models.CASCADE, related_name="tokens"
+    )
     token_hash = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -115,3 +133,42 @@ class FoundationAuthToken(models.Model):
     def __str__(self):
         """Return token owner email without exposing the token."""
         return self.user.email
+
+
+class FoundationLoginAttempt(models.Model):
+    """Security audit event for successful and failed login attempts."""
+
+    email_hash = models.CharField(max_length=64, db_index=True)
+    remote_addr_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    success = models.BooleanField(default=False)
+    reason = models.CharField(max_length=80, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = "foundation_login_attempts"
+        ordering = ["-created_at", "-id"]
+
+
+class FoundationTwoFactorChallenge(models.Model):
+    """Short-lived one-time challenge used by a future 2FA delivery adapter."""
+
+    user = models.ForeignKey(
+        FoundationUser,
+        on_delete=models.CASCADE,
+        related_name="two_factor_challenges",
+    )
+    challenge_id = models.CharField(max_length=64, unique=True)
+    code_hash = models.CharField(max_length=64)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(blank=True, null=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "foundation_two_factor_challenges"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["challenge_id", "expires_at"], name="foundation_2fa_lookup_idx"
+            ),
+        ]

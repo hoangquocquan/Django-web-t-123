@@ -5,12 +5,11 @@ middleware, database connection, logging, static/media paths, and DRF. It does
 not define business models or migrate legacy data.
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from dotenv import load_dotenv
-
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = BASE_DIR.parent
@@ -27,7 +26,9 @@ def env_bool(name, default=False):
 
 def env_list(name, default=""):
     """Read a comma-separated list from environment variables."""
-    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+    return [
+        item.strip() for item in os.getenv(name, default).split(",") if item.strip()
+    ]
 
 
 def env_int(name, default):
@@ -135,6 +136,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.common.middleware.SecurityHeadersMiddleware",
 ]
 
 
@@ -180,6 +182,9 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.api.authentication.FoundationBearerAuthentication",
     ],
 }
 
@@ -264,3 +269,15 @@ AI_POLICY_VERSION = os.getenv("AI_POLICY_VERSION", "ai-policy-v2.0")
 AI_MAX_INPUT_CHARS = env_int("AI_MAX_INPUT_CHARS", 12000)
 REDIS_URL = os.getenv("REDIS_URL", "")
 AI_REDIS_RATE_LIMIT_ENABLED = env_bool("AI_REDIS_RATE_LIMIT_ENABLED", False)
+AUTH_PASSWORD_MIN_LENGTH = env_int("AUTH_PASSWORD_MIN_LENGTH", 12)
+AUTH_LOGIN_MAX_FAILURES = env_int("AUTH_LOGIN_MAX_FAILURES", 5)
+AUTH_LOGIN_WINDOW_SECONDS = env_int("AUTH_LOGIN_WINDOW_SECONDS", 900)
+AUTH_TOKEN_TTL_HOURS = env_int("AUTH_TOKEN_TTL_HOURS", 8)
+AUTH_MAX_ACTIVE_TOKENS = env_int("AUTH_MAX_ACTIVE_TOKENS", 5)
+UPLOAD_MAX_BYTES = env_int("UPLOAD_MAX_BYTES", 10 * 1024 * 1024)
+UPLOAD_ARCHIVE_MAX_MEMBERS = env_int("UPLOAD_ARCHIVE_MAX_MEMBERS", 500)
+UPLOAD_ARCHIVE_MAX_UNCOMPRESSED_BYTES = env_int(
+    "UPLOAD_ARCHIVE_MAX_UNCOMPRESSED_BYTES", 50 * 1024 * 1024
+)
+UPLOAD_ARCHIVE_MAX_RATIO = env_int("UPLOAD_ARCHIVE_MAX_RATIO", 100)
+ALLOWED_EXTERNAL_HOSTS = env_list("ALLOWED_EXTERNAL_HOSTS", "")

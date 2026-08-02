@@ -10,6 +10,8 @@ venv/
 **/.git/
 .env
 .env.*
+**/.env
+**/.env.*
 docs.zip
 *.zip
 *.sqlite

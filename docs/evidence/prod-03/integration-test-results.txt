@@ -1,0 +1,2 @@
+Result: PASS
+Coverage includes login lockout, token rotation/revocation/expiry/cleanup, one-time 2FA, permission denial, private download, upload rejection, cleanup, URL validation, security headers, and PostgreSQL migration.
