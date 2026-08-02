@@ -5,7 +5,7 @@
 - Date: 2026-08-02
 - Branch: `codex/production-readiness-full`
 - Baseline: `c11660a190f02f961d6906290c44284c25d1bb19`
-- Phase commit: `PENDING_UNTIL_COMMIT`
+- Phase commit: `38ebfe3fcd7b03652764bee311fc5c99fb631270`
 - Decision: `PASS_WITH_WARNINGS`
 - Next-phase eligibility: `READY_FOR_NEXT_PHASE`
 
