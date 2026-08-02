@@ -259,7 +259,10 @@ def build_documentation_contract(inventory, sections):
             for pattern in unsafe_patterns
             if any(
                 re.search(pattern, line, re.IGNORECASE)
-                and not any(marker in line.casefold() for marker in denial_markers)
+                and not any(
+                    marker in line.casefold().replace("`", "")
+                    for marker in denial_markers
+                )
                 for line in added_lines
             )
         ]
