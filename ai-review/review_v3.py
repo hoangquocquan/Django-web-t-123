@@ -243,8 +243,26 @@ def build_documentation_contract(inventory, sections):
     for item in inventory:
         if item["classification"] != "documentation":
             continue
-        added = "\n".join(changed_lines(sections.get(item["path"], ""), "+"))
-        unsafe = [pattern for pattern in unsafe_patterns if re.search(pattern, added, re.IGNORECASE)]
+        added_lines = changed_lines(sections.get(item["path"], ""), "+")
+        added = "\n".join(added_lines)
+        denial_markers = (
+            "returned 401",
+            "returned 403",
+            "rejected",
+            "blocked",
+            "denied",
+            "must remain false",
+            "expected failure",
+        )
+        unsafe = [
+            pattern
+            for pattern in unsafe_patterns
+            if any(
+                re.search(pattern, line, re.IGNORECASE)
+                and not any(marker in line.casefold() for marker in denial_markers)
+                for line in added_lines
+            )
+        ]
         if unsafe:
             blockers.append(f"Unsafe authorization wording detected in {item['path']}.")
         files.append(

@@ -122,6 +122,16 @@ def test_safe_documentation_gate_values_pass():
     assert evidence["documentation_contract"]["status"] == "PASS"
 
 
+def test_documentation_of_rejected_auto_deploy_request_is_safe():
+    patch = file_patch(
+        "docs/security.md",
+        "+A valid-signature auto_deploy=true request returned 401 and was rejected.",
+    )
+    evidence = build_review_v3_evidence(["M\tdocs/security.md"], patch)
+
+    assert evidence["documentation_contract"]["status"] == "PASS"
+
+
 def test_test_and_docs_files_have_explicit_skip_reasons():
     patch = file_patch("tests/test_a.py", "+def test_a(): pass") + file_patch(
         "docs/a.md", "+safe"
