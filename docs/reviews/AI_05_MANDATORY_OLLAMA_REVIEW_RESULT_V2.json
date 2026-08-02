@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The mandatory Ollama review phase is enforced with fail-closed rules and actual staged Git diff included in real local review evidence.",
+    "high_findings": [],
+    "security_findings": [],
+    "test_findings": [],
+    "migration_findings": [],
+    "recommended_actions": [],
+    "medium_findings": [],
+    "requirements_checked": [
+      "human_approval_required",
+      "auto_merge",
+      "auto_deploy",
+      "approval_bypass_detected"
+    ],
+    "critical_findings": [],
+    "missing_requirements": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_merge": false,
+      "human_approval_required": true,
+      "auto_deploy": false,
+      "approval_bypass_detected": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The mandatory Ollama review phase is enforced with fail-closed rules and actual staged Git diff included in real local review evidence.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\"decision\": \"PASS\", \"summary\": \"The mandatory Ollama review phase is enforced with fail-closed rules and actual staged Git diff included in real local review evidence.\", \"high_findings\": [], \"security_findings\": [], \"test_findings\": [], \"migration_findings\": [], \"recommended_actions\": [],\"medium_findings\": [], \"requirements_checked\": [\"human_approval_required\", \"auto_merge\", \"auto_deploy\", \"approval_bypass_detected\"], \"critical_findings\": [], \"missing_requirements\": [],\"requires_human_review\": true, \"safety_gates\": {\"auto_merge\": false, \"human_approval_required\": true, \"auto_deploy\": false, \"approval_bypass_detected\": false}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "4f0f9a70231d8f45c1a9435ce450fa1619163ad5d6197128a66aa0465e3168e9",
+    "review_output_sha256": "d3dea122a7466911463136660d6e80d0aa356ee4845446ac7ea141cfed4c73b7",
+    "actual_diff_sha256": "2ea0e8fa3607e89b7724d59124bc7b867c038dd72dfab1d68a1ce2743cc583e0",
+    "base_commit": "7ce8468c6e756284a2381db0ffeb2e10c9e69cc1",
+    "current_commit": "7ce8468c6e756284a2381db0ffeb2e10c9e69cc1",
+    "correlation_id": "39235aaa-aae1-436c-a468-bfac008910da"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "AI-05",
+  "created_at": "2026-08-02T01:35:07+00:00"
+}

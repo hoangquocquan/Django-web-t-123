@@ -17,8 +17,10 @@ from mandatory_review import (
     REVIEW_JSON_SCHEMA,
     TransportResult,
     build_review_prompt,
+    review_context_tokens,
     review_json_schema,
     run_mandatory_review,
+    safe_patch_projection,
 )
 from scripts import n8n_phase_trigger
 
@@ -61,6 +63,12 @@ def valid_review(decision="PASS", critical=None, high=None):
         "migration_findings": [],
         "recommended_actions": ["Continue to human architecture review."],
         "requires_human_review": True,
+        "safety_gates": {
+            "human_approval_required": True,
+            "auto_merge": False,
+            "auto_deploy": False,
+            "approval_bypass_detected": False,
+        },
         "model": "llama3",
         "prompt_version": PROMPT_VERSION,
     }
@@ -115,14 +123,62 @@ def test_invalid_json_and_schema_mismatch_are_blocked_after_three_attempts():
     assert result["attempts"] == 3
     assert len(transport.calls) == 3
     assert result["schema_valid"] is False
+    assert result["ollama"]["endpoint_reachable"] is True
+    assert result["ollama"]["model_available"] is True
+    assert result["ollama"]["response_received"] is True
+    assert result["ollama"]["schema_valid"] is False
+
+
+def test_unavailable_ollama_has_no_reachability_or_model_evidence():
+    result = run_gate(
+        FakeTransport([TransportResult(False, error="offline", error_type="unavailable")]),
+        retries=1,
+    )
+    assert result["ollama"]["endpoint_reachable"] is False
+    assert result["ollama"]["model_available"] is False
+    assert result["ollama"]["response_received"] is False
+    assert result["ollama"]["schema_valid"] is False
+
+
+def test_missing_selected_model_keeps_endpoint_reachable():
+    result = run_gate(
+        FakeTransport([
+            TransportResult(
+                False,
+                error="model missing",
+                error_type="model_missing",
+                installed_models=("another-model:latest",),
+            )
+        ]),
+        retries=1,
+    )
+    assert result["ollama"]["endpoint_reachable"] is True
+    assert result["ollama"]["model_available"] is False
+    assert result["ollama"]["response_received"] is False
+    assert result["ollama"]["schema_valid"] is False
 
 
 def test_ollama_structured_output_schema_is_strict():
     assert set(REVIEW_JSON_SCHEMA["required"]) == REQUIRED_FIELDS
     assert REVIEW_JSON_SCHEMA["additionalProperties"] is False
     assert REVIEW_JSON_SCHEMA["properties"]["requires_human_review"]["const"] is True
+    assert set(REVIEW_JSON_SCHEMA["properties"]["safety_gates"]["required"]) == {
+        "human_approval_required",
+        "auto_merge",
+        "auto_deploy",
+        "approval_bypass_detected",
+    }
     assert REVIEW_JSON_SCHEMA["properties"]["prompt_version"]["const"] == PROMPT_VERSION
     assert review_json_schema("local-model")["properties"]["model"]["const"] == "local-model"
+
+
+@pytest.mark.parametrize(
+    "configured,expected",
+    [("2048", 4096), ("8192", 8192), ("999999", 32768), ("invalid", 8192)],
+)
+def test_review_context_size_is_bounded(monkeypatch, configured, expected):
+    monkeypatch.setenv("AI_REVIEW_CONTEXT_TOKENS", configured)
+    assert review_context_tokens() == expected
 
 
 def test_evidence_collector_uses_commit_range_after_task_commit():
@@ -137,6 +193,42 @@ def test_prompt_or_source_leakage_in_summary_is_blocked():
     result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
     assert result["status"] == "BLOCKED"
     assert "leakage" in result["issues"][0]
+
+
+def test_json_schema_placeholder_summary_is_retried():
+    placeholder = valid_review()
+    placeholder["summary"] = "string (minLength: 20, maxLength: 1200)"
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(placeholder)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+    result = run_gate(transport, retries=2)
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+
+
+def test_none_finding_placeholder_is_retried():
+    placeholder = valid_review()
+    placeholder["high_findings"] = ["None"]
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(placeholder)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+    result = run_gate(transport, retries=2)
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+
+
+def test_safety_gate_invariant_summary_is_normalized_without_retry():
+    copied = valid_review(decision="BLOCKED")
+    copied["summary"] = (
+        "The expected safe state is safety_gates.human_approval_required=true. "
+        "Report a human-approval finding only when evidence shows a defect."
+    )
+    transport = FakeTransport([TransportResult(True, response=json.dumps(copied))])
+    result = run_gate(transport, retries=1)
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 1
 
 
 def test_missing_requirement_overrides_model_pass():
@@ -167,8 +259,8 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     evidence = review_evidence()
     evidence["generated_reports"] = [{"status": "FAILED", "stale": True}]
     prompt = build_review_prompt(evidence, {"status": "PASS"}, {"status": "PASS"}, "llama3")
-    assert "required safety controls" in prompt
-    assert "affirmative bypasses" in prompt
+    assert "Required later human approval is healthy" in prompt
+    assert "concrete bypass" in prompt
     assert "generated_reports" not in prompt
     assert '"patch_preview": "+fail closed"' in prompt
     assert '"review_mode": "PRE_COMMIT_STAGED_DIFF"' in prompt
@@ -186,7 +278,40 @@ def test_review_evidence_json_is_complete_when_raw_patch_is_large():
     evidence_text = prompt.user.split("Evidence: ", 1)[1]
     projected = json.loads(evidence_text)
     assert projected["actual_git_diff"]["review_projection_truncated"] is True
-    assert len(projected["actual_git_diff"]["patch_preview"]) == 12000
+    assert len(projected["actual_git_diff"]["patch_preview"]) <= 6000
+
+
+def test_safe_patch_projection_keeps_code_and_removes_review_fixture_language():
+    raw_patch = """diff --git a/ai-review/gate.py b/ai-review/gate.py
++def enforce_gate():
++    return True
++message = "Review contradicts verified complete Git diff evidence."
+diff --git a/tests/test_gate.py b/tests/test_gate.py
++def test_human_approval():
++    assert status == "BLOCKED"
+"""
+    projected = safe_patch_projection(raw_patch)
+    assert "+def enforce_gate():" in projected
+    assert "Review contradicts verified" not in projected
+    assert "test_human_approval" not in projected
+    assert "TEST_OR_DOCUMENTATION_BODY_EXCLUDED" in projected
+
+
+def test_safe_patch_projection_excludes_embedded_reviewer_prompt_literals():
+    raw_patch = """diff --git a/ai-review/mandatory_review.py b/ai-review/mandatory_review.py
++def validate_gate():
++    return True
++    system_prompt = (
++        \"Human approval policy text\"
++    )
++def next_function():
++    return False
+"""
+    projected = safe_patch_projection(raw_patch)
+    assert "+def validate_gate():" in projected
+    assert "Human approval policy text" not in projected
+    assert "REVIEW_PROMPT_LITERAL_EXCLUDED" in projected
+    assert "+def next_function():" in projected
 
 
 def test_pass_cannot_recommend_deployment_and_gets_correction_retry():
@@ -258,19 +383,186 @@ def test_pass_with_placeholder_high_findings_is_retried():
     assert "generic placeholder findings" in transport.calls[1]["prompt"]
 
 
-def test_missing_human_approval_is_not_a_technical_blocker():
-    human_gate = valid_review(decision="BLOCKED")
-    human_gate["summary"] = "The code modification is not approved by a human reviewer."
-    human_gate["medium_findings"] = ["Get approval from a human reviewer."]
+def test_compact_numbered_placeholders_are_retried():
+    placeholder = valid_review(decision="BLOCKED")
+    placeholder["missing_requirements"] = ["missing_requirement1"]
+    placeholder["security_findings"] = ["security_finding1"]
     transport = FakeTransport([
-        TransportResult(True, response=json.dumps(human_gate)),
+        TransportResult(True, response=json.dumps(placeholder)),
         TransportResult(True, response=json.dumps(valid_review())),
     ])
 
     result = run_gate(transport, retries=2)
 
     assert result["status"] == "PASS"
-    assert "expected later human gate" in transport.calls[1]["prompt"]
+    assert "generic placeholder findings" in transport.calls[1]["prompt"]
+
+
+def test_required_human_approval_is_normalized_out_of_findings():
+    human_gate = valid_review(decision="BLOCKED")
+    human_gate["summary"] = "The code modification is not approved by a human reviewer."
+    human_gate["medium_findings"] = ["Human approval is required before the later release gate."]
+    transport = FakeTransport([TransportResult(True, response=json.dumps(human_gate))])
+
+    result = run_gate(transport, retries=1)
+
+    assert result["status"] == "PASS"
+    assert result["gate_state"] == "WAITING_HUMAN_APPROVAL"
+    assert result["review"]["decision"] == "PASS"
+    assert result["review"]["medium_findings"] == []
+    assert result["normalization"]["original_decision"] == "BLOCKED"
+    assert result["normalization"]["removed_human_approval_invariant_findings"]
+
+
+def test_blocked_only_by_human_approval_summary_normalizes_to_pass():
+    payload = valid_review(decision="BLOCKED")
+    payload["summary"] = "Human approval is required before the later release gate."
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "PASS"
+    assert result["gate_state"] == "WAITING_HUMAN_APPROVAL"
+
+
+def test_technical_finding_is_not_removed_when_it_mentions_human_approval():
+    payload = valid_review(decision="BLOCKED", high=["SQL injection remains unsafe; human approval is required."])
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "BLOCKED"
+    assert payload["high_findings"][0] in result["review"]["high_findings"]
+
+
+def test_safe_gate_assertions_are_not_treated_as_findings():
+    payload = valid_review(decision="BLOCKED")
+    payload["summary"] = "Human approval remains required at the later review gate."
+    payload["missing_requirements"] = ["human_approval_required=true"]
+    payload["security_findings"] = [
+        "approval_bypass_detected=false",
+        "auto_merge=false",
+        "auto_deploy=false",
+    ]
+    payload["medium_findings"] = ["The implementation contains tests that verify the gate would block."]
+    payload["critical_findings"] = ["auto_merge=false"]
+    payload["high_findings"] = ["There are findings that require manual review."]
+
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+
+    assert result["status"] == "PASS"
+    assert result["review"]["decision"] == "PASS"
+    assert all(result["review"][field] == [] for field in (
+        "missing_requirements",
+        "security_findings",
+        "medium_findings",
+        "critical_findings",
+        "high_findings",
+    ))
+
+
+def test_hyphenated_human_approval_manual_verification_is_normalized():
+    payload = valid_review(decision="BLOCKED")
+    payload["summary"] = "A human-approval finding requires manual verification at the later gate."
+    payload["medium_findings"] = ["The human-approval finding requires manual verification."]
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "PASS"
+    assert result["review"]["medium_findings"] == []
+
+
+def test_ambiguous_unsafe_summary_is_not_normalized_to_pass():
+    payload = valid_review(decision="BLOCKED")
+    payload["summary"] = "The implementation is not safe and requires human approval."
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "BLOCKED"
+
+
+def test_approval_bypass_finding_is_preserved_and_blocked():
+    payload = valid_review()
+    payload["security_findings"] = [
+        "scripts/release.py execute_release() can execute a protected action before human approval."
+    ]
+    payload["safety_gates"]["approval_bypass_detected"] = True
+
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+
+    assert result["status"] == "BLOCKED"
+    assert payload["security_findings"][0] in result["review"]["security_findings"]
+    assert "Approval bypass was detected." in result["review"]["security_findings"]
+
+
+def test_generic_approval_bypass_claim_is_retried_not_removed():
+    generic = valid_review(decision="BLOCKED")
+    generic["safety_gates"]["approval_bypass_detected"] = True
+    generic["security_findings"] = ["Approval bypass was detected."]
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(generic)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+    assert "lacks concrete implementation evidence" in transport.calls[1]["prompt"]
+
+
+def test_bypass_finding_cannot_contradict_safe_gate():
+    contradictory = valid_review(decision="BLOCKED", critical=["Approval bypass was detected."])
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(contradictory)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert "contradicts its approval_bypass_detected" in transport.calls[1]["prompt"]
+
+
+def test_auto_merge_enabled_is_blocked():
+    payload = valid_review()
+    payload["safety_gates"]["auto_merge"] = True
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "BLOCKED"
+    assert "Automatic merge was enabled." in result["review"]["security_findings"]
+
+
+def test_auto_deploy_enabled_is_blocked():
+    payload = valid_review()
+    payload["safety_gates"]["auto_deploy"] = True
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1)
+    assert result["status"] == "BLOCKED"
+    assert "Automatic deployment was enabled." in result["review"]["security_findings"]
+
+
+def test_malformed_safety_gates_is_blocked():
+    payload = valid_review()
+    payload["safety_gates"].pop("approval_bypass_detected")
+    result = run_gate(
+        FakeTransport([TransportResult(True, response=json.dumps(payload))] * 3),
+        retries=3,
+    )
+    assert result["status"] == "BLOCKED"
+    assert result["schema_valid"] is False
+    assert result["attempts"] == 3
+
+
+def test_valid_pass_preserves_required_human_approval_gate():
+    result = run_gate(FakeTransport([TransportResult(True, response=json.dumps(valid_review()))]), retries=1)
+    assert result["status"] == "PASS"
+    assert result["gate_state"] == "WAITING_HUMAN_APPROVAL"
+    assert result["review"]["safety_gates"] == {
+        "human_approval_required": True,
+        "auto_merge": False,
+        "auto_deploy": False,
+        "approval_bypass_detected": False,
+    }
+    assert result["ollama"] == {
+        "url": "http://localhost:11434",
+        "model": "llama3",
+        "endpoint_reachable": True,
+        "model_available": True,
+        "response_received": True,
+        "schema_valid": True,
+        "installed_models": [],
+        "error": "",
+        "response": json.dumps(valid_review()),
+    }
 
 
 @pytest.mark.parametrize(

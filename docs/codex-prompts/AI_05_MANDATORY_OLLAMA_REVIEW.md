@@ -10,7 +10,8 @@ Make local Ollama review a fail-closed technical gate for AI Factory and n8n. A 
 - `AI_REVIEW_MODEL=llama3`
 - `AI_REVIEW_TIMEOUT_SECONDS=120`
 - `AI_REVIEW_MAX_RETRIES=3`
-- `AI_REVIEW_PROMPT_VERSION=ai-review-v2.0`
+- `AI_REVIEW_CONTEXT_TOKENS=8192`
+- `AI_REVIEW_PROMPT_VERSION=ai-review-v2.1`
 
 ## Review Evidence
 
@@ -47,3 +48,26 @@ Revert AI-05 commits. No database migration is created by this phase.
 ## Expected Commit
 
 `feat(ai-factory): enforce mandatory ollama phase review`
+
+## V2 Human Approval Semantics
+
+Human approval is an expected safety invariant and is not a technical finding.
+The reviewer may report an approval finding only when approval can be bypassed,
+AI can approve its own work, auto-merge or auto-deploy is enabled, or a
+protected action can execute before approval.
+
+Every review must include:
+
+```json
+{
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}
+```
+
+Malformed or missing gates, unsafe gate values, fallback output, Critical or
+High findings remain fail-closed.

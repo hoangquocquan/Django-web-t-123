@@ -90,8 +90,10 @@ def render_report(evidence, rule_validation, test_result, ai_review):
 - Summary: {ai_review.get("summary")}
 - Issues: {ai_review.get("issues", [])}
 - Recommendation: {ai_review.get("recommendation")}
-- Ollama available: {(ai_review.get("ollama") or {}).get("available")}
+- Ollama endpoint reachable: {(ai_review.get("ollama") or {}).get("endpoint_reachable")}
 - Ollama model: {(ai_review.get("ollama") or {}).get("model")}
+- Ollama model available: {(ai_review.get("ollama") or {}).get("model_available")}
+- Ollama response received: {(ai_review.get("ollama") or {}).get("response_received")}
 - Review completed: {ai_review.get("review_completed")}
 - Schema valid: {ai_review.get("schema_valid")}
 - Fallback used: {ai_review.get("fallback_used")}
