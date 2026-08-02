@@ -10,5 +10,9 @@
   "human_approval_required": true,
   "auto_merge": false,
   "auto_deploy": false,
-  "approval_bypass_detected": false
+  "approval_bypass_detected": false,
+  "merge_authorized": false,
+  "release_authorized": false,
+  "deployment_authorized": false,
+  "production_authorized": false
 }
