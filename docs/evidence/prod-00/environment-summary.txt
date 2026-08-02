@@ -1,0 +1,16 @@
+PHASE: PROD-00
+OS: Windows
+PYTHON: 3.12.10
+DJANGO: 5.2.16
+DATABASE_DEFAULT: local development SQLite
+LEGACY_DATABASE: read-only SQLite URI
+DOCKER_CLI: installed
+DOCKER_DAEMON: unavailable
+POSTGRES_CLIENT: unavailable
+POSTGRES_RUNTIME: not verified
+REDIS_CLIENT: unavailable
+REDIS_RUNTIME: not verified
+OLLAMA_ENDPOINT: http://localhost:11434
+OLLAMA_MODELS: llama3:latest, nomic-embed-text:latest
+N8N_RUNTIME: not reachable on localhost:5678
+GIT_REMOTE: none configured

@@ -1,0 +1,8 @@
+STATUS: PASS_WITH_WARNINGS
+COMMAND: bandit -r django_backend ai-factory ai-review -f json
+EXIT_CODE: 1
+RESULT: 0 High, 5 Medium, 531 Low
+MEDIUM_CLASSIFICATION: All five B608 findings are inherited test-only SQL fixture construction in accounts/cms/crm/sales ORM tests. No production source Medium finding was reported.
+SECRET_SCAN: No private key or real credential identified. Tracked Compose files contain explicit local-only development placeholder credentials; PROD-02 owns their replacement with required environment inputs.
+RUNTIME_ARTIFACT_SCAN: SQLite databases, logs, backups, and user ZIP files are not tracked, except one tracked synthetic IIS training log used by tests.
+IMPACT: Baseline may proceed with warnings; production readiness may not be declared until PROD-02 and PROD-03 resolve configuration and security requirements.

@@ -1,0 +1,14 @@
+STATUS: RECORDED
+BASELINE: 65b77beefbb80f715baf5d30f2a70c22d7bb5d44
+COUNT: 29 before final review artifacts
+SCOPE:
+- docs/codex-prompts/PRODUCTION_READINESS_MASTER.md
+- docs/codex-prompts/PROD_00_BASELINE_VERIFICATION.md
+- docs/evidence/prod-00/*
+- docs/reviews/PRODUCTION_READINESS_COMMIT_MANIFEST.md
+- docs/reviews/PRODUCTION_READINESS_DEPENDENCY_GRAPH.md
+- docs/reviews/PRODUCTION_READINESS_FILE_OWNERSHIP.md
+- docs/reviews/PRODUCTION_READINESS_PHASE_STATUS.md
+
+No application source, migration, runtime database, backup, ZIP, cache, or
+secret file is part of PROD-00.

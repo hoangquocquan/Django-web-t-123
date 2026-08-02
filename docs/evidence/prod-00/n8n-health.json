@@ -1,0 +1,7 @@
+{
+  "status": "NOT_VERIFIED",
+  "endpoint": "http://localhost:5678",
+  "runtime_reachable": false,
+  "reason": "No listening n8n service or configured webhook",
+  "required_by": "PROD-04"
+}

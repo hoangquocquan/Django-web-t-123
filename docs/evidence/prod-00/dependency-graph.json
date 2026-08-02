@@ -1,0 +1,14 @@
+{
+  "phase": "PROD-00",
+  "baseline": "AI-06",
+  "dependencies": {
+    "PROD-01": ["PROD-00"],
+    "PROD-02": ["PROD-01"],
+    "PROD-03": ["PROD-02"],
+    "PROD-04": ["PROD-03"],
+    "PROD-05": ["PROD-04"],
+    "PROD-06": ["PROD-05"],
+    "PROD-07": ["PROD-06"]
+  },
+  "execution": "serialized"
+}

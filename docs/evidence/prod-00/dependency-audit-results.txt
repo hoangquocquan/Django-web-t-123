@@ -1,0 +1,8 @@
+STATUS: PASS_WITH_ENVIRONMENT_WARNING
+PROJECT_COMMAND: pip-audit -r django_backend/requirements.txt
+PROJECT_EXIT_CODE: 0
+PROJECT_RESULT: No known vulnerabilities found.
+GLOBAL_COMMAND: pip-audit
+GLOBAL_EXIT_CODE: 1
+GLOBAL_RESULT: 55 advisories in 7 globally installed packages, including unrelated developer tools.
+IMPACT: Project-declared dependencies pass. The non-isolated global Python environment must not be used as a production runtime image.

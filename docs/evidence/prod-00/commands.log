@@ -1,0 +1,26 @@
+PROD-00 commands - 2026-08-02
+
+PASS | Git root, branch, HEAD, status, log, and remote inspection
+PASS | AI-01 through AI-06 source/review/commit inventory
+PASS | Python and Django version inspection
+PASS | migration and test discovery
+PASS | runtime artifact and tracked-file classification
+PASS | python -m compileall -q django_backend ai-factory ai-review scripts
+PASS | python django_backend/manage.py check
+PASS | python django_backend/manage.py makemigrations --check --dry-run
+PASS | focused tests: 60 passed
+PASS | integration tests: 25 passed
+PASS | full regression: 455 passed
+PASS_WITH_WARNINGS | repository Ruff baseline debt
+PASS_WITH_WARNINGS | Bandit: 0 High, 5 inherited test-only Medium
+PASS | project-scoped pip-audit: no known vulnerabilities
+WARNING | global pip-audit: non-project environment contains vulnerable tools
+PASS_WITH_WARNINGS | Docker Compose config valid, daemon unavailable
+NOT_VERIFIED | PostgreSQL runtime
+NOT_VERIFIED | Redis runtime
+PASS | Ollama endpoint and required models
+NOT_VERIFIED | live n8n runtime
+BLOCKED_ATTEMPT_0 | mandatory Ollama reviewer stopped at deterministic gate because rule status used PASS_WITH_WARNINGS
+CORRECTION_1 | normalized required-check status to PASS while preserving runtime warnings separately
+PASS | mandatory local Ollama review, llama3, schema valid, no fallback
+RESULT | Critical=0 High=0 gate_state=WAITING_HUMAN_APPROVAL

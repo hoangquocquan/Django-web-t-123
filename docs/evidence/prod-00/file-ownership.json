@@ -1,0 +1,12 @@
+{
+  "phase": "PROD-00",
+  "allowed_paths": [
+    "docs/codex-prompts/PRODUCTION_READINESS_MASTER.md",
+    "docs/codex-prompts/PROD_00_BASELINE_VERIFICATION.md",
+    "docs/reviews/PRODUCTION_READINESS_*.md",
+    "docs/reviews/PROD_00_BASELINE_VERIFICATION_*",
+    "docs/evidence/prod-00/"
+  ],
+  "application_code_changes": false,
+  "database_changes": false
+}

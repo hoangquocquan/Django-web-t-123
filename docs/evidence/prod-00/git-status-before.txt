@@ -1,0 +1,9 @@
+BRANCH: codex/production-readiness-full
+HEAD: 65b77beefbb80f715baf5d30f2a70c22d7bb5d44
+STATUS:
+?? docs.zip
+?? docs/reviews.zip
+?? mecprecision.zip
+
+The ZIP files are pre-existing user artifacts and are excluded from every
+production-readiness commit.

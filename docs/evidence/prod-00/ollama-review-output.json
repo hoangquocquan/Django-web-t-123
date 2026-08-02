@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The review mode is PRE_COMMIT_STAGED_DIFF, and the phase specification is present. The base commit and current commit are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with PRODUCTION_READINESS_ prefixes. The rules indicate that the phase status is PASS, and required checks have passed. The tests also indicate a PASS status for all categories. The evidence summary shows that the phase specification is present, and the actual diff SHA256 hash matches the expected value. There are no findings or warnings reported.",
+    "medium_findings": [],
+    "missing_requirements": [],
+    "security_findings": [],
+    "critical_findings": [],
+    "migration_findings": [],
+    "recommended_actions": [],
+    "requirements_checked": [
+      "ai_01_to_ai_06_integrated",
+      "compile",
+      "django_check",
+      "migration_consistency",
+      "focused_tests",
+      "integration_tests",
+      "full_regression",
+      "project_dependency_audit"
+    ],
+    "high_findings": [],
+    "test_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "human_approval_required": true,
+      "auto_deploy": false,
+      "auto_merge": false,
+      "approval_bypass_detected": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The review mode is PRE_COMMIT_STAGED_DIFF, and the phase specification is present. The base commit and current commit are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with PRODUCTION_READINESS_ prefixes. The rules indicate that the phase status is PASS, and required checks have passed. The tests also indicate a PASS status for all categories. The evidence summary shows that the phase specification is present, and the actual diff SHA256 hash matches the expected value. There are no findings or warnings reported.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\"decision\": \"PASS\", \"summary\": \"The review mode is PRE_COMMIT_STAGED_DIFF, and the phase specification is present. The base commit and current commit are the same. The actual diff SHA256 hash matches the expected value. The changed files list includes multiple files with PRODUCTION_READINESS_ prefixes. The rules indicate that the phase status is PASS, and required checks have passed. The tests also indicate a PASS status for all categories. The evidence summary shows that the phase specification is present, and the actual diff SHA256 hash matches the expected value. There are no findings or warnings reported.\",\"medium_findings\": [], \"missing_requirements\": [],\"security_findings\": [], \"critical_findings\": [], \"migration_findings\": [], \"recommended_actions\": [],\"requirements_checked\": [\"ai_01_to_ai_06_integrated\", \"compile\", \"django_check\", \"migration_consistency\", \"focused_tests\", \"integration_tests\", \"full_regression\", \"project_dependency_audit\"], \"high_findings\": [], \"test_findings\": [], \"requires_human_review\": true, \"safety_gates\": {\"human_approval_required\": true, \"auto_deploy\": false, \"auto_merge\": false, \"approval_bypass_detected\": false}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "f330cae6c4d1726cf1e2c5cdbce402059382153eb8bab2684f2265918fdbae9c",
+    "review_output_sha256": "08878d54fc9162697dbb84461ba95f5c2cf94e946bf5cbb71228b285a1575a14",
+    "actual_diff_sha256": "4d13859f1109d87f8e008805ae26bf57da78d9573711920b7f982675642afa54",
+    "base_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+    "current_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+    "correlation_id": "6a89c5e2-6a1e-4d76-a66d-e7e69d56e383"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-00",
+  "created_at": "2026-08-02T02:53:22+00:00"
+}
