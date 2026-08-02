@@ -1,0 +1,1 @@
+{"status":"PASS","available":true,"backend":"redis-atomic","distributed":true,"multi_instance_sequence":[1,2,3],"capacity_control":"enabled_in_production"}

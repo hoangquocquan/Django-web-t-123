@@ -13,6 +13,11 @@ from urllib import error, request
 
 from django.conf import settings
 
+from apps.ai.services.model_config import (
+    AIModelConfigService,
+    AIModelConfigurationError,
+)
+from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 
 logger = logging.getLogger(__name__)
 TOKEN_PATTERN = re.compile(r"[\w\-]+", re.UNICODE)
@@ -64,12 +69,40 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
 
     provider_name = "ollama-local"
 
-    def __init__(self, base_url=None, model=None, timeout=None, retries=None, dimensions=None, opener=None):
-        self.base_url = (base_url or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
-        self.model_name = model or getattr(settings, "OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
-        self.timeout = int(timeout or getattr(settings, "OLLAMA_EMBEDDING_TIMEOUT_SECONDS", 30))
-        self.retries = max(0, int(retries if retries is not None else getattr(settings, "OLLAMA_EMBEDDING_RETRIES", 1)))
-        self.dimensions = int(dimensions or getattr(settings, "OLLAMA_EMBEDDING_DIMENSIONS", 768))
+    def __init__(
+        self,
+        base_url=None,
+        model=None,
+        timeout=None,
+        retries=None,
+        dimensions=None,
+        opener=None,
+    ):
+        try:
+            self.base_url = OllamaClient._validated_local_host(
+                base_url or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")
+            )
+            self.model_name = AIModelConfigService().validate_model(
+                model
+                or getattr(settings, "OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
+                "embedding",
+            )
+        except (OllamaClientError, AIModelConfigurationError) as exc:
+            raise EmbeddingProviderError(str(exc)) from exc
+        self.timeout = int(
+            timeout or getattr(settings, "OLLAMA_EMBEDDING_TIMEOUT_SECONDS", 30)
+        )
+        self.retries = max(
+            0,
+            int(
+                retries
+                if retries is not None
+                else getattr(settings, "OLLAMA_EMBEDDING_RETRIES", 1)
+            ),
+        )
+        self.dimensions = int(
+            dimensions or getattr(settings, "OLLAMA_EMBEDDING_DIMENSIONS", 768)
+        )
         self.opener = opener or request.urlopen
 
     def embed_text(self, text: str) -> list[float]:
@@ -94,15 +127,22 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
                 if attempt < self.retries:
                     time.sleep(0.1 * (attempt + 1))
 
-        logger.warning("Ollama embedding failed without logging document content: %s", last_error)
+        logger.warning(
+            "Ollama embedding failed without logging document content: %s", last_error
+        )
         raise last_error or EmbeddingProviderError("Ollama embedding failed.")
 
     def health_check(self) -> dict:
         try:
             data = self._json_request("GET", "/api/tags")
-            models = [item.get("name", "") for item in data.get("models", []) if item.get("name")]
+            models = [
+                item.get("name", "")
+                for item in data.get("models", [])
+                if item.get("name")
+            ]
             model_available = any(
-                name == self.model_name or name.split(":", 1)[0] == self.model_name.split(":", 1)[0]
+                name == self.model_name
+                or name.split(":", 1)[0] == self.model_name.split(":", 1)[0]
                 for name in models
             )
             return {
@@ -131,25 +171,37 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
         headers = {"Accept": "application/json"}
         if body is not None:
             headers["Content-Type"] = "application/json"
-        req = request.Request(f"{self.base_url}{path}", data=body, headers=headers, method=method)
+        req = request.Request(
+            f"{self.base_url}{path}", data=body, headers=headers, method=method
+        )
         try:
             with self.opener(req, timeout=self.timeout) as response:
                 raw_body = response.read().decode("utf-8")
         except error.HTTPError as exc:
-            raise EmbeddingProviderError(f"Ollama embedding API returned HTTP {exc.code}.") from exc
+            raise EmbeddingProviderError(
+                f"Ollama embedding API returned HTTP {exc.code}."
+            ) from exc
         except (error.URLError, TimeoutError, OSError) as exc:
-            raise EmbeddingProviderError("Ollama embedding API is not available.") from exc
+            raise EmbeddingProviderError(
+                "Ollama embedding API is not available."
+            ) from exc
         try:
             return json.loads(raw_body or "{}")
         except json.JSONDecodeError as exc:
-            raise EmbeddingProviderError("Ollama embedding API returned invalid JSON.") from exc
+            raise EmbeddingProviderError(
+                "Ollama embedding API returned invalid JSON."
+            ) from exc
 
     def _validate_vectors(self, vectors, expected_count):
         if len(vectors) != expected_count:
-            raise EmbeddingProviderError("Ollama returned an incomplete embedding batch.")
+            raise EmbeddingProviderError(
+                "Ollama returned an incomplete embedding batch."
+            )
         for vector in vectors:
             if not vector:
-                raise EmbeddingProviderError("Ollama returned an empty embedding vector.")
+                raise EmbeddingProviderError(
+                    "Ollama returned an empty embedding vector."
+                )
             if self.dimensions and len(vector) != self.dimensions:
                 raise EmbeddingProviderError(
                     f"Embedding dimension mismatch: expected {self.dimensions}, received {len(vector)}."
@@ -171,7 +223,11 @@ class DevelopmentHashEmbeddingProvider(EmbeddingProvider):
             index = digest[0] % self.dimensions
             vector[index] += 1.0 + (digest[1] % 5) / 10.0
         magnitude = math.sqrt(sum(value * value for value in vector))
-        return vector if magnitude == 0 else [round(value / magnitude, 6) for value in vector]
+        return (
+            vector
+            if magnitude == 0
+            else [round(value / magnitude, 6) for value in vector]
+        )
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         return [self.embed_text(text) for text in texts]
@@ -192,8 +248,12 @@ class LocalEmbeddingService(DevelopmentHashEmbeddingProvider):
 
 def get_embedding_provider():
     """Chọn provider bằng settings; production mặc định dùng Ollama local."""
-    provider_name = getattr(settings, "KNOWLEDGE_EMBEDDING_PROVIDER", "ollama").strip().lower()
+    provider_name = (
+        getattr(settings, "KNOWLEDGE_EMBEDDING_PROVIDER", "ollama").strip().lower()
+    )
     if provider_name in {"development-hash", "local-fallback", "test"}:
-        logger.warning("Using development hash embedding fallback; semantic retrieval is disabled.")
+        logger.warning(
+            "Using development hash embedding fallback; semantic retrieval is disabled."
+        )
         return DevelopmentHashEmbeddingProvider()
     return OllamaEmbeddingProvider()

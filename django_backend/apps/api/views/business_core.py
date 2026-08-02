@@ -20,7 +20,6 @@ from apps.api.serializers.business_core import (
 )
 from apps.api.views.foundation import _require_foundation_permission
 from apps.api.views.helpers import handle_not_found, ok, paginated_ok
-from apps.business_core.models import BusinessProduct, InventoryWarehouse
 from apps.business_core.services import (
     BusinessCustomerService,
     BusinessProductService,
@@ -76,7 +75,10 @@ def business_products(request):
         product = service.create_product(**serializer.validated_data)
     except ValidationError as exc:
         return _validation_response(exc)
-    return Response({"success": True, "data": business_product_to_dict(product)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {"success": True, "data": business_product_to_dict(product)},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["GET", "PUT"])
@@ -97,7 +99,9 @@ def business_product_detail(request, product_id):
         serializer = BusinessProductUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         try:
-            updated_product = service.update_product(product, **serializer.validated_data)
+            updated_product = service.update_product(
+                product, **serializer.validated_data
+            )
         except ValidationError as exc:
             return _validation_response(exc)
         return ok(business_product_to_dict(updated_product))
@@ -116,7 +120,9 @@ def business_customers(request):
 
     service = BusinessCustomerService()
     if request.method == "GET":
-        return paginated_ok(request, service.list_customers(), business_customer_to_dict)
+        return paginated_ok(
+            request, service.list_customers(), business_customer_to_dict
+        )
 
     serializer = BusinessCustomerSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -124,7 +130,10 @@ def business_customers(request):
         customer = service.create_customer(**serializer.validated_data)
     except ValidationError as exc:
         return _validation_response(exc)
-    return Response({"success": True, "data": business_customer_to_dict(customer)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {"success": True, "data": business_customer_to_dict(customer)},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["GET", "PUT"])
@@ -145,7 +154,9 @@ def business_customer_detail(request, customer_id):
         serializer = BusinessCustomerUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         try:
-            updated_customer = service.update_customer(customer, **serializer.validated_data)
+            updated_customer = service.update_customer(
+                customer, **serializer.validated_data
+            )
         except ValidationError as exc:
             return _validation_response(exc)
         return ok(business_customer_to_dict(updated_customer))
@@ -169,7 +180,10 @@ def inventory_warehouses(request):
     serializer = InventoryWarehouseSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     warehouse = service.create_warehouse(**serializer.validated_data)
-    return Response({"success": True, "data": warehouse_to_dict(warehouse)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {"success": True, "data": warehouse_to_dict(warehouse)},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["GET", "POST"])
@@ -188,8 +202,8 @@ def inventory_items(request):
     serializer = InventoryItemSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        product = BusinessProduct.objects.get(id=serializer.validated_data["product_id"])
-        warehouse = InventoryWarehouse.objects.get(id=serializer.validated_data["warehouse_id"])
+        product = service.get_product(serializer.validated_data["product_id"])
+        warehouse = service.get_warehouse(serializer.validated_data["warehouse_id"])
     except ObjectDoesNotExist:
         return Response(
             {
@@ -207,7 +221,10 @@ def inventory_items(request):
         quantity=serializer.validated_data.get("quantity", 0),
         reorder_point=serializer.validated_data.get("reorder_point", 0),
     )
-    return Response({"success": True, "data": inventory_item_to_dict(item)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {"success": True, "data": inventory_item_to_dict(item)},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["POST"])
@@ -228,7 +245,9 @@ def inventory_adjust(request, item_id):
             updated_item = service.adjust_stock(
                 item=item,
                 quantity_delta=serializer.validated_data["quantity_delta"],
-                transaction_type=serializer.validated_data.get("transaction_type", "adjustment"),
+                transaction_type=serializer.validated_data.get(
+                    "transaction_type", "adjustment"
+                ),
                 reason=serializer.validated_data.get("reason", ""),
                 reference=serializer.validated_data.get("reference", ""),
                 created_by=user.email,

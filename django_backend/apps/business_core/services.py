@@ -13,17 +13,23 @@ from .models import (
     InventoryWarehouse,
 )
 
-
 VALID_PRODUCT_STATUSES = {"draft", "published", "archived"}
 VALID_CUSTOMER_STATUSES = {"active", "inactive", "lead"}
-VALID_TRANSACTION_TYPES = {"initial", "adjustment", "receipt", "issue", "reserve", "release"}
+VALID_TRANSACTION_TYPES = {
+    "initial",
+    "adjustment",
+    "receipt",
+    "issue",
+    "reserve",
+    "release",
+}
 
 
 def _decimal(value, field_name):
     """Convert numeric API input into Decimal for database-safe math."""
     try:
         return Decimal(str(value))
-    except Exception as exc:  # noqa: BLE001 - normalize all Decimal parsing errors.
+    except Exception as exc:
         raise ValidationError(f"{field_name} must be a valid number.") from exc
 
 
@@ -43,7 +49,9 @@ class BusinessProductService:
         """Create one Django-owned product with validation."""
         status = fields.get("status", "draft") or "draft"
         if status not in VALID_PRODUCT_STATUSES:
-            raise ValidationError("Product status must be draft, published, or archived.")
+            raise ValidationError(
+                "Product status must be draft, published, or archived."
+            )
         if BusinessProduct.objects.filter(slug=fields["slug"]).exists():
             raise ValidationError("Product slug already exists.")
         fields["status"] = status
@@ -70,7 +78,9 @@ class BusinessProductService:
             "published_at",
         }
         if "status" in fields and fields["status"] not in VALID_PRODUCT_STATUSES:
-            raise ValidationError("Product status must be draft, published, or archived.")
+            raise ValidationError(
+                "Product status must be draft, published, or archived."
+            )
         if "price" in fields:
             fields["price"] = _decimal(fields["price"], "price")
         for field_name, value in fields.items():
@@ -136,6 +146,14 @@ class InventoryService:
         """Return one stock balance."""
         return self.list_items().get(id=item_id)
 
+    def get_product(self, product_id):
+        """Resolve an inventory product inside the business service boundary."""
+        return BusinessProduct.objects.get(id=product_id)
+
+    def get_warehouse(self, warehouse_id):
+        """Resolve an inventory warehouse inside the business service boundary."""
+        return InventoryWarehouse.objects.get(id=warehouse_id)
+
     @transaction.atomic
     def create_warehouse(self, code, name, location="", is_active=True):
         """Create one Django-owned warehouse."""
@@ -165,7 +183,15 @@ class InventoryService:
         return item
 
     @transaction.atomic
-    def adjust_stock(self, item, quantity_delta, transaction_type="adjustment", reason="", reference="", created_by=""):
+    def adjust_stock(
+        self,
+        item,
+        quantity_delta,
+        transaction_type="adjustment",
+        reason="",
+        reference="",
+        created_by="",
+    ):
         """Adjust stock and rollback automatically if validation fails."""
         if transaction_type not in VALID_TRANSACTION_TYPES:
             raise ValidationError("Invalid inventory transaction type.")

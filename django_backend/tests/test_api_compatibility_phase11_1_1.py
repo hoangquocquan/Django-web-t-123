@@ -1,9 +1,7 @@
 """Compatibility tests for Phase 11.1.1 Django API replacements."""
 
 import pytest
-
 from apps.api.services.replacement_submission_service import reset_submissions
-
 
 REPLACEMENT_GET_ENDPOINTS = [
     "/api/v1/public/home/",
@@ -148,8 +146,8 @@ def test_product_update_and_delete_replacements_are_admin_protected(client):
     assert delete_response.json()["data"]["submission"]["operation"] == "DELETE"
 
 
-def test_ai_chat_replacement_returns_safe_response(client):
-    """AI chat replacement should be available without calling Ollama in tests."""
+def test_ai_chat_replacement_requires_authentication(client):
+    """AI chat replacement must not expose local inference anonymously."""
     response = client.post(
         "/api/v1/ai/chat/",
         data={"question": "MecPrecision có gia công CNC không?"},
@@ -157,9 +155,9 @@ def test_ai_chat_replacement_returns_safe_response(client):
     )
     body = response.json()
 
-    assert response.status_code == 200
-    assert body["success"] is True
-    assert "answer" in body["data"]
+    assert response.status_code == 403
+    assert body["success"] is False
+    assert body["error"]["code"] == "permission_denied"
 
 
 def test_unrelated_write_endpoints_remain_blocked(client, legacy_db):
@@ -170,4 +168,4 @@ def test_unrelated_write_endpoints_remain_blocked(client, legacy_db):
         content_type="application/json",
     )
 
-    assert response.status_code in {403, 405}
+    assert response.status_code in {401, 403, 405}

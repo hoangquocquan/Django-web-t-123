@@ -62,6 +62,7 @@ CACHES = {
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 AI_REDIS_RATE_LIMIT_ENABLED = True
+AI_OLLAMA_CAPACITY_ENABLED = True
 
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)  # noqa: F405
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", True)  # noqa: F405

@@ -21,6 +21,13 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
       SECURE_SSL_REDIRECT: "true"
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
+      OLLAMA_GENERATION_MODELS: ${OLLAMA_GENERATION_MODELS:-llama3}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      OLLAMA_EMBEDDING_MODELS: ${OLLAMA_EMBEDDING_MODELS:-nomic-embed-text}
+      OLLAMA_REVIEW_MODEL: ${OLLAMA_REVIEW_MODEL:-llama3}
+      OLLAMA_REVIEW_MODELS: ${OLLAMA_REVIEW_MODELS:-llama3}
+      AI_OLLAMA_MAX_CONCURRENCY: ${AI_OLLAMA_MAX_CONCURRENCY:-2}
     depends_on:
       database:
         condition: service_healthy
@@ -62,6 +69,44 @@ services:
     volumes:
       - redis-data:/data
 
+  n8n:
+    image: n8nio/n8n:2.21.7
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5679}:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: database
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-mecprecision}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-mecprecision}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?N8N_ENCRYPTION_KEY is required}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:?N8N_WEBHOOK_SECRET is required}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      GENERIC_TIMEZONE: Asia/Tokyo
+      TZ: Asia/Tokyo
+    depends_on:
+      database:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5678/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+    networks:
+      - mecprecision-local
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n/workflows:/opt/mecprecision/workflows:ro
+
 networks:
   mecprecision-local:
     driver: bridge
@@ -70,3 +115,4 @@ volumes:
   media-data:
   postgres-data:
   redis-data:
+  n8n-data:

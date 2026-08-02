@@ -1,0 +1,1 @@
+{"status":"PASS","focused":"22 passed","full_regression":"490 passed","migration_regression":"238 passed","django_check":"PASS","migration_drift":"PASS","bandit":"PASS","pip_audit":"PASS","postgres":"PASS","redis":"PASS","ollama":"PASS","n8n_live":"PASS","fallback_used":false}

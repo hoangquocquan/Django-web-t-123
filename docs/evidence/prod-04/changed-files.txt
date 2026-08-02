@@ -1,0 +1,5 @@
+AI model configuration, Ollama client/health, and Redis capacity control
+RAG runtime health endpoint and bilingual benchmark command
+API service-boundary correction discovered by migration regression
+Production Compose n8n service and two live workflow definitions
+Focused tests and PROD-04 documentation/evidence

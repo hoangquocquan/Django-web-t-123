@@ -713,6 +713,8 @@ def production_language_detected(payload):
         "proceed with deployment",
         "deployment approved",
         "merge the changes",
+        "merge into production",
+        "safe to merge into production",
     )
     return any(phrase in text for phrase in phrases)
 

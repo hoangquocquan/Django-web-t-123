@@ -35,6 +35,10 @@ class FoundationPermissionService:
             result.setdefault(permission.module, []).append(permission.action)
         return {module: sorted(actions) for module, actions in result.items()}
 
+    def list_roles(self):
+        """Return roles with permissions preloaded for API presentation."""
+        return FoundationRole.objects.prefetch_related("permissions").all()
+
     def has_permission(self, user, module, action="read"):
         """Return whether a user can perform an action."""
         if not user or not user.is_active:

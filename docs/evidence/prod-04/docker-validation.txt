@@ -1,0 +1,8 @@
+STATUS=PASS
+COMPOSE=PASS
+WEB_IMAGE=sha256:c9edb21aa0fbb2277f0d27dc07bd395b258080ceeb0c5ea7bbe80b3b5e45f823
+WEB_SIZE_BYTES=68079487
+WEB_USER=appuser
+N8N_IMAGE=n8nio/n8n:2.21.7
+SERVICES=web,database,redis,n8n healthy
+RUNTIME_ARTIFACT_SCAN=No .env, SQLite, DB, ZIP, or backup files found in /app

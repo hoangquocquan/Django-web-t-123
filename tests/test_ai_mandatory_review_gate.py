@@ -345,6 +345,23 @@ def test_pass_cannot_claim_ready_for_deployment():
     assert "attempted to authorize deployment" in transport.calls[1]["prompt"]
 
 
+def test_pass_cannot_claim_safe_to_merge_into_production():
+    unsafe = valid_review()
+    unsafe["summary"] = "The changes are safe to merge into production."
+    transport = FakeTransport(
+        [
+            TransportResult(True, response=json.dumps(unsafe)),
+            TransportResult(True, response=json.dumps(valid_review())),
+        ]
+    )
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+    assert "attempted to authorize deployment" in transport.calls[1]["prompt"]
+
+
 def test_last_attempt_with_deployment_authorization_is_blocked():
     unsafe = valid_review()
     unsafe["recommended_actions"] = ["Proceed with deployment."]

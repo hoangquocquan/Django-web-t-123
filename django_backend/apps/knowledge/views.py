@@ -20,6 +20,7 @@ from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.assistant_service import KnowledgeAssistantService
 from apps.knowledge.services.document_processor import DocumentProcessor
 from apps.knowledge.services.knowledge_service import KnowledgeService, document_to_dict
+from apps.knowledge.services.runtime_health import KnowledgeRuntimeHealthService
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.upload_security import stored_file_cleanup
 
@@ -272,3 +273,14 @@ def knowledge_chat(request):
         limit=serializer.validated_data["limit"],
     )
     return ok(result)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def knowledge_health(request):
+    """Return permission-protected RAG/model/vector health for operators."""
+    try:
+        _require_knowledge_user(request)
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+    return ok(KnowledgeRuntimeHealthService().check())

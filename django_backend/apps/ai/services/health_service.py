@@ -7,7 +7,6 @@ import logging
 from apps.ai.services.model_config import AIModelConfigService
 from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +33,8 @@ class OllamaHealthService:
             return {
                 "status": "unavailable",
                 "available": False,
+                "endpoint_reachable": False,
+                "response_received": False,
                 "model": config.model_name,
                 "model_available": False,
                 "endpoint": config.endpoint,
@@ -44,9 +45,10 @@ class OllamaHealthService:
         return {
             "status": "ready" if model_available else "model_missing",
             "available": True,
+            "endpoint_reachable": True,
+            "response_received": True,
             "model": config.model_name,
             "model_available": model_available,
             "endpoint": config.endpoint,
             "models": health.get("models", []),
         }
-

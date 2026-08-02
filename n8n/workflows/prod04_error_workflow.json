@@ -1,0 +1,33 @@
+{
+  "id": "PROD04ErrorWorkflow",
+  "name": "PROD-04 Local Error Audit",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "prod04-error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution = $json.execution ?? {};\nreturn [{json: {status: 'FAILED_CLOSED', execution_id: execution.id ?? '', human_approval_required: true, phase_advanced: false, auto_merge: false, auto_deploy: false}}];"
+      },
+      "id": "prod04-error-record",
+      "name": "Create Safe Error Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {"main": [[{"node": "Create Safe Error Record", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"},
+  "staticData": null,
+  "meta": {"templateCredsSetupCompleted": true},
+  "pinData": {},
+  "versionId": "22222222-2222-4222-8222-222222222222"
+}

@@ -5,11 +5,18 @@ from __future__ import annotations
 import json
 import logging
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from urllib import error, request
 from urllib.parse import urlparse
 
 from django.conf import settings
+
+from apps.ai.services.model_config import (
+    AIModelConfigService,
+    AIModelConfigurationError,
+)
+from apps.ai.services.runtime_capacity import AIRuntimeBusyError, AIRuntimeCapacity
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +46,19 @@ class OllamaClient:
         retries=1,
         temperature=None,
         token_limit=None,
+        purpose="generation",
+        capacity=None,
     ):
         """Configure the local endpoint without using any external AI service."""
         self.host = self._validated_local_host(
             host or getattr(settings, "OLLAMA_HOST", "http://localhost:11434")
         )
-        self.model = model or getattr(settings, "OLLAMA_MODEL", "llama3")
+        self.purpose = purpose
+        selected_model = model or getattr(settings, "OLLAMA_MODEL", "llama3")
+        try:
+            self.model = AIModelConfigService().validate_model(selected_model, purpose)
+        except AIModelConfigurationError as exc:
+            raise OllamaClientError(str(exc)) from exc
         self.timeout = timeout or getattr(settings, "OLLAMA_TIMEOUT_SECONDS", 30)
         self.retries = max(0, int(retries))
         self.temperature = float(
@@ -57,6 +71,7 @@ class OllamaClient:
             if token_limit is not None
             else getattr(settings, "OLLAMA_NUM_PREDICT", 512)
         )
+        self.capacity = capacity
 
     @staticmethod
     def _validated_local_host(host):
@@ -141,26 +156,40 @@ class OllamaClient:
             payload["format"] = response_format
         attempts = self.retries + 1
         last_error = None
-        for attempt in range(attempts):
-            try:
-                started = time.perf_counter()
-                data = self._json_request("POST", "/api/generate", payload)
-                response_time_ms = int((time.perf_counter() - started) * 1000)
-                answer = str(data.get("response", "")).strip()
-                if not answer:
-                    raise OllamaClientError("Ollama response is empty.")
-                return OllamaResponse(
-                    answer=answer,
-                    model=self.model,
-                    endpoint=self.host,
-                    response_time_ms=response_time_ms,
-                )
-            except OllamaClientError as exc:
-                last_error = exc
-                if attempt < attempts - 1:
-                    time.sleep(0.1 * (attempt + 1))
+        capacity = self.capacity
+        if capacity is None and getattr(settings, "AI_OLLAMA_CAPACITY_ENABLED", False):
+            capacity = AIRuntimeCapacity()
+        try:
+            context = capacity.slot(self.purpose) if capacity else _null_slot()
+            with context:
+                for attempt in range(attempts):
+                    try:
+                        started = time.perf_counter()
+                        data = self._json_request("POST", "/api/generate", payload)
+                        response_time_ms = int((time.perf_counter() - started) * 1000)
+                        answer = str(data.get("response", "")).strip()
+                        if not answer:
+                            raise OllamaClientError("Ollama response is empty.")
+                        return OllamaResponse(
+                            answer=answer,
+                            model=self.model,
+                            endpoint=self.host,
+                            response_time_ms=response_time_ms,
+                        )
+                    except OllamaClientError as exc:
+                        last_error = exc
+                        if attempt < attempts - 1:
+                            time.sleep(0.1 * (attempt + 1))
+        except AIRuntimeBusyError as exc:
+            raise OllamaClientError(str(exc)) from exc
 
         logger.warning(
             "Ollama request failed without logging prompt content: %s", last_error
         )
         raise last_error or OllamaClientError("Ollama request failed.")
+
+
+@contextmanager
+def _null_slot():
+    """Provide the same context-manager interface when capacity control is disabled."""
+    yield

@@ -1,0 +1,88 @@
+{
+  "id": "PROD04RuntimeGate",
+  "name": "PROD-04 AI Runtime Human Approval Gate",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "prod04-runtime-review", "responseMode": "responseNode", "options": {}},
+      "id": "prod04-webhook",
+      "name": "Authenticated Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "prod04-runtime-review"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst body = $json.body ?? {};\nconst headers = $json.headers ?? {};\nconst signature = String(headers['x-mec-signature'] ?? '');\nconst secret = String($env.N8N_WEBHOOK_SECRET ?? '');\nfunction canonical(value) {\n  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';\n  if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}';\n  return JSON.stringify(value);\n}\nlet authorized = Boolean(secret && signature);\nif (authorized) {\n  const expected = crypto.createHmac('sha256', secret).update(canonical(body)).digest('hex');\n  const supplied = signature.replace(/^sha256=/, '');\n  authorized = expected.length === supplied.length && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(supplied));\n}\nconst gates = body.safety_gates ?? {};\nconst gatesValid = gates.human_approval_required === true && gates.auto_merge === false && gates.auto_deploy === false && gates.approval_bypass_detected === false;\nconst correlationValid = Boolean(body.correlation_id && typeof body.correlation_id === 'string');\nreturn [{json: {authorized: authorized && gatesValid && correlationValid, correlation_id: correlationValid ? body.correlation_id : '', safety_gates: gates, rejection_reason: !authorized ? 'WEBHOOK_AUTH_INVALID' : (!gatesValid ? 'SAFETY_GATE_BLOCKED' : (!correlationValid ? 'CORRELATION_ID_REQUIRED' : ''))}}];"
+      },
+      "id": "prod04-validate",
+      "name": "Validate Signature And Safety Gates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+          "conditions": [{"id": "prod04-authorized-condition", "leftValue": "={{ $json.authorized }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true", "singleValue": true}}],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "prod04-authorized",
+      "name": "Authorized And Safe",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {"url": "http://web:8000/api/v1/health/", "sendHeaders": true, "headerParameters": {"parameters": [{"name": "X-Forwarded-Proto", "value": "https"}]}, "options": {"timeout": 10000}},
+      "id": "prod04-health",
+      "name": "Verify Django Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, -100],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {"jsCode": "const validated = $('Validate Signature And Safety Gates').first().json;\nreturn [{json: {accepted: true, correlation_id: validated.correlation_id, human_approval_required: true, phase_advanced: false, auto_merge: false, auto_deploy: false, django_health: $json.status ?? 'unknown'}}];"},
+      "id": "prod04-result",
+      "name": "Build Safe Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, -100]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {"responseCode": 200}},
+      "id": "prod04-response",
+      "name": "Return Approval Pending",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1200, -100]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ {accepted: false, error: $json.rejection_reason, human_approval_required: true, phase_advanced: false, auto_merge: false, auto_deploy: false} }}", "options": {"responseCode": 401}},
+      "id": "prod04-reject",
+      "name": "Reject Unsafe Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [720, 120]
+    }
+  ],
+  "connections": {
+    "Authenticated Webhook": {"main": [[{"node": "Validate Signature And Safety Gates", "type": "main", "index": 0}]]},
+    "Validate Signature And Safety Gates": {"main": [[{"node": "Authorized And Safe", "type": "main", "index": 0}]]},
+    "Authorized And Safe": {"main": [[{"node": "Verify Django Health", "type": "main", "index": 0}], [{"node": "Reject Unsafe Request", "type": "main", "index": 0}]]},
+    "Verify Django Health": {"main": [[{"node": "Build Safe Result", "type": "main", "index": 0}]]},
+    "Build Safe Result": {"main": [[{"node": "Return Approval Pending", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "errorWorkflow": "PROD04ErrorWorkflow"},
+  "staticData": null,
+  "meta": {"templateCredsSetupCompleted": true},
+  "pinData": {},
+  "versionId": "33333333-3333-4333-8333-333333333333"
+}

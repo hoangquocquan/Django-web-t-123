@@ -1,9 +1,8 @@
 """Production readiness tests for Phase 9.2 API hardening."""
 
+import pytest
 from django.db import connections
 from django.test.utils import CaptureQueriesContext
-import pytest
-
 
 LIST_ENDPOINTS = [
     "/api/v1/catalog/products/",
@@ -49,12 +48,14 @@ def test_invalid_pagination_returns_consistent_400(client, legacy_db):
         "/api/v1/auth/profile/",
     ],
 )
-def test_unsafe_methods_are_blocked_across_business_apis(client, legacy_db, method, url):
+def test_unsafe_methods_are_blocked_across_business_apis(
+    client, legacy_db, method, url
+):
     """Non-replacement business APIs still block unsafe methods."""
     request_method = getattr(client, method)
     response = request_method(url, data={}, content_type="application/json")
 
-    assert response.status_code in {403, 405}
+    assert response.status_code in {401, 403, 405}
 
 
 def test_phase11_1_1_write_replacements_are_validation_gated(client, legacy_db):

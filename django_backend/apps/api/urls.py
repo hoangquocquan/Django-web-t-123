@@ -8,6 +8,7 @@ from apps.knowledge.views import (
     knowledge_chat,
     knowledge_document_download,
     knowledge_documents,
+    knowledge_health,
     knowledge_search,
 )
 
@@ -236,6 +237,7 @@ urlpatterns = [
     ),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
+    path("knowledge/health/", knowledge_health, name="api-knowledge-health"),
     path("agent/run/", agent_run, name="api-agent-run"),
     path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
 ]

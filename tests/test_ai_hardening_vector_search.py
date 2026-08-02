@@ -3,9 +3,6 @@ import json
 from urllib import error
 
 import pytest
-from django.test import override_settings
-from django.core.management import call_command
-
 from apps.knowledge.models import KnowledgeDocument, KnowledgeEmbedding
 from apps.knowledge.services.embedding_service import (
     DevelopmentHashEmbeddingProvider,
@@ -16,6 +13,8 @@ from apps.knowledge.services.knowledge_indexer import KnowledgeIndexer
 from apps.knowledge.services.knowledge_service import KnowledgeService
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.vector_store import DjangoJSONVectorStore
+from django.core.management import call_command
+from django.test import override_settings
 
 
 class FakeResponse:
@@ -50,7 +49,10 @@ def test_ollama_embedding_valid_batch():
         opener=opener_with_vectors([[1, 0, 0], [0, 1, 0]]),
     )
 
-    assert provider.embed_batch(["gia công CNC", "precision machining"]) == [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    assert provider.embed_batch(["gia công CNC", "precision machining"]) == [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ]
 
 
 def test_ollama_embedding_offline_is_safe():
@@ -62,11 +64,14 @@ def test_ollama_embedding_offline_is_safe():
         provider.embed_text("CNC")
 
 
+@override_settings(OLLAMA_EMBEDDING_MODELS=("nomic-embed-text", "missing-model"))
 def test_ollama_health_reports_missing_model():
     provider = OllamaEmbeddingProvider(
         model="missing-model",
         dimensions=3,
-        opener=lambda req, timeout: FakeResponse({"models": [{"name": "nomic-embed-text:latest"}]}),
+        opener=lambda req, timeout: FakeResponse(
+            {"models": [{"name": "nomic-embed-text:latest"}]}
+        ),
     )
 
     assert provider.health_check()["model_available"] is False
@@ -144,8 +149,12 @@ def test_vietnamese_and_english_retrieval_use_matching_provider():
         permission_level="public",
     )
 
-    vietnamese = KnowledgeSearchService(embedding_service=provider).search("gia công CNC chính xác", user=None)
-    english = KnowledgeSearchService(embedding_service=provider).search("inspection fixture quality", user=None)
+    vietnamese = KnowledgeSearchService(embedding_service=provider).search(
+        "gia công CNC chính xác", user=None
+    )
+    english = KnowledgeSearchService(embedding_service=provider).search(
+        "inspection fixture quality", user=None
+    )
 
     assert vietnamese["sources"][0]["title"] == "Gia công CNC"
     assert english["sources"][0]["title"] == "Fixture"
@@ -154,7 +163,9 @@ def test_vietnamese_and_english_retrieval_use_matching_provider():
 @pytest.mark.django_db
 def test_management_command_dry_run_and_resume(capsys):
     provider = DevelopmentHashEmbeddingProvider()
-    KnowledgeService(embedding_service=provider).create_document(title="Demo", content="CNC demo", permission_level="public")
+    KnowledgeService(embedding_service=provider).create_document(
+        title="Demo", content="CNC demo", permission_level="public"
+    )
 
     call_command("reindex_knowledge_embeddings", "--dry-run", stdout=io.StringIO())
     assert KnowledgeDocument.objects.count() == 1
@@ -178,7 +189,9 @@ def test_no_context_query_returns_no_sources():
         permission_level="public",
     )
 
-    result = KnowledgeSearchService(embedding_service=provider).search("dự báo thời tiết sao Hỏa", user=None)
+    result = KnowledgeSearchService(embedding_service=provider).search(
+        "dự báo thời tiết sao Hỏa", user=None
+    )
 
     assert result["results"] == []
     assert result["sources"] == []

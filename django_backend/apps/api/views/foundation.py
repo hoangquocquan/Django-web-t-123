@@ -15,7 +15,6 @@ from apps.api.serializers.foundation import (
     user_to_dict,
 )
 from apps.api.views.helpers import handle_not_found, ok, paginated_ok
-from apps.foundation.models import FoundationRole
 from apps.foundation.services import (
     FoundationAuthService,
     FoundationPermissionService,
@@ -197,7 +196,7 @@ def foundation_roles(request):
         return _permission_error_response(exc)
 
     permission_service = FoundationPermissionService()
-    roles = FoundationRole.objects.prefetch_related("permissions").all()
+    roles = permission_service.list_roles()
     return ok([role_to_dict(role, permission_service) for role in roles])
 
 

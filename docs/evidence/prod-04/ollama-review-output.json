@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "PROD-04 - Ollama, Redis, n8n and AI Runtime Productionization",
+    "critical_findings": [],
+    "requirements_checked": [
+      "local_private_ollama",
+      "purpose_model_allowlist",
+      "distributed_rate_limit",
+      "distributed_capacity",
+      "rag_health",
+      "bilingual_citations",
+      "document_permission_filtering",
+      "sales_draft_only",
+      "agent_read_only",
+      "n8n_postgres_persistence",
+      "webhook_hmac",
+      "bounded_retry",
+      "correlation_id",
+      "human_approval_gate"
+    ],
+    "security_findings": [],
+    "medium_findings": [],
+    "high_findings": [],
+    "missing_requirements": [],
+    "migration_findings": [],
+    "recommended_actions": [],
+    "test_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "human_approval_required": true,
+      "approval_bypass_detected": false,
+      "auto_merge": false,
+      "auto_deploy": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "PROD-04 - Ollama, Redis, n8n and AI Runtime Productionization",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{ \"decision\": \"PASS\", \"summary\": \"PROD-04 - Ollama, Redis, n8n and AI Runtime Productionization\",\n\n\"critical_findings\": [],\n\n\"requirements_checked\": [\"local_private_ollama\", \"purpose_model_allowlist\", \"distributed_rate_limit\", \"distributed_capacity\", \"rag_health\", \"bilingual_citations\", \"document_permission_filtering\", \"sales_draft_only\", \"agent_read_only\", \"n8n_postgres_persistence\", \"webhook_hmac\", \"bounded_retry\", \"correlation_id\", \"human_approval_gate\"],\n\n\"security_findings\": [],\n\n\"medium_findings\": [],\n\n\"high_findings\": [],\n\n\"missing_requirements\": [],\n\n\"migration_findings\": [],\n\n\"recommended_actions\": [],\n\n\"test_findings\": [],\n\n\"requires_human_review\": true, \"safety_gates\": {\"human_approval_required\": true, \"approval_bypass_detected\": false, \"auto_merge\": false, \"auto_deploy\": false},\n\n\"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\" }"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "1b66d2eef16c791f982546967cb1025ed1cc3fc9d777b57c10957adf2507b1df",
+    "review_output_sha256": "636c650b2d9298ec984220194b2ffb906f63058db8fa5808c2851c5271109cf4",
+    "actual_diff_sha256": "508e8b36c5679eb4a811cb6b2a302f00300de4068f2d690ad18f3377b1e172c0",
+    "base_commit": "c11660a190f02f961d6906290c44284c25d1bb19",
+    "current_commit": "c11660a190f02f961d6906290c44284c25d1bb19",
+    "correlation_id": "c90d8cae-2cc8-4905-9813-8883d572cefb"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-04",
+  "created_at": "2026-08-02T05:14:46+00:00"
+}

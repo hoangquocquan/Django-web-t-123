@@ -1,0 +1,4 @@
+STATUS=PASS
+DRIFT=No changes detected
+POSTGRES=python manage.py migrate --check passed in production container
+MIGRATIONS_CREATED=0
