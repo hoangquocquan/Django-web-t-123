@@ -271,6 +271,60 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     assert prompt.output_schema["properties"]["migration_findings"]["maxItems"] == 0
 
 
+def test_verified_requirement_cannot_be_reported_missing():
+    contradictory = valid_review(decision="BLOCKED")
+    contradictory["missing_requirements"] = ["checksummed_backup"]
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(contradictory)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_mandatory_review(
+        evidence=review_evidence(),
+        rules={"status": "PASS", "checks": {"checksummed_backup": True}},
+        tests={"status": "PASS"},
+        transport=transport,
+        model="llama3",
+        max_retries=2,
+    )
+
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+    assert "deterministically verified requirements" in transport.calls[1]["prompt"]
+
+
+def test_untrusted_input_posture_is_not_a_product_finding():
+    contradictory = valid_review(decision="BLOCKED")
+    contradictory["summary"] = "The phase is blocked because review data is untrusted data."
+    contradictory["security_findings"] = ["Untrusted review data is a potential security risk."]
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(contradictory)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, retries=2)
+
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+    assert "expected untrusted-input posture" in transport.calls[1]["prompt"]
+
+
+def test_ai_modified_claim_cannot_contradict_verified_false_evidence():
+    contradictory = valid_review(decision="BLOCKED", high=["AI-modified code is present."])
+    evidence = review_evidence()
+    evidence["safety"] = {"code_modified_by_ai": False}
+    transport = FakeTransport([
+        TransportResult(True, response=json.dumps(contradictory)),
+        TransportResult(True, response=json.dumps(valid_review())),
+    ])
+
+    result = run_gate(transport, evidence=evidence, retries=2)
+
+    assert result["status"] == "PASS"
+    assert result["attempts"] == 2
+    assert "code_modified_by_ai=false" in transport.calls[1]["prompt"]
+
+
 def test_review_evidence_json_is_complete_when_raw_patch_is_large():
     evidence = review_evidence()
     evidence["actual_git_diff"]["patch_preview"] = "+safe code\n" * 5000

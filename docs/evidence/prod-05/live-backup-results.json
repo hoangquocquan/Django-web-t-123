@@ -1,8 +1,49 @@
 {
-  "status": "BLOCKED",
+  "status": "BACKUP_COMPLETE",
   "command": "python scripts/prod05_backup.py",
-  "reason": "Docker API access required escalation; the execution environment rejected escalation because its usage limit was reached.",
-  "backup_created": false,
+  "package": "backups/prod05/20260802T070951Z",
+  "created_at": "2026-08-02T07:09:51.183519+00:00",
+  "manifest_sha256": "8a2f9f767dfdc4bc6adae040c0a1a9eecbcfd5a6919f5c52d45d7d15c1eecd53",
+  "database_engine": "postgresql",
+  "database_name": "mecprecision",
+  "components": [
+    {
+      "name": "postgres.dump",
+      "kind": "postgresql_and_n8n_database",
+      "size_bytes": 450972,
+      "sha256": "044e3f660c892a74b521719e31cfefae57590ba6c52de4c88485febdc8ac2b57"
+    },
+    {
+      "name": "media.tar.gz",
+      "kind": "django_media",
+      "size_bytes": 86,
+      "sha256": "4bc984bff6bfaa0692857ceda03420b0ed4b3813a1674eb5e8b06c71f85349b2"
+    },
+    {
+      "name": "n8n-data.tar.gz",
+      "kind": "n8n_encrypted_runtime_config",
+      "size_bytes": 5843,
+      "sha256": "0fe75e4a319c5998c09788bd05965bd361ac4d4508562f17557c4f07ff3f6c67"
+    },
+    {
+      "name": "n8n-workflows.tar.gz",
+      "kind": "n8n_versioned_workflows",
+      "size_bytes": 3576,
+      "sha256": "3363050273e31e9ab01e95a0afa4a1a10a9654e8aeaef74c1c48896b1525ac2e"
+    }
+  ],
+  "manifest_valid": true,
+  "checksums_valid": true,
+  "archive_paths_safe": true,
+  "plaintext_secret_detected": false,
+  "backup_created": true,
   "fake_evidence_created": false,
-  "production_data_modified": false
+  "production_data_modified": false,
+  "backup_package_committed": false,
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
 }

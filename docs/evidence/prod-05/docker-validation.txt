@@ -1,9 +1,14 @@
-BLOCKED
-Docker API access was denied in the sandbox. An escalation request for the exact
-backup command was rejected because the execution environment usage limit was
-reached. No workaround, build, backup, restore, push, or deployment was attempted.
+PASS
+Docker Desktop 4.74.0 and Docker Engine 29.4.3 were available through the
+desktop-linux context. The production-like web, PostgreSQL, Redis, and n8n
+containers were running and reported healthy.
 
-STATUS = NOT_RUN
-REASON = Docker API permission and escalation usage limit.
-RETRY_COMMAND = docker version; docker ps; python scripts/prod05_backup.py
-IMPACT = Live runtime, backup, and isolated restore gates remain blocked.
+STATUS = PASS
+CONTEXT = desktop-linux
+WEB = healthy
+POSTGRESQL = healthy; accepting connections
+REDIS = healthy; PONG recorded by the container health check
+N8N = healthy; HTTP 200 from /healthz
+OLLAMA = reachable; llama3 model available
+DEPLOYMENT = not executed
+PRODUCTION = not modified

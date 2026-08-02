@@ -1,8 +1,8 @@
 {
   "status": "PASS",
-  "phase_gate_status": "BLOCKED",
-  "focused": "23 passed",
-  "full_regression": "500 passed",
+  "phase_gate_status": "PASS_PENDING_OLLAMA_REVIEW",
+  "focused": "23 PROD-05 tests and 66 mandatory-review plus PROD-05 tests passed",
+  "full_regression": "503 passed",
   "migration_regression": "238 passed",
   "django_check": "PASS",
   "migration_drift": "PASS",
@@ -11,7 +11,31 @@
   "bandit_high_critical": "PASS",
   "backup_unit_contract": "PASS",
   "restore_unit_contract": "PASS",
-  "live_backup": "NOT_RUN_DOCKER_PERMISSION_DENIED",
-  "live_isolated_restore": "NOT_RUN_DOCKER_PERMISSION_DENIED",
+  "dependency_audit": "PASS_NO_KNOWN_VULNERABILITIES",
+  "live_backup": "PASS",
+  "backup_checksum": "PASS",
+  "live_isolated_restore": "PASS",
+  "postgresql_restore": "PASS",
+  "media_restore": "PASS_EMPTY_SOURCE_VOLUME",
+  "n8n_recovery": "PASS",
+  "runtime_evidence": {
+    "backup_metadata": "docs/evidence/prod-05/live-backup-results.json",
+    "manifest_sha256": "8a2f9f767dfdc4bc6adae040c0a1a9eecbcfd5a6919f5c52d45d7d15c1eecd53",
+    "restore_result": "docs/evidence/prod-05/restore-test-result.json",
+    "production_data_modified": false,
+    "backup_package_committed": false
+  },
+  "deterministic_requirement_checks": {
+    "authenticated_prometheus_metrics": "PASS",
+    "structured_pii_safe_logging": "PASS",
+    "postgres_redis_ollama_n8n_health": "PASS",
+    "host_capacity_metrics": "PASS",
+    "login_governance_upload_queue_metrics": "PASS",
+    "checksummed_postgres_media_n8n_backup": "PASS",
+    "isolated_restore_only": "PASS",
+    "archive_path_traversal_rejection": "PASS",
+    "incident_and_outage_runbooks": "PASS",
+    "human_approval_gate": "PASS"
+  },
   "fallback_used": false
 }

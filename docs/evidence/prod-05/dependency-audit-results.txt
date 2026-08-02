@@ -1,12 +1,18 @@
-Status: NOT_RERUN_NETWORK_RESTRICTED
+Status: PASS
 
-pip-audit first encountered a denied default Windows cache path. It was rerun with
-a writable temporary cache and --disable-pip --no-deps, then the sandbox denied
-network access to pypi.org. PROD-05 changes no requirements file and adds no package.
-The immediately preceding PROD-04 audit passed for the same pinned requirements.
-This evidence does not claim a new PASS.
+Project production manifest audited:
+django_backend/requirements-prod.txt
 
-STATUS = NOT_RUN
-REASON = Network access to pypi.org was denied after retrying with a writable cache.
-RETRY_COMMAND = python -m pip_audit -r django_backend/requirements-prod.txt
-IMPACT = No new dependency was added, but a fresh PROD-05 vulnerability lookup is unavailable.
+Command:
+pip-audit --disable-pip --no-deps -r django_backend/requirements-prod.txt
+
+Result:
+No known vulnerabilities found.
+
+An initial environment-wide audit reported vulnerabilities in unrelated packages
+installed in the shared Python environment. That result is not used as project
+evidence because those packages are absent from the production requirements file.
+
+STATUS = PASS
+SCOPE = pinned Django production dependencies
+NETWORK = PyPI reachable during the final audit

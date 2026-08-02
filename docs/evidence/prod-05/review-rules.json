@@ -15,6 +15,21 @@
     "incident_and_outage_runbooks",
     "human_approval_gate"
   ],
+  "checks": {
+    "authenticated_prometheus_metrics": true,
+    "structured_pii_safe_logging": true,
+    "postgres_redis_ollama_n8n_health": true,
+    "host_capacity_metrics": true,
+    "login_governance_upload_queue_metrics": true,
+    "checksummed_postgres_media_n8n_backup": true,
+    "isolated_restore_only": true,
+    "archive_path_traversal_rejection": true,
+    "incident_and_outage_runbooks": true,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  },
   "safety_gates": {
     "human_approval_required": true,
     "auto_merge": false,

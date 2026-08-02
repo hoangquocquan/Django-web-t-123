@@ -1,0 +1,83 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "PROD-05 Monitoring, Backup and Disaster Recovery",
+    "requirements_checked": [
+      "authenticated_prometheus_metrics",
+      "structured_pii_safe_logging",
+      "postgres_redis_ollama_n8n_health",
+      "host_capacity_metrics",
+      "login_governance_upload_queue_metrics",
+      "checksummed_postgres_media_n8n_backup",
+      "isolated_restore_only",
+      "archive_path_traversal_rejection",
+      "incident_and_outage_runbooks",
+      "human_approval_gate"
+    ],
+    "missing_requirements": [],
+    "migration_findings": [],
+    "recommended_actions": [
+      "Compile, Django check, migration drift, focused tests, regression, security scans, live backup/restore, and schema-valid local Ollama review must pass before PROD-06."
+    ],
+    "security_findings": [],
+    "test_findings": [],
+    "high_findings": [],
+    "critical_findings": [],
+    "medium_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_deploy": false,
+      "approval_bypass_detected": false,
+      "human_approval_required": true,
+      "auto_merge": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "PROD-05 Monitoring, Backup and Disaster Recovery",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{ \"decision\": \"PASS\", \"summary\": \"PROD-05 Monitoring, Backup and Disaster Recovery\",\n\n\"requirements_checked\": [\"authenticated_prometheus_metrics\", \"structured_pii_safe_logging\", \"postgres_redis_ollama_n8n_health\", \"host_capacity_metrics\", \"login_governance_upload_queue_metrics\", \"checksummed_postgres_media_n8n_backup\", \"isolated_restore_only\", \"archive_path_traversal_rejection\", \"incident_and_outage_runbooks\", \"human_approval_gate\"],\n\n\"missing_requirements\": [],\n\n\"migration_findings\": [],\n\n\"recommended_actions\": [\"Compile, Django check, migration drift, focused tests, regression, security scans, live backup/restore, and schema-valid local Ollama review must pass before PROD-06.\"],\n\n\"security_findings\": [],\n\n\"test_findings\": [],\n\n\"high_findings\": [],\n\n\"critical_findings\": [],\n\n\"medium_findings\": [],\n\n\"requires_human_review\": true,\n\n\"safety_gates\": {\"auto_deploy\": false, \"approval_bypass_detected\": false, \"human_approval_required\": true, \"auto_merge\": false},\n\n\"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\"}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "d3413e232f5a38c9d048227e248eaca317be4d4ab08a205f8eed6fbd06caa6e9",
+    "review_output_sha256": "f59e7892e7bee25cf739740263ebdf32e7e41606628bbcd2989f06c3ecb31be9",
+    "actual_diff_sha256": "2ed61b0d3042bedc3ac715bd08298245387c6d7e9fb1bfac7a9374766f0b1ad0",
+    "base_commit": "f84dd708531754efce43317cb99a0ad5174e5297",
+    "current_commit": "c11cb4e59151a49a32dae791461977299af8a31c",
+    "correlation_id": "9339246a-911b-4dff-9159-430a8cb50df1"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-05",
+  "created_at": "2026-08-02T07:31:16+00:00"
+}

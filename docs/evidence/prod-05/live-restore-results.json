@@ -1,7 +1,20 @@
 {
-  "status": "BLOCKED_NOT_STARTED",
-  "reason": "A real checksummed backup package was not available because Docker API access was denied.",
-  "isolated_database_created": false,
+  "status": "RESTORE_TEST_PASS",
+  "package": "backups/prod05/20260802T070951Z",
+  "target": "temporary PostgreSQL database and temporary filesystem",
+  "manifest_schema": 1,
+  "database": {
+    "migration_check": "PASS",
+    "database_smoke": "PASS",
+    "temporary_database_removed": true
+  },
+  "files": {
+    "media": 0,
+    "n8n_runtime": 7,
+    "n8n_workflows": 5
+  },
+  "isolated_database_created": true,
+  "isolated_restore": true,
   "production_data_modified": false,
-  "restore_success_claimed": false
+  "restore_success_claimed": true
 }

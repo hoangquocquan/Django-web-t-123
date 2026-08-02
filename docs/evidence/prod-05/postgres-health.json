@@ -1,6 +1,9 @@
 {
-  "status": "NOT_RUN",
-  "reason": "Docker API access denied by the execution environment.",
-  "retry_command": "docker ps; python scripts/prod05_backup.py",
-  "impact": "Live PostgreSQL dump and isolated restore are unverified."
+  "status": "PASS",
+  "container": "mecprecision-vietnam-database-1",
+  "container_health": "healthy",
+  "connection_check": "accepting connections",
+  "backup": "PASS",
+  "isolated_restore": "PASS",
+  "temporary_restore_database_remaining": false
 }

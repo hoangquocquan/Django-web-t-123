@@ -1,7 +1,14 @@
-Ruff changed scope: PASS
-Ruff format changed scope: PASS
+Ruff changed scope: PASS for F/E4/E7/E9 with E402 ignored for test bootstrap imports
+Ruff format PROD-05 implementation scope: PASS; 12 files already formatted
 Mypy changed scope: PASS
-Bandit changed scope: no Medium, High, or Critical findings
+Bandit changed scope: no Medium, High, or Critical findings; test-only Low findings retained
 Secret scan: PASS; only a clearly named test-only metrics token fixture matched
 Artifact scan: PASS; no ZIP/database/dump/backup/cache artifact staged
 Safety gates: human approval required; auto merge/deploy disabled; no bypass detected
+
+Tooling note: the machine-wide Ruff configuration enables RUF100 while disabling
+F403/F405, which makes the required noqa comments appear unused. The isolated
+project check above explicitly enabled the standard Python error rules instead of
+changing production source to satisfy an external user-level configuration.
+The two pre-existing mandatory-review files also retain baseline Ruff formatter
+drift; their focused lint, mypy, Bandit, and 66 behavior tests pass.

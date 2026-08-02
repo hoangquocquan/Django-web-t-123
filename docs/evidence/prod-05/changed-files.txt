@@ -8,3 +8,7 @@ Evidence/review: docs/evidence/prod-05 and two PROD-05 review artifacts.
 
 No file was deleted. No migration, database, backup archive, secret, cache, log,
 or ZIP was staged.
+
+V2 runtime completion adds only reviewer hardening, focused tests, sanitized
+backup/restore evidence, and review documents. The real backup package remains
+ignored and outside Git.
