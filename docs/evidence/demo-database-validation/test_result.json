@@ -12,10 +12,11 @@
   },
   "database_validation": {
     "orm_sqlite_counts_consistent": true,
-    "original_database_modified": false,
+    "original_database_modified": true,
     "critical_findings": 0,
     "high_findings": 1,
-    "blocking_finding": "SQ-DEMO-000208 has a negative total of -38.00"
+    "blocking_finding": "SQ-DEMO-000208 has a negative total of -38.00",
+    "database_change": "Mandatory review revoked auth token 16; compensating recovery completed"
   },
   "safety": {
     "failed_tests_skipped": false,

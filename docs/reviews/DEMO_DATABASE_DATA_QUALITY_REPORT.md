@@ -44,5 +44,6 @@ hỗ trợ khách hàng cá nhân nên chưa được coi là lỗi chặn.
 
 ## Kết luận
 
-`DEMO_DATABASE_VALIDATION_FAILED` vì còn một phát hiện High. Database không bị
-thay đổi trong quá trình kiểm tra.
+`DEMO_DATABASE_VALIDATION_FAILED` vì còn một phát hiện High. Phần read-only
+validation không đổi database, nhưng Mandatory Ollama review sau đó đã revoke
+một auth token local; token đã được khôi phục và sự việc được ghi trong evidence.

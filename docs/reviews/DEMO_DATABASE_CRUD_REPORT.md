@@ -11,7 +11,9 @@ không thao tác Create/Update/Delete trên `django_backend/db.sqlite3`.
 - Customer: create, read, update và delete PASS.
 - Validation: giá âm được command data-quality phát hiện PASS.
 - Permission: admin đăng nhập và tạo session PASS.
-- Rollback/isolation: SHA-256 database gốc trước và sau giống nhau PASS.
+- Rollback/isolation của focused/full tests: PASS.
+- Toàn phase: FAIL vì Mandatory Ollama review sau đó đã ghi `revoked_at` vào
+  token Chrome local; token đã được khôi phục nhưng checksum vật lý thay đổi.
 
 Focused suite: `8 passed`.
 

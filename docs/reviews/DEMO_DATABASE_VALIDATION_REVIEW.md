@@ -14,11 +14,17 @@ Implementation commit: `a3214a862eba39fafa905710199534787f4d999e`.
 - Engine: SQLite qua Django ORM.
 - Header SQLite: hợp lệ.
 - SHA-256 trước: `a9f0a9ad2e43a8f8023ca6f99345cd5a1ae6cc5bdd7578a44006f7966f51114d`.
-- SHA-256 sau: `a9f0a9ad2e43a8f8023ca6f99345cd5a1ae6cc5bdd7578a44006f7966f51114d`.
-- Database gốc bị sửa bởi validation: không.
+- SHA-256 sau cùng: `4ace83481646cc6520fcf650fa4224458206a0d941b374ebc5c1881fa5a6342c`.
+- Database gốc bị sửa trong phase: có.
 
 Trước validation, migration bảo mật `foundation.0006` đã được áp dụng để sửa lỗi
 login 500. Database được sao lưu vào thư mục Temp trước migration.
+
+Sau validation read-only, Mandatory Ollama review đã vô tình revoke token Chrome
+`FoundationAuthToken id=16`. Thao tác được phát hiện từ `revoked_at` lúc 21:16;
+token được khôi phục về `NULL` sau một bản sao lưu an toàn. Số lượng tất cả bảng
+không đổi, nhưng checksum vật lý đã đổi nên phase không được tuyên bố bảo toàn
+database gốc.
 
 ## Kết quả chính
 

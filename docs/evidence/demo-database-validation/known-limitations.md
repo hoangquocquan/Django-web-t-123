@@ -8,3 +8,5 @@
   phần code mới.
 - Kiểm thử trình duyệt trong phase dùng Django test client; đăng nhập thật tại
   `http://127.0.0.1:8001/admin/login/` cũng đã được xác minh HTTP 200/302/200.
+- Mandatory review đã ghi vào auth token local ngoài ý muốn. Token đã được phục
+  hồi nhưng checksum database không thể coi là bất biến cho toàn phase.
