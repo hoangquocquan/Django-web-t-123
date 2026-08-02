@@ -9,9 +9,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
+# Git chỉ được gọi bằng argv cố định và không dùng shell.
+import subprocess  # nosec B404
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,7 +42,8 @@ def read_file(path, limit=8000):
 
 def run_git(args):
     """Run a read-only Git command for review context."""
-    completed = subprocess.run(
+    # Lệnh cố định này chỉ đọc metadata Git nội bộ.
+    completed = subprocess.run(  # nosec B603 B607
         ["git", *args],
         cwd=PROJECT_ROOT,
         check=False,
@@ -66,10 +69,23 @@ def normalize_model_name(name):
 
 def http_json(url, method="GET", payload=None, timeout=5):
     """Call a local Ollama JSON endpoint and return structured output."""
+    parsed = urlparse(url)
+    if parsed.scheme != "http" or parsed.hostname not in {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+    }:
+        return {
+            "ok": False,
+            "status_code": None,
+            "data": {},
+            "error": "Only a local HTTP Ollama endpoint is permitted.",
+        }
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
     request = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        # URL đã được khóa ở local HTTP phía trên.
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # nosec B310
             body = response.read().decode("utf-8")
             return {"ok": True, "status_code": response.status, "data": json.loads(body) if body else {}, "error": ""}
     except urllib.error.HTTPError as exc:
@@ -79,19 +95,35 @@ def http_json(url, method="GET", payload=None, timeout=5):
 
 
 def list_ollama_models(ollama_url=DEFAULT_OLLAMA_URL, timeout=5):
-    """Return installed Ollama models from `/api/tags`."""
+    """Return explicit transport and model evidence from `/api/tags`."""
     endpoint = ollama_url.rstrip("/") + "/api/tags"
     result = http_json(endpoint, timeout=timeout)
     models = []
-    if result["ok"]:
-        for item in result["data"].get("models", []):
+    model_records = []
+    raw_models = result["data"].get("models") if result["ok"] else None
+    model_list_received = isinstance(raw_models, list)
+    if model_list_received:
+        for item in raw_models:
             name = item.get("name") or item.get("model")
             if name:
                 models.append(name)
+                details = item.get("details") or {}
+                model_records.append(
+                    {
+                        "name": name,
+                        "digest": str(item.get("digest") or ""),
+                        "family": str(details.get("family") or ""),
+                    }
+                )
     return {
+        # `available` is kept for older advisory callers; mandatory review uses
+        # the explicit transport facts below.
         "available": result["ok"],
+        "endpoint_reachable": result["ok"],
+        "model_list_received": model_list_received,
         "endpoint": endpoint,
         "models": models,
+        "model_records": model_records,
         "error": result["error"],
         "status_code": result["status_code"],
     }

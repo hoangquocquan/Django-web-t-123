@@ -1,0 +1,5 @@
+Branch: codex/production-readiness-full
+Base commit: ca2f30256dd029b33cf94995cb8cf15bf750c4b5
+Remote: none configured
+Pre-existing untracked files excluded: docs.zip, docs/reviews.zip, mecprecision.zip
+Initial production readiness status: PRODUCTION_READINESS_BLOCKED

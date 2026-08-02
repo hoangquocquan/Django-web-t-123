@@ -10,11 +10,14 @@ import argparse
 import hashlib
 import json
 import os
-import subprocess
+# Git chỉ được gọi bằng argv cố định và không dùng shell.
+import subprocess  # nosec B404
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+from review_v3 import build_review_v3_evidence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +31,8 @@ def utc_now():
 
 def run_git(args):
     """Run a read-only Git command."""
-    completed = subprocess.run(
+    # Lệnh cố định này chỉ đọc diff và metadata Git nội bộ.
+    completed = subprocess.run(  # nosec B603 B607
         ["git", *args],
         cwd=PROJECT_ROOT,
         check=False,
@@ -55,6 +59,9 @@ def read_text(path, limit=12000):
 def find_phase_requirement(phase):
     """Find the saved Codex prompt for a phase."""
     prompt_dir = PROJECT_ROOT / "docs" / "codex-prompts"
+    if str(phase).upper() == "REVIEW-V3":
+        review_v3_prompt = prompt_dir / "REVIEW_ENGINE_V3_HARDENING.md"
+        return review_v3_prompt if review_v3_prompt.exists() else None
     normalized = str(phase).replace("-", "_").replace(".", ".")
     matches = sorted(prompt_dir.glob(f"PHASE_{phase}*.md"))
     if not matches:
@@ -100,11 +107,22 @@ def collect_evidence(phase="13.5", output_path=None):
     latest_commit = run_git(["log", "-1", "--oneline"])["stdout"]
     diff_hash = hashlib.sha256(actual_diff.encode("utf-8")).hexdigest() if actual_diff else ""
     migration_files = [line.split("\t")[-1] for line in name_status.splitlines() if "/migrations/" in line.replace("\\", "/")]
-    test_result_files = list_existing(["ai-review/results/test_result.json", "docs/cicd/test_pipeline_result.json"])
+    phase_slug = str(phase).strip().casefold()
+    phase_test_result = f"docs/evidence/{phase_slug}/test_result.json"
+    test_result_files = list_existing(
+        [
+            phase_test_result,
+            "ai-review/results/test_result.json",
+            "docs/cicd/test_pipeline_result.json",
+        ]
+    )
     test_hashes = {
         item["path"]: hashlib.sha256((PROJECT_ROOT / item["path"]).read_bytes()).hexdigest()
         for item in test_result_files
     }
+    review_v3 = build_review_v3_evidence(
+        name_status.splitlines(), actual_diff, test_result_hashes=test_hashes
+    )
 
     generated_reports = list_existing(
         [
@@ -152,6 +170,7 @@ def collect_evidence(phase="13.5", output_path=None):
             "patch_preview": actual_diff[:24000],
             "truncated": len(actual_diff) > 24000,
         },
+        "review_v3": review_v3,
         "migrations": migration_files,
         "test_result_hashes": test_hashes,
         "generated_reports": generated_reports,

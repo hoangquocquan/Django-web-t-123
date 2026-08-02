@@ -1,0 +1,56 @@
+{
+  "phase": "REVIEW-V3",
+  "status": "PASS",
+  "results": [
+    {
+      "name": "django_system_check",
+      "command": "python manage.py check",
+      "status": "PASS",
+      "summary": "System check identified no issues (0 silenced)."
+    },
+    {
+      "name": "migration_drift_check",
+      "command": "python manage.py makemigrations --check --dry-run",
+      "status": "PASS",
+      "summary": "No changes detected."
+    },
+    {
+      "name": "focused_review_v3_tests",
+      "command": "pytest -q tests/test_ai_mandatory_review_gate.py tests/test_review_engine_v3.py",
+      "status": "PASS",
+      "passed": 82,
+      "failed": 0
+    },
+    {
+      "name": "full_regression",
+      "command": "pytest -q",
+      "status": "PASS",
+      "passed": 538,
+      "failed": 0,
+      "duration_seconds": 54.28
+    },
+    {
+      "name": "mypy",
+      "command": "python -m mypy (five REVIEW-V3 source files, split to avoid duplicate module basename)",
+      "status": "PASS",
+      "files_checked": 5
+    },
+    {
+      "name": "bandit",
+      "command": "python -m bandit -q (five REVIEW-V3 source files)",
+      "status": "PASS",
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  ],
+  "failed_required": [],
+  "safety": {
+    "failed_tests_skipped": false,
+    "fallback_can_pass": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

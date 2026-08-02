@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,7 @@ from mandatory_review import (
     run_mandatory_review,
     safe_patch_projection,
 )
+from review_v3 import build_review_v3_evidence
 from scripts import n8n_phase_trigger
 
 
@@ -45,9 +47,38 @@ def review_evidence():
         "git": {"base_commit": "a" * 40, "current_commit": "b" * 40},
         "actual_git_diff": {
             "sha256": "c" * 64,
-            "changed_files": ["M\tai-review/mandatory_review.py"],
+            "changed_files": ["M\tdocs/spec.md"],
             "stat": "1 file changed",
             "patch_preview": "+fail closed",
+        },
+        "review_v3": {
+            "version": "review-v3",
+            "changed_files": [
+                {
+                    "status": "M",
+                    "path": "docs/spec.md",
+                    "classification": "documentation",
+                }
+            ],
+            "production_files": [],
+            "production_chunks": [],
+            "expected_chunk_ids": [],
+            "skipped_files": [
+                {
+                    "path": "docs/spec.md",
+                    "reason": "Handled by deterministic documentation contract.",
+                }
+            ],
+            "unreviewed_production_files": [],
+            "test_contract": {"status": "PASS", "blockers": [], "files": []},
+            "documentation_contract": {
+                "status": "PASS",
+                "blockers": [],
+                "files": [],
+            },
+            "blockers": [],
+            "full_diff_coverage": True,
+            "status": "PASS",
         },
         "migrations": [],
         "test_result_hashes": {"tests.json": "d" * 64},
@@ -55,7 +86,7 @@ def review_evidence():
 
 
 def valid_review(decision="PASS", critical=None, high=None):
-    return {
+    payload = {
         "decision": decision,
         "summary": "Actual diff and tests were reviewed. Production is not approved.",
         "requirements_checked": ["fail closed", "actual diff"],
@@ -73,10 +104,21 @@ def valid_review(decision="PASS", critical=None, high=None):
             "auto_merge": False,
             "auto_deploy": False,
             "approval_bypass_detected": False,
+            "merge_authorized": False,
+            "release_authorized": False,
+            "deployment_authorized": False,
+            "production_authorized": False,
         },
+        "full_diff_coverage": True,
+        "reviewed_chunk_ids": [],
         "model": "llama3",
         "prompt_version": PROMPT_VERSION,
     }
+    if decision == "WARNING":
+        payload["medium_findings"] = [
+            "A concrete non-blocking review action remains for the human reviewer."
+        ]
+    return payload
 
 
 class FakeTransport:
@@ -88,7 +130,19 @@ class FakeTransport:
         self.calls.append(
             {"prompt": prompt, "model": model, "url": url, "timeout": timeout}
         )
-        return self.outcomes.pop(0)
+        outcome = self.outcomes.pop(0)
+        if outcome.ok:
+            return replace(
+                outcome,
+                endpoint_reachable=True,
+                model_list_received=True,
+                model_available=True,
+                response_received=bool(outcome.response),
+                model_digest=outcome.model_digest or "e" * 64,
+                model_family=outcome.model_family or "llama",
+                ollama_version=outcome.ollama_version or "0.11.0-test",
+            )
+        return outcome
 
 
 def run_gate(transport, evidence=None, retries=3, required=True):
@@ -162,6 +216,8 @@ def test_missing_selected_model_keeps_endpoint_reachable():
                     error="model missing",
                     error_type="model_missing",
                     installed_models=("another-model:latest",),
+                    endpoint_reachable=True,
+                    model_list_received=True,
                 )
             ]
         ),
@@ -182,6 +238,10 @@ def test_ollama_structured_output_schema_is_strict():
         "auto_merge",
         "auto_deploy",
         "approval_bypass_detected",
+        "merge_authorized",
+        "release_authorized",
+        "deployment_authorized",
+        "production_authorized",
     }
     assert REVIEW_JSON_SCHEMA["properties"]["prompt_version"]["const"] == PROMPT_VERSION
     assert (
@@ -245,7 +305,7 @@ def test_none_finding_placeholder_is_retried():
     assert result["attempts"] == 2
 
 
-def test_safety_gate_invariant_summary_is_normalized_without_retry():
+def test_safety_gate_invariant_summary_stays_blocked_without_model_retry():
     copied = valid_review(decision="BLOCKED")
     copied["summary"] = (
         "The expected safe state is safety_gates.human_approval_required=true. "
@@ -253,7 +313,8 @@ def test_safety_gate_invariant_summary_is_normalized_without_retry():
     )
     transport = FakeTransport([TransportResult(True, response=json.dumps(copied))])
     result = run_gate(transport, retries=1)
-    assert result["status"] == "PASS"
+    assert result["status"] == "BLOCKED"
+    assert result["review_completed"] is False
     assert result["attempts"] == 1
 
 
@@ -296,7 +357,8 @@ def test_prompt_distinguishes_safety_prohibitions_from_production_approval():
     assert "Required later human approval is healthy" in prompt
     assert "concrete bypass" in prompt
     assert "generated_reports" not in prompt
-    assert '"patch_preview": "+fail closed"' in prompt
+    assert '"review_v3"' in prompt
+    assert '"full_diff_coverage": true' in prompt
     assert '"review_mode": "PRE_COMMIT_STAGED_DIFF"' in prompt
     assert '"diff_evidence_complete": true' in prompt
     assert "+fail closed" not in prompt.system
@@ -379,8 +441,9 @@ def test_review_evidence_json_is_complete_when_raw_patch_is_large():
     )
     evidence_text = prompt.user.split("Evidence: ", 1)[1]
     projected = json.loads(evidence_text)
-    assert projected["actual_git_diff"]["review_projection_truncated"] is True
-    assert len(projected["actual_git_diff"]["patch_preview"]) <= 6000
+    assert "patch_preview" not in projected["actual_git_diff"]
+    assert projected["review_v3"]["full_diff_coverage"] is True
+    assert projected["review_v3"]["production_chunks"] == []
 
 
 def test_safe_patch_projection_keeps_code_and_removes_review_fixture_language():
@@ -573,32 +636,37 @@ def test_compact_numbered_placeholders_are_retried():
     assert "generic placeholder findings" in transport.calls[1]["prompt"]
 
 
-def test_required_human_approval_is_normalized_out_of_findings():
+def test_required_human_approval_is_retried_and_model_must_return_pass():
     human_gate = valid_review(decision="BLOCKED")
     human_gate["summary"] = "The code modification is not approved by a human reviewer."
     human_gate["medium_findings"] = [
         "Human approval is required before the later release gate."
     ]
-    transport = FakeTransport([TransportResult(True, response=json.dumps(human_gate))])
+    transport = FakeTransport(
+        [
+            TransportResult(True, response=json.dumps(human_gate)),
+            TransportResult(True, response=json.dumps(valid_review())),
+        ]
+    )
 
-    result = run_gate(transport, retries=1)
+    result = run_gate(transport, retries=2)
 
     assert result["status"] == "PASS"
     assert result["gate_state"] == "WAITING_HUMAN_APPROVAL"
     assert result["review"]["decision"] == "PASS"
-    assert result["review"]["medium_findings"] == []
-    assert result["normalization"]["original_decision"] == "BLOCKED"
-    assert result["normalization"]["removed_human_approval_invariant_findings"]
+    assert result["attempts"] == 2
+    assert "expected safety invariant" in transport.calls[1]["prompt"]
 
 
-def test_blocked_only_by_human_approval_summary_normalizes_to_pass():
+def test_blocked_only_by_human_approval_stays_blocked_when_retries_exhausted():
     payload = valid_review(decision="BLOCKED")
     payload["summary"] = "Human approval is required before the later release gate."
     result = run_gate(
         FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1
     )
-    assert result["status"] == "PASS"
-    assert result["gate_state"] == "WAITING_HUMAN_APPROVAL"
+    assert result["status"] == "BLOCKED"
+    assert result["gate_state"] == "BLOCKED"
+    assert result["schema_valid"] is False
 
 
 def test_technical_finding_is_not_removed_when_it_mentions_human_approval():
@@ -628,9 +696,13 @@ def test_safe_gate_assertions_are_not_treated_as_findings():
     payload["critical_findings"] = ["auto_merge=false"]
     payload["high_findings"] = ["There are findings that require manual review."]
 
-    result = run_gate(
-        FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1
+    transport = FakeTransport(
+        [
+            TransportResult(True, response=json.dumps(payload)),
+            TransportResult(True, response=json.dumps(valid_review())),
+        ]
     )
+    result = run_gate(transport, retries=2)
 
     assert result["status"] == "PASS"
     assert result["review"]["decision"] == "PASS"
@@ -646,7 +718,7 @@ def test_safe_gate_assertions_are_not_treated_as_findings():
     )
 
 
-def test_hyphenated_human_approval_manual_verification_is_normalized():
+def test_hyphenated_human_approval_requires_model_retry():
     payload = valid_review(decision="BLOCKED")
     payload["summary"] = (
         "A human-approval finding requires manual verification at the later gate."
@@ -654,9 +726,13 @@ def test_hyphenated_human_approval_manual_verification_is_normalized():
     payload["medium_findings"] = [
         "The human-approval finding requires manual verification."
     ]
-    result = run_gate(
-        FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1
+    transport = FakeTransport(
+        [
+            TransportResult(True, response=json.dumps(payload)),
+            TransportResult(True, response=json.dumps(valid_review())),
+        ]
     )
+    result = run_gate(transport, retries=2)
     assert result["status"] == "PASS"
     assert result["review"]["medium_findings"] == []
 
@@ -741,6 +817,110 @@ def test_auto_deploy_enabled_is_blocked():
     assert "Automatic deployment was enabled." in result["review"]["security_findings"]
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        "merge_authorized",
+        "release_authorized",
+        "deployment_authorized",
+        "production_authorized",
+    ],
+)
+def test_any_ai_authorization_field_enabled_is_blocked(field):
+    payload = valid_review()
+    payload["safety_gates"][field] = True
+
+    result = run_gate(
+        FakeTransport([TransportResult(True, response=json.dumps(payload))]), retries=1
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert any("was granted by the AI reviewer" in item for item in result["review"]["security_findings"])
+
+
+def test_missing_authorization_field_is_schema_invalid_and_blocked():
+    payload = valid_review()
+    payload["safety_gates"].pop("release_authorized")
+
+    result = run_gate(
+        FakeTransport([TransportResult(True, response=json.dumps(payload))] * 3),
+        retries=3,
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["schema_valid"] is False
+
+
+def test_endpoint_reachable_with_empty_model_list_does_not_imply_model_available():
+    result = run_gate(
+        FakeTransport(
+            [
+                TransportResult(
+                    False,
+                    error="model missing",
+                    error_type="model_missing",
+                    endpoint_reachable=True,
+                    model_list_received=True,
+                    model_available=False,
+                )
+            ]
+        ),
+        retries=1,
+    )
+
+    assert result["ollama"]["endpoint_reachable"] is True
+    assert result["ollama"]["model_list_received"] is True
+    assert result["ollama"]["model_available"] is False
+
+
+def test_model_must_confirm_every_production_chunk_id():
+    evidence = review_evidence()
+    patch = (
+        "diff --git a/app/service.py b/app/service.py\n"
+        "--- a/app/service.py\n+++ b/app/service.py\n@@ -1 +1 @@\n-old\n+safe\n"
+    )
+    evidence["actual_git_diff"] = {
+        "sha256": "f" * 64,
+        "changed_files": ["M\tapp/service.py"],
+        "stat": "1 file changed",
+        "patch_preview": patch,
+    }
+    evidence["review_v3"] = build_review_v3_evidence(
+        ["M\tapp/service.py"], patch, evidence["test_result_hashes"]
+    )
+    payload = valid_review()
+    payload["reviewed_chunk_ids"] = evidence["review_v3"]["expected_chunk_ids"]
+
+    result = run_gate(
+        FakeTransport([TransportResult(True, response=json.dumps(payload))]),
+        evidence=evidence,
+        retries=1,
+    )
+
+    assert result["status"] == "PASS"
+    assert result["evidence"]["full_diff_coverage"] is True
+
+
+def test_missing_model_chunk_confirmation_remains_blocked():
+    evidence = review_evidence()
+    patch = (
+        "diff --git a/app/service.py b/app/service.py\n"
+        "--- a/app/service.py\n+++ b/app/service.py\n@@ -1 +1 @@\n-old\n+safe\n"
+    )
+    evidence["actual_git_diff"]["changed_files"] = ["M\tapp/service.py"]
+    evidence["review_v3"] = build_review_v3_evidence(["M\tapp/service.py"], patch)
+    payload = valid_review()
+
+    result = run_gate(
+        FakeTransport([TransportResult(True, response=json.dumps(payload))] * 3),
+        evidence=evidence,
+        retries=3,
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["schema_valid"] is False
+
+
 def test_malformed_safety_gates_is_blocked():
     payload = valid_review()
     payload["safety_gates"].pop("approval_bypass_detected")
@@ -765,15 +945,27 @@ def test_valid_pass_preserves_required_human_approval_gate():
         "auto_merge": False,
         "auto_deploy": False,
         "approval_bypass_detected": False,
+        "merge_authorized": False,
+        "release_authorized": False,
+        "deployment_authorized": False,
+        "production_authorized": False,
     }
     assert result["ollama"] == {
         "url": "http://localhost:11434",
         "model": "llama3",
         "endpoint_reachable": True,
+        "model_list_received": True,
         "model_available": True,
         "response_received": True,
         "schema_valid": True,
         "installed_models": [],
+        "model_digest": "e" * 64,
+        "family": "llama",
+        "ollama_version": "0.11.0-test",
+        "prompt_version": PROMPT_VERSION,
+        "context_tokens": review_context_tokens(),
+        "temperature": 0.0,
+        "num_predict": 1200,
         "error": "",
         "response": json.dumps(valid_review()),
     }
@@ -788,9 +980,13 @@ def test_valid_pass_preserves_required_human_approval_gate():
     ],
 )
 def test_review_decisions_map_to_explicit_gate_states(decision, expected_gate):
-    transport = FakeTransport(
-        [TransportResult(True, response=json.dumps(valid_review(decision)))]
-    )
+    payload = valid_review(decision)
+    if decision == "BLOCKED":
+        payload["safety_gates"]["approval_bypass_detected"] = True
+        payload["high_findings"] = [
+            "release.py execute() can run a protected action before human approval."
+        ]
+    transport = FakeTransport([TransportResult(True, response=json.dumps(payload))])
 
     result = run_gate(transport)
 
@@ -855,7 +1051,7 @@ def test_actual_git_diff_is_mandatory_and_is_sent_to_reviewer():
     )
     passed = run_gate(valid_transport)
     assert passed["status"] == "PASS"
-    assert "fail closed" in valid_transport.calls[0]["prompt"]
+    assert "docs/spec.md" in valid_transport.calls[0]["prompt"]
     assert "cccccccc" in valid_transport.calls[0]["prompt"]
 
 

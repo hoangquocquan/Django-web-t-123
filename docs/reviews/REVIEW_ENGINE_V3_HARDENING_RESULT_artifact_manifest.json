@@ -1,0 +1,137 @@
+{
+  "manifest_version": "review-v3",
+  "created_at": "2026-08-02T11:06:15+00:00",
+  "phase": "REVIEW-V3",
+  "base_commit": "ca2f30256dd029b33cf94995cb8cf15bf750c4b5",
+  "current_commit": "ca2f30256dd029b33cf94995cb8cf15bf750c4b5",
+  "changed_files": [
+    {
+      "status": "M",
+      "path": "ai-review/evidence_collector.py",
+      "classification": "production"
+    },
+    {
+      "status": "M",
+      "path": "ai-review/mandatory_review.py",
+      "classification": "production"
+    },
+    {
+      "status": "M",
+      "path": "ai-review/ollama_phase_reviewer.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "ai-review/review_v3.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "docs/codex-prompts/REVIEW_ENGINE_V3_HARDENING.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/reviews/REVIEW_ENGINE_V3_BASELINE.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "M",
+      "path": "scripts/ollama_phase_reviewer.py",
+      "classification": "production"
+    },
+    {
+      "status": "M",
+      "path": "tests/test_ai_mandatory_review_gate.py",
+      "classification": "test"
+    },
+    {
+      "status": "A",
+      "path": "tests/test_review_engine_v3.py",
+      "classification": "test"
+    }
+  ],
+  "reviewed_files": [
+    "ai-review/evidence_collector.py",
+    "ai-review/mandatory_review.py",
+    "ai-review/ollama_phase_reviewer.py",
+    "ai-review/review_v3.py",
+    "scripts/ollama_phase_reviewer.py"
+  ],
+  "reviewed_chunks": [
+    "ai-review/evidence_collector.py#1",
+    "ai-review/evidence_collector.py#2",
+    "ai-review/mandatory_review.py#1",
+    "ai-review/mandatory_review.py#2",
+    "ai-review/mandatory_review.py#3",
+    "ai-review/mandatory_review.py#4",
+    "ai-review/mandatory_review.py#5",
+    "ai-review/mandatory_review.py#6",
+    "ai-review/mandatory_review.py#7",
+    "ai-review/mandatory_review.py#8",
+    "ai-review/mandatory_review.py#9",
+    "ai-review/mandatory_review.py#10",
+    "ai-review/ollama_phase_reviewer.py#1",
+    "ai-review/review_v3.py#1",
+    "ai-review/review_v3.py#2",
+    "ai-review/review_v3.py#3",
+    "ai-review/review_v3.py#4",
+    "ai-review/review_v3.py#5",
+    "ai-review/review_v3.py#6",
+    "ai-review/review_v3.py#7",
+    "scripts/ollama_phase_reviewer.py#1",
+    "scripts/ollama_phase_reviewer.py#2"
+  ],
+  "skipped_files": [
+    {
+      "path": "docs/codex-prompts/REVIEW_ENGINE_V3_HARDENING.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/reviews/REVIEW_ENGINE_V3_BASELINE.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "tests/test_ai_mandatory_review_gate.py",
+      "reason": "Handled by deterministic test contract."
+    },
+    {
+      "path": "tests/test_review_engine_v3.py",
+      "reason": "Handled by deterministic test contract."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/review-v3/review_input.json",
+      "size_bytes": 116616,
+      "sha256": "321c908230e71f16908333070cc86928e787763ea0af2ce822fe8f46b66899b4"
+    },
+    {
+      "path": "docs/evidence/review-v3/rule_validation.json",
+      "size_bytes": 680,
+      "sha256": "3858e9617e0aacb74d5f66c2c7f90e6e48bf1fdcf6b0f54a1f7444a95956aec7"
+    },
+    {
+      "path": "docs/evidence/review-v3/test_result.json",
+      "size_bytes": 1416,
+      "sha256": "a038d6e97fd1f8e988a162da270171bae43eeca010a98e1eeca14b555445b49e"
+    },
+    {
+      "path": "docs/reviews/REVIEW_ENGINE_V3_HARDENING_RESULT.json",
+      "size_bytes": 6691,
+      "sha256": "ab3f66ef6d629212a7dd846e05fe09f4aecada63f47faeace3c22bb7805470a4"
+    }
+  ],
+  "model_identity": {
+    "model": "llama3",
+    "model_digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+    "family": "llama",
+    "prompt_version": "ai-review-v3.0",
+    "context_tokens": 16384,
+    "temperature": 0.0,
+    "num_predict": 1200,
+    "ollama_version": "0.32.5"
+  },
+  "correlation_id": "f195ef05-dda9-41b8-bba0-7cce83e18841",
+  "signature_status": "SIGNATURE_NOT_AVAILABLE"
+}

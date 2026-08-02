@@ -17,6 +17,7 @@ if str(Path(__file__).resolve().parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from mandatory_review import production_language_detected, run_mandatory_review
+from review_v3 import create_artifact_manifest, signature_status, write_json
 
 
 __all__ = ["production_language_detected", "review_phase"]
@@ -79,7 +80,32 @@ def review_phase(
     result.update({"phase": evidence.get("phase", "unknown"), "created_at": utc_now()})
     output = Path(output_path or DEFAULT_OUTPUT)
     output.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path = output.with_name(output.stem + "_artifact_manifest.json")
+    result["artifact_manifest"] = {
+        "path": str(manifest_path),
+        "signature_status": signature_status(),
+    }
     output.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+    ollama = result.get("ollama") or {}
+    manifest = create_artifact_manifest(
+        phase=evidence.get("phase", "unknown"),
+        base_commit=(evidence.get("git") or {}).get("base_commit", ""),
+        current_commit=(evidence.get("git") or {}).get("current_commit", ""),
+        review_v3=evidence.get("review_v3") or {},
+        artifact_paths=[evidence_path, rule_path, test_path, output],
+        model_identity={
+            "model": ollama.get("model", model),
+            "model_digest": ollama.get("model_digest", ""),
+            "family": ollama.get("family", ""),
+            "prompt_version": ollama.get("prompt_version", ""),
+            "context_tokens": ollama.get("context_tokens"),
+            "temperature": ollama.get("temperature"),
+            "num_predict": ollama.get("num_predict"),
+            "ollama_version": ollama.get("ollama_version", ""),
+        },
+        correlation_id=evidence.get("correlation_id", ""),
+    )
+    write_json(manifest_path, manifest)
     return result
 
 
