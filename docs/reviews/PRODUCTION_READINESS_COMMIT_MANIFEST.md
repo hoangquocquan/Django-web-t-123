@@ -6,7 +6,7 @@ Baseline: `65b77beefbb80f715baf5d30f2a70c22d7bb5d44`
 | --- | --- | --- | --- |
 | PROD-00 | `e88809c1b78e8f7023f05794daa8f1d7e41791ad` | `docs(platform): verify production readiness baseline` | PASS_WITH_WARNINGS |
 | PROD-01 | `6ce0dd43136dc5c3591b9a8467448fd97939dbb9` | `feat(business-ui): complete role-based sales and crm workflows` | PASS_WITH_WARNINGS |
-| PROD-02 | PENDING | `feat(platform): add production django postgres redis and container runtime` | PENDING |
+| PROD-02 | `996eed3687dffbc2a678b83a42a9b624b4fdbe16` | `feat(platform): add production django postgres redis and container runtime` | PASS_WITH_WARNINGS |
 | PROD-03 | PENDING | `feat(security): harden authentication authorization and document uploads` | PENDING |
 | PROD-04 | PENDING | `feat(ai-runtime): productionize ollama redis and n8n orchestration` | PENDING |
 | PROD-05 | PENDING | `feat(operations): add monitoring backup restore and disaster recovery` | PENDING |

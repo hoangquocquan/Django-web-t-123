@@ -5,7 +5,7 @@
 - Date: 2026-08-02
 - Branch: `codex/production-readiness-full`
 - Baseline: `97c8f2265e5c6ca4a5bcb000b65996b46bc23cc9`
-- Phase commit: recorded after the dedicated commit is created
+- Phase commit: `996eed3687dffbc2a678b83a42a9b624b4fdbe16`
 - Decision: `PASS_WITH_WARNINGS`
 - Next-phase eligibility: `READY_FOR_NEXT_PHASE`
 
