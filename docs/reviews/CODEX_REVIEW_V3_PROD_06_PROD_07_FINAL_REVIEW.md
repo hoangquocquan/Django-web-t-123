@@ -16,6 +16,7 @@ This single file is the handover index for external architecture review. It summ
 - Documentation contract correction: `0b74ee7`
 - Compact contract correction: `b3739cc`
 - Bounded aggregate output correction: `c9f5f32`
+- PROD-07 final evidence package: `d777c3f`
 
 ## Gate Summary
 
