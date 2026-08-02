@@ -5,3 +5,8 @@ a writable temporary cache and --disable-pip --no-deps, then the sandbox denied
 network access to pypi.org. PROD-05 changes no requirements file and adds no package.
 The immediately preceding PROD-04 audit passed for the same pinned requirements.
 This evidence does not claim a new PASS.
+
+STATUS = NOT_RUN
+REASON = Network access to pypi.org was denied after retrying with a writable cache.
+RETRY_COMMAND = python -m pip_audit -r django_backend/requirements-prod.txt
+IMPACT = No new dependency was added, but a fresh PROD-05 vulnerability lookup is unavailable.

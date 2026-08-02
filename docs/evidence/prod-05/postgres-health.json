@@ -1,0 +1,6 @@
+{
+  "status": "NOT_RUN",
+  "reason": "Docker API access denied by the execution environment.",
+  "retry_command": "docker ps; python scripts/prod05_backup.py",
+  "impact": "Live PostgreSQL dump and isolated restore are unverified."
+}

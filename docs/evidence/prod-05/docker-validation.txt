@@ -2,3 +2,8 @@ BLOCKED
 Docker API access was denied in the sandbox. An escalation request for the exact
 backup command was rejected because the execution environment usage limit was
 reached. No workaround, build, backup, restore, push, or deployment was attempted.
+
+STATUS = NOT_RUN
+REASON = Docker API permission and escalation usage limit.
+RETRY_COMMAND = docker version; docker ps; python scripts/prod05_backup.py
+IMPACT = Live runtime, backup, and isolated restore gates remain blocked.

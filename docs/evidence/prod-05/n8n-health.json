@@ -1,0 +1,6 @@
+{
+  "status": "NOT_RUN",
+  "reason": "Docker API access denied by the execution environment.",
+  "retry_command": "docker ps; request the n8n /healthz endpoint; run the PROD-05 backup command",
+  "impact": "Live n8n data-volume backup and restore are unverified."
+}

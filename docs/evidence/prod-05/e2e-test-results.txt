@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = Docker API access was denied and escalation was rejected because the execution environment usage limit was reached.
+RETRY_COMMAND = python scripts/prod05_backup.py; then python scripts/prod05_restore_test.py <package> --output <report>
+IMPACT = Live backup, isolated restore, and runtime end-to-end acceptance are unverified; PROD-06 is blocked.

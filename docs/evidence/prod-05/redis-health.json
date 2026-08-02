@@ -1,0 +1,6 @@
+{
+  "status": "NOT_RUN",
+  "reason": "Docker API access denied by the execution environment.",
+  "retry_command": "docker ps; request the protected operations-health endpoint",
+  "impact": "Live Redis metrics storage and outage behavior are covered by tests but not runtime-verified in PROD-05."
+}
