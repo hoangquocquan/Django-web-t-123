@@ -1,0 +1,16 @@
+﻿{
+    "status":  "PASS",
+    "command":  "python -m pytest tests/test_phase13_8_ai_factory.py -q",
+    "result":  ".....                                                                    [100%]\n5 passed in 0.34s",
+    "required_review_fail_closed":  true,
+    "invalid_json_blocked":  true,
+    "fallback_cannot_pass":  true,
+    "human_approval_preserved":  true,
+    "real_cumulative_review":  "PASS",
+    "review_model":  "llama3",
+    "schema_valid":  true,
+    "fallback_used":  false,
+    "critical_findings":  0,
+    "high_findings":  0,
+    "gate_state":  "WAITING_HUMAN_APPROVAL"
+}

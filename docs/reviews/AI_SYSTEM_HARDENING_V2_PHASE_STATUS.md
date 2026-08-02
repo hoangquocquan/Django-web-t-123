@@ -1,13 +1,16 @@
 # AI System Hardening V2 Phase Status
 
-| Phase | State | Gate |
+| Phase | Status | Gate |
 | --- | --- | --- |
-| AI-00 | READY_FOR_NEXT_PHASE | Commit `dbea8b2`, tests PASS, Ollama review PASS |
-| AI-01 | READY_FOR_NEXT_PHASE | Commit `a2751c3`, tests and Ollama review PASS |
-| AI-02 | READY_FOR_NEXT_PHASE | Commit `5e10202`, tests PASS, Redis validation PASS, Ollama review PASS |
-| AI-03 | READY_FOR_NEXT_PHASE | Commit `03b17e4`, tests PASS, real synthesis PASS, Ollama review PASS |
-| AI-04 | READY_FOR_NEXT_PHASE | Commit `a5175d9`, tests, migration, real tools and Ollama review PASS |
-| AI-05 | BLOCKED_REQUIRES_HUMAN | Code/tests PASS; local `llama3` review exhausted 3 retries without a valid technical PASS |
-| AI-06 | BLOCKED_BY_DEPENDENCY | AI-05 mandatory Ollama gate has not passed |
+| AI-00 Reproducible Baseline | COMPLETE | PASS |
+| AI-01 Real Embedding and Vector Search | COMPLETE | PASS |
+| AI-02 Governance V2 | COMPLETE | PASS |
+| AI-03 Grounded Sales Synthesis | COMPLETE | PASS |
+| AI-04 Safe Agent Controller | COMPLETE | PASS |
+| AI-05 Mandatory Ollama Review V2 | COMPLETE | V2 PASS after original fail-closed block |
+| AI-06 Final Integration and Handover | TECHNICALLY_COMPLETE | WAITING_FOR_HUMAN_APPROVAL |
 
-Final program state remains `WAITING_FOR_HUMAN_APPROVAL`; no merge, push, release or deployment is authorized.
+Overall: `AI_SYSTEM_HARDENING_V2_PASS_WITH_WARNINGS`.
+
+Warnings are recorded separately and do not change the mandatory human
+approval gate.

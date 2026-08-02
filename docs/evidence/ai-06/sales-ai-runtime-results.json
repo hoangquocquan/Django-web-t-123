@@ -1,0 +1,16 @@
+﻿{
+    "status":  "PASS",
+    "generation_mode":  "ollama",
+    "model":  "llama3",
+    "summary":  "High-priority lead from AI-06 Demo CNC with technical fit score of 85 (Grade A) for precision shaft quotation",
+    "source_ids":  [
+                       2
+                   ],
+    "human_approval_required":  true,
+    "autonomous_action":  false,
+    "draft_only":  true,
+    "validation_errors":  [
+
+                          ],
+    "external_ai_used":  false
+}

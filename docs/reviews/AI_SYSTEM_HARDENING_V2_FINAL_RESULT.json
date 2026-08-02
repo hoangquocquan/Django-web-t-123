@@ -1,0 +1,34 @@
+{
+  "pipeline_status": "AI_SYSTEM_HARDENING_V2_PASS_WITH_WARNINGS",
+  "workflow_state": "WAITING_FOR_HUMAN_APPROVAL",
+  "branch": "codex/ai-06-final-integration",
+  "baseline_commit": "e10b456d21e1c190b2944fbe79befb88d81d4763",
+  "ai_05_v2_commit": "81232332776fd30f22d607b61ac8aec9706d7f38",
+  "integration_fix_commit": "8e4a592e8b11ac21d18ccfe4598585f64737ec3c",
+  "ai_06_documentation_commit": null,
+  "phase_completeness": "COMPLETE",
+  "focused_tests": {"passed": 163, "failed": 0},
+  "full_regression": {"passed": 455, "failed": 0},
+  "new_findings": {"critical": 0, "high": 0, "medium": 0},
+  "mandatory_ollama_review": {
+    "decision": "PASS",
+    "model": "llama3",
+    "endpoint": "http://localhost:11434",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 1,
+    "critical_findings": 0,
+    "high_findings": 0
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  },
+  "n8n_runtime_status": "N8N_RUNTIME_NOT_VERIFIED",
+  "production_approved": false
+}

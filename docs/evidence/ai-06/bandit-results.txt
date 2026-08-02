@@ -1,0 +1,329 @@
+﻿STATUS_CHANGED_FILES: PASS
+COMMAND: bandit django_backend/apps/ai/services/ollama_client.py -q
+EXIT_CODE: 0
+OUTPUT:
+
+CUMULATIVE_RESCAN: pending
+
+CUMULATIVE_COMMAND: bandit -r django_backend/apps/ai django_backend/apps/knowledge django_backend/apps/ai_agent ai-factory ai-review
+CUMULATIVE_EXIT_CODE: 1
+CUMULATIVE_HIGH: 0
+CUMULATIVE_MEDIUM: 0
+CUMULATIVE_LOW: 19
+CUMULATIVE_OUTPUT:
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.12.10
+Working... ---------------------------------------- 100% 0:00:00
+Run started:2026-08-02 01:55:21.130415+00:00
+
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-factory\evidence_builder.py:6:0
+5	import json
+6	import subprocess
+7	from datetime import datetime, timezone
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: ai-factory\evidence_builder.py:23:16
+22	    """Read Git metadata without changing repository state."""
+23	    completed = subprocess.run(
+24	        ["git", *args],
+25	        cwd=PROJECT_ROOT,
+26	        check=False,
+27	        capture_output=True,
+28	        text=True,
+29	        encoding="utf-8",
+30	        errors="replace",
+31	    )
+32	    return completed.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-factory\evidence_builder.py:23:16
+22	    """Read Git metadata without changing repository state."""
+23	    completed = subprocess.run(
+24	        ["git", *args],
+25	        cwd=PROJECT_ROOT,
+26	        check=False,
+27	        capture_output=True,
+28	        text=True,
+29	        encoding="utf-8",
+30	        errors="replace",
+31	    )
+32	    return completed.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-factory\run_ai_factory.py:7:0
+6	import json
+7	import subprocess
+8	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-factory\run_ai_factory.py:73:20
+72	    try:
+73	        completed = subprocess.run(
+74	            args,
+75	            cwd=PROJECT_ROOT,
+76	            check=False,
+77	            capture_output=True,
+78	            text=True,
+79	            encoding="utf-8",
+80	            errors="replace",
+81	            timeout=timeout,
+82	        )
+83	        returncode = completed.returncode
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-review\error_collector.py:10:0
+9	import re
+10	import subprocess
+11	import sys
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: ai-review\error_collector.py:28:16
+27	    """Run a read-only Git command."""
+28	    completed = subprocess.run(
+29	        ["git", *args],
+30	        cwd=PROJECT_ROOT,
+31	        check=False,
+32	        capture_output=True,
+33	        text=True,
+34	        encoding="utf-8",
+35	        errors="replace",
+36	    )
+37	    return completed.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-review\error_collector.py:28:16
+27	    """Run a read-only Git command."""
+28	    completed = subprocess.run(
+29	        ["git", *args],
+30	        cwd=PROJECT_ROOT,
+31	        check=False,
+32	        capture_output=True,
+33	        text=True,
+34	        encoding="utf-8",
+35	        errors="replace",
+36	    )
+37	    return completed.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-review\error_collector.py:53:20
+52	    try:
+53	        completed = subprocess.run(
+54	            normalize_command(command),
+55	            cwd=PROJECT_ROOT,
+56	            check=False,
+57	            capture_output=True,
+58	            text=True,
+59	            encoding="utf-8",
+60	            errors="replace",
+61	            timeout=timeout,
+62	        )
+63	        returncode = completed.returncode
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'False'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: ai-review\error_collector.py:126:12
+125	            "tests_skipped": False,
+126	            "fake_pass_created": False,
+127	            "human_approval_required": True,
+128	        },
+129	    }
+130
+131	    output = Path(output_path or DEFAULT_OUTPUT)
+132	    output.parent.mkdir(parents=True, exist_ok=True)
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-review\evidence_collector.py:13:0
+12	import os
+13	import subprocess
+14	import sys
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: ai-review\evidence_collector.py:31:16
+30	    """Run a read-only Git command."""
+31	    completed = subprocess.run(
+32	        ["git", *args],
+33	        cwd=PROJECT_ROOT,
+34	        check=False,
+35	        capture_output=True,
+36	        text=True,
+37	        encoding="utf-8",
+38	        errors="replace",
+39	    )
+40	    return {
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-review\evidence_collector.py:31:16
+30	    """Run a read-only Git command."""
+31	    completed = subprocess.run(
+32	        ["git", *args],
+33	        cwd=PROJECT_ROOT,
+34	        check=False,
+35	        capture_output=True,
+36	        text=True,
+37	        encoding="utf-8",
+38	        errors="replace",
+39	    )
+40	    return {
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'WAITING_HUMAN_APPROVAL'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: ai-review\mandatory_review.py:645:12
+644	        gate_state = {
+645	            "PASS": "WAITING_HUMAN_APPROVAL",
+646	            "WARNING": "WAITING_HUMAN_REVIEW",
+647	            "BLOCKED": "BLOCKED",
+648	        }[decision]
+649	        output_hash = hashlib.sha256(last_transport.response.encode("utf-8")).hexdigest()
+650	        return {
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-review\retry_controller.py:12:0
+11	import json
+12	import subprocess
+13	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-review\retry_controller.py:43:20
+42	    try:
+43	        completed = subprocess.run(
+44	            normalize_command(command),
+45	            cwd=PROJECT_ROOT,
+46	            check=False,
+47	            capture_output=True,
+48	            text=True,
+49	            encoding="utf-8",
+50	            errors="replace",
+51	            timeout=timeout,
+52	        )
+53	        returncode = completed.returncode
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'False'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: ai-review\retry_controller.py:206:12
+205	            "tests_skipped": False,
+206	            "fake_pass_created": False,
+207	            "code_modified_by_ai": False,
+208	            "human_approval_required": True,
+209	        },
+210	    }
+211
+212	    result_output.parent.mkdir(parents=True, exist_ok=True)
+213	    result_output.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ai-review\test_executor.py:8:0
+7	import shutil
+8	import subprocess
+9	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ai-review\test_executor.py:38:20
+37	    try:
+38	        completed = subprocess.run(
+39	            command,
+40	            cwd=PROJECT_ROOT,
+41	            check=False,
+42	            capture_output=True,
+43	            text=True,
+44	            encoding="utf-8",
+45	            errors="replace",
+46	            timeout=timeout,
+47	        )
+48	        returncode = completed.returncode
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 6442
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 1
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 19
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 3
+		High: 16
+Files skipped (0):

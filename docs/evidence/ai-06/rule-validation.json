@@ -1,0 +1,27 @@
+{
+  "phase": "AI-06",
+  "status": "PASS",
+  "checks": {
+    "ai_01_to_ai_05_source_complete": true,
+    "ai_05_v2_commit_exists": true,
+    "cumulative_diff_required": true,
+    "mandatory_review": true,
+    "fail_closed": true,
+    "fallback_cannot_pass": true,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false,
+    "external_ai_used": false,
+    "main_merged": false,
+    "remote_pushed": false,
+    "deployed": false
+  },
+  "phase_commit_map": "docs/evidence/ai-06/phase-commit-map.json",
+  "known_limitations": [
+    "N8N_RUNTIME_NOT_VERIFIED",
+    "Redis distributed rate limiting is not configured in the local environment",
+    "pip-audit is BLOCKED_BY_ENVIRONMENT because outbound PyPI access is denied",
+    "repository-wide Ruff and cumulative mypy retain documented baseline debt"
+  ]
+}

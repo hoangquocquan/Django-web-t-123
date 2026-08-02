@@ -1,0 +1,7 @@
+﻿STATUS: PASS
+COMMAND: mypy --ignore-missing-imports django_backend/apps/ai/services/ollama_client.py
+EXIT_CODE: 0
+OUTPUT:
+Success: no issues found in 1 source file
+
+CUMULATIVE_NOTE: An advisory mypy run over all AI packages found 80 inherited errors, primarily missing Django/DRF stubs and generated migration annotations.

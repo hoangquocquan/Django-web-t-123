@@ -1,0 +1,76 @@
+﻿STATUS: PASS
+COMMAND: docker compose -f docker-compose.yml config
+EXIT_CODE: 0
+OUTPUT:
+WARNING: Error loading config file: open C:\Users\hoang\.docker\config.json: Access is denied.
+WARNING: Error loading config file: open C:\Users\hoang\.docker\config.json: Access is denied.
+name: mecprecision-vietnam
+services:
+  database:
+    container_name: mecprecision-postgres-local
+    environment:
+      POSTGRES_DB: mecprecision_local
+      POSTGRES_PASSWORD: <REDACTED_LOCAL_VALUE>
+      POSTGRES_USER: mecprecision
+    image: postgres:16-alpine
+    networks:
+      mecprecision-local: null
+    volumes:
+      - type: volume
+        source: postgres-data
+        target: /var/lib/postgresql/data
+        volume: {}
+  redis:
+    container_name: mecprecision-redis-local
+    image: redis:7-alpine
+    networks:
+      mecprecision-local: null
+    volumes:
+      - type: volume
+        source: redis-data
+        target: /data
+        volume: {}
+  web:
+    build:
+      context: C:\Users\hoang\Documents\Codex\mecprecision-vietnam
+      dockerfile: Dockerfile
+    container_name: mecprecision-web-local
+    depends_on:
+      database:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,web
+      DATABASE_URL: sqlite:////app/django_backend/db.sqlite3
+      DEBUG: "False"
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      LEGACY_DATABASE_URL: file:/app/backend/database/mecprecision.sqlite?mode=ro
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: <REDACTED_LOCAL_VALUE>
+    image: mecprecision-vietnam:local
+    networks:
+      mecprecision-local: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: media-data
+        target: /app/django_backend/media
+        volume: {}
+networks:
+  mecprecision-local:
+    name: mecprecision-vietnam_mecprecision-local
+    driver: bridge
+volumes:
+  media-data:
+    name: mecprecision-vietnam_media-data
+  postgres-data:
+    name: mecprecision-vietnam_postgres-data
+  redis-data:
+    name: mecprecision-vietnam_redis-data
