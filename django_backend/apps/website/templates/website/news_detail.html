@@ -1,10 +1,19 @@
 {% extends "website/base.html" %}
 {% block content %}
-  <article class="container article-page">
-    <span class="eyebrow">News</span>
-    <h1>{{ page.title }}</h1>
-    <div class="article-content">
-      {{ page.content|linebreaks }}
-    </div>
-  </article>
+  <section class="section">
+    <article class="container" style="max-width: 800px;">
+      <span class="eyebrow">Tin tức kỹ thuật</span>
+      <h1 style="font-size: 36px; font-weight: 800; margin-bottom: 24px;">{{ page.title }}</h1>
+      
+      <div class="article-content" style="background: var(--bg-card); border: 1px solid var(--line-border); border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-sm); line-height: 1.8;">
+        {{ page.content|linebreaks }}
+      </div>
+
+      <div style="margin-top: 32px;">
+        <a class="btn btn-outline" href="{% url 'website:news' %}" style="color: var(--slate-body); border-color: var(--line-border);">
+          <span>← Quay lại danh sách tin tức</span>
+        </a>
+      </div>
+    </article>
+  </section>
 {% endblock %}
