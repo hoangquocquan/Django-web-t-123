@@ -1,11 +1,16 @@
 """Tests for Phase 10 read-only migration readiness snapshot tooling."""
 
+import pytest
+
 from scripts.phase10_readiness_snapshot import EXPECTED_TABLES, snapshot_database
 
 
-def test_phase10_snapshot_reads_legacy_database_without_mutation():
+@pytest.mark.legacy_artifact
+def test_phase10_snapshot_reads_legacy_database_without_mutation(
+    legacy_artifact_path,
+):
     """The snapshot script must read expected tables and keep SQLite unchanged."""
-    snapshot = snapshot_database()
+    snapshot = snapshot_database(legacy_artifact_path)
 
     assert snapshot["database_size_unchanged"] is True
     assert snapshot["expected_table_count"] == len(EXPECTED_TABLES)

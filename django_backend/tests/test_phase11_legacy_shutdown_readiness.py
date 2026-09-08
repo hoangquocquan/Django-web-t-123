@@ -1,6 +1,11 @@
 """Tests cho cổng kiểm tra shutdown legacy Phase 11."""
 
-from scripts.phase11_legacy_shutdown_readiness import evaluate_shutdown_readiness
+import pytest
+
+from scripts.phase11_legacy_shutdown_readiness import (
+    LEGACY_ASSETS,
+    evaluate_shutdown_readiness,
+)
 
 
 def test_phase11_blocks_when_phase10_decision_keeps_legacy_active():
@@ -26,7 +31,10 @@ def test_phase11_blocks_when_operational_evidence_is_missing(tmp_path):
     assert result["legacy_code_removed"] is False
 
 
-def test_phase11_can_be_ready_for_manual_review_when_all_gates_are_mocked(tmp_path):
+@pytest.mark.legacy_artifact
+def test_phase11_can_be_ready_for_manual_review_when_all_gates_are_mocked(
+    tmp_path, legacy_artifact_path, monkeypatch
+):
     """Khi mọi điều kiện được mock là đã đạt, script chỉ cho phép review thủ công."""
     decision_report = tmp_path / "decision.md"
     decision_report.write_text("ALLOW_PHASE_11\n", encoding="utf-8")
@@ -37,6 +45,7 @@ def test_phase11_can_be_ready_for_manual_review_when_all_gates_are_mocked(tmp_pa
         "PHASE11_ARCHIVE_RESTORE_VERIFIED": "verified",
         "PHASE11_BUSINESS_OWNER_APPROVED": "approved",
     }
+    monkeypatch.setitem(LEGACY_ASSETS, "legacy_database", legacy_artifact_path)
 
     result = evaluate_shutdown_readiness(env, decision_report_path=decision_report)
 

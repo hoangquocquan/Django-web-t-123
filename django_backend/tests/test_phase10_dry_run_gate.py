@@ -1,5 +1,7 @@
 """Tests for Phase 10.2 dry-run migration safety gate."""
 
+import pytest
+
 from scripts.phase10_dry_run_migration import (
     evaluate_dry_run,
     is_safe_test_database_url,
@@ -14,11 +16,12 @@ from scripts.check_phase10_postgres_connection import (
 )
 
 
-def test_dry_run_gate_blocks_missing_target_database(monkeypatch):
+@pytest.mark.legacy_artifact
+def test_dry_run_gate_blocks_missing_target_database(monkeypatch, legacy_artifact_path):
     """Without a PostgreSQL test URL the dry run must stay blocked."""
     monkeypatch.delenv("PHASE10_DRY_RUN_DATABASE_URL", raising=False)
 
-    result = evaluate_dry_run()
+    result = evaluate_dry_run(legacy_database_path=legacy_artifact_path)
 
     assert result["status"] == "blocked"
     assert result["dry_run_allowed"] is False
@@ -33,10 +36,14 @@ def test_dry_run_gate_accepts_only_safe_test_database_names():
     assert not is_safe_test_database_url("postgresql://user:pass@localhost/mecprecision_prod")
 
 
-def test_dry_run_gate_rejects_production_marker_even_when_dryrun_exists():
+@pytest.mark.legacy_artifact
+def test_dry_run_gate_rejects_production_marker_even_when_dryrun_exists(
+    legacy_artifact_path,
+):
     """A database name cannot combine a safe marker with a production marker."""
     result = evaluate_dry_run(
-        "postgresql://user:pass@localhost/mecprecision_prod_dryrun"
+        "postgresql://user:pass@localhost/mecprecision_prod_dryrun",
+        legacy_database_path=legacy_artifact_path,
     )
 
     assert result["status"] == "blocked"

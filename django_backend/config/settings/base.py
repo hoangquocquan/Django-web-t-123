@@ -9,10 +9,10 @@ import os
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(BASE_DIR / ".env")
 
 
@@ -164,17 +164,23 @@ TEMPLATES = [
 
 DATABASES = {
     "default": database_from_url(os.getenv("DATABASE_URL", "")),
-    "legacy": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.getenv(
-            "LEGACY_DATABASE_URL",
-            f"file:{(PROJECT_ROOT / 'backend' / 'database' / 'mecprecision.sqlite').as_posix()}?mode=ro",
-        ),
-        "OPTIONS": {
-            "uri": True,
-        },
-    },
 }
+
+# The retired backend database is compatibility-only. A fresh clone must not
+# depend on an ignored local SQLite file or silently create one. Operators who
+# still need read-only compatibility must opt in and provide an explicit URI.
+LEGACY_DATABASE_ENABLED = env_bool("LEGACY_DATABASE_ENABLED", False)
+LEGACY_DATABASE_URL = os.getenv("LEGACY_DATABASE_URL", "").strip()
+if LEGACY_DATABASE_ENABLED:
+    if not LEGACY_DATABASE_URL:
+        raise ImproperlyConfigured(
+            "LEGACY_DATABASE_URL is required when LEGACY_DATABASE_ENABLED=true."
+        )
+    DATABASES["legacy"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": LEGACY_DATABASE_URL,
+        "OPTIONS": {"uri": LEGACY_DATABASE_URL.startswith("file:")},
+    }
 
 
 REST_FRAMEWORK = {

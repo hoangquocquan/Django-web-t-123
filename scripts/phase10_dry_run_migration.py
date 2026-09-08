@@ -389,10 +389,10 @@ def execute_dry_run(database_url=None, sqlite_database=DEFAULT_DATABASE, schema_
     }
 
 
-def evaluate_dry_run(database_url=None):
+def evaluate_dry_run(database_url=None, legacy_database_path=DEFAULT_DATABASE):
     """Evaluate whether Phase 10.2 can run against a safe test target."""
     database_url = database_url or os.getenv("PHASE10_DRY_RUN_DATABASE_URL", "")
-    snapshot = snapshot_database()
+    snapshot = snapshot_database(Path(legacy_database_path))
     url_validation = validate_dryrun_database_url(database_url)
     environment_validation = evaluate_postgres_environment(
         database_url,
@@ -457,7 +457,7 @@ def main():
     if args.execute:
         result = execute_dry_run(args.database_url, Path(args.sqlite_database))
     else:
-        result = evaluate_dry_run(args.database_url)
+        result = evaluate_dry_run(args.database_url, Path(args.sqlite_database))
     print(json.dumps(result, indent=2, ensure_ascii=False))
     if args.execute:
         return 0 if result["status"] == "completed" else 2
