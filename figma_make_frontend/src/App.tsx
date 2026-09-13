@@ -1,4 +1,30 @@
-import { useState } from "react"
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react"
+
+import {
+  CanonicalClientError,
+  InMemoryAuthSession,
+  createCanonicalClient,
+} from "./api/canonical.ts"
+import {
+  canonicalBaseUrlForPhase5b,
+  createFoundationAuthClient,
+  type FoundationUser,
+} from "./api/foundation.ts"
+import {
+  createLatestRequestGuard,
+  fetchRfqPage,
+  rfqRows,
+  rfqStateFromError,
+  rfqStatusText,
+  type RfqViewState,
+} from "./api/rfq.ts"
 
 const orange = "#ff5a1f"
 const products = [
@@ -43,6 +69,52 @@ const news = [
   ],
 ]
 
+type UnauthenticatedSessionState = {
+  status: "unauthenticated"
+  message?: string
+}
+
+type AuthenticatingSessionState = {
+  status: "authenticating"
+  message?: string
+}
+
+type AuthenticatedSessionState = {
+  status: "authenticated"
+  user: FoundationUser
+  expiresAt: string
+  message?: string
+}
+
+type SessionState = UnauthenticatedSessionState | AuthenticatingSessionState | AuthenticatedSessionState
+
+type AuthDependencies = {
+  authSession: InMemoryAuthSession
+  foundationAuth: ReturnType<typeof createFoundationAuthClient>
+  canonicalClient: ReturnType<typeof createCanonicalClient>
+}
+
+const defaultAuthSession = new InMemoryAuthSession()
+const defaultFoundationAuth = createFoundationAuthClient({
+  auth: defaultAuthSession,
+})
+const defaultCanonicalClient = createCanonicalClient({
+  baseUrl: canonicalBaseUrlForPhase5b(),
+  auth: defaultAuthSession,
+})
+
+function loginMessage(error: unknown): string {
+  if (error instanceof CanonicalClientError) {
+    if (error.kind === "validation") return "Nhập email và mật khẩu."
+    if (error.kind === "authentication" || error.kind === "permission") {
+      return "Đăng nhập bị từ chối."
+    }
+    if (error.kind === "timeout") return "Đăng nhập hết thời gian chờ."
+    if (error.kind === "network") return "Không thể kết nối máy chủ."
+  }
+  return "Không thể đăng nhập lúc này."
+}
+
 function Logo() {
   return (
     <button
@@ -56,7 +128,13 @@ function Logo() {
     </button>
   )
 }
-function Badge({ children, tone = "orange" }: { children: any tone?: string }) {
+function Badge({
+  children,
+  tone = "orange",
+}: {
+  children: ReactNode
+  tone?: string
+}) {
   const c =
     tone === "green"
       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
@@ -78,25 +156,45 @@ function Btn({
   children,
   onClick,
   ghost = false,
+  disabled,
+  type = "button",
 }: {
-  children: any
+  children: ReactNode
   onClick?: () => void
   ghost?: boolean
+  disabled?: boolean
+  type?: "button" | "submit"
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
+      type={type}
       className={
         ghost
           ? "border border-white/20 px-5 py-3 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400"
-          : "bg-orange-600 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500"
+          : "bg-orange-600 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
       }
     >
       {children}
     </button>
   )
 }
-function Field({ label, placeholder }: { label: string placeholder: string }) {
+function Field({
+  label,
+  placeholder,
+  type = "text",
+  value,
+  onChange,
+  required,
+}: {
+  label: string
+  placeholder: string
+  type?: string
+  value?: string
+  onChange?: (value: string) => void
+  required?: boolean
+}) {
   return (
     <label className="grid gap-2">
       <span className="text-[10px] uppercase tracking-[.2em] text-zinc-500">
@@ -104,6 +202,10 @@ function Field({ label, placeholder }: { label: string placeholder: string }) {
       </span>
       <input
         placeholder={placeholder}
+        type={type}
+        value={value}
+        onChange={(event) => onChange?.(event.currentTarget.value)}
+        required={required}
         className="border border-white/10 bg-zinc-950 px-4 py-3 outline-none focus:border-orange-500"
       />
     </label>
@@ -151,7 +253,12 @@ function SectionTitle({
     </div>
   )
 }
-function DataTable({ headers, rows }: { headers: string[] rows: string[][] }) {
+type DataTableProps = {
+  headers: string[]
+  rows: string[][]
+}
+
+function DataTable({ headers, rows }: DataTableProps) {
   return (
     <div className="overflow-auto border border-white/10">
       <table className="w-full min-w-[760px] text-left text-sm">
@@ -924,19 +1031,75 @@ function SideLayout({
     </div>
   )
 }
-function AdminPage({ route, go }: { route: string go: (v: string) => void }) {
+function FoundationLoginForm({
+  session,
+  onLogin,
+}: {
+  session: SessionState
+  onLogin: (email: string, password: string) => Promise<void>
+}) {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const disabled = session.status === "authenticating"
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const submittedPassword = password
+    setPassword("")
+    void onLogin(email, submittedPassword)
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-md border border-white/10 bg-[#0b0d0f] p-8"
+    >
+      <Logo />
+      <h1 className="mt-12 font-serif text-4xl">Đăng nhập quản trị</h1>
+      <div className="mt-8 grid gap-5">
+        <Field
+          label="Email"
+          placeholder="Email đăng nhập"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          required
+        />
+        <Field
+          label="Mật khẩu"
+          placeholder="Mật khẩu"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          required
+        />
+        {session.message && (
+          <p className="text-sm text-orange-400">{session.message}</p>
+        )}
+        <Btn disabled={disabled} type="submit">
+          {disabled ? "Đang đăng nhập" : "Đăng nhập"}
+        </Btn>
+      </div>
+    </form>
+  )
+}
+
+function AdminPage({
+  route,
+  go,
+  session,
+  onLogin,
+  onLogout,
+}: {
+  route: string
+  go: (v: string) => void
+  session: SessionState
+  onLogin: (email: string, password: string) => Promise<void>
+  onLogout: () => void
+}) {
   if (route === "admin-login")
     return (
       <div className="grid min-h-screen place-items-center bg-zinc-950 p-5">
-        <form className="w-full max-w-md border border-white/10 bg-[#0b0d0f] p-8">
-          <Logo />
-          <h1 className="mt-12 font-serif text-4xl">Đăng nhập quản trị</h1>
-          <div className="mt-8 grid gap-5">
-            <Field label="Email" placeholder="admin@mecprecision.vn" />
-            <Field label="Mật khẩu" placeholder="••••••••" />
-            <Btn onClick={() => go("admin")}>Đăng nhập</Btn>
-          </div>
-        </form>
+        <FoundationLoginForm session={session} onLogin={onLogin} />
       </div>
     )
   let title =
@@ -958,7 +1121,13 @@ function AdminPage({ route, go }: { route: string go: (v: string) => void }) {
           </div>
           <h1 className="mt-2 font-serif text-4xl">{title}</h1>
         </div>
-        <Btn>+ Tạo mới</Btn>
+        {session.status === "authenticated" ? (
+          <Btn ghost onClick={onLogout}>
+            Đăng xuất
+          </Btn>
+        ) : (
+          <Btn onClick={() => go("admin-login")}>Đăng nhập</Btn>
+        )}
       </div>
       {route === "admin" ? (
         <>
@@ -1105,7 +1274,54 @@ function AdminPage({ route, go }: { route: string go: (v: string) => void }) {
   )
 }
 
-function SalesPage({ route, go }: { route: string go: (v: string) => void }) {
+function RfqPanel({
+  rfqState,
+  go,
+  reloadRfqs,
+}: {
+  rfqState: RfqViewState
+  go: (v: string) => void
+  reloadRfqs: () => void
+}) {
+  if (rfqState.status === "populated") {
+    return (
+      <DataTable
+        headers={["RFQ", "Khách hàng", "Hạn báo giá", "Dự án", "Trạng thái"]}
+        rows={rfqRows(rfqState.page)}
+      />
+    )
+  }
+
+  return (
+    <div className="grid min-h-[260px] place-items-center border border-white/10 bg-zinc-900/30 p-10 text-center">
+      <div>
+        <h3 className="font-serif text-3xl">RFQ canonical</h3>
+        <p className="mt-3 text-zinc-500">{rfqStatusText(rfqState)}</p>
+        <div className="mt-6">
+          {rfqState.status === "unauthenticated" ? (
+            <Btn onClick={() => go("admin-login")}>Đăng nhập</Btn>
+          ) : (
+            <Btn ghost onClick={reloadRfqs}>
+              Tải lại
+            </Btn>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SalesPage({
+  route,
+  go,
+  rfqState,
+  reloadRfqs,
+}: {
+  route: string
+  go: (v: string) => void
+  rfqState: RfqViewState
+  reloadRfqs: () => void
+}) {
   const title =
     {
       sales: "Tổng quan kinh doanh",
@@ -1195,38 +1411,7 @@ function SalesPage({ route, go }: { route: string go: (v: string) => void }) {
           rows={customers}
         />
       ) : route === "sales-quotes" ? (
-        <DataTable
-          headers={[
-            "Báo giá",
-            "Khách hàng",
-            "Ngày tạo",
-            "Giá trị",
-            "Trạng thái",
-          ]}
-          rows={[
-            [
-              "QT-2026-082",
-              "Samsung SDI",
-              "31/08/2026",
-              "1,28 tỷ ₫",
-              "Chờ duyệt",
-            ],
-            [
-              "QT-2026-081",
-              "Thaco",
-              "30/08/2026",
-              "840 triệu ₫",
-              "Đang hoạt động",
-            ],
-            [
-              "QT-2026-079",
-              "Viettel",
-              "28/08/2026",
-              "620 triệu ₫",
-              "Đã đối soát",
-            ],
-          ]}
-        />
+        <RfqPanel rfqState={rfqState} go={go} reloadRfqs={reloadRfqs} />
       ) : route === "sales-ai" ? (
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div className="border border-white/10 p-6">
@@ -1307,15 +1492,142 @@ function SalesPage({ route, go }: { route: string go: (v: string) => void }) {
   )
 }
 
-export default function App() {
+export default function App({ dependencies }: {
+  dependencies?: Partial<AuthDependencies>
+} = {}) {
   const [route, setRoute] = useState(location.hash.replace("#/", "") || "")
+  const authSession = dependencies?.authSession ?? defaultAuthSession
+  const foundationAuth = dependencies?.foundationAuth ?? defaultFoundationAuth
+  const canonicalClient =
+    dependencies?.canonicalClient ?? defaultCanonicalClient
+  const requestGuard = useMemo(() => createLatestRequestGuard(), [])
+  const loginGuard = useMemo(() => createLatestRequestGuard(), [])
+  const loginAbort = useRef<AbortController | null>(null)
+  const rfqAbort = useRef<AbortController | null>(null)
+  const [session, setSession] = useState<SessionState>({
+    status: authSession.getAccessToken()
+      ? "unauthenticated"
+      : "unauthenticated",
+  })
+  const [rfqState, setRfqState] = useState<RfqViewState>({
+    status: "unauthenticated",
+  })
   const go = (r: string) => {
     setRoute(r)
     location.hash = "/" + r
     scrollTo(0, 0)
   }
-  if (route.startsWith("admin")) return <AdminPage route={route} go={go} />
-  if (route.startsWith("sales")) return <SalesPage route={route} go={go} />
+
+  const login = async (email: string, password: string) => {
+    loginAbort.current?.abort()
+    const controller = new AbortController()
+    loginAbort.current = controller
+    const requestId = loginGuard.next()
+    setSession({ status: "authenticating" })
+    try {
+      const result = await foundationAuth.login({ email, password }, {
+        signal: controller.signal,
+      })
+      if (!loginGuard.isLatest(requestId)) return
+      rfqAbort.current?.abort()
+      requestGuard.next()
+      setSession({
+        status: "authenticated",
+        user: result.user,
+        expiresAt: result.expires_at,
+      })
+      setRfqState({ status: "unauthenticated" })
+      go("admin")
+    } catch (error) {
+      if (!loginGuard.isLatest(requestId)) return
+      authSession.clear()
+      setRfqState({ status: "unauthenticated" })
+      setSession({
+        status:
+          error instanceof CanonicalClientError && error.kind === "validation"
+            ? "unauthenticated"
+            : "unauthenticated",
+        message: loginMessage(error),
+      })
+    }
+  }
+
+  const logout = () => {
+    const accessToken = authSession.getAccessToken()
+    loginAbort.current?.abort()
+    loginGuard.next()
+    authSession.clear()
+    rfqAbort.current?.abort()
+    requestGuard.next()
+    setSession({ status: "unauthenticated" })
+    setRfqState({ status: "unauthenticated" })
+    go("admin-login")
+    if (accessToken) void foundationAuth.logout(accessToken)
+  }
+
+  const loadRfqs = () => {
+    if (!authSession.getAccessToken()) {
+      setRfqState({ status: "unauthenticated" })
+      return
+    }
+    rfqAbort.current?.abort()
+    const controller = new AbortController()
+    rfqAbort.current = controller
+    const requestId = requestGuard.next()
+    setRfqState({ status: "loading" })
+    void fetchRfqPage(canonicalClient, controller.signal)
+      .then((page) => {
+        if (!requestGuard.isLatest(requestId)) return
+        setRfqState(
+          page.results.length > 0
+            ? { status: "populated", page }
+            : { status: "empty", page },
+        )
+      })
+      .catch((error) => {
+        if (!requestGuard.isLatest(requestId)) return
+        if (error instanceof CanonicalClientError) {
+          const nextState = rfqStateFromError(error)
+          if (nextState.status === "unauthenticated") {
+            authSession.clear()
+            setSession({ status: "unauthenticated" })
+          }
+          setRfqState(nextState)
+          return
+        }
+        setRfqState({ status: "protocol" })
+      })
+  }
+
+  useEffect(() => {
+    if (route === "sales-quotes") loadRfqs()
+    return () => {
+      loginAbort.current?.abort()
+      rfqAbort.current?.abort()
+    }
+  }, [route])
+
+  if (route.startsWith("admin")) {
+    return (
+      <AdminPage
+        route={route}
+        go={go}
+        session={session}
+        onLogin={login}
+        onLogout={logout}
+      />
+    )
+  }
+  if (route.startsWith("sales")) {
+    return (
+      <SalesPage
+        route={route}
+        go={go}
+        rfqState={rfqState}
+        reloadRfqs={loadRfqs}
+      />
+    )
+  }
   let page =
     route === "products" ? (
       <Products go={go} />

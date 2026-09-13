@@ -8,8 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "test": "node --test src/api/canonical.test.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.phase5a.json"
+    "test": "node --test src/api/canonical.test.ts src/api/phase5b.test.ts",
+    "test:phase5a": "node --test src/api/canonical.test.ts",
+    "test:phase5b": "node --test src/api/phase5b.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck:phase5a": "tsc --noEmit -p tsconfig.phase5a.json"
   },
   "dependencies": {
     "react": "^19.0.0",
