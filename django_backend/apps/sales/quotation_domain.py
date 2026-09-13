@@ -311,6 +311,125 @@ def create_quotation_revision(
     raise last_error
 
 
+def update_draft_quotation(
+    *,
+    quotation_id,
+    actor_id,
+    currency=None,
+    valid_from=None,
+    valid_until=None,
+    pricing_lines=None,
+    discount_total=None,
+    tax_amount=None,
+    terms=None,
+):
+    """Replace editable draft pricing and recalculate authoritative amounts."""
+    with transaction.atomic():
+        quotation = (
+            SalesQuotation.objects.select_for_update(of=("self",))
+            .select_related("rfq")
+            .get(pk=quotation_id)
+        )
+        if quotation.data_contract != "MVP_V1" or quotation.workflow_status != "DRAFT":
+            raise ValidationError({"quotation": "Only a canonical DRAFT can be edited."})
+
+        normalized_currency = str(currency or quotation.currency).upper()
+        next_valid_from = valid_from or quotation.valid_from
+        next_valid_until = valid_until or quotation.valid_until
+        if normalized_currency not in dict(QUOTATION_CURRENCY_CHOICES):
+            raise ValidationError({"currency": "Only VND and USD are supported."})
+        if not next_valid_from or not next_valid_until or next_valid_until < next_valid_from:
+            raise ValidationError({"valid_until": "Validity end must not precede validity start."})
+
+        if pricing_lines is not None:
+            if not pricing_lines:
+                raise ValidationError({"lines": "At least one quotation line is required."})
+            source_ids = [item.get("source_rfq_line_id") for item in pricing_lines]
+            if any(item is None for item in source_ids) or len(set(source_ids)) != len(source_ids):
+                raise ValidationError({"lines": "Source RFQ lines must be present and unique."})
+            source_lines = {
+                line.pk: line
+                for line in SalesRfqLine.objects.select_related("part", "material").filter(
+                    rfq_id=quotation.rfq_id,
+                    pk__in=source_ids,
+                )
+            }
+            if len(source_lines) != len(source_ids):
+                raise ValidationError({"lines": "Every source line must belong to the RFQ."})
+            prepared_lines = [
+                _prepare_line(
+                    source_lines[item["source_rfq_line_id"]],
+                    item,
+                    normalized_currency,
+                    index,
+                )
+                for index, item in enumerate(pricing_lines, start=1)
+            ]
+            quotation.lines.all().delete()
+            for item in prepared_lines:
+                SalesQuotationLine.objects.create(
+                    quotation=quotation,
+                    data_contract="MVP_V1",
+                    **item,
+                )
+            lines = list(quotation.lines.order_by("line_number", "id"))
+        else:
+            lines = list(quotation.lines.select_for_update().order_by("line_number", "id"))
+            if not lines:
+                raise ValidationError({"lines": "At least one quotation line is required."})
+            for line in lines:
+                amounts = calculate_line_amounts(
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    discount=line.discount,
+                    currency=normalized_currency,
+                )
+                for field, value in amounts.items():
+                    setattr(line, field, value)
+                line.save(update_fields=list(amounts))
+
+        header = calculate_header_amounts(
+            line_subtotals=[line.line_subtotal for line in lines],
+            discount_total=(
+                quotation.discount_total if discount_total is None else discount_total
+            ),
+            tax_amount=quotation.tax_amount if tax_amount is None else tax_amount,
+            currency=normalized_currency,
+        )
+        quotation.currency = normalized_currency
+        quotation.valid_from = next_valid_from
+        quotation.valid_until = next_valid_until
+        if terms is not None:
+            quotation.terms = str(terms)
+        quotation.updated_by_id = actor_id
+        for field, value in header.items():
+            setattr(quotation, field, value)
+        quotation.save(
+            update_fields=[
+                "currency",
+                "valid_from",
+                "valid_until",
+                "terms",
+                "updated_by",
+                *header,
+                "updated_at",
+            ]
+        )
+        return quotation
+
+
+def archive_draft_quotation(*, quotation_id, actor_id):
+    """Retire an eligible draft while preserving its revision history."""
+    with transaction.atomic():
+        quotation = SalesQuotation.objects.select_for_update().get(pk=quotation_id)
+        if quotation.data_contract != "MVP_V1" or quotation.workflow_status != "DRAFT":
+            raise ValidationError({"quotation": "Only a canonical DRAFT can be archived."})
+        quotation.workflow_status = "SUPERSEDED"
+        quotation.updated_by_id = actor_id
+        quotation.save(update_fields=["workflow_status", "updated_by", "updated_at"])
+        return quotation
+
+
 def submit_quotation(quotation_id, actor_id):
     """Recalculate authoritative totals and lock a draft for approval."""
     with transaction.atomic():

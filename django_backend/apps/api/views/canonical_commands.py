@@ -9,9 +9,13 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from apps.api.canonical_contract import CanonicalAPIView, success
 from apps.api.canonical_permissions import CanonicalCommandPermission
 from apps.api.serializers.canonical import (
+    approval_decision_to_dict,
+    customer_decision_to_dict,
     customer_to_dict,
     material_to_dict,
     part_to_dict,
+    order_to_dict,
+    quotation_to_dict,
     rfq_document_to_dict,
     rfq_line_to_dict,
     rfq_to_dict,
@@ -26,6 +30,12 @@ from apps.api.serializers.canonical_commands import (
     MaterialUpdateSerializer,
     PartCreateSerializer,
     PartUpdateSerializer,
+    QuotationApprovalSerializer,
+    QuotationCreateSerializer,
+    QuotationCustomerDecisionSerializer,
+    QuotationRejectionSerializer,
+    QuotationSendSerializer,
+    QuotationUpdateSerializer,
     ReasonSerializer,
     RequestInformationSerializer,
     RfqCreateSerializer,
@@ -36,6 +46,7 @@ from apps.api.serializers.canonical_commands import (
 )
 from apps.api.services.canonical_command_service import (
     MasterDataCommandService,
+    QuotationCommandService,
     RfqCommandService,
     RfqDocumentSecurityService,
 )
@@ -327,6 +338,179 @@ class RfqAcknowledgeDeclinedCommandView(CanonicalCommandView):
                     request.user, rfq_id, data["reason"]
                 )
             )
+        )
+
+
+class QuotationCreateCommandView(CanonicalCommandView):
+    permission_code = "quotation:create_revision"
+    serializer_class = QuotationCreateSerializer
+    resource_name = "Quotation"
+
+    def post(self, request, rfq_id):
+        quotation, created = QuotationCommandService.create(
+            request.user,
+            rfq_id,
+            self.validated(request),
+            request.headers.get("Idempotency-Key"),
+        )
+        return success(
+            quotation_to_dict(quotation),
+            status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class QuotationRevisionCreateCommandView(QuotationCreateCommandView):
+    def post(self, request, quotation_id):
+        source = QuotationCommandService.quotation_source(request.user, quotation_id)
+        quotation, created = QuotationCommandService.create(
+            request.user,
+            source.rfq_id,
+            self.validated(request),
+            request.headers.get("Idempotency-Key"),
+            source_quotation_id=source.pk,
+        )
+        return success(
+            quotation_to_dict(quotation),
+            status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class QuotationUpdateCommandView(CanonicalCommandView):
+    permission_code = "quotation:change"
+    serializer_class = QuotationUpdateSerializer
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        quotation = QuotationCommandService.update(
+            request.user, quotation_id, self.validated(request)
+        )
+        return success(quotation_to_dict(quotation))
+
+
+class QuotationArchiveCommandView(CanonicalCommandView):
+    permission_code = "quotation:archive"
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        self.validated(request)
+        return success(
+            quotation_to_dict(
+                QuotationCommandService.archive(request.user, quotation_id)
+            )
+        )
+
+
+class QuotationSubmitCommandView(CanonicalCommandView):
+    permission_code = "quotation:submit"
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        self.validated(request)
+        return success(
+            quotation_to_dict(
+                QuotationCommandService.submit(request.user, quotation_id)
+            )
+        )
+
+
+class QuotationApproveCommandView(CanonicalCommandView):
+    permission_code = "quotation:approve"
+    serializer_class = QuotationApprovalSerializer
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        data = self.validated(request)
+        decision, quotation = QuotationCommandService.decide(
+            request.user,
+            quotation_id,
+            decision="APPROVED",
+            notes=data.get("notes", ""),
+        )
+        return success(
+            {
+                "quotation": quotation_to_dict(quotation),
+                "decision": approval_decision_to_dict(decision),
+            }
+        )
+
+
+class QuotationRejectCommandView(CanonicalCommandView):
+    permission_code = "quotation:reject"
+    serializer_class = QuotationRejectionSerializer
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        data = self.validated(request)
+        decision, quotation = QuotationCommandService.decide(
+            request.user,
+            quotation_id,
+            decision="REJECTED",
+            reason=data["reason"],
+            notes=data.get("notes", ""),
+        )
+        return success(
+            {
+                "quotation": quotation_to_dict(quotation),
+                "decision": approval_decision_to_dict(decision),
+            }
+        )
+
+
+class QuotationSendCommandView(CanonicalCommandView):
+    permission_code = "quotation:send"
+    serializer_class = QuotationSendSerializer
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        quotation = QuotationCommandService.send(
+            request.user, quotation_id, self.validated(request)
+        )
+        return success(quotation_to_dict(quotation))
+
+
+class QuotationCustomerDecisionCommandView(CanonicalCommandView):
+    permission_code = "quotation:record_customer_decision"
+    serializer_class = QuotationCustomerDecisionSerializer
+    resource_name = "Quotation"
+    decision = ""
+
+    def post(self, request, quotation_id):
+        decision, quotation = QuotationCommandService.record_customer_decision(
+            request.user,
+            quotation_id,
+            self.validated(request),
+            decision=self.decision,
+        )
+        return success(
+            {
+                "quotation": quotation_to_dict(quotation),
+                "decision": customer_decision_to_dict(decision),
+            }
+        )
+
+
+class QuotationAcceptCommandView(QuotationCustomerDecisionCommandView):
+    decision = "ACCEPTED"
+
+
+class QuotationDeclineCommandView(QuotationCustomerDecisionCommandView):
+    decision = "DECLINED"
+
+
+class QuotationConvertCommandView(CanonicalCommandView):
+    permission_code = "quotation:convert"
+    resource_name = "Quotation"
+
+    def post(self, request, quotation_id):
+        self.validated(request)
+        order, created = QuotationCommandService.convert(
+            request.user,
+            quotation_id,
+            request.headers.get("Idempotency-Key"),
+        )
+        return success(
+            order_to_dict(order),
+            status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
 

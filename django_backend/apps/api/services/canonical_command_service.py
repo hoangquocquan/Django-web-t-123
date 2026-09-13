@@ -7,6 +7,7 @@ import json
 import re
 import uuid
 import zipfile
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path, PurePosixPath
 
@@ -32,12 +33,23 @@ from apps.business_core.models import (
 from apps.foundation.models import FoundationUser
 from apps.knowledge.services.upload_security import MalwareScanner
 from apps.sales.models import (
+    SalesQuotation,
     SalesRfq,
     SalesRfqDocument,
     SalesRfqLine,
     SalesTechnicalReview,
 )
-from apps.transaction_domain.models import AuditEvent
+from apps.sales.quotation_domain import (
+    archive_draft_quotation,
+    create_quotation_revision,
+    mark_quotation_sent,
+    record_customer_decision,
+    record_quotation_approval,
+    submit_quotation,
+    update_draft_quotation,
+)
+from apps.transaction_domain.models import AuditEvent, TransactionOrder
+from apps.transaction_domain.order_domain import convert_accepted_quotation
 
 
 MAX_COMMAND_ATTEMPTS = 3
@@ -65,9 +77,15 @@ LINE_FIELDS = {
 
 def _require_exact(actor, permission_code, *, roles=None, require_view=True):
     """Enforce exact role and exact permission rows without wildcard fallback."""
-    role_name = getattr(getattr(actor, "role", None), "name", None)
+    role = getattr(actor, "role", None)
+    role_name = getattr(role, "name", None)
     allowed = roles or CANONICAL_COMMAND_ROLE_MATRIX.get(permission_code, frozenset())
-    if actor is None or not actor.is_active or role_name not in allowed:
+    if (
+        actor is None
+        or not actor.is_active
+        or not getattr(role, "is_active", False)
+        or role_name not in allowed
+    ):
         raise PermissionDenied(f"Missing canonical permission: {permission_code}")
     if not has_exact_permission(actor, permission_code):
         raise PermissionDenied(f"Missing canonical permission: {permission_code}")
@@ -352,6 +370,8 @@ def _json_safe(value):
         return {key: _json_safe(item) for key, item in sorted(value.items())}
     if isinstance(value, (list, tuple)):
         return [_json_safe(item) for item in value]
+    if isinstance(value, Decimal):
+        return str(value)
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value
@@ -467,7 +487,7 @@ def _require_valid_submission(rfq):
     return lines
 
 
-class RfqCommandService:
+class _RfqCommandServiceBase:
     """Canonical RFQ aggregate and technical-review command boundary."""
 
     @staticmethod
@@ -571,6 +591,357 @@ class RfqCommandService:
             metadata={"changed_fields": changed},
         )
         return rfq
+
+
+def _require_quotation_owner(actor, quotation):
+    if actor.role.name != "Sales":
+        return
+    rfq = quotation.rfq
+    if actor.pk not in {
+        quotation.created_by_id,
+        rfq.created_by_id,
+        rfq.assigned_to_id,
+    }:
+        raise PermissionDenied("Sales may mutate only owned or assigned quotations.")
+
+
+def _quotation_hash(actor, command, object_id, data=None):
+    return _request_hash(
+        actor,
+        {
+            "command": command,
+            "object_id": object_id,
+            "data": dict(data or {}),
+        },
+    )
+
+
+class QuotationCommandService:
+    """Canonical quotation lifecycle and accepted-quotation conversion boundary."""
+
+    @staticmethod
+    def quotation_source(actor, quotation_id):
+        _require_exact(actor, "quotation:create_revision")
+        quotation = SalesQuotation.objects.select_related("rfq").get(pk=quotation_id)
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        return quotation
+
+    @staticmethod
+    def create(actor, rfq_id, data, idempotency_key, *, source_quotation_id=None):
+        _require_exact(actor, "quotation:create_revision")
+        key = _validate_idempotency_key(idempotency_key)
+        payload = dict(data)
+        digest = _quotation_hash(
+            actor,
+            "quotation.create_revision",
+            rfq_id,
+            {**payload, "source_quotation_id": source_quotation_id},
+        )
+        with transaction.atomic():
+            rfq = SalesRfq.objects.select_for_update().get(pk=rfq_id)
+            _require_mvp(rfq, "RFQ")
+            _require_rfq_owner(actor, rfq)
+            if rfq.status != "READY_TO_QUOTE":
+                raise CanonicalConflict(
+                    "RFQ must be READY_TO_QUOTE.", code="invalid_state"
+                )
+            existing = SalesQuotation.objects.filter(idempotency_key=key).first()
+            if existing:
+                if existing.request_hash != digest or existing.rfq_id != rfq.pk:
+                    raise CanonicalConflict(
+                        "Idempotency key was already used for a different request.",
+                        code="idempotency_conflict",
+                    )
+                _require_quotation_owner(actor, existing)
+                return existing, False
+
+            latest = SalesQuotation.objects.filter(
+                rfq=rfq,
+                data_contract="MVP_V1",
+                revision__isnull=False,
+            ).order_by("-revision", "-id").first()
+            if source_quotation_id is None:
+                if latest is not None:
+                    raise CanonicalConflict(
+                        "This RFQ already has a quotation revision.", code="invalid_state"
+                    )
+            elif (
+                latest is None
+                or latest.pk != source_quotation_id
+                or latest.workflow_status != "REJECTED"
+            ):
+                raise CanonicalConflict(
+                    "A new revision requires the latest rejected quotation.",
+                    code="invalid_state",
+                )
+            elif latest:
+                _require_quotation_owner(actor, latest)
+
+            quotation = create_quotation_revision(
+                rfq_id=rfq.pk,
+                created_by_id=actor.pk,
+                currency=payload["currency"],
+                valid_from=payload["valid_from"],
+                valid_until=payload["valid_until"],
+                pricing_lines=payload["lines"],
+                discount_total=payload.get("discount_total", "0"),
+                tax_amount=payload.get("tax_amount", "0"),
+                terms=payload.get("terms", ""),
+                idempotency_key=key,
+                request_hash=digest,
+            )
+            if latest is not None:
+                _audit(
+                    actor=actor,
+                    action="quotation.superseded",
+                    entity_type="quotation",
+                    entity_id=latest.pk,
+                    old_status="REJECTED",
+                    new_status="SUPERSEDED",
+                    metadata={"replacement_quotation_id": quotation.pk},
+                )
+            _audit(
+                actor=actor,
+                action=(
+                    "quotation.created"
+                    if quotation.revision == 0
+                    else "quotation.revision_created"
+                ),
+                entity_type="quotation",
+                entity_id=quotation.pk,
+                new_status="DRAFT",
+                metadata={
+                    "quotation_number": quotation.quotation_number,
+                    "rfq_id": rfq.pk,
+                    "revision": quotation.revision,
+                },
+            )
+            return quotation, True
+
+    @staticmethod
+    @transaction.atomic
+    def update(actor, quotation_id, data):
+        _require_exact(actor, "quotation:change")
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        if quotation.workflow_status != "DRAFT":
+            raise CanonicalConflict(
+                "Only DRAFT quotations may be edited.", code="invalid_state"
+            )
+        payload = dict(data)
+        return update_draft_quotation(
+            quotation_id=quotation.pk,
+            actor_id=actor.pk,
+            currency=payload.get("currency"),
+            valid_from=payload.get("valid_from"),
+            valid_until=payload.get("valid_until"),
+            pricing_lines=payload.get("lines"),
+            discount_total=payload.get("discount_total"),
+            tax_amount=payload.get("tax_amount"),
+            terms=payload.get("terms"),
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def archive(actor, quotation_id):
+        _require_exact(actor, "quotation:archive")
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        if quotation.workflow_status != "DRAFT":
+            raise CanonicalConflict(
+                "Only DRAFT quotations may be archived.", code="invalid_state"
+            )
+        archived = archive_draft_quotation(quotation_id=quotation.pk, actor_id=actor.pk)
+        _audit(
+            actor=actor,
+            action="quotation.superseded",
+            entity_type="quotation",
+            entity_id=quotation.pk,
+            old_status="DRAFT",
+            new_status="SUPERSEDED",
+            reason="Archived eligible draft",
+            metadata={"operation": "archive"},
+        )
+        return archived
+
+    @staticmethod
+    @transaction.atomic
+    def submit(actor, quotation_id):
+        _require_exact(actor, "quotation:submit")
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        if quotation.workflow_status != "DRAFT":
+            raise CanonicalConflict(
+                "Only DRAFT quotations may be submitted.", code="invalid_state"
+            )
+        submitted = submit_quotation(quotation.pk, actor.pk)
+        _audit(
+            actor=actor,
+            action="quotation.submitted",
+            entity_type="quotation",
+            entity_id=quotation.pk,
+            old_status="DRAFT",
+            new_status="PENDING_APPROVAL",
+        )
+        return submitted
+
+    @staticmethod
+    @transaction.atomic
+    def decide(actor, quotation_id, *, decision, reason="", notes=""):
+        permission = "quotation:approve" if decision == "APPROVED" else "quotation:reject"
+        _require_exact(actor, permission, roles={"Manager"})
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        if quotation.workflow_status != "PENDING_APPROVAL":
+            raise CanonicalConflict(
+                "Quotation is not pending approval.", code="invalid_state"
+            )
+        approval = record_quotation_approval(
+            quotation_id=quotation.pk,
+            reviewer_id=actor.pk,
+            decision=decision,
+            reason=reason,
+            notes=notes,
+        )
+        _audit(
+            actor=actor,
+            action=(
+                "quotation.approved" if decision == "APPROVED" else "quotation.rejected"
+            ),
+            entity_type="quotation",
+            entity_id=quotation.pk,
+            old_status="PENDING_APPROVAL",
+            new_status=decision,
+            reason=reason,
+        )
+        return approval, SalesQuotation.objects.select_related("rfq").get(pk=quotation.pk)
+
+    @staticmethod
+    @transaction.atomic
+    def send(actor, quotation_id, data):
+        _require_exact(actor, "quotation:send")
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        if quotation.workflow_status != "APPROVED":
+            raise CanonicalConflict(
+                "Only APPROVED quotations may be sent.", code="invalid_state"
+            )
+        sent = mark_quotation_sent(
+            quotation_id=quotation.pk,
+            actor_id=actor.pk,
+            sent_to=data["sent_to"],
+            evidence=data["evidence"],
+        )
+        _audit(
+            actor=actor,
+            action="quotation.sent",
+            entity_type="quotation",
+            entity_id=quotation.pk,
+            old_status="APPROVED",
+            new_status="SENT",
+            metadata={"evidence_recorded": True},
+        )
+        return sent
+
+    @staticmethod
+    @transaction.atomic
+    def record_customer_decision(actor, quotation_id, data, *, decision):
+        _require_exact(actor, "quotation:record_customer_decision")
+        quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+            pk=quotation_id
+        )
+        _require_mvp(quotation, "quotation")
+        _require_quotation_owner(actor, quotation)
+        if quotation.workflow_status != "SENT":
+            raise CanonicalConflict(
+                "Customer decision requires a SENT quotation.", code="invalid_state"
+            )
+        evidence = record_customer_decision(
+            quotation_id=quotation.pk,
+            recorded_by_id=actor.pk,
+            decision=decision,
+            contact_snapshot=data["contact_snapshot"],
+            evidence=data["evidence"],
+            reason=data.get("reason", ""),
+        )
+        _audit(
+            actor=actor,
+            action=(
+                "quotation.customer_accepted"
+                if decision == "ACCEPTED"
+                else "quotation.customer_declined"
+            ),
+            entity_type="quotation",
+            entity_id=quotation.pk,
+            old_status="SENT",
+            new_status=decision,
+            reason=data.get("reason", ""),
+            metadata={"decision_evidence_recorded": True},
+        )
+        return evidence, SalesQuotation.objects.select_related("rfq").get(pk=quotation.pk)
+
+    @staticmethod
+    def convert(actor, quotation_id, idempotency_key):
+        _require_exact(actor, "quotation:convert")
+        if not has_exact_permission(actor, "order:view"):
+            raise PermissionDenied("Missing canonical permission: order:view")
+        key = _validate_idempotency_key(idempotency_key)
+        digest = _quotation_hash(actor, "quotation.convert", quotation_id)
+        rfq_id = SalesQuotation.objects.only("rfq_id").get(pk=quotation_id).rfq_id
+        if rfq_id is None:
+            raise PermissionDenied("Legacy quotations cannot use canonical commands.")
+        with transaction.atomic():
+            SalesRfq.objects.select_for_update().get(pk=rfq_id)
+            quotation = SalesQuotation.objects.select_for_update(of=("self",)).select_related("rfq").get(
+                pk=quotation_id
+            )
+            _require_mvp(quotation, "quotation")
+            _require_quotation_owner(actor, quotation)
+            existing = TransactionOrder.objects.filter(idempotency_key=key).first()
+            if existing:
+                if (
+                    existing.request_hash != digest
+                    or existing.source_quotation_id != quotation.pk
+                ):
+                    raise CanonicalConflict(
+                        "Idempotency key was already used for a different request.",
+                        code="idempotency_conflict",
+                    )
+                return existing, False
+            if quotation.workflow_status != "ACCEPTED":
+                raise CanonicalConflict(
+                    "Only ACCEPTED quotations may be converted.", code="invalid_state"
+                )
+            if TransactionOrder.objects.filter(source_quotation=quotation).exists():
+                raise CanonicalConflict(
+                    "This quotation already has a sales order.", code="already_converted"
+                )
+            order = convert_accepted_quotation(
+                quotation_id=quotation.pk,
+                actor_id=actor.pk,
+                idempotency_key=key,
+                request_hash=digest,
+            )
+            return order, True
+
+
+class RfqCommandService(_RfqCommandServiceBase):
+    """Complete Phase 4B RFQ service retained around Phase 4C additions."""
 
     @staticmethod
     @transaction.atomic

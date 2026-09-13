@@ -11,6 +11,7 @@ from urllib.parse import unquote, urlparse
 
 import pytest
 from django.db import connections
+from django.db.migrations.executor import MigrationExecutor
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -107,3 +108,20 @@ def legacy_db(settings, django_db_blocker, tmp_path, legacy_artifact_path):
     connections["legacy"].close()
     del connections.databases["legacy"]
     settings.DATABASES.pop("legacy", None)
+
+
+@pytest.fixture(autouse=True)
+def restore_latest_schema_after_phase3_migration_boundary(request, django_db_blocker):
+    """Keep migration-boundary tests from leaking historical schema to later tests."""
+    yield
+    migration_modules = {
+        "test_phase3b_migrations.py",
+        "test_phase3c_migrations.py",
+        "test_phase3d_migrations.py",
+    }
+    if request.node.path.name not in migration_modules:
+        return
+    with django_db_blocker.unblock():
+        default_connection = connections["default"]
+        executor = MigrationExecutor(default_connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())

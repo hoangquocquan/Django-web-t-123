@@ -448,7 +448,7 @@ class SalesQuotation(models.Model):
         "created_by_id",
     )
     WORKFLOW_TRANSITIONS = {
-        "DRAFT": {"PENDING_APPROVAL"},
+        "DRAFT": {"PENDING_APPROVAL", "SUPERSEDED"},
         "PENDING_APPROVAL": {"APPROVED", "REJECTED"},
         "REJECTED": {"SUPERSEDED"},
         "APPROVED": {"SENT", "SUPERSEDED"},

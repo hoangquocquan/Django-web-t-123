@@ -218,3 +218,110 @@ class RfqDocumentUploadSerializer(StrictSerializer):
     document_revision = serializers.CharField(
         max_length=64, required=False, allow_blank=True, default=""
     )
+
+
+class CommercialDecimalField(serializers.DecimalField):
+    """Reject JSON floats before Decimal normalization can hide their origin."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, float):
+            raise serializers.ValidationError("Binary floating-point values are not accepted.")
+        return super().to_internal_value(data)
+
+
+class QuotationPricingLineSerializer(StrictSerializer):
+    source_rfq_line_id = serializers.IntegerField(min_value=1)
+    unit_price = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0.0001"),
+    )
+    discount = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0"),
+        required=False,
+        default=Decimal("0"),
+    )
+
+
+class QuotationCreateSerializer(StrictSerializer):
+    currency = serializers.ChoiceField(choices=("VND", "USD"))
+    valid_from = serializers.DateField()
+    valid_until = serializers.DateField()
+    discount_total = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0"),
+        required=False,
+        default=Decimal("0"),
+    )
+    tax_amount = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0"),
+        required=False,
+        default=Decimal("0"),
+    )
+    terms = serializers.CharField(required=False, allow_blank=True, default="")
+    lines = QuotationPricingLineSerializer(many=True, allow_empty=False)
+
+    def validate(self, attrs):
+        if attrs["valid_until"] < attrs["valid_from"]:
+            raise serializers.ValidationError(
+                {"valid_until": "Validity end must not precede validity start."}
+            )
+        return attrs
+
+
+class QuotationUpdateSerializer(StrictSerializer):
+    currency = serializers.ChoiceField(choices=("VND", "USD"), required=False)
+    valid_from = serializers.DateField(required=False)
+    valid_until = serializers.DateField(required=False)
+    discount_total = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0"),
+        required=False,
+    )
+    tax_amount = CommercialDecimalField(
+        max_digits=20,
+        decimal_places=4,
+        min_value=Decimal("0"),
+        required=False,
+    )
+    terms = serializers.CharField(required=False, allow_blank=True)
+    lines = QuotationPricingLineSerializer(many=True, allow_empty=False, required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("At least one editable field is required.")
+        if (
+            "valid_from" in attrs
+            and "valid_until" in attrs
+            and attrs["valid_until"] < attrs["valid_from"]
+        ):
+            raise serializers.ValidationError(
+                {"valid_until": "Validity end must not precede validity start."}
+            )
+        return attrs
+
+
+class QuotationApprovalSerializer(StrictSerializer):
+    notes = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class QuotationRejectionSerializer(StrictSerializer):
+    reason = serializers.CharField(trim_whitespace=True)
+    notes = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class QuotationSendSerializer(StrictSerializer):
+    sent_to = serializers.CharField(max_length=254, trim_whitespace=True)
+    evidence = serializers.CharField(trim_whitespace=True)
+
+
+class QuotationCustomerDecisionSerializer(StrictSerializer):
+    contact_snapshot = serializers.CharField(max_length=254, trim_whitespace=True)
+    evidence = serializers.CharField(trim_whitespace=True)
+    reason = serializers.CharField(required=False, allow_blank=True, default="")

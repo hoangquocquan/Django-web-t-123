@@ -29,6 +29,15 @@ CANONICAL_COMMAND_ROLE_MATRIX = {
     "rfq:review": frozenset({"Manager"}),
     "rfq:document_upload": frozenset({"Admin", "Sales"}),
     "rfq:document_download": frozenset({"Admin", "Sales", "Manager"}),
+    "quotation:create_revision": frozenset({"Admin", "Sales"}),
+    "quotation:change": frozenset({"Admin", "Sales"}),
+    "quotation:archive": frozenset({"Admin", "Sales"}),
+    "quotation:submit": frozenset({"Admin", "Sales"}),
+    "quotation:approve": frozenset({"Manager"}),
+    "quotation:reject": frozenset({"Manager"}),
+    "quotation:send": frozenset({"Admin", "Sales"}),
+    "quotation:record_customer_decision": frozenset({"Admin", "Sales"}),
+    "quotation:convert": frozenset({"Admin", "Sales"}),
 }
 
 
@@ -54,6 +63,8 @@ class CanonicalReadPermission(BasePermission):
 
         role = getattr(user, "role", None)
         role_name = getattr(role, "name", None)
+        if not getattr(role, "is_active", False):
+            raise exceptions.PermissionDenied("Inactive canonical role.")
         permission_code = view.get_permission_code()
         allowed_roles = CANONICAL_ROLE_MATRIX.get(permission_code, frozenset())
         if role_name not in allowed_roles:
@@ -73,7 +84,7 @@ class CanonicalReadPermission(BasePermission):
 def has_exact_permission(user, permission_code):
     """Check one exact code/module/action tuple without wildcard fallback."""
     role = getattr(user, "role", None)
-    if role is None:
+    if role is None or not getattr(role, "is_active", False):
         return False
     module, action = permission_code.split(":", 1)
     return role.permissions.filter(
@@ -95,6 +106,8 @@ class CanonicalCommandPermission(BasePermission):
 
         permission_code = view.get_permission_code()
         role_name = getattr(getattr(user, "role", None), "name", None)
+        if not getattr(getattr(user, "role", None), "is_active", False):
+            raise exceptions.PermissionDenied("Inactive canonical role.")
         if role_name not in CANONICAL_COMMAND_ROLE_MATRIX.get(
             permission_code, frozenset()
         ):
