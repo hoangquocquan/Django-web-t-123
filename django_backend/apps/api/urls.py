@@ -1,6 +1,6 @@
 """Central URL map for migrated business APIs and legacy replacements."""
 
-from django.urls import path
+from django.urls import include, path
 
 from apps.ai.views import ai_chat, ai_governance_events, ai_health
 from apps.ai_agent.views import agent_run, sales_assistant
@@ -87,6 +87,7 @@ from .views.transaction_domain import (
 )
 
 urlpatterns = [
+    path("canonical/", include("apps.api.canonical_urls")),
     path("admin/login/", admin_login, name="api-admin-login"),
     path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
     path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
