@@ -49,7 +49,10 @@ from apps.sales.quotation_domain import (
     update_draft_quotation,
 )
 from apps.transaction_domain.models import AuditEvent, TransactionOrder
-from apps.transaction_domain.order_domain import convert_accepted_quotation
+from apps.transaction_domain.order_domain import (
+    convert_accepted_quotation,
+    transition_order,
+)
 
 
 MAX_COMMAND_ATTEMPTS = 3
@@ -938,6 +941,72 @@ class QuotationCommandService:
                 request_hash=digest,
             )
             return order, True
+
+
+class OrderProgressCommandService:
+    """Canonical sales-order progress command boundary."""
+
+    @staticmethod
+    def _transition(actor, order_id, *, permission_code, target_status, data):
+        _require_exact(actor, permission_code)
+        return transition_order(
+            order_id=order_id,
+            actor_id=actor.pk,
+            target_status=target_status,
+            progress_percent=data["progress_percent"],
+            milestone_note=data.get("milestone_note", ""),
+            reason=data.get("reason", ""),
+        )
+
+    @classmethod
+    def progress(cls, actor, order_id, data):
+        return cls._transition(
+            actor,
+            order_id,
+            permission_code="order:progress",
+            target_status="IN_PROGRESS",
+            data=data,
+        )
+
+    @classmethod
+    def hold(cls, actor, order_id, data):
+        return cls._transition(
+            actor,
+            order_id,
+            permission_code="order:hold",
+            target_status="ON_HOLD",
+            data=data,
+        )
+
+    @classmethod
+    def resume(cls, actor, order_id, data):
+        return cls._transition(
+            actor,
+            order_id,
+            permission_code="order:resume",
+            target_status="IN_PROGRESS",
+            data=data,
+        )
+
+    @classmethod
+    def complete(cls, actor, order_id, data):
+        return cls._transition(
+            actor,
+            order_id,
+            permission_code="order:complete",
+            target_status="COMPLETED",
+            data={**data, "progress_percent": 100},
+        )
+
+    @classmethod
+    def cancel(cls, actor, order_id, data):
+        return cls._transition(
+            actor,
+            order_id,
+            permission_code="order:cancel",
+            target_status="CANCELLED",
+            data=data,
+        )
 
 
 class RfqCommandService(_RfqCommandServiceBase):

@@ -28,6 +28,9 @@ from apps.api.serializers.canonical_commands import (
     EmptyCommandSerializer,
     MaterialCreateSerializer,
     MaterialUpdateSerializer,
+    OrderCompleteCommandSerializer,
+    OrderProgressCommandSerializer,
+    OrderReasonCommandSerializer,
     PartCreateSerializer,
     PartUpdateSerializer,
     QuotationApprovalSerializer,
@@ -46,6 +49,7 @@ from apps.api.serializers.canonical_commands import (
 )
 from apps.api.services.canonical_command_service import (
     MasterDataCommandService,
+    OrderProgressCommandService,
     QuotationCommandService,
     RfqCommandService,
     RfqDocumentSecurityService,
@@ -512,6 +516,66 @@ class QuotationConvertCommandView(CanonicalCommandView):
             order_to_dict(order),
             status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+
+class OrderProgressCommandView(CanonicalCommandView):
+    permission_code = "order:progress"
+    serializer_class = OrderProgressCommandSerializer
+    resource_name = "Sales order"
+
+    def post(self, request, order_id):
+        order = OrderProgressCommandService.progress(
+            request.user, order_id, self.validated(request)
+        )
+        return success(order_to_dict(order))
+
+
+class OrderHoldCommandView(CanonicalCommandView):
+    permission_code = "order:hold"
+    serializer_class = OrderReasonCommandSerializer
+    resource_name = "Sales order"
+
+    def post(self, request, order_id):
+        order = OrderProgressCommandService.hold(
+            request.user, order_id, self.validated(request)
+        )
+        return success(order_to_dict(order))
+
+
+class OrderResumeCommandView(CanonicalCommandView):
+    permission_code = "order:resume"
+    serializer_class = OrderProgressCommandSerializer
+    resource_name = "Sales order"
+
+    def post(self, request, order_id):
+        order = OrderProgressCommandService.resume(
+            request.user, order_id, self.validated(request)
+        )
+        return success(order_to_dict(order))
+
+
+class OrderCompleteCommandView(CanonicalCommandView):
+    permission_code = "order:complete"
+    serializer_class = OrderCompleteCommandSerializer
+    resource_name = "Sales order"
+
+    def post(self, request, order_id):
+        order = OrderProgressCommandService.complete(
+            request.user, order_id, self.validated(request)
+        )
+        return success(order_to_dict(order))
+
+
+class OrderCancelCommandView(CanonicalCommandView):
+    permission_code = "order:cancel"
+    serializer_class = OrderReasonCommandSerializer
+    resource_name = "Sales order"
+
+    def post(self, request, order_id):
+        order = OrderProgressCommandService.cancel(
+            request.user, order_id, self.validated(request)
+        )
+        return success(order_to_dict(order))
 
 
 class RfqDocumentUploadCommandView(CanonicalCommandView):

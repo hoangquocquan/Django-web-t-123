@@ -325,3 +325,23 @@ class QuotationCustomerDecisionSerializer(StrictSerializer):
     contact_snapshot = serializers.CharField(max_length=254, trim_whitespace=True)
     evidence = serializers.CharField(trim_whitespace=True)
     reason = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class OrderProgressCommandSerializer(StrictSerializer):
+    progress_percent = serializers.IntegerField(min_value=0, max_value=100)
+    milestone_note = serializers.CharField(
+        max_length=240, required=False, allow_blank=True, default=""
+    )
+
+
+class OrderReasonCommandSerializer(OrderProgressCommandSerializer):
+    reason = serializers.CharField(trim_whitespace=True)
+
+
+class OrderCompleteCommandSerializer(StrictSerializer):
+    progress_percent = serializers.IntegerField(
+        min_value=100, max_value=100, required=False, default=100
+    )
+    milestone_note = serializers.CharField(
+        max_length=240, required=False, allow_blank=True, default=""
+    )

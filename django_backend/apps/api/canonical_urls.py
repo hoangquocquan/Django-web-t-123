@@ -36,6 +36,11 @@ from apps.api.views.canonical_commands import (
     MaterialArchiveCommandView,
     MaterialCreateCommandView,
     MaterialUpdateCommandView,
+    OrderCancelCommandView,
+    OrderCompleteCommandView,
+    OrderHoldCommandView,
+    OrderProgressCommandView,
+    OrderResumeCommandView,
     PartArchiveCommandView,
     PartCreateCommandView,
     PartUpdateCommandView,
@@ -322,6 +327,31 @@ urlpatterns = [
         name="canonical-quotation-customer-decisions",
     ),
     path("orders/", OrderListView.as_view(), name="canonical-order-list"),
+    path(
+        "orders/<int:order_id>/commands/progress/",
+        OrderProgressCommandView.as_view(),
+        name="canonical-order-progress-command",
+    ),
+    path(
+        "orders/<int:order_id>/commands/hold/",
+        OrderHoldCommandView.as_view(),
+        name="canonical-order-hold-command",
+    ),
+    path(
+        "orders/<int:order_id>/commands/resume/",
+        OrderResumeCommandView.as_view(),
+        name="canonical-order-resume-command",
+    ),
+    path(
+        "orders/<int:order_id>/commands/complete/",
+        OrderCompleteCommandView.as_view(),
+        name="canonical-order-complete-command",
+    ),
+    path(
+        "orders/<int:order_id>/commands/cancel/",
+        OrderCancelCommandView.as_view(),
+        name="canonical-order-cancel-command",
+    ),
     path(
         "orders/<int:order_id>/",
         OrderDetailView.as_view(),

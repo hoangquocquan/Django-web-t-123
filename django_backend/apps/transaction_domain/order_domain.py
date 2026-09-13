@@ -30,7 +30,7 @@ CONVERSION_ROLES = {"Admin", "Sales"}
 PROGRESS_ROLES = {"Admin", "Manager"}
 ALLOWED_TRANSITIONS = {
     "CONFIRMED": {"IN_PROGRESS", "ON_HOLD", "CANCELLED"},
-    "IN_PROGRESS": {"ON_HOLD", "COMPLETED", "CANCELLED"},
+    "IN_PROGRESS": {"IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELLED"},
     "ON_HOLD": {"IN_PROGRESS", "CANCELLED"},
     "COMPLETED": set(),
     "CANCELLED": set(),
@@ -156,6 +156,10 @@ def _after_order_header_created(order):
 
 def _after_order_evidence_created(order):
     """Test seam for proving rollback after lines and event evidence persistence."""
+
+
+def _after_order_transition_saved(order):
+    """Test seam for proving rollback after a progress state save."""
 
 
 def convert_accepted_quotation(
@@ -342,6 +346,8 @@ def transition_order(
         )
         if target_status == "IN_PROGRESS" and order.expected_delivery_date is None:
             raise ValidationError({"expected_delivery_date": "Expected delivery date is required before work starts."})
+        if target_status == order.workflow_status and progress == order.progress_percent:
+            raise ValidationError({"progress_percent": "Progress command must advance recorded progress."})
 
         previous_status = order.workflow_status
         order.workflow_status = target_status
@@ -364,6 +370,7 @@ def transition_order(
             ])
         finally:
             del order._phase3d_transition_authorized
+        _after_order_transition_saved(order)
 
         OrderProgressEvent.objects.create(
             order=order,

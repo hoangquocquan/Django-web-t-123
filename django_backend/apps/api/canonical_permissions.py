@@ -38,6 +38,11 @@ CANONICAL_COMMAND_ROLE_MATRIX = {
     "quotation:send": frozenset({"Admin", "Sales"}),
     "quotation:record_customer_decision": frozenset({"Admin", "Sales"}),
     "quotation:convert": frozenset({"Admin", "Sales"}),
+    "order:progress": frozenset({"Admin", "Manager"}),
+    "order:hold": frozenset({"Admin", "Manager"}),
+    "order:resume": frozenset({"Admin", "Manager"}),
+    "order:complete": frozenset({"Admin", "Manager"}),
+    "order:cancel": frozenset({"Admin", "Manager"}),
 }
 
 

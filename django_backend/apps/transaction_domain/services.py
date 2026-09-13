@@ -77,6 +77,13 @@ class OrderService:
         """Return one order with related customer."""
         return self.list_orders().get(id=order_id)
 
+    @staticmethod
+    def _require_legacy_order(order):
+        if order.data_contract == "MVP_V1":
+            raise ValidationError(
+                "Canonical MVP_V1 orders may be changed only through canonical order commands."
+            )
+
     @transaction.atomic
     def create_order(self, *, customer_id, project_name="", message="", items=None, actor=""):
         """Create an order, items, inventory reservations, and audit history atomically."""
@@ -143,6 +150,7 @@ class OrderService:
     @transaction.atomic
     def update_order(self, order, **fields):
         """Update non-payment order metadata."""
+        self._require_legacy_order(order)
         editable_fields = {"project_name", "message", "internal_note"}
         for field_name, value in fields.items():
             if field_name in editable_fields:
@@ -173,6 +181,7 @@ class WorkflowService:
     @transaction.atomic
     def transition_order(self, order, target_status, actor="", note=""):
         """Move an order to a new status and create audit records."""
+        OrderService._require_legacy_order(order)
         if target_status not in VALID_ORDER_STATUSES:
             raise ValidationError("Invalid order status.")
         allowed_targets = ALLOWED_TRANSITIONS.get(order.status, set())
