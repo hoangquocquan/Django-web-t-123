@@ -29,14 +29,71 @@ from apps.api.views.canonical import (
     RfqListView,
     TechnicalReviewListView,
 )
+from apps.api.views.canonical_commands import (
+    CustomerArchiveCommandView,
+    CustomerCreateCommandView,
+    CustomerUpdateCommandView,
+    MaterialArchiveCommandView,
+    MaterialCreateCommandView,
+    MaterialUpdateCommandView,
+    PartArchiveCommandView,
+    PartCreateCommandView,
+    PartUpdateCommandView,
+    RfqAcknowledgeDeclinedCommandView,
+    RfqArchiveCommandView,
+    RfqCreateCommandView,
+    RfqDocumentDownloadView,
+    RfqDocumentUploadCommandView,
+    RfqDocumentVersionCommandView,
+    RfqLineAddCommandView,
+    RfqLineRemoveCommandView,
+    RfqLineUpdateCommandView,
+    RfqRequestInformationCommandView,
+    RfqResubmitCommandView,
+    RfqReviewCompleteCommandView,
+    RfqReviewDeclineCommandView,
+    RfqReviewStartCommandView,
+    RfqSubmitCommandView,
+    RfqUpdateCommandView,
+)
 
 
 urlpatterns = [
+    path(
+        "customers/commands/create/",
+        CustomerCreateCommandView.as_view(),
+        name="canonical-customer-create-command",
+    ),
+    path(
+        "customers/<int:object_id>/commands/update/",
+        CustomerUpdateCommandView.as_view(),
+        name="canonical-customer-update-command",
+    ),
+    path(
+        "customers/<int:object_id>/commands/archive/",
+        CustomerArchiveCommandView.as_view(),
+        name="canonical-customer-archive-command",
+    ),
     path("customers/", CustomerListView.as_view(), name="canonical-customer-list"),
     path(
         "customers/<int:object_id>/",
         CustomerDetailView.as_view(),
         name="canonical-customer-detail",
+    ),
+    path(
+        "parts/commands/create/",
+        PartCreateCommandView.as_view(),
+        name="canonical-part-create-command",
+    ),
+    path(
+        "parts/<int:object_id>/commands/update/",
+        PartUpdateCommandView.as_view(),
+        name="canonical-part-update-command",
+    ),
+    path(
+        "parts/<int:object_id>/commands/archive/",
+        PartArchiveCommandView.as_view(),
+        name="canonical-part-archive-command",
     ),
     path("parts/", PartListView.as_view(), name="canonical-part-list"),
     path(
@@ -44,11 +101,106 @@ urlpatterns = [
         PartDetailView.as_view(),
         name="canonical-part-detail",
     ),
+    path(
+        "materials/commands/create/",
+        MaterialCreateCommandView.as_view(),
+        name="canonical-material-create-command",
+    ),
+    path(
+        "materials/<int:object_id>/commands/update/",
+        MaterialUpdateCommandView.as_view(),
+        name="canonical-material-update-command",
+    ),
+    path(
+        "materials/<int:object_id>/commands/archive/",
+        MaterialArchiveCommandView.as_view(),
+        name="canonical-material-archive-command",
+    ),
     path("materials/", MaterialListView.as_view(), name="canonical-material-list"),
     path(
         "materials/<int:object_id>/",
         MaterialDetailView.as_view(),
         name="canonical-material-detail",
+    ),
+    path(
+        "rfqs/commands/create/",
+        RfqCreateCommandView.as_view(),
+        name="canonical-rfq-create-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/commands/update/",
+        RfqUpdateCommandView.as_view(),
+        name="canonical-rfq-update-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/commands/submit/",
+        RfqSubmitCommandView.as_view(),
+        name="canonical-rfq-submit-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/commands/archive/",
+        RfqArchiveCommandView.as_view(),
+        name="canonical-rfq-archive-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/commands/resubmit/",
+        RfqResubmitCommandView.as_view(),
+        name="canonical-rfq-resubmit-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/lines/commands/add/",
+        RfqLineAddCommandView.as_view(),
+        name="canonical-rfq-line-add-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/lines/<int:line_id>/commands/update/",
+        RfqLineUpdateCommandView.as_view(),
+        name="canonical-rfq-line-update-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/lines/<int:line_id>/commands/remove/",
+        RfqLineRemoveCommandView.as_view(),
+        name="canonical-rfq-line-remove-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/review/commands/start/",
+        RfqReviewStartCommandView.as_view(),
+        name="canonical-rfq-review-start-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/review/commands/request-information/",
+        RfqRequestInformationCommandView.as_view(),
+        name="canonical-rfq-request-information-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/review/commands/complete/",
+        RfqReviewCompleteCommandView.as_view(),
+        name="canonical-rfq-review-complete-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/review/commands/decline/",
+        RfqReviewDeclineCommandView.as_view(),
+        name="canonical-rfq-review-decline-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/review/commands/acknowledge-declined/",
+        RfqAcknowledgeDeclinedCommandView.as_view(),
+        name="canonical-rfq-acknowledge-declined-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/documents/commands/upload/",
+        RfqDocumentUploadCommandView.as_view(),
+        name="canonical-rfq-document-upload-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/documents/<int:document_id>/commands/version/",
+        RfqDocumentVersionCommandView.as_view(),
+        name="canonical-rfq-document-version-command",
+    ),
+    path(
+        "rfqs/<int:rfq_id>/documents/<int:document_id>/download/",
+        RfqDocumentDownloadView.as_view(),
+        name="canonical-rfq-document-download",
     ),
     path("rfqs/", RfqListView.as_view(), name="canonical-rfq-list"),
     path("rfqs/<int:rfq_id>/", RfqDetailView.as_view(), name="canonical-rfq-detail"),

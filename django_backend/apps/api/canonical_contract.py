@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    PermissionDenied as DjangoPermissionDenied,
+    ValidationError as DjangoValidationError,
+)
 from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -26,9 +30,21 @@ class CanonicalApiError(Exception):
         self.details = details
 
 
-def success(data):
+class CanonicalConflict(CanonicalApiError):
+    """A state, idempotency, or uniqueness conflict."""
+
+    def __init__(self, message, *, code="conflict", details=None):
+        super().__init__(
+            code,
+            message,
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+def success(data, *, status_code=status.HTTP_200_OK):
     """Return the canonical success envelope."""
-    return Response({"success": True, "data": data})
+    return Response({"success": True, "data": data}, status=status_code)
 
 
 def error(code, message, *, status_code, details=None):
@@ -185,6 +201,12 @@ class CanonicalAPIView(APIView):
                 "The authenticated user is not authorized for this resource.",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
+        if isinstance(exc, DjangoPermissionDenied):
+            return error(
+                "permission_denied",
+                "The authenticated user is not authorized for this command.",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
         if isinstance(exc, (exceptions.NotFound, ObjectDoesNotExist)):
             return error(
                 "not_found",
@@ -204,4 +226,18 @@ class CanonicalAPIView(APIView):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 details=exc.detail,
             )
-        return super().handle_exception(exc)
+        if isinstance(exc, DjangoValidationError):
+            details = getattr(exc, "message_dict", None)
+            if details is None:
+                details = {"non_field_errors": list(exc.messages)}
+            return error(
+                "validation_error",
+                "Request validation failed.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                details=details,
+            )
+        return error(
+            "internal_error",
+            "The request could not be completed.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

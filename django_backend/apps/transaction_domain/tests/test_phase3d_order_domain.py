@@ -348,7 +348,14 @@ def test_rbac_legacy_unassigned_and_sales_progress_fail_closed(phase3d_factory):
     context = phase3d_factory(10)
     order = convert(context)
     legacy_role = FoundationRole.objects.create(name="editor-phase3d")
-    wildcard = FoundationPermission.objects.get(module="*", action="*")
+    wildcard, _ = FoundationPermission.objects.get_or_create(
+        module="*",
+        action="*",
+        defaults={
+            "name": "Legacy wildcard permission",
+            "description": "Fixture-only wildcard permission used to verify fail-closed RBAC.",
+        },
+    )
     legacy_role.permissions.add(wildcard)
     legacy_user = FoundationUser.objects.create(
         email="legacy-phase3d@example.com", full_name="Legacy", password_hash="unused", role=legacy_role
