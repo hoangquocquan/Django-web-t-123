@@ -463,7 +463,7 @@ test("integrated RFQ slice has no mock fallback data", async () => {
   const salesQuotesStart = appSource.indexOf('route === "sales-quotes"')
   const salesAiStart = appSource.indexOf('route === "sales-ai"')
   const slice = appSource.slice(salesQuotesStart, salesAiStart)
-  assert.match(slice, /<RfqPanel/)
+  assert.match(slice, /<RfqWorkspace/)
   assert.equal(slice.includes("QT-2026-082"), false)
   assert.equal(slice.includes("Samsung SDI"), false)
 })

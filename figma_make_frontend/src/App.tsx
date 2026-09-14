@@ -20,11 +20,10 @@ import {
 import {
   createLatestRequestGuard,
   fetchRfqPage,
-  rfqRows,
   rfqStateFromError,
-  rfqStatusText,
   type RfqViewState,
 } from "./api/rfq.ts"
+import RfqWorkspace from "./components/RfqWorkspace.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -1274,53 +1273,22 @@ function AdminPage({
   )
 }
 
-function RfqPanel({
-  rfqState,
-  go,
-  reloadRfqs,
-}: {
-  rfqState: RfqViewState
-  go: (v: string) => void
-  reloadRfqs: () => void
-}) {
-  if (rfqState.status === "populated") {
-    return (
-      <DataTable
-        headers={["RFQ", "Khách hàng", "Hạn báo giá", "Dự án", "Trạng thái"]}
-        rows={rfqRows(rfqState.page)}
-      />
-    )
-  }
-
-  return (
-    <div className="grid min-h-[260px] place-items-center border border-white/10 bg-zinc-900/30 p-10 text-center">
-      <div>
-        <h3 className="font-serif text-3xl">RFQ canonical</h3>
-        <p className="mt-3 text-zinc-500">{rfqStatusText(rfqState)}</p>
-        <div className="mt-6">
-          {rfqState.status === "unauthenticated" ? (
-            <Btn onClick={() => go("admin-login")}>Đăng nhập</Btn>
-          ) : (
-            <Btn ghost onClick={reloadRfqs}>
-              Tải lại
-            </Btn>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function SalesPage({
   route,
   go,
+  authenticated,
+  canonicalClient,
   rfqState,
   reloadRfqs,
+  onAuthenticationFailure,
 }: {
   route: string
   go: (v: string) => void
+  authenticated: boolean
+  canonicalClient: ReturnType<typeof createCanonicalClient>
   rfqState: RfqViewState
   reloadRfqs: () => void
+  onAuthenticationFailure: () => void
 }) {
   const title =
     {
@@ -1340,7 +1308,7 @@ function SalesPage({
           </div>
           <h1 className="mt-2 font-serif text-4xl">{title}</h1>
         </div>
-        <Btn>+ Tạo mới</Btn>
+        {route !== "sales-quotes" && <Btn>+ Tạo mới</Btn>}
       </div>
       {route === "sales" ? (
         <>
@@ -1411,7 +1379,14 @@ function SalesPage({
           rows={customers}
         />
       ) : route === "sales-quotes" ? (
-        <RfqPanel rfqState={rfqState} go={go} reloadRfqs={reloadRfqs} />
+        <RfqWorkspace
+          client={canonicalClient}
+          authenticated={authenticated}
+          rfqState={rfqState}
+          reloadRfqs={reloadRfqs}
+          goToLogin={() => go("admin-login")}
+          onAuthenticationFailure={onAuthenticationFailure}
+        />
       ) : route === "sales-ai" ? (
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div className="border border-white/10 p-6">
@@ -1565,6 +1540,15 @@ export default function App({ dependencies }: {
     if (accessToken) void foundationAuth.logout(accessToken)
   }
 
+  const handleRfqAuthenticationFailure = () => {
+    authSession.clear()
+    rfqAbort.current?.abort()
+    requestGuard.next()
+    setSession({ status: "unauthenticated" })
+    setRfqState({ status: "unauthenticated" })
+    go("admin-login")
+  }
+
   const loadRfqs = () => {
     if (!authSession.getAccessToken()) {
       setRfqState({ status: "unauthenticated" })
@@ -1623,8 +1607,11 @@ export default function App({ dependencies }: {
       <SalesPage
         route={route}
         go={go}
+        authenticated={session.status === "authenticated"}
+        canonicalClient={canonicalClient}
         rfqState={rfqState}
         reloadRfqs={loadRfqs}
+        onAuthenticationFailure={handleRfqAuthenticationFailure}
       />
     )
   }
