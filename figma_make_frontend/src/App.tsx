@@ -24,6 +24,7 @@ import {
   type RfqViewState,
 } from "./api/rfq.ts"
 import RfqWorkspace from "./components/RfqWorkspace.tsx"
+import QuotationWorkspace from "./components/QuotationWorkspace.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -1281,6 +1282,7 @@ function SalesPage({
   rfqState,
   reloadRfqs,
   onAuthenticationFailure,
+  role,
 }: {
   route: string
   go: (v: string) => void
@@ -1289,7 +1291,11 @@ function SalesPage({
   rfqState: RfqViewState
   reloadRfqs: () => void
   onAuthenticationFailure: () => void
+  role: string | null
 }) {
+  const [quoteWorkspace, setQuoteWorkspace] = useState<"rfq" | "quotation">(
+    "rfq",
+  )
   const title =
     {
       sales: "Tổng quan kinh doanh",
@@ -1379,14 +1385,58 @@ function SalesPage({
           rows={customers}
         />
       ) : route === "sales-quotes" ? (
-        <RfqWorkspace
-          client={canonicalClient}
-          authenticated={authenticated}
-          rfqState={rfqState}
-          reloadRfqs={reloadRfqs}
-          goToLogin={() => go("admin-login")}
-          onAuthenticationFailure={onAuthenticationFailure}
-        />
+        <div className="grid gap-5">
+          <div className="flex flex-wrap gap-3 border-b border-white/10 pb-4">
+            <button
+              className={
+                quoteWorkspace === "rfq"
+                  ? "bg-orange-600 px-4 py-2 text-sm"
+                  : "border border-white/20 px-4 py-2 text-sm"
+              }
+              onClick={() => setQuoteWorkspace("rfq")}
+            >
+              RFQ
+            </button>
+            <button
+              className={
+                quoteWorkspace === "quotation"
+                  ? "bg-orange-600 px-4 py-2 text-sm"
+                  : "border border-white/20 px-4 py-2 text-sm"
+              }
+              onClick={() => setQuoteWorkspace("quotation")}
+            >
+              Quotation lifecycle
+            </button>
+          </div>
+          <div
+            aria-hidden={quoteWorkspace !== "rfq"}
+            className={quoteWorkspace === "rfq" ? "block" : "hidden"}
+          >
+            <RfqWorkspace
+              client={canonicalClient}
+              authenticated={authenticated}
+              rfqState={rfqState}
+              reloadRfqs={reloadRfqs}
+              goToLogin={() => go("admin-login")}
+              onAuthenticationFailure={onAuthenticationFailure}
+            />
+          </div>
+          <div
+            aria-hidden={quoteWorkspace !== "quotation"}
+            className={quoteWorkspace === "quotation" ? "block" : "hidden"}
+          >
+            <QuotationWorkspace
+              active={quoteWorkspace === "quotation"}
+              authenticated={authenticated}
+              client={canonicalClient}
+              role={role}
+              rfqState={rfqState}
+              reloadRfqs={reloadRfqs}
+              goToLogin={() => go("admin-login")}
+              onAuthenticationFailure={onAuthenticationFailure}
+            />
+          </div>
+        </div>
       ) : route === "sales-ai" ? (
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div className="border border-white/10 p-6">
@@ -1612,6 +1662,7 @@ export default function App({ dependencies }: {
         rfqState={rfqState}
         reloadRfqs={loadRfqs}
         onAuthenticationFailure={handleRfqAuthenticationFailure}
+        role={session.status === "authenticated" ? session.user.role : null}
       />
     )
   }
