@@ -8,11 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "test": "node --test src/api/canonical.test.ts src/api/phase5b.test.ts src/api/phase5c.test.ts src/api/phase5d.test.ts",
+    "test": "node --test src/api/canonical.test.ts src/api/phase5b.test.ts src/api/phase5c.test.ts src/api/phase5d.test.ts src/api/phase5e.test.ts",
     "test:phase5a": "node --test src/api/canonical.test.ts",
     "test:phase5b": "node --test src/api/phase5b.test.ts",
     "test:phase5c": "node --test src/api/phase5c.test.ts",
     "test:phase5d": "node --test src/api/phase5d.test.ts",
+    "test:phase5e": "node --test src/api/phase5e.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:phase5a": "tsc --noEmit -p tsconfig.phase5a.json"
   },

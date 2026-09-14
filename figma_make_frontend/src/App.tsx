@@ -25,6 +25,7 @@ import {
 } from "./api/rfq.ts"
 import RfqWorkspace from "./components/RfqWorkspace.tsx"
 import QuotationWorkspace from "./components/QuotationWorkspace.tsx"
+import OrderWorkspace from "./components/OrderWorkspace.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -1293,9 +1294,8 @@ function SalesPage({
   onAuthenticationFailure: () => void
   role: string | null
 }) {
-  const [quoteWorkspace, setQuoteWorkspace] = useState<"rfq" | "quotation">(
-    "rfq",
-  )
+  const [quoteWorkspace, setQuoteWorkspace] =
+    useState<"rfq" | "quotation" | "order">("rfq")
   const title =
     {
       sales: "Tổng quan kinh doanh",
@@ -1407,6 +1407,16 @@ function SalesPage({
             >
               Quotation lifecycle
             </button>
+            <button
+              className={
+                quoteWorkspace === "order"
+                  ? "bg-orange-600 px-4 py-2 text-sm"
+                  : "border border-white/20 px-4 py-2 text-sm"
+              }
+              onClick={() => setQuoteWorkspace("order")}
+            >
+              Order progress & audit
+            </button>
           </div>
           <div
             aria-hidden={quoteWorkspace !== "rfq"}
@@ -1432,6 +1442,19 @@ function SalesPage({
               role={role}
               rfqState={rfqState}
               reloadRfqs={reloadRfqs}
+              goToLogin={() => go("admin-login")}
+              onAuthenticationFailure={onAuthenticationFailure}
+            />
+          </div>
+          <div
+            aria-hidden={quoteWorkspace !== "order"}
+            className={quoteWorkspace === "order" ? "block" : "hidden"}
+          >
+            <OrderWorkspace
+              active={quoteWorkspace === "order"}
+              authenticated={authenticated}
+              client={canonicalClient}
+              role={role}
               goToLogin={() => go("admin-login")}
               onAuthenticationFailure={onAuthenticationFailure}
             />

@@ -44,7 +44,7 @@ export type CanonicalQuotationSummary = {
   created_by_id: number | null
   created_at: string | null
   updated_at: string | null
-  compatibility: Record<string, unknown>
+  compatibility: Record<string, unknown> | null
 }
 
 export type CanonicalQuotation = CanonicalQuotationSummary & {
@@ -239,7 +239,7 @@ export function isQuotationSummary(
     isNullableNumber(value.created_by_id) &&
     isNullableString(value.created_at) &&
     isNullableString(value.updated_at) &&
-    isRecord(value.compatibility)
+    (value.compatibility === null || isRecord(value.compatibility))
   )
 }
 
