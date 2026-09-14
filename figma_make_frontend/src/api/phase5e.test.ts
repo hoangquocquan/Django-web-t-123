@@ -468,13 +468,14 @@ test("ambiguous progress failure is not blindly retried", async () => {
 })
 
 test("ambiguous progress reconciliation proves an applied transition", () => {
-  const payload = { progress_percent: 25 }
+  const payload = { progress_percent: 25, milestone_note: "First cut" }
   const event: CanonicalOrderProgress = {
     ...initialProgress,
     id: 702,
     from_status: "CONFIRMED",
     to_status: "IN_PROGRESS",
     progress_percent: 25,
+    milestone_note: "First cut",
   }
   const after: OrderWorkspaceData = {
     ...workspace,
@@ -489,6 +490,50 @@ test("ambiguous progress reconciliation proves an applied transition", () => {
     classifyProgressReconciliation(workspace, after, "progress", payload),
     "applied",
   )
+})
+
+test("progress reconciliation rejects coincident but non-matching evidence", () => {
+  const authoritativeOrder = {
+    ...order,
+    workflow_status: "ON_HOLD" as const,
+    progress_percent: 20,
+  }
+  const expectedPayload = {
+    progress_percent: 20,
+    milestone_note: "Awaiting material",
+    reason: "Supplier delay",
+  }
+  const matchingShape: CanonicalOrderProgress = {
+    ...initialProgress,
+    id: 702,
+    order_id: order.id,
+    from_status: "CONFIRMED",
+    to_status: "ON_HOLD",
+    progress_percent: 20,
+    milestone_note: expectedPayload.milestone_note,
+    reason: expectedPayload.reason,
+  }
+
+  for (const coincidentEvent of [
+    { ...matchingShape, order_id: 999 },
+    { ...matchingShape, from_status: "IN_PROGRESS" as const },
+    { ...matchingShape, milestone_note: "Different evidence" },
+    { ...matchingShape, reason: "Different reason" },
+  ]) {
+    assert.equal(
+      classifyProgressReconciliation(
+        workspace,
+        {
+          ...workspace,
+          order: authoritativeOrder,
+          progress: [initialProgress, coincidentEvent],
+        },
+        "hold",
+        expectedPayload,
+      ),
+      "ambiguous",
+    )
+  }
 })
 
 test("ambiguous progress reconciliation distinguishes non-applied and unknown", () => {

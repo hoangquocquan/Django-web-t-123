@@ -681,10 +681,16 @@ export function classifyProgressReconciliation(
   const priorIds = new Set(before.progress.map((event) => event.id))
   const additions = after.progress.filter((event) => !priorIds.has(event.id))
   const expected = expectedProgress(action, payload)
+  const expectedMilestone = payload.milestone_note ?? ""
+  const expectedReason = "reason" in payload ? payload.reason : ""
   if (
     additions.length === 1 &&
+    additions[0]!.order_id === before.order.id &&
+    additions[0]!.from_status === before.order.workflow_status &&
     additions[0]!.to_status === expected.status &&
     additions[0]!.progress_percent === expected.percent &&
+    additions[0]!.milestone_note === expectedMilestone &&
+    additions[0]!.reason === expectedReason &&
     after.order.workflow_status === expected.status &&
     after.order.progress_percent === expected.percent
   ) {
