@@ -1,5 +1,13 @@
 # MecPrecision Vietnam
 
+> Phase 6A local full-stack integration is documented in
+> [`docs/phase6/LOCAL_FULL_STACK.md`](docs/phase6/LOCAL_FULL_STACK.md). It uses
+> an isolated PostgreSQL 16/Redis/Django Compose project and a loopback Vite
+> proxy; it does not use the repository's base Compose stack.
+
+> Phase 6D production-static operations, recovery, and backup/restore guidance
+> is in [`docs/phase6/OPERATIONS.md`](docs/phase6/OPERATIONS.md).
+
 Repository này có backend chính là Django và frontend chính là React/Vite. Các
 thư mục `backend/`, `frontend/` và `mecprecision/` được giữ lại để tương thích,
 đối chiếu lịch sử hoặc rollback; chúng không phải đường chạy mặc định và không
@@ -104,8 +112,18 @@ Build production:
 pnpm build
 ```
 
-`package.json` hiện không định nghĩa script test hoặc lint; script chất lượng có
-sẵn là `pnpm format`. CI chỉ chạy build thay vì tuyên bố có test frontend.
+`package.json` định nghĩa các suite Phase 5A-5E, Phase 6A-6D, full test,
+typecheck, build và format checks. CI chạy các gate này từ lockfile hiện hành.
+
+Đường chạy production-like Phase 6D dùng static gateway, không dùng Vite dev:
+
+```powershell
+pwsh -NoProfile -File scripts/phase6/Start-Phase6D.ps1 -DjangoPort 8001 -FrontendPort 8443
+```
+
+Port 8000 đang có thể thuộc stack `mecprecision-vietnam`; helper fail-closed khi
+có collision và không dừng process/container sở hữu port. Dừng riêng Phase 6 và
+giữ volumes bằng `scripts/phase6/Stop-Phase6.ps1`. Không chạy Docker prune.
 
 ## Kiểm tra backend
 
@@ -157,8 +175,9 @@ database SQLite legacy.
 ## CI
 
 Workflow chính `.github/workflows/ci.yml` cài dependency từ manifest hiện hành,
-chạy Django system check, kiểm tra migration, full pytest của backend và build
-frontend từ lockfile. Các workflow chuyên biệt hiện hữu cũng dùng requirements
-của Django; không workflow nào cài dependency từ backend legacy.
+chạy Django system check, kiểm tra migration, full pytest backend, frontend
+tests/typechecks/format/build, PostgreSQL migration smoke và Phase 6 runtime
+contract checks. Các workflow chuyên biệt hiện hữu cũng dùng requirements của
+Django; không workflow nào cài dependency từ backend legacy.
 
 Không có deployment tự động trong các workflow này.

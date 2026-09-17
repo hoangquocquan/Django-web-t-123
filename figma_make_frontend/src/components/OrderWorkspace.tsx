@@ -37,11 +37,11 @@ import {
 import type { CanonicalPage } from "../api/rfq.ts"
 
 const inputClass =
-  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 focus-visible:ring-2 focus-visible:ring-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
 const buttonClass =
-  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 const ghostButtonClass =
-  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 
 function safeText(value: string) {
   return value.trim().slice(0, 500)
@@ -55,7 +55,11 @@ function FieldError({
   name: string
 }) {
   const message = state.fieldErrors?.[name]
-  return message ? <p className="text-xs text-orange-400">{message}</p> : null
+  return message ? (
+    <p className="text-xs text-orange-400" role="alert">
+      {message}
+    </p>
+  ) : null
 }
 
 export default function OrderWorkspace({
@@ -250,6 +254,39 @@ export default function OrderWorkspace({
   }
 
   useEffect(() => {
+    if (!authenticated) {
+      indexAbort.current?.abort()
+      conversionAbort.current?.abort()
+      workspaceAbort.current?.abort()
+      auditAbort.current?.abort()
+      guards.index.next()
+      guards.conversion.next()
+      guards.workspace.next()
+      guards.audit.next()
+      gate.finish()
+      conversionAttempt.reset()
+      progressPending.current = false
+      setOrders(null)
+      setAcceptedQuotations(null)
+      setWorkspace(null)
+      setGlobalAudit(null)
+      setAuditOffset(0)
+      setSelectedQuotationId("")
+      setProgressPercent("0")
+      setMilestoneNote("")
+      setReason("")
+      setIndexState({ status: "initial", message: "Chưa tải danh sách Order." })
+      setAuditState({ status: "initial", message: "Chưa tải global audit." })
+      setConversionState({
+        status: "initial",
+        message: "Chưa tải quotation ACCEPTED.",
+      })
+      setCommand({
+        status: "initial",
+        message: "Chọn quotation ACCEPTED hoặc canonical Order.",
+      })
+      return
+    }
     if (!active) {
       indexAbort.current?.abort()
       conversionAbort.current?.abort()
@@ -522,7 +559,14 @@ export default function OrderWorkspace({
           <div className="text-xs uppercase tracking-widest text-orange-500">
             Canonical Order · progress · audit · {role ?? "unknown role"}
           </div>
-          <p className="mt-1 text-sm text-zinc-400">{command.message}</p>
+          <p
+            aria-atomic="true"
+            aria-live="polite"
+            className="mt-1 text-sm text-zinc-400"
+            role="status"
+          >
+            {command.message}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -548,7 +592,9 @@ export default function OrderWorkspace({
         <div className="border border-white/10 p-5">
           <h3 className="font-serif text-2xl">Convert ACCEPTED quotation</h3>
           <select
+            aria-label="Quotation đã chấp nhận để chuyển đổi"
             className={`${inputClass} mt-4`}
+            data-testid="order-conversion-selector"
             disabled={pending || activeConversion}
             value={selectedQuotationId}
             onChange={(event) =>
@@ -588,6 +634,7 @@ export default function OrderWorkspace({
             {orders?.results.map((order) => (
               <button
                 className={ghostButtonClass}
+                data-order-id={order.id}
                 disabled={pending || activeConversion}
                 key={order.id}
                 onClick={() => selectOrder(order.id)}
@@ -655,7 +702,13 @@ export default function OrderWorkspace({
 
       {workspace && (
         <>
-          <div className="border border-white/10 bg-[#0b0d0f] p-5">
+          <div
+            className="border border-white/10 bg-[#0b0d0f] p-5"
+            data-order-number={workspace.order.order_number}
+            data-order-progress={workspace.order.progress_percent}
+            data-order-status={workspace.order.workflow_status}
+            data-testid="order-workspace-detail"
+          >
             <div className="flex flex-wrap justify-between gap-4">
               <div>
                 <div className="text-xs uppercase tracking-widest text-orange-500">
@@ -693,7 +746,9 @@ export default function OrderWorkspace({
               <h3 className="font-serif text-2xl">Order progress commands</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input
+                  aria-label="Phần trăm tiến độ"
                   className={inputClass}
+                  data-testid="order-progress-input"
                   disabled={locked}
                   inputMode="numeric"
                   placeholder="Progress 0–100"
@@ -703,7 +758,9 @@ export default function OrderWorkspace({
                   }
                 />
                 <input
+                  aria-label="Ghi chú mốc tiến độ"
                   className={inputClass}
+                  data-testid="order-milestone-input"
                   disabled={locked}
                   maxLength={240}
                   placeholder="Milestone note"
@@ -714,7 +771,9 @@ export default function OrderWorkspace({
                 />
               </div>
               <textarea
+                aria-label="Lý do hold hoặc cancel"
                 className={inputClass}
+                data-testid="order-reason-input"
                 disabled={locked}
                 placeholder="Reason bắt buộc cho hold/cancel"
                 value={reason}

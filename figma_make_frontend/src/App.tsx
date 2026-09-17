@@ -120,7 +120,7 @@ function Logo() {
   return (
     <button
       onClick={() => (location.hash = "")}
-      className="flex items-center gap-3 font-semibold tracking-widest"
+      className="flex items-center gap-3 font-semibold tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
     >
       <span className="grid h-8 w-8 place-items-center bg-orange-600 text-white">
         M
@@ -173,8 +173,8 @@ function Btn({
       type={type}
       className={
         ghost
-          ? "border border-white/20 px-5 py-3 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400"
-          : "bg-orange-600 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
+          ? "border border-white/20 px-5 py-3 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+          : "bg-orange-600 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-60"
       }
     >
       {children}
@@ -202,12 +202,13 @@ function Field({
         {label}
       </span>
       <input
+        data-field-label={label}
         placeholder={placeholder}
         type={type}
         value={value}
         onChange={(event) => onChange?.(event.currentTarget.value)}
         required={required}
-        className="border border-white/10 bg-zinc-950 px-4 py-3 outline-none focus:border-orange-500"
+        className="border border-white/10 bg-zinc-950 px-4 py-3 outline-none focus:border-orange-500 focus-visible:ring-2 focus-visible:ring-orange-400"
       />
     </label>
   )
@@ -1074,7 +1075,13 @@ function FoundationLoginForm({
           required
         />
         {session.message && (
-          <p className="text-sm text-orange-400">{session.message}</p>
+          <p
+            aria-live="assertive"
+            className="text-sm text-orange-400"
+            role="alert"
+          >
+            {session.message}
+          </p>
         )}
         <Btn disabled={disabled} type="submit">
           {disabled ? "Đang đăng nhập" : "Đăng nhập"}
@@ -1283,6 +1290,7 @@ function SalesPage({
   rfqState,
   reloadRfqs,
   onAuthenticationFailure,
+  onLogout,
   role,
 }: {
   route: string
@@ -1292,6 +1300,7 @@ function SalesPage({
   rfqState: RfqViewState
   reloadRfqs: () => void
   onAuthenticationFailure: () => void
+  onLogout: () => void
   role: string | null
 }) {
   const [quoteWorkspace, setQuoteWorkspace] =
@@ -1314,7 +1323,14 @@ function SalesPage({
           </div>
           <h1 className="mt-2 font-serif text-4xl">{title}</h1>
         </div>
-        {route !== "sales-quotes" && <Btn>+ Tạo mới</Btn>}
+        <div className="flex gap-3">
+          {route !== "sales-quotes" && <Btn>+ Tạo mới</Btn>}
+          {authenticated && (
+            <Btn ghost onClick={onLogout}>
+              Đăng xuất
+            </Btn>
+          )}
+        </div>
       </div>
       {route === "sales" ? (
         <>
@@ -1385,33 +1401,36 @@ function SalesPage({
           rows={customers}
         />
       ) : route === "sales-quotes" ? (
-        <div className="grid gap-5">
+        <div className="grid gap-5" data-testid="canonical-workflow">
           <div className="flex flex-wrap gap-3 border-b border-white/10 pb-4">
             <button
+              aria-pressed={quoteWorkspace === "rfq"}
               className={
                 quoteWorkspace === "rfq"
-                  ? "bg-orange-600 px-4 py-2 text-sm"
-                  : "border border-white/20 px-4 py-2 text-sm"
+                  ? "bg-orange-600 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                  : "border border-white/20 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
               }
               onClick={() => setQuoteWorkspace("rfq")}
             >
               RFQ
             </button>
             <button
+              aria-pressed={quoteWorkspace === "quotation"}
               className={
                 quoteWorkspace === "quotation"
-                  ? "bg-orange-600 px-4 py-2 text-sm"
-                  : "border border-white/20 px-4 py-2 text-sm"
+                  ? "bg-orange-600 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                  : "border border-white/20 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
               }
               onClick={() => setQuoteWorkspace("quotation")}
             >
               Quotation lifecycle
             </button>
             <button
+              aria-pressed={quoteWorkspace === "order"}
               className={
                 quoteWorkspace === "order"
-                  ? "bg-orange-600 px-4 py-2 text-sm"
-                  : "border border-white/20 px-4 py-2 text-sm"
+                  ? "bg-orange-600 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                  : "border border-white/20 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
               }
               onClick={() => setQuoteWorkspace("order")}
             >
@@ -1425,6 +1444,7 @@ function SalesPage({
             <RfqWorkspace
               client={canonicalClient}
               authenticated={authenticated}
+              role={role}
               rfqState={rfqState}
               reloadRfqs={reloadRfqs}
               goToLogin={() => go("admin-login")}
@@ -1566,6 +1586,13 @@ export default function App({ dependencies }: {
     scrollTo(0, 0)
   }
 
+  useEffect(() => {
+    const synchronizeRoute = () =>
+      setRoute(location.hash.replace("#/", "") || "")
+    window.addEventListener("hashchange", synchronizeRoute)
+    return () => window.removeEventListener("hashchange", synchronizeRoute)
+  }, [])
+
   const login = async (email: string, password: string) => {
     loginAbort.current?.abort()
     const controller = new AbortController()
@@ -1685,6 +1712,7 @@ export default function App({ dependencies }: {
         rfqState={rfqState}
         reloadRfqs={loadRfqs}
         onAuthenticationFailure={handleRfqAuthenticationFailure}
+        onLogout={logout}
         role={session.status === "authenticated" ? session.user.role : null}
       />
     )

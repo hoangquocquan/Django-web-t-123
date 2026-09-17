@@ -896,6 +896,9 @@ export function createQuotationAttemptManager(
     complete(attempt: CreateAttempt) {
       if (active === attempt) active = null
     },
+    reset() {
+      active = null
+    },
     hasActiveAttempt() {
       return active !== null
     },

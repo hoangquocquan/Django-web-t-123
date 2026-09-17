@@ -5,6 +5,8 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from apps.common.legacy_write_boundary import require_legacy_record
+
 from .models import (
     BusinessCustomer,
     BusinessProduct,
@@ -47,6 +49,7 @@ class BusinessProductService:
     @transaction.atomic
     def create_product(self, **fields):
         """Create one Django-owned product with validation."""
+        fields["data_contract"] = "LEGACY"
         status = fields.get("status", "draft") or "draft"
         if status not in VALID_PRODUCT_STATUSES:
             raise ValidationError(
@@ -61,6 +64,7 @@ class BusinessProductService:
     @transaction.atomic
     def update_product(self, product, **fields):
         """Update editable Django-owned product fields."""
+        require_legacy_record(product, entity_name="product")
         editable_fields = {
             "legacy_category_id",
             "category_name",
@@ -104,6 +108,7 @@ class BusinessCustomerService:
     @transaction.atomic
     def create_customer(self, **fields):
         """Create one Django-owned customer with validation."""
+        fields["data_contract"] = "LEGACY"
         status = fields.get("status", "active") or "active"
         if status not in VALID_CUSTOMER_STATUSES:
             raise ValidationError("Customer status must be active, inactive, or lead.")
@@ -113,6 +118,7 @@ class BusinessCustomerService:
     @transaction.atomic
     def update_customer(self, customer, **fields):
         """Update editable Django-owned customer fields."""
+        require_legacy_record(customer, entity_name="customer")
         editable_fields = {
             "company_name",
             "contact_name",

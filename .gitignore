@@ -16,6 +16,9 @@ venv/
 !.env.example
 !.env.dryrun.example
 !.env.production.example
+!.env.phase6.example
+!figma_make_frontend/.env.example
+.phase6/
 
 # Django
 db.sqlite3

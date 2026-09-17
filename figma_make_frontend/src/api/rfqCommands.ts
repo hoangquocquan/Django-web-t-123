@@ -11,6 +11,7 @@ import {
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{1,64}$/
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const UNITS = ["PCS", "KG", "M", "MM"] as const
+const BUSINESS_TIME_ZONE = "Asia/Tokyo"
 
 export type RfqUnit = typeof UNITS[number]
 
@@ -53,7 +54,7 @@ export type CanonicalRfqLine = {
   material_id: number | null
   description: string
   quantity: string
-  unit: string
+  unit: RfqUnit
   required_delivery_date: string
   tolerance: string
   technical_notes: string
@@ -92,6 +93,12 @@ export type RfqLineCreatePayload = {
 }
 
 export type RfqLineUpdatePayload = Partial<RfqLineCreatePayload>
+
+export type RfqReviewCompletePayload = {
+  feasible_line_ids: number[]
+  drawing_not_required_line_ids: number[]
+  notes?: string
+}
 
 export type ClientFieldErrors = Record<string, string>
 
@@ -194,15 +201,37 @@ function decimalQuantity(value: unknown): string {
 }
 
 function unitValue(value: unknown): RfqUnit {
-  if (typeof value !== "string" || !UNITS.includes(value as RfqUnit)) {
+  if (!isRfqUnit(value)) {
     clientValidation({ unit: "Đơn vị phải là PCS, KG, M hoặc MM." })
   }
-  return value as RfqUnit
+  return value
+}
+
+function isRfqUnit(value: unknown): value is RfqUnit {
+  return typeof value === "string" && UNITS.includes(value as RfqUnit)
+}
+
+export function businessCalendarDate(
+  instant: Date = new Date(),
+  timeZone = BUSINESS_TIME_ZONE,
+): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(instant)
+  const calendar = Object.fromEntries(
+    parts
+      .filter((part) => ["year", "month", "day"].includes(part.type))
+      .map((part) => [part.type, part.value]),
+  )
+  return `${calendar.year}-${calendar.month}-${calendar.day}`
 }
 
 export function validateRfqCreatePayload(
   input: unknown,
-  today = new Date().toISOString().slice(0, 10),
+  today = businessCalendarDate(),
 ): RfqCreatePayload {
   if (!isRecord(input)) clientValidation({ form: "Dữ liệu RFQ không hợp lệ." })
   rejectUnknownFields(input, [
@@ -251,7 +280,7 @@ export function validateRfqUpdatePayload(
     quote_due_at: null,
     required_delivery_date: null,
   },
-  today = new Date().toISOString().slice(0, 10),
+  today = businessCalendarDate(),
 ): RfqUpdatePayload {
   if (!isRecord(input)) clientValidation({ form: "Dữ liệu RFQ không hợp lệ." })
   rejectUnknownFields(input, [
@@ -489,7 +518,7 @@ export function isCanonicalRfqLine(value: unknown): value is CanonicalRfqLine {
     (typeof value.material_id === "number" || value.material_id === null) &&
     typeof value.description === "string" &&
     typeof value.quantity === "string" &&
-    typeof value.unit === "string" &&
+    isRfqUnit(value.unit) &&
     typeof value.required_delivery_date === "string" &&
     typeof value.tolerance === "string" &&
     typeof value.technical_notes === "string" &&
@@ -662,6 +691,100 @@ export async function submitRfq(
   return result
 }
 
+function reviewRfqFromResponse(
+  value: unknown,
+  expectedStatus: string,
+): CanonicalRfq {
+  if (
+    !isRecord(value) ||
+    !isCanonicalRfq(value.rfq) ||
+    value.rfq.status !== expectedStatus
+  ) {
+    protocolError("invalid_rfq_review_response")
+  }
+  return value.rfq
+}
+
+export async function startRfqReview(
+  client: RfqClient,
+  rfqId: number,
+  signal?: AbortSignal,
+): Promise<CanonicalRfq> {
+  const result = await postCommand<unknown>(
+    client,
+    `rfqs/${positiveInteger(rfqId, "rfq_id")}/review/commands/start/`,
+    {},
+    signal,
+  )
+  return reviewRfqFromResponse(result, "UNDER_REVIEW")
+}
+
+export function validateRfqReviewCompletePayload(
+  input: RfqReviewCompletePayload,
+): RfqReviewCompletePayload {
+  if (!isRecord(input))
+    clientValidation({ form: "Dữ liệu review không hợp lệ." })
+  rejectUnknownFields(input, [
+    "feasible_line_ids",
+    "drawing_not_required_line_ids",
+    "notes",
+  ])
+  const feasible = Array.isArray(input.feasible_line_ids)
+    ? input.feasible_line_ids.map((id) =>
+        positiveInteger(id, "feasible_line_ids"),
+      )
+    : clientValidation({ feasible_line_ids: "Phải xác nhận mọi dòng RFQ." })
+  const noDrawing = Array.isArray(input.drawing_not_required_line_ids)
+    ? input.drawing_not_required_line_ids.map((id) =>
+        positiveInteger(id, "drawing_not_required_line_ids"),
+      )
+    : clientValidation({
+        drawing_not_required_line_ids: "Xác nhận bản vẽ không hợp lệ.",
+      })
+  if (feasible.length === 0 || new Set(feasible).size !== feasible.length) {
+    clientValidation({
+      feasible_line_ids: "Phải xác nhận riêng từng dòng RFQ.",
+    })
+  }
+  if (new Set(noDrawing).size !== noDrawing.length) {
+    clientValidation({
+      drawing_not_required_line_ids: "Dòng xác nhận bản vẽ bị trùng.",
+    })
+  }
+  return {
+    feasible_line_ids: feasible,
+    drawing_not_required_line_ids: noDrawing,
+    notes: text(input.notes ?? "", "notes", 2000),
+  }
+}
+
+export async function completeRfqReview(
+  client: RfqClient,
+  rfqId: number,
+  payload: RfqReviewCompletePayload,
+  signal?: AbortSignal,
+): Promise<CanonicalRfq> {
+  const result = await postCommand<unknown>(
+    client,
+    `rfqs/${positiveInteger(rfqId, "rfq_id")}/review/commands/complete/`,
+    validateRfqReviewCompletePayload(payload),
+    signal,
+  )
+  return reviewRfqFromResponse(result, "READY_TO_QUOTE")
+}
+
+export function rfqReviewPermissions(
+  role: string | null,
+  status: string | null,
+  locked: boolean,
+) {
+  const manager = role === "Manager" && !locked
+  return {
+    start: manager && status === "SUBMITTED",
+    complete: manager && status === "UNDER_REVIEW",
+  }
+}
+
 export async function fetchRfqDetail(
   client: RfqClient,
   rfqId: number,
@@ -825,6 +948,9 @@ export function createRfqCreateAttemptManager(
     },
     activePayload(): RfqCreatePayload | null {
       return active === null ? null : { ...active.payload }
+    },
+    clear(): void {
+      active = null
     },
   }
 }

@@ -38,6 +38,20 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
         run: python manage.py makemigrations --check --dry-run
 
+      - name: Phase 6A focused configuration and legacy-boundary tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: >-
+          python -m pytest -q
+          apps/core/tests/test_phase6a_configuration.py
+          apps/api/tests/test_phase6a_legacy_write_boundary.py
+          apps/api/tests/test_phase4d_order_progress_commands.py
+
+      - name: Phase 6D configuration and operations contracts
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python -m pytest -q apps/core/tests/test_phase6d_release_readiness.py
+
       - name: Run full Django test suite
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
@@ -69,5 +83,89 @@ jobs:
       - name: Install dependencies from lockfile
         run: pnpm install --frozen-lockfile
 
+      - name: Frontend typecheck
+        run: pnpm typecheck
+
+      - name: Phase 5A typecheck
+        run: pnpm typecheck:phase5a
+
+      - name: Phase 5A-5E focused tests
+        run: |
+          pnpm test:phase5a
+          pnpm test:phase5b
+          pnpm test:phase5c
+          pnpm test:phase5d
+          pnpm test:phase5e
+
+      - name: Phase 6A routing tests
+        run: pnpm test:phase6a
+
+      - name: Phase 6D frontend release contracts
+        run: pnpm test:phase6d
+
+      - name: Full frontend tests
+        run: pnpm test
+
+      - name: Focused frontend format check
+        run: |
+          pnpm format:check:phase6a
+          pnpm format:check:phase6d
+
       - name: Build frontend
         run: pnpm build
+
+  postgres-integration:
+    name: Phase 6A PostgreSQL migration smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: phase6_ci
+          POSTGRES_USER: phase6_ci
+          POSTGRES_PASSWORD: phase6_ci_fictional
+        options: >-
+          --health-cmd "pg_isready -U phase6_ci -d phase6_ci"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: django_backend/requirements*.txt
+      - name: Install dependencies
+        working-directory: django_backend
+        run: python -m pip install -r requirements.txt
+      - name: Clean PostgreSQL migration and consistency smoke
+        working-directory: django_backend
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.base
+          SECRET_KEY: phase6-ci-fictional
+          DATABASE_URL: postgresql://phase6_ci:phase6_ci_fictional@127.0.0.1:5432/phase6_ci?connect_timeout=5
+        run: |
+          python manage.py migrate --noinput
+          python manage.py migrate --check
+          python manage.py makemigrations --check --dry-run
+
+  phase6-static:
+    name: Phase 6A runtime syntax
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          $errors = $null
+          Get-ChildItem scripts/phase6/*.ps1 | ForEach-Object {
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errors)
+            if ($errors) { throw ($errors | Out-String) }
+          }
+      - name: Validate isolated Compose definition
+        run: docker compose -p django-web-t-123-phase6 --env-file .env.phase6.example -f docker-compose.phase6.yml config --quiet
+      - name: Validate Phase 6D production-static image definition
+        run: docker compose -p django-web-t-123-phase6 --env-file .env.phase6.example -f docker-compose.phase6.yml --profile phase6d config --quiet

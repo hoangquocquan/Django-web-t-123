@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from apps.business_core.models import BusinessCustomer, BusinessProduct, InventoryItem
 from apps.business_core.services import InventoryService
+from apps.common.legacy_write_boundary import require_legacy_record
 
 from .models import (
     OrderStatusHistory,
@@ -79,16 +80,14 @@ class OrderService:
 
     @staticmethod
     def _require_legacy_order(order):
-        if order.data_contract == "MVP_V1":
-            raise ValidationError(
-                "Canonical MVP_V1 orders may be changed only through canonical order commands."
-            )
+        return require_legacy_record(order, entity_name="order")
 
     @transaction.atomic
     def create_order(self, *, customer_id, project_name="", message="", items=None, actor=""):
         """Create an order, items, inventory reservations, and audit history atomically."""
         customer = BusinessCustomer.objects.get(id=customer_id)
         order = TransactionOrder.objects.create(
+            data_contract="LEGACY",
             customer=customer,
             order_number="PENDING",
             project_name=project_name or "",

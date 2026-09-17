@@ -21,6 +21,24 @@ def required_environment(name):
     return value
 
 
+def validated_url(name, schemes, *, require_username=False, require_password=False):
+    """Return a bounded production service URL or fail without echoing it."""
+    value = required_environment(name)
+    parsed = urlparse(value)
+    if (
+        parsed.scheme not in schemes
+        or not parsed.hostname
+        or parsed.fragment
+        or (require_username and not parsed.username)
+        or (require_password and not parsed.password)
+    ):
+        allowed = " or ".join(f"{scheme}://" for scheme in sorted(schemes))
+        raise ImproperlyConfigured(
+            f"Production {name} must be a complete {allowed} service URL."
+        )
+    return value, parsed
+
+
 DEBUG = False
 ENVIRONMENT = "production"
 
@@ -31,27 +49,54 @@ DATABASES = deepcopy(DATABASES)  # noqa: F405
 LOGGING = deepcopy(LOGGING)  # noqa: F405
 
 SECRET_KEY = required_environment("SECRET_KEY")
+if SECRET_KEY.upper() == "CHANGE_ME" or any(char in SECRET_KEY for char in "\r\n\x00"):
+    raise ImproperlyConfigured(
+        "Production SECRET_KEY contains an unsafe placeholder or control character."
+    )
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")  # noqa: F405
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured(
         "Production ALLOWED_HOSTS must contain at least one host."
     )
+if any(
+    host == "*" or "://" in host or "/" in host or any(char.isspace() for char in host)
+    for host in ALLOWED_HOSTS
+):
+    raise ImproperlyConfigured(
+        "Production ALLOWED_HOSTS must contain explicit host names only."
+    )
 
-DATABASE_URL = required_environment("DATABASE_URL")
-if urlparse(DATABASE_URL).scheme not in {"postgres", "postgresql"}:
-    raise ImproperlyConfigured("Production DATABASE_URL must use PostgreSQL.")
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")  # noqa: F405
+if CORS_ALLOWED_ORIGINS:
+    raise ImproperlyConfigured(
+        "Production CORS_ALLOWED_ORIGINS must be empty for the same-origin deployment."
+    )
+
+DATABASE_URL, parsed_database_url = validated_url(
+    "DATABASE_URL",
+    {"postgres", "postgresql"},
+    require_username=True,
+    require_password=True,
+)
+if not parsed_database_url.path.strip("/"):
+    raise ImproperlyConfigured(
+        "Production DATABASE_URL must name a PostgreSQL database."
+    )
 DATABASES["default"] = database_from_url(DATABASE_URL)  # noqa: F405
 DATABASES["default"].update(
     {
         "CONN_MAX_AGE": env_int("DATABASE_CONN_MAX_AGE", 60),  # noqa: F405
         "CONN_HEALTH_CHECKS": True,
-        "OPTIONS": {"sslmode": os.getenv("DATABASE_SSLMODE", "prefer")},
+        "OPTIONS": {
+            "sslmode": os.getenv("DATABASE_SSLMODE", "prefer"),
+            "connect_timeout": env_int("DATABASE_CONNECT_TIMEOUT_SECONDS", 5),  # noqa: F405
+        },
     }
 )
 
-REDIS_URL = required_environment("REDIS_URL")
-if urlparse(REDIS_URL).scheme not in {"redis", "rediss"}:
-    raise ImproperlyConfigured("Production REDIS_URL must use redis:// or rediss://.")
+REDIS_URL, _parsed_redis_url = validated_url(
+    "REDIS_URL", {"redis", "rediss"}, require_password=True
+)
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
@@ -81,6 +126,25 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 X_FRAME_OPTIONS = "DENY"
 
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")  # noqa: F405
+for origin in CSRF_TRUSTED_ORIGINS:
+    parsed_origin = urlparse(origin)
+    if (
+        parsed_origin.scheme not in {"http", "https"}
+        or not parsed_origin.hostname
+        or parsed_origin.username
+        or parsed_origin.password
+        or parsed_origin.path not in {"", "/"}
+        or parsed_origin.query
+        or parsed_origin.fragment
+        or "*" in origin
+    ):
+        raise ImproperlyConfigured(
+            "Production CSRF_TRUSTED_ORIGINS must contain explicit HTTP(S) origins only."
+        )
+    if SECURE_SSL_REDIRECT and parsed_origin.scheme != "https":
+        raise ImproperlyConfigured(
+            "Production CSRF_TRUSTED_ORIGINS must use HTTPS when SSL redirect is enabled."
+        )
 
 STATIC_ROOT = Path(os.getenv("STATIC_ROOT", BASE_DIR / "staticfiles"))  # noqa: F405
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "media"))  # noqa: F405

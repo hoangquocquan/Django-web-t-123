@@ -7,10 +7,14 @@ from .views import (
     health_check,
     health_rollback_status,
     operations_health,
+    phase6_liveness,
+    phase6_readiness,
     prometheus_metrics,
 )
 
 urlpatterns = [
+    path("phase6/live/", phase6_liveness, name="phase6-liveness"),
+    path("phase6/ready/", phase6_readiness, name="phase6-readiness"),
     re_path(r"^health/?$", health_check, name="health"),
     re_path(r"^cutover/health/?$", api_cutover_status, name="health-cutover-status"),
     re_path(

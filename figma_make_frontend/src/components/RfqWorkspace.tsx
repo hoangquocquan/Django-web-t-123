@@ -3,8 +3,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { CanonicalClientError } from "../api/canonical.ts"
 import {
   addRfqLine,
+  businessCalendarDate,
   commandState,
   commandStateFromError,
+  completeRfqReview,
   createCommandGate,
   createRfqCreateAttemptManager,
   createRfqRequestGuards,
@@ -14,6 +16,8 @@ import {
   loadRfqSelectors,
   removeRfqLine,
   rfqLifecyclePermissions,
+  rfqReviewPermissions,
+  startRfqReview,
   submitRfq,
   updateRfqDraft,
   updateRfqLine,
@@ -72,15 +76,11 @@ const emptyLine: LineForm = {
 }
 
 const inputClass =
-  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 focus-visible:ring-2 focus-visible:ring-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
 const buttonClass =
-  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 const ghostButtonClass =
-  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 
 function headerFromRfq(rfq: CanonicalRfq): HeaderForm {
   return {
@@ -98,9 +98,7 @@ function lineFromRfq(line: CanonicalRfqLine): LineForm {
     materialId: line.material_id === null ? "" : String(line.material_id),
     description: line.description,
     quantity: line.quantity,
-    unit: ["PCS", "KG", "M", "MM"].includes(line.unit)
-      ? line.unit as LineForm["unit"]
-      : "PCS",
+    unit: line.unit,
     requiredDeliveryDate: line.required_delivery_date,
     tolerance: line.tolerance,
     technicalNotes: line.technical_notes,
@@ -116,7 +114,9 @@ function FieldError({
 }) {
   const message = state.fieldErrors?.[name]
   return message ? (
-    <span className="text-xs text-orange-400">{message}</span>
+    <span className="text-xs text-orange-400" role="alert">
+      {message}
+    </span>
   ) : null
 }
 
@@ -139,6 +139,7 @@ function Labeled({ label, children }: LabeledProps) {
 export default function RfqWorkspace({
   client,
   authenticated,
+  role,
   rfqState,
   reloadRfqs,
   goToLogin,
@@ -146,6 +147,7 @@ export default function RfqWorkspace({
 }: {
   client: RfqClient
   authenticated: boolean
+  role: string | null
   rfqState: RfqViewState
   reloadRfqs: () => void
   goToLogin: () => void
@@ -167,7 +169,7 @@ export default function RfqWorkspace({
   const [selectedRfq, setSelectedRfq] = useState<CanonicalRfq | null>(null)
   const [lines, setLines] = useState<CanonicalRfqLine[]>([])
   const [editingLineId, setEditingLineId] = useState<number | null>(null)
-  const gate = useMemo(() => createCommandGate(), [])
+  const gateRef = useRef(createCommandGate())
   const createAttempt = useMemo(() => createRfqCreateAttemptManager(), [])
   const requestGuards = useMemo(() => createRfqRequestGuards(), [])
   const { selectors: selectorGuard, workspace: workspaceGuard } = requestGuards
@@ -179,9 +181,17 @@ export default function RfqWorkspace({
     selectedRfq?.status ?? null,
     pending || needsReconciliation,
   )
-  const editable = lifecycle.header && lifecycle.lines
+  const canAuthorRfq = role === "Admin" || role === "Sales"
+  const editable = canAuthorRfq && lifecycle.header && lifecycle.lines
+  const review = rfqReviewPermissions(
+    role,
+    selectedRfq?.status ?? null,
+    pending || needsReconciliation,
+  )
   const headerEditable =
-    selectedRfq === null ? !pending && !activeCreateAttempt : editable
+    selectedRfq === null
+      ? canAuthorRfq && !pending && !activeCreateAttempt
+      : canAuthorRfq && editable
 
   const handleFailure = (error: unknown) => {
     const next = commandStateFromError(error)
@@ -220,6 +230,7 @@ export default function RfqWorkspace({
       lines: CanonicalRfqLine[]
     }>,
   ) => {
+    const gate = gateRef.current
     if (!gate.tryStart()) return
     activeAbort.current?.abort()
     const controller = new AbortController()
@@ -241,6 +252,19 @@ export default function RfqWorkspace({
 
   useEffect(() => {
     if (!authenticated) {
+      activeAbort.current?.abort()
+      activeAbort.current = null
+      workspaceGuard.next()
+      selectorGuard.next()
+      createAttempt.clear()
+      gateRef.current = createCommandGate()
+      setSelectors({ customers: [], parts: [], materials: [] })
+      setSelectedRfq(null)
+      setLines([])
+      setEditingLineId(null)
+      setHeader(emptyHeader)
+      setLineForm(emptyLine)
+      setCommand(commandState("initial"))
       setSelectorState(commandState("initial"))
       return
     }
@@ -323,7 +347,7 @@ export default function RfqWorkspace({
             quote_due_at: header.quoteDueAt,
             required_delivery_date: header.requiredDeliveryDate,
           },
-          today(),
+          businessCalendarDate(),
         )
       } catch (error) {
         handleFailure(error)
@@ -355,7 +379,7 @@ export default function RfqWorkspace({
           quote_due_at: selectedRfq.quote_due_at,
           required_delivery_date: selectedRfq.required_delivery_date,
         },
-        today(),
+        businessCalendarDate(),
       )
       void runCommand(async (signal) => {
         const rfq = await updateRfqDraft(
@@ -435,7 +459,10 @@ export default function RfqWorkspace({
           details: { lines: true },
         })
       }
-      if (!selectedRfq.quote_due_at || selectedRfq.quote_due_at <= today()) {
+      if (
+        !selectedRfq.quote_due_at ||
+        selectedRfq.quote_due_at <= businessCalendarDate()
+      ) {
         throw new CanonicalClientError({
           kind: "validation",
           code: "client_validation_error",
@@ -465,6 +492,28 @@ export default function RfqWorkspace({
     }
   }
 
+  const reviewAction = (action: "start" | "complete") => {
+    if (!selectedRfq || !review[action]) return
+    void runCommand(async (signal) => {
+      const rfq =
+        action === "start"
+          ? await startRfqReview(client, selectedRfq.id, signal)
+          : await completeRfqReview(
+              client,
+              selectedRfq.id,
+              {
+                feasible_line_ids: lines.map((line) => line.id),
+                drawing_not_required_line_ids: lines
+                  .filter((line) => !line.drawing_required)
+                  .map((line) => line.id),
+                notes: "Phase 6B canonical browser review",
+              },
+              signal,
+            )
+      return reconcile(rfq.id, signal)
+    })
+  }
+
   if (!authenticated) {
     return (
       <div className="grid min-h-[260px] place-items-center border border-white/10 bg-zinc-900/30 p-10 text-center">
@@ -488,7 +537,12 @@ export default function RfqWorkspace({
           <div className="text-xs uppercase tracking-widest text-orange-500">
             Canonical RFQ workflow
           </div>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p
+            aria-atomic="true"
+            aria-live="polite"
+            className="mt-1 text-sm text-zinc-400"
+            role="status"
+          >
             {selectorState.status === "loading_selectors"
               ? selectorState.message
               : command.message}
@@ -496,7 +550,7 @@ export default function RfqWorkspace({
         </div>
         <button
           className={buttonClass}
-          disabled={pending || activeCreateAttempt}
+          disabled={!canAuthorRfq || pending || activeCreateAttempt}
           onClick={startNew}
         >
           + RFQ nháp
@@ -527,7 +581,7 @@ export default function RfqWorkspace({
                       "Dự án",
                       "Trạng thái",
                     ].map((heading) => (
-                      <th className="px-4 py-3" key={heading}>
+                      <th className="px-4 py-3" key={heading} scope="col">
                         {heading}
                       </th>
                     ))}
@@ -536,13 +590,22 @@ export default function RfqWorkspace({
                 <tbody>
                   {rfqState.page.results.map((rfq, index) => (
                     <tr
-                      className="cursor-pointer border-t border-white/10 hover:bg-white/[.03]"
+                      className="border-t border-white/10 hover:bg-white/[.03]"
+                      data-rfq-id={rfq.id}
                       key={rfq.id}
-                      onClick={() => openRfq(rfq)}
                     >
-                      {rfqRows(rfqState.page)[index]!.map((cell) => (
-                        <td className="px-4 py-3" key={cell}>
-                          {cell}
+                      {rfqRows(rfqState.page)[index]!.map((cell, cellIndex) => (
+                        <td className="px-4 py-3" key={`${cellIndex}-${cell}`}>
+                          {cellIndex === 0 ? (
+                            <button
+                              className="text-left font-semibold text-orange-300 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                              onClick={() => openRfq(rfq)}
+                            >
+                              {cell}
+                            </button>
+                          ) : (
+                            cell
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -636,6 +699,7 @@ export default function RfqWorkspace({
                   disabled={
                     !selectorsReady ||
                     selectedRfq !== null ||
+                    !canAuthorRfq ||
                     pending ||
                     activeCreateAttempt
                   }
@@ -723,7 +787,7 @@ export default function RfqWorkspace({
               ) : (
                 <button
                   className={buttonClass}
-                  disabled={!selectorsReady || pending}
+                  disabled={!canAuthorRfq || !selectorsReady || pending}
                   onClick={createDraft}
                 >
                   {createAttempt.hasUnreconciledCreate()
@@ -913,6 +977,35 @@ export default function RfqWorkspace({
             >
               Gửi RFQ sang SUBMITTED
             </button>
+          )}
+
+          {(review.start || review.complete) && selectedRfq && (
+            <div className="grid gap-3 border border-white/10 p-5">
+              <h3 className="font-serif text-2xl">Manager RFQ review</h3>
+              <p className="text-sm text-zinc-500">
+                Review fail-closed: mọi dòng phải có vật liệu, dung sai và ghi
+                chú kỹ thuật.
+              </p>
+              {review.start && (
+                <button
+                  className={buttonClass}
+                  data-testid="rfq-review-start"
+                  onClick={() => reviewAction("start")}
+                >
+                  Bắt đầu technical review
+                </button>
+              )}
+              {review.complete && (
+                <button
+                  className={buttonClass}
+                  data-testid="rfq-review-complete"
+                  disabled={lines.length === 0}
+                  onClick={() => reviewAction("complete")}
+                >
+                  Xác nhận READY_TO_QUOTE
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

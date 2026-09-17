@@ -9,6 +9,7 @@ import {
 } from "./canonical.ts"
 import {
   addRfqLine,
+  businessCalendarDate,
   commandStateFromError,
   createCommandGate,
   createRfqCreateAttemptManager,
@@ -17,6 +18,7 @@ import {
   executeRfqCreateAttempt,
   fetchRfqDetail,
   fetchRfqLines,
+  isCanonicalRfqLine,
   loadRfqSelectors,
   removeRfqLine,
   rfqLifecyclePermissions,
@@ -90,7 +92,7 @@ const rfq: CanonicalRfq = {
   updated_by_id: null,
   created_at: "2026-09-13T00:00:00+09:00",
   updated_at: "2026-09-13T00:00:00+09:00",
-  compatibility: {},
+  compatibility: null,
 }
 
 const line: CanonicalRfqLine = {
@@ -164,7 +166,7 @@ test("Phase 5C loads only canonical selector read endpoints", async () => {
   })
 })
 
-test("create draft posts the canonical payload with an opaque idempotency key", async () => {
+test("create draft accepts the backend MVP null compatibility contract", async () => {
   const payload = validateRfqCreatePayload({
     customer_id: customer.id,
     project_name: " Phase 5C fixture ",
@@ -191,6 +193,7 @@ test("create draft posts the canonical payload with an opaque idempotency key", 
   assert.equal(idempotencyKey, "phase5c.opaque-key-001")
   assert.deepEqual(requestBody, payload)
   assert.equal(created.id, rfq.id)
+  assert.equal(created.compatibility, null)
 })
 
 test("create attempt manager reuses the same key for the same logical retry", () => {
@@ -263,6 +266,70 @@ test("create attempt manager issues a new key after definitive completion", () =
   assert.equal(attempt.key, "phase5c-key-1")
   manager.complete(attempt)
   assert.equal(manager.begin(payload).key, "phase5c-key-2")
+})
+
+test("session reset clears retained create context before a later session", () => {
+  let sequence = 0
+  const manager = createRfqCreateAttemptManager(
+    () => `phase5c-session-key-${++sequence}`,
+  )
+  const oldSessionPayload: RfqCreatePayload = {
+    customer_id: customer.id,
+    project_name: "Old session draft",
+    quote_due_at: "2026-09-20",
+    required_delivery_date: "2026-10-10",
+  }
+
+  const oldSessionAttempt = manager.begin(oldSessionPayload)
+  assert.equal(oldSessionAttempt.key, "phase5c-session-key-1")
+  assert.equal(manager.hasActiveAttempt(), true)
+  manager.markCreated(oldSessionAttempt, rfq.id)
+  assert.equal(manager.hasUnreconciledCreate(), true)
+  manager.clear()
+
+  assert.equal(manager.hasActiveAttempt(), false)
+  assert.equal(manager.hasUnreconciledCreate(), false)
+  assert.equal(manager.activePayload(), null)
+
+  const newSessionAttempt = manager.begin({
+    customer_id: customer.id,
+    project_name: "New session draft",
+    quote_due_at: "2026-09-21",
+    required_delivery_date: "2026-10-11",
+  })
+  assert.equal(newSessionAttempt.key, "phase5c-session-key-2")
+  assert.equal(newSessionAttempt.payload.project_name, "New session draft")
+})
+
+test("RFQ workspace clears mutable command state at the unauthenticated boundary", async () => {
+  const source = await readFile(
+    new URL("../components/RfqWorkspace.tsx", import.meta.url),
+    "utf8",
+  )
+  const unauthenticatedBranch = source.slice(
+    source.indexOf("if (!authenticated) {"),
+    source.indexOf(
+      "const controller = new AbortController()",
+      source.indexOf("if (!authenticated) {"),
+    ),
+  )
+
+  for (const reset of [
+    "activeAbort.current?.abort()",
+    "workspaceGuard.next()",
+    "selectorGuard.next()",
+    "createAttempt.clear()",
+    "gateRef.current = createCommandGate()",
+    "setSelectedRfq(null)",
+    "setLines([])",
+    "setEditingLineId(null)",
+    "setHeader(emptyHeader)",
+    "setLineForm(emptyLine)",
+    'setCommand(commandState("initial"))',
+    'setSelectorState(commandState("initial"))',
+  ]) {
+    assert.equal(unauthenticatedBranch.includes(reset), true, reset)
+  }
 })
 
 test("create success followed by failed reconciliation retries GET without duplicate POST", async () => {
@@ -497,6 +564,58 @@ test("line validation enforces description, quantity, unit, tolerance, notes, an
         technical_notes: "",
         drawing_required: true,
       }),
+    { code: "client_validation_error" },
+  )
+})
+
+test("canonical RFQ lines reject unsupported backend units without normalization", async () => {
+  const invalidLine = { ...line, unit: "BOX" }
+  assert.equal(isCanonicalRfqLine(invalidLine), false)
+
+  await assert.rejects(
+    fetchRfqLines(
+      client(async () =>
+        jsonResponse({ success: true, data: page([invalidLine]) }),
+      ),
+      rfq.id,
+    ),
+    { code: "invalid_rfq_line_page", kind: "protocol" },
+  )
+
+  await assert.rejects(
+    addRfqLine(
+      client(async () => jsonResponse({ success: true, data: invalidLine })),
+      rfq.id,
+      validateRfqLineCreatePayload({
+        description: line.description,
+        quantity: line.quantity,
+        unit: "PCS",
+        required_delivery_date: line.required_delivery_date,
+        tolerance: line.tolerance,
+        technical_notes: line.technical_notes,
+        drawing_required: false,
+      }),
+    ),
+    { code: "invalid_rfq_line_response", kind: "protocol" },
+  )
+})
+
+test("business calendar date follows Asia/Tokyo across the UTC rollover", () => {
+  const instant = new Date("2026-09-15T15:30:00.000Z")
+
+  assert.equal(instant.toISOString().slice(0, 10), "2026-09-15")
+  assert.equal(businessCalendarDate(instant), "2026-09-16")
+  assert.equal(businessCalendarDate(instant, "UTC"), "2026-09-15")
+  assert.throws(
+    () =>
+      validateRfqCreatePayload(
+        {
+          customer_id: customer.id,
+          quote_due_at: "2026-09-15",
+          required_delivery_date: "2026-09-15",
+        },
+        businessCalendarDate(instant),
+      ),
     { code: "client_validation_error" },
   )
 })

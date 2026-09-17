@@ -3,6 +3,8 @@
 import secrets
 
 from django.conf import settings
+from django.core.cache import cache
+from django.db import connection
 from django.http import HttpResponse
 from rest_framework.decorators import (
     api_view,
@@ -31,6 +33,33 @@ def root_health(request):
             "phase": 9,
         }
     )
+
+
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def phase6_liveness(request):
+    """Report process liveness without contacting dependencies."""
+    return Response({"success": True, "data": {"status": "live"}})
+
+
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def phase6_readiness(request):
+    """Report readiness only after PostgreSQL and the configured cache respond."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        cache.set("phase6-readiness", "ready", timeout=10)
+        if cache.get("phase6-readiness") != "ready":
+            raise RuntimeError("cache readiness check failed")
+    except Exception:  # noqa: BLE001 - public probe must not expose dependency details.
+        return Response(
+            {"success": False, "data": {"status": "not_ready"}}, status=503
+        )
+    return Response({"success": True, "data": {"status": "ready"}})
 
 
 @api_view(["GET"])

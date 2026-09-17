@@ -60,11 +60,11 @@ const emptyForm: CommercialForm = {
 }
 
 const inputClass =
-  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "w-full border border-white/10 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-orange-500 focus-visible:ring-2 focus-visible:ring-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
 const buttonClass =
-  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+  "bg-orange-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 const ghostButtonClass =
-  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+  "border border-white/20 px-4 py-2 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
 
 function formFromWorkspace(data: QuotationWorkspaceData): CommercialForm {
   return {
@@ -119,7 +119,11 @@ function FieldError({
   name: string
 }) {
   const message = state.fieldErrors?.[name]
-  return message ? <p className="text-xs text-orange-400">{message}</p> : null
+  return message ? (
+    <p className="text-xs text-orange-400" role="alert">
+      {message}
+    </p>
+  ) : null
 }
 
 function sourceLineLabel(
@@ -253,6 +257,38 @@ export default function QuotationWorkspace({
   }
 
   useEffect(() => {
+    if (!authenticated) {
+      indexAbort.current?.abort()
+      workspaceAbort.current?.abort()
+      rfqLinesAbort.current?.abort()
+      guards.index.next()
+      guards.workspace.next()
+      guards.rfqLines.next()
+      gate.finish()
+      attempt.reset()
+      setIndex(null)
+      setWorkspace(null)
+      setSelectedRfqId("")
+      setRfqLines([])
+      setForm(emptyForm)
+      setApprovalNotes("")
+      setRejectionReason("")
+      setRejectionNotes("")
+      setSentTo("")
+      setSendEvidence("")
+      setCustomerContact("")
+      setCustomerEvidence("")
+      setDeclineReason("")
+      setIndexState({
+        status: "initial",
+        message: "Chưa tải danh sách báo giá.",
+      })
+      setCommand({
+        status: "initial",
+        message: "Chọn quotation family hoặc RFQ đủ điều kiện.",
+      })
+      return
+    }
     if (!active) {
       indexAbort.current?.abort()
       workspaceAbort.current?.abort()
@@ -559,7 +595,14 @@ export default function QuotationWorkspace({
           <div className="text-xs uppercase tracking-widest text-orange-500">
             Canonical quotation lifecycle · {role ?? "Chưa xác định role"}
           </div>
-          <p className="mt-1 text-sm text-zinc-400">{command.message}</p>
+          <p
+            aria-atomic="true"
+            aria-live="polite"
+            className="mt-1 text-sm text-zinc-400"
+            role="status"
+          >
+            {command.message}
+          </p>
         </div>
         <button
           className={ghostButtonClass}
@@ -585,6 +628,8 @@ export default function QuotationWorkspace({
           <div className="border border-white/10 p-5">
             <h3 className="font-serif text-2xl">Tạo từ RFQ</h3>
             <select
+              aria-label="RFQ sẵn sàng tạo quotation"
+              data-testid="quotation-rfq-selector"
               className={`${inputClass} mt-4`}
               disabled={pending || activeAttempt}
               value={selectedRfqId}
@@ -616,6 +661,7 @@ export default function QuotationWorkspace({
               {index?.families.results.map((family) => (
                 <div
                   className="border border-white/10 p-3"
+                  data-rfq-number={family.rfq_number}
                   key={family.quotation_family_number}
                 >
                   <div className="text-sm font-semibold">
@@ -628,6 +674,8 @@ export default function QuotationWorkspace({
                     {family.revisions.map((revision) => (
                       <button
                         className={ghostButtonClass}
+                        data-quotation-id={revision.id}
+                        data-quotation-status={revision.workflow_status}
                         disabled={pending || activeAttempt}
                         key={revision.id}
                         onClick={() =>
@@ -649,7 +697,11 @@ export default function QuotationWorkspace({
 
         <div className="grid content-start gap-5">
           {workspace && (
-            <div className="border border-white/10 bg-[#0b0d0f] p-5">
+            <div
+              className="border border-white/10 bg-[#0b0d0f] p-5"
+              data-quotation-status={workspace.quotation.workflow_status}
+              data-testid="quotation-workspace-detail"
+            >
               <div className="flex flex-wrap justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-widest text-orange-500">
@@ -706,6 +758,7 @@ export default function QuotationWorkspace({
               <div className="mt-5 grid gap-4">
                 <div className="grid gap-4 sm:grid-cols-3">
                   <select
+                    aria-label="Tiền tệ"
                     className={inputClass}
                     disabled={!formEditable}
                     value={form.currency}
@@ -720,7 +773,9 @@ export default function QuotationWorkspace({
                     <option>USD</option>
                   </select>
                   <input
+                    aria-label="Ngày hiệu lực"
                     className={inputClass}
+                    data-testid="quotation-valid-from"
                     disabled={!formEditable}
                     type="date"
                     value={form.validFrom}
@@ -729,7 +784,9 @@ export default function QuotationWorkspace({
                     }
                   />
                   <input
+                    aria-label="Ngày hết hạn"
                     className={inputClass}
+                    data-testid="quotation-valid-until"
                     disabled={!formEditable}
                     type="date"
                     value={form.validUntil}
@@ -743,6 +800,7 @@ export default function QuotationWorkspace({
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <input
+                    aria-label="Tổng chiết khấu"
                     className={inputClass}
                     disabled={!formEditable}
                     inputMode="decimal"
@@ -756,6 +814,7 @@ export default function QuotationWorkspace({
                     }
                   />
                   <input
+                    aria-label="Thuế"
                     className={inputClass}
                     disabled={!formEditable}
                     inputMode="decimal"
@@ -767,6 +826,7 @@ export default function QuotationWorkspace({
                   />
                 </div>
                 <textarea
+                  aria-label="Điều khoản"
                   className={inputClass}
                   disabled={!formEditable}
                   placeholder="Điều khoản"
@@ -789,7 +849,9 @@ export default function QuotationWorkspace({
                         )}
                       </span>
                       <input
+                        aria-label={`Đơn giá dòng ${index + 1}`}
                         className={inputClass}
+                        data-testid="quotation-unit-price"
                         disabled={!formEditable}
                         inputMode="decimal"
                         placeholder="Đơn giá"
@@ -807,6 +869,7 @@ export default function QuotationWorkspace({
                         }}
                       />
                       <input
+                        aria-label={`Chiết khấu dòng ${index + 1}`}
                         className={inputClass}
                         disabled={!formEditable}
                         inputMode="decimal"
@@ -888,6 +951,7 @@ export default function QuotationWorkspace({
             <div className="grid gap-4 border border-white/10 p-5">
               <h3 className="font-serif text-2xl">Manager decision</h3>
               <textarea
+                aria-label="Ghi chú phê duyệt"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Ghi chú phê duyệt"
@@ -904,6 +968,7 @@ export default function QuotationWorkspace({
                 Phê duyệt
               </button>
               <textarea
+                aria-label="Lý do từ chối"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Lý do từ chối bắt buộc"
@@ -913,6 +978,7 @@ export default function QuotationWorkspace({
                 }
               />
               <textarea
+                aria-label="Ghi chú từ chối"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Ghi chú từ chối"
@@ -939,6 +1005,7 @@ export default function QuotationWorkspace({
                 Ghi nhận đã gửi khách hàng
               </h3>
               <input
+                aria-label="Người nhận quotation"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Người nhận"
@@ -946,6 +1013,7 @@ export default function QuotationWorkspace({
                 onChange={(event) => setSentTo(event.currentTarget.value)}
               />
               <textarea
+                aria-label="Bằng chứng gửi quotation"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Bằng chứng gửi"
@@ -962,6 +1030,7 @@ export default function QuotationWorkspace({
             <div className="grid gap-4 border border-white/10 p-5">
               <h3 className="font-serif text-2xl">Quyết định khách hàng</h3>
               <input
+                aria-label="Thông tin liên hệ khách hàng"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Contact snapshot"
@@ -971,6 +1040,7 @@ export default function QuotationWorkspace({
                 }
               />
               <textarea
+                aria-label="Bằng chứng quyết định khách hàng"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Decision evidence"
@@ -989,6 +1059,7 @@ export default function QuotationWorkspace({
                 </button>
               </div>
               <textarea
+                aria-label="Lý do khách hàng từ chối"
                 className={inputClass}
                 disabled={pending}
                 placeholder="Lý do decline bắt buộc"

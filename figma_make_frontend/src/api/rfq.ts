@@ -29,7 +29,7 @@ export type CanonicalRfq = {
   updated_by_id: number | null
   created_at: string | null
   updated_at: string | null
-  compatibility: Record<string, unknown>
+  compatibility: Record<string, unknown> | null
 }
 
 export type CanonicalRfqPage = CanonicalPage<CanonicalRfq>
@@ -81,7 +81,7 @@ export function isCanonicalRfq(value: unknown): value is CanonicalRfq {
     (typeof value.updated_by_id === "number" || value.updated_by_id === null) &&
     (typeof value.created_at === "string" || value.created_at === null) &&
     (typeof value.updated_at === "string" || value.updated_at === null) &&
-    isRecord(value.compatibility)
+    (value.compatibility === null || isRecord(value.compatibility))
   )
 }
 

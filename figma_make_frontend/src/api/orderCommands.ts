@@ -563,6 +563,9 @@ export function createOrderConversionAttemptManager(
     complete(attempt: ConversionAttempt) {
       if (active === attempt) active = null
     },
+    reset() {
+      active = null
+    },
     hasActiveAttempt() {
       return active !== null
     },

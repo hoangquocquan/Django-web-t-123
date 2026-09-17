@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from apps.business_core.models import BusinessCustomer, BusinessProduct
+from apps.common.legacy_write_boundary import require_legacy_record
 from apps.sales.models import (
     SalesActivity,
     SalesFollowUp,
@@ -149,6 +150,7 @@ class SalesPlatformService:
         )
         quotation_number = data.get("quotation_number") or self._next_quotation_number()
         quotation = SalesQuotation.objects.create(
+            data_contract="LEGACY",
             opportunity=opportunity,
             customer=customer,
             quotation_number=quotation_number,
@@ -180,6 +182,7 @@ class SalesPlatformService:
             line_total = (quantity * unit_price - discount).quantize(MONEY_QUANT)
             SalesQuotationLine.objects.create(
                 quotation=quotation,
+                data_contract="LEGACY",
                 product=product,
                 description=description,
                 quantity=quantity,
@@ -192,6 +195,7 @@ class SalesPlatformService:
 
     def recalculate_quotation(self, quotation):
         """Recalculate quotation totals from line items."""
+        require_legacy_record(quotation, entity_name="quotation")
         subtotal = Decimal(0)
         discount_total = Decimal(0)
         for line in quotation.lines.all():
@@ -225,6 +229,7 @@ class SalesPlatformService:
     def approve_quotation(self, quotation_id, actor=""):
         """Record an explicit human quotation approval."""
         quotation = SalesQuotation.objects.select_for_update().get(id=quotation_id)
+        require_legacy_record(quotation, entity_name="quotation")
         if quotation.approval_status == "approved":
             return quotation
         if quotation.status not in {"draft", "review"}:
@@ -245,6 +250,7 @@ class SalesPlatformService:
     def handoff_quotation(self, quotation_id, actor=""):
         """Mark an approved quotation accepted and ready for order handoff."""
         quotation = SalesQuotation.objects.select_for_update().get(id=quotation_id)
+        require_legacy_record(quotation, entity_name="quotation")
         if quotation.approval_status != "approved":
             raise ValidationError("Quotation requires human approval before handoff.")
         quotation.status = "accepted"

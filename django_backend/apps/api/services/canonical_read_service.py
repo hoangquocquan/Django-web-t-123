@@ -107,9 +107,12 @@ class CanonicalReadService:
     @classmethod
     def quotation_families(cls):
         revisions = cls._quotation_queryset().order_by("revision", "id")
-        return SalesRfq.objects.exclude(quotation_family_number="").select_related(
-            "customer"
-        ).prefetch_related(Prefetch("quotations", queryset=revisions))
+        return (
+            SalesRfq.objects.exclude(quotation_family_number__isnull=True)
+            .exclude(quotation_family_number="")
+            .select_related("customer")
+            .prefetch_related(Prefetch("quotations", queryset=revisions))
+        )
 
     @classmethod
     def quotation_family(cls, family_number):

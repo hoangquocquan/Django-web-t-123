@@ -44,6 +44,8 @@ class FoundationPermissionService:
         if not user or not user.is_active:
             return False
         role = user.role
+        if not role.is_active:
+            return False
         if role.permissions.filter(module="*", action=action).exists():
             return True
         if role.permissions.filter(module="*", action="*").exists():

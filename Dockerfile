@@ -23,7 +23,8 @@ COPY django_backend /app/django_backend
 # Static assets are built without production credentials or a database connection.
 RUN DJANGO_SETTINGS_MODULE=config.settings.test \
     SECRET_KEY=container-build-only \
-    python django_backend/manage.py collectstatic --noinput
+    python django_backend/manage.py collectstatic --noinput \
+    && rm -rf /app/django_backend/logs
 
 # Tao user khong phai root de giam rui ro khi container bi khai thac.
 RUN adduser --disabled-password --gecos "" appuser \

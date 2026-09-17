@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
+import { phase6ServerConfig } from './phase6.config.ts'
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -30,14 +31,13 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '8443'),
-      strictPort: true,
+      ...phase6ServerConfig(process.env),
       watch: { ignored: ['**/.figma/**'] },
     },
     preview: {
-      host: '0.0.0.0',
-      port: parseInt(process.env.PORT || '8443'),
+      host: '127.0.0.1',
+      port: phase6ServerConfig(process.env).port,
+      strictPort: true,
     },
   }
 })
