@@ -2,25 +2,57 @@
 {% block content %}
   <section class="page-hero">
     <div class="container">
-      <span class="eyebrow">Contact</span>
-      <h1>Talk to MecPrecision</h1>
-      <p>Send contact details or request a CNC machining quote. Django validates the forms and stores safe submission intents.</p>
+      <span class="eyebrow">Gửi yêu cầu báo giá</span>
+      <h1>Liên Hệ & Tư Vấn Kỹ Thuật Gia Công CNC</h1>
+      <p>Đội ngũ kỹ sư MecPrecision VIETNAM sẵn sàng hỗ trợ tư vấn bản vẽ, vật liệu và báo giá nhanh chóng cho quý khách hàng trong 24 giờ.</p>
     </div>
   </section>
-  <section class="container form-grid">
-    <form method="post" class="site-form">
-      {% csrf_token %}
-      <input type="hidden" name="form_name" value="contact" />
-      <h2>Contact form</h2>
-      {{ contact_form.as_p }}
-      <button type="submit">Send contact</button>
-    </form>
-    <form method="post" class="site-form">
-      {% csrf_token %}
-      <input type="hidden" name="form_name" value="quote" />
-      <h2>Quote request</h2>
-      {{ quote_form.as_p }}
-      <button type="submit">Send quote</button>
-    </form>
+
+  <section class="section">
+    <div class="container form-grid">
+      <!-- Contact Info Card -->
+      <div class="contact-info-panel" style="background: var(--primary-navy); color: #ffffff; padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+        <span class="eyebrow light">Thông tin liên hệ</span>
+        <h2 style="color: #ffffff; font-size: 28px; margin-bottom: 24px;">MecPrecision VIETNAM</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 24px; margin-bottom: 36px;">
+          <div>
+            <h4 style="color: #60a5fa; margin-bottom: 6px; font-size: 14px;">🏢 ĐỊA CHỈ NHÀ MÁY</h4>
+            <p style="color: #cbd5e1; margin: 0;">Lô C2, Đường số 3, KCN Tân Bình, Phường Tây Thạnh, Quận Tân Phú, TPHCM, Việt Nam</p>
+          </div>
+          <div>
+            <h4 style="color: #60a5fa; margin-bottom: 6px; font-size: 14px;">📧 EMAIL KỸ THUẬT & BÁO GIÁ</h4>
+            <p style="color: #cbd5e1; margin: 0;"><a href="mailto:sales@mecprecision.vn" style="color: #ffffff; text-decoration: underline;">sales@mecprecision.vn</a></p>
+          </div>
+          <div>
+            <h4 style="color: #60a5fa; margin-bottom: 6px; font-size: 14px;">📞 HOTLINE & ZALO</h4>
+            <p style="color: #cbd5e1; margin: 0;">090-123-4567 | (028) 3812-3456</p>
+          </div>
+          <div>
+            <h4 style="color: #60a5fa; margin-bottom: 6px; font-size: 14px;">⏰ THỜI GIAN LÀM VIỆC</h4>
+            <p style="color: #cbd5e1; margin: 0;">Thứ 2 - Thứ 7: 08:00 - 17:30 (Trừ ngày lễ)</p>
+          </div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.08); padding: 20px; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.15);">
+          <p style="font-size: 13px; color: #94a3b8; margin: 0;">💡 <strong>Lưu ý đính kèm bản vẽ:</strong> Quý khách gửi file CAD/STEP hoặc 2D PDF vui lòng ghi rõ số lượng gia công và dung sai yêu cầu để được báo giá chính xác nhất.</p>
+        </div>
+      </div>
+
+      <!-- Quote Request Form -->
+      <form method="post" class="site-form">
+        {% csrf_token %}
+        <input type="hidden" name="form_name" value="quote" />
+        <h3>Yêu cầu báo giá kỹ thuật</h3>
+        <p style="font-size: 14px; color: var(--slate-muted); margin-bottom: 24px;">Điền thông tin bên dưới để gửi yêu cầu trực tiếp đến bộ phận kinh doanh.</p>
+        
+        {{ quote_form.as_p }}
+        
+        <button class="btn btn-primary" type="submit" style="width: 100%; margin-top: 16px;">
+          <span>Gửi yêu cầu báo giá</span>
+          <span>✉️</span>
+        </button>
+      </form>
+    </div>
   </section>
 {% endblock %}

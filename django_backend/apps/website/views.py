@@ -6,8 +6,9 @@ custom HTTP rendering.
 """
 
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET
 
 from apps.api.services.replacement_submission_service import create_submission
 from apps.business_core.models import BusinessProduct
@@ -237,3 +238,58 @@ def contact(request):
             "quote_form": quote_form,
         },
     )
+
+
+@require_GET
+def api_home(request):
+    """API endpoint matching frontend/js/app.js expectations (/api/home)."""
+    products_qs = _featured_products()
+    products_data = []
+    for p in products_qs:
+        products_data.append({
+            "name": getattr(p, "name", ""),
+            "category": getattr(p, "category_name", "") or "Chi tiết cơ khí",
+            "image": getattr(p, "main_image", "") or DEFAULT_HERO_IMAGE,
+            "description": getattr(p, "short_description", "") or getattr(p, "description", "") or "",
+        })
+
+    capabilities_raw = _safe_capabilities(4)
+    capabilities_data = []
+    for item in capabilities_raw:
+        if isinstance(item, dict):
+            capabilities_data.append({
+                "icon": item.get("icon", ""),
+                "title": item.get("title", ""),
+                "text": item.get("content", item.get("text", "")),
+            })
+        else:
+            capabilities_data.append({
+                "icon": getattr(item, "icon", ""),
+                "title": getattr(item, "title", ""),
+                "text": getattr(item, "content", getattr(item, "description", "")),
+            })
+
+    news_raw = _safe_news(3)
+    news_data = []
+    for item in news_raw:
+        if isinstance(item, dict):
+            news_data.append({
+                "title": item.get("title", ""),
+                "category": item.get("category", "Tin tức"),
+                "image": item.get("image", DEFAULT_HERO_IMAGE),
+                "description": item.get("description", item.get("summary", "")),
+            })
+        else:
+            news_data.append({
+                "title": getattr(item, "title", ""),
+                "category": getattr(item, "category", "Tin tức"),
+                "image": getattr(item, "image", DEFAULT_HERO_IMAGE),
+                "description": getattr(item, "summary", getattr(item, "description", "")),
+            })
+
+    return JsonResponse({
+        "products": products_data,
+        "capabilities": capabilities_data,
+        "news": news_data,
+    })
+

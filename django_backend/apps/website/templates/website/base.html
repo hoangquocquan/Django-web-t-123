@@ -4,45 +4,148 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ seo.title }}</title>
-    <meta name="description" content="{{ seo.description }}" />
-    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ seo.canonical_path }}" />
+    <title>{{ seo.title|default:"MecPrecision VIETNAM - Gia công cơ khí chính xác CNC" }}</title>
+    <meta name="description" content="{{ seo.description|default:"Cung cấp linh kiện gia công CNC, cụm chi tiết chính xác và dịch vụ kỹ thuật cho các doanh nghiệp sản xuất." }}" />
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ seo.canonical_path|default:request.path }}" />
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
     <link rel="stylesheet" href="{% static 'website/site.css' %}" />
   </head>
   <body>
+    <!-- Top Announcement Bar -->
+    <div class="top-bar">
+      <div class="top-bar-container">
+        <div class="top-info">
+          <span>📍 KCN Tân Bình, TPHCM, Việt Nam</span>
+          <span class="divider">•</span>
+          <span>📞 Hotline: (+84) 090-123-4567</span>
+        </div>
+        <div class="top-right">
+          <span class="cert-badge">ISO 9001:2015</span>
+          <div class="lang-switch">
+            <a href="#" class="active">VI</a>
+            <a href="#">EN</a>
+            <a href="#">JA</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Header -->
     <header class="site-header">
-      <a class="brand" href="{% url 'website:home' %}">
-        <span class="brand-mark">M</span>
-        <span>MecPrecision VIETNAM</span>
-      </a>
-      <nav class="site-nav" aria-label="Primary navigation">
-        <a href="{% url 'website:home' %}">Home</a>
-        <a href="{% url 'website:products' %}">Products</a>
-        <a href="{% url 'website:technology' %}">Technology</a>
-        <a href="{% url 'website:news' %}">News</a>
-        <a href="{% url 'website:contact' %}">Contact</a>
-        <a class="admin-link" href="{% url 'admin_ui:login' %}">Admin</a>
-      </nav>
+      <div class="header-container">
+        <a class="brand" href="{% url 'website:home' %}" aria-label="MecPrecision VIETNAM">
+          <span class="brand-mark">M</span>
+          <div class="brand-text">
+            <span class="brand-name">MecPrecision</span>
+            <span class="brand-tag">VIETNAM</span>
+          </div>
+        </a>
+
+        <button class="menu-button" id="menuToggle" type="button" aria-label="Mở menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav class="site-nav" id="mainNav" aria-label="Primary navigation">
+          <a class="{% if request.path == '/' %}active{% endif %}" href="{% url 'website:home' %}">Trang chủ</a>
+          <a class="{% if '/products' in request.path or '/product/' in request.path %}active{% endif %}" href="{% url 'website:products' %}">Sản phẩm</a>
+          <a class="{% if '/technology' in request.path %}active{% endif %}" href="{% url 'website:technology' %}">Công nghệ</a>
+          <a class="{% if '/news' in request.path %}active{% endif %}" href="{% url 'website:news' %}">Tin tức</a>
+          <a class="{% if '/contact' in request.path %}active{% endif %}" href="{% url 'website:contact' %}">Liên hệ</a>
+          <a class="admin-link" href="{% url 'admin_ui:login' %}" target="_blank">Quản trị Admin</a>
+          <a class="cta-button" href="{% url 'website:contact' %}">Báo giá ngay</a>
+        </nav>
+      </div>
     </header>
+
     <main>
       {% if messages %}
-        <section class="container messages">
+        <div class="container messages-wrapper">
           {% for message in messages %}
-            <p class="message {{ message.tags }}">{{ message }}</p>
+            <div class="message {{ message.tags }}">
+              <span class="message-icon">{% if message.tags == 'success' %}✓{% else %}i{% endif %}</span>
+              <span>{{ message }}</span>
+            </div>
           {% endfor %}
-        </section>
+        </div>
       {% endif %}
+
       {% block content %}{% endblock %}
     </main>
+
+    <!-- Footer -->
     <footer class="site-footer">
-      <div>
-        <strong>MecPrecision VIETNAM</strong>
-        <p>Precision CNC machining, fixtures, and manufacturing support.</p>
+      <div class="footer-container">
+        <div class="footer-col brand-col">
+          <a class="brand footer-brand" href="{% url 'website:home' %}">
+            <span class="brand-mark">M</span>
+            <div class="brand-text">
+              <span class="brand-name">MecPrecision</span>
+              <span class="brand-tag">VIETNAM</span>
+            </div>
+          </a>
+          <p class="footer-desc">Chuyên gia công cơ khí chính xác CNC, đồ gá (fixtures), cụm chi tiết máy và dịch vụ kỹ thuật chất lượng cao cho các nhà máy công nghiệp.</p>
+          <div class="cert-list">
+            <span class="cert-pill">ISO 9001:2015 Certified</span>
+            <span class="cert-pill">RoHS Compliant</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-title">Danh mục sản phẩm</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'website:products' %}?category=Trục %26 bạc chính xác">Trục & Bạc chính xác</a></li>
+            <li><a href="{% url 'website:products' %}?category=Bánh răng %26 truyền động">Bánh răng & Chi tiết truyền động</a></li>
+            <li><a href="{% url 'website:products' %}?category=Cụm linh kiện lắp ráp">Cụm linh kiện lắp ráp</a></li>
+            <li><a href="{% url 'website:products' %}">Đồ gá & Jigs kiểm tra</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-title">Liên kết nhanh</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'website:home' %}">Trang chủ</a></li>
+            <li><a href="{% url 'website:technology' %}">Năng lực sản xuất</a></li>
+            <li><a href="{% url 'website:news' %}">Tin tức & Sự kiện</a></li>
+            <li><a href="{% url 'website:contact' %}">Yêu cầu báo giá kỹ thuật</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col contact-col">
+          <h4 class="footer-title">Thông tin liên hệ</h4>
+          <p>🏢 <strong>Nhà máy:</strong> Lô C2, Đường số 3, KCN Tân Bình, TPHCM</p>
+          <p>📧 <strong>Email:</strong> <a href="mailto:sales@mecprecision.vn">sales@mecprecision.vn</a></p>
+          <p>📞 <strong>Hotline:</strong> 090-123-4567 | (028) 3812-3456</p>
+          <p>🌐 <strong>Website:</strong> www.mecprecision.vn</p>
+        </div>
       </div>
-      <div>
-        <strong>Contact</strong>
-        <p>sales@mecprecision.vn<br />Ho Chi Minh City, Vietnam</p>
+      <div class="footer-bottom">
+        <div class="footer-bottom-container">
+          <p>© 2026 MecPrecision VIETNAM. All rights reserved.</p>
+          <p>Giải pháp cơ khí chính xác hàng đầu cho doanh nghiệp.</p>
+        </div>
       </div>
     </footer>
+
+    <script>
+      // Mobile menu toggle logic
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+        if (toggleBtn && mainNav) {
+          toggleBtn.addEventListener('click', function() {
+            const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+            toggleBtn.setAttribute('aria-expanded', !expanded);
+            mainNav.classList.toggle('open');
+          });
+        }
+      });
+    </script>
   </body>
 </html>

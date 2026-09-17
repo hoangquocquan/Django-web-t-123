@@ -21,4 +21,6 @@ urlpatterns = [
     path("news/<slug:slug>/", views.news_detail, name="news-detail"),
     path("contact", views.contact, name="contact-no-slash"),
     path("contact/", views.contact, name="contact"),
+    path("api/home", views.api_home, name="api-home-no-slash"),
+    path("api/home/", views.api_home, name="api-home"),
 ]

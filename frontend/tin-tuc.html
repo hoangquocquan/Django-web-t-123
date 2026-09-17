@@ -1,59 +1,61 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tin tá»©c - MecPrecision VIETNAM</title>
-    <meta name="description" content="Tin tá»©c vĂ  cáº­p nháº­t tá»« MecPrecision VIETNAM." />
+    <title>Tin tức & Hoạt động - MecPrecision VIETNAM</title>
+    <meta name="description" content="Tin tức ngành cơ khí chính xác, cập nhật hoạt động và kiến thức kỹ thuật từ MecPrecision VIETNAM." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <!-- Header: menu dĂ¹ng chung cho toĂ n bá»™ website. -->
     <header class="site-header">
-      <a class="brand" href="index.html" aria-label="MecPrecision VIETNAM"><span class="brand-mark">M</span><span>MecPrecision VIETNAM</span></a>
-      <button class="menu-button" type="button" aria-label="Má»Ÿ menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <nav class="main-nav" aria-label="Menu chĂ­nh">
-        <a href="index.html">Trang chá»§</a>
-        <a href="san-pham.html">Sáº£n pháº©m</a>
-        <a href="cong-nghe.html">CĂ´ng nghá»‡</a>
-        <a class="active" href="tin-tuc.html">Tin tá»©c</a>
-        <a href="lien-he.html">LiĂªn há»‡</a>
+      <a class="brand" href="index.html" aria-label="MecPrecision VIETNAM">
+        <span class="brand-mark">M</span>
+        <span>MecPrecision VIETNAM</span>
+      </a>
+      <button class="menu-button" type="button" aria-label="Mở menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-nav" aria-label="Menu chính">
+        <a href="index.html">Trang chủ</a>
+        <a href="san-pham.html">Sản phẩm</a>
+        <a href="cong-nghe.html">Công nghệ</a>
+        <a class="active" href="tin-tuc.html">Tin tức</a>
+        <a href="lien-he.html">Liên hệ</a>
       </nav>
-      <a class="header-cta" href="lien-he.html">YĂªu cáº§u bĂ¡o giĂ¡</a>
+      <a class="header-cta" href="lien-he.html">Yêu cầu báo giá</a>
     </header>
 
     <main>
-      <!-- Banner Ä‘áº§u trang tin tá»©c. -->
       <section class="page-hero">
         <div class="container">
-          <p class="eyebrow">Tin tá»©c</p>
-          <h1>Cáº­p nháº­t tá»« nhĂ  mĂ¡y</h1>
-          <p>CĂ¡c bĂ i viáº¿t demo Ä‘ang láº¥y dá»¯ liá»‡u tá»« máº£ng <strong>news</strong> trong file <strong>app.js</strong>.</p>
+          <p class="eyebrow">Tin tức & Sự kiện</p>
+          <h1>Bản tin công nghệ & Hoạt động công ty</h1>
+          <p>
+            Cập nhật những xu hướng gia công CNC mới nhất, chia sẻ kinh nghiệm kỹ thuật cơ khí và hoạt động sản xuất tại MecPrecision.
+          </p>
         </div>
       </section>
 
-      <!-- Danh sĂ¡ch tin tá»©c: app.js sáº½ tá»± chĂ¨n cĂ¡c bĂ i viáº¿t vĂ o newsGrid. -->
       <section class="section news-section">
         <div class="container">
-          <div class="news-grid" id="newsGrid"></div>
+          <div id="newsGrid" class="news-grid">
+            <!-- Nạp tự động từ app.js -->
+          </div>
         </div>
       </section>
     </main>
 
-    <!-- Footer: thĂ´ng tin liĂªn há»‡ ngáº¯n gá»n á»Ÿ cuá»‘i trang. -->
     <footer class="site-footer">
-      <div class="container footer-grid">
-        <div><a class="brand footer-brand" href="index.html"><span class="brand-mark">M</span><span>MecPrecision</span></a><p>Gia cĂ´ng cÆ¡ khĂ­ chĂ­nh xĂ¡c vĂ  giáº£i phĂ¡p sáº£n xuáº¥t.</p></div>
-        <div><h3>LiĂªn há»‡</h3><p>Email: sales@mecprecision.vn</p><p>Hotline: 0900 000 000</p></div>
-        <div><h3>Äá»‹a chá»‰</h3><p>Khu cĂ´ng nghiá»‡p, TP. Há»“ ChĂ­ Minh, Viá»‡t Nam</p></div>
+      <div class="container" style="padding: 40px 0; color: #a0aec0; font-size: 14px;">
+        <p>© 2026 MecPrecision VIETNAM. Tất cả quyền được bảo lưu.</p>
       </div>
-      <p class="copyright">Â© 2026 MecPrecision VIETNAM.</p>
     </footer>
 
-    <!-- data.js chá»©a dá»¯ liá»‡u Ä‘Æ°á»£c xuáº¥t ra tá»« SQLite. Pháº£i Ä‘áº·t trÆ°á»›c app.js. -->
     <script src="js/data.js"></script>
-    <!-- app.js xá»­ lĂ½ menu mobile vĂ  tá»± Ä‘á»• dá»¯ liá»‡u tin tá»©c vĂ o trang. -->
     <script src="js/app.js"></script>
   </body>
 </html>
-
