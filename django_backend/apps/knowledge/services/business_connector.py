@@ -41,3 +41,22 @@ class BusinessKnowledgeConnector:
                 }
             )
         return rows
+
+
+class PublicBusinessKnowledgeConnector:
+    """Expose only published-style product facts to the public assistant."""
+
+    def build_context(self, query):
+        """Return a bounded product catalogue without private business records."""
+        del query
+        products = []
+        for product in BusinessProduct.objects.filter(is_active=True).order_by("id")[:5]:
+            products.append(
+                {
+                    "name": product.name,
+                    "category": getattr(product, "category_name", "") or "",
+                    "material": getattr(product, "material", "") or "",
+                    "description": getattr(product, "short_description", "") or "",
+                }
+            )
+        return {"products": products}

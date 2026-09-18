@@ -26,6 +26,9 @@ import {
 import RfqWorkspace from "./components/RfqWorkspace.tsx"
 import QuotationWorkspace from "./components/QuotationWorkspace.tsx"
 import OrderWorkspace from "./components/OrderWorkspace.tsx"
+import AiSalesWorkspace from "./components/AiSalesWorkspace.tsx"
+import KnowledgeAssistantWorkspace from "./components/KnowledgeAssistantWorkspace.tsx"
+import PublicAiChat from "./components/PublicAiChat.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -1481,80 +1484,19 @@ function SalesPage({
           </div>
         </div>
       ) : route === "sales-ai" ? (
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-          <div className="border border-white/10 p-6">
-            <div className="space-y-4">
-              <div className="max-w-xl bg-zinc-900 p-4 text-sm">
-                Hôm nay tôi nên ưu tiên cơ hội nào?
-              </div>
-              <div className="ml-auto max-w-2xl border border-orange-500/30 bg-orange-500/5 p-5">
-                <b>3 cơ hội nên xử lý trước</b>
-                <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm text-zinc-300">
-                  <li>Samsung SDI — báo giá 1,28 tỷ sắp hết hạn sau 18 giờ.</li>
-                  <li>Thaco — khách hàng đã mở báo giá 4 lần trong 2 ngày.</li>
-                  <li>
-                    Viettel — cần bổ sung chứng chỉ vật liệu trước thứ Sáu.
-                  </li>
-                </ol>
-                <div className="mt-5 text-xs text-zinc-500">
-                  Nguồn: CRM #882 · Báo giá QT-082 · Lịch sử tương tác
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 flex gap-3">
-              <input
-                className="flex-1 border border-white/10 bg-zinc-950 px-4"
-                placeholder="Hỏi AI về pipeline, khách hàng, báo giá…"
-              />
-              <Btn>Gửi</Btn>
-            </div>
-          </div>
-          <div className="border border-white/10 p-5">
-            <h3 className="font-semibold">Hành động đề xuất</h3>
-            {[
-              "Soạn email theo dõi Samsung",
-              "Tạo nhiệm vụ gọi Thaco",
-              "Tóm tắt hồ sơ Viettel",
-            ].map((x) => (
-              <button
-                className="mt-3 w-full border border-white/10 p-3 text-left text-sm hover:border-orange-500"
-                key={x}
-              >
-                {x}
-              </button>
-            ))}
-          </div>
-        </div>
+        <AiSalesWorkspace
+          authenticated={authenticated}
+          client={canonicalClient}
+          goToLogin={() => go("admin-login")}
+          onAuthenticationFailure={onAuthenticationFailure}
+        />
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="grid min-h-[420px] place-items-center border border-dashed border-white/20 bg-zinc-900/30 p-10 text-center">
-            <div>
-              <div className="text-5xl">⇧</div>
-              <h3 className="mt-5 font-serif text-3xl">
-                Tải tài liệu kỹ thuật
-              </h3>
-              <p className="mt-3 text-zinc-500">
-                RFQ, bản vẽ PDF, STEP, Excel hoặc email khách hàng
-              </p>
-              <div className="mt-6">
-                <Btn>Chọn tệp</Btn>
-              </div>
-            </div>
-          </div>
-          <div className="border border-white/10 p-6">
-            <div className="flex justify-between">
-              <h3 className="font-semibold">Kết quả trích xuất</h3>
-              <Badge tone="green">96% tin cậy</Badge>
-            </div>
-            <div className="mt-6 grid gap-4">
-              <Field label="Khách hàng" placeholder="Samsung SDI Việt Nam" />
-              <Field label="Mã chi tiết" placeholder="BAT-HSG-2048" />
-              <Field label="Vật liệu" placeholder="Aluminium 7075-T6" />
-              <Field label="Số lượng" placeholder="2.400 pcs" />
-              <Btn>Tạo lead & báo giá</Btn>
-            </div>
-          </div>
-        </div>
+        <KnowledgeAssistantWorkspace
+          authenticated={authenticated}
+          client={canonicalClient}
+          goToLogin={() => go("admin-login")}
+          onAuthenticationFailure={onAuthenticationFailure}
+        />
       )}
     </SideLayout>
   )
@@ -1765,6 +1707,7 @@ export default function App({ dependencies }: {
         </button>
       </div>
       <Footer />
+      <PublicAiChat goToContact={() => go("contact")} />
     </div>
   )
 }

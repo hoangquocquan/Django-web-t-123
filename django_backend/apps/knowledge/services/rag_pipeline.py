@@ -97,7 +97,9 @@ class AIRequestLogService:
         return AIRequestLog.objects.create(
             user_email=getattr(user, "email", "") or "",
             question_hash=hashlib.sha256(normalized_question.encode("utf-8")).hexdigest(),
-            question_preview=normalized_question[:240],
+            # Anonymous/public questions may contain contact details. Keep only
+            # their one-way hash while retaining previews for authenticated use.
+            question_preview=normalized_question[:240] if user else "",
             retrieved_documents=[
                 {
                     "id": source.get("id"),

@@ -98,11 +98,13 @@ class AIRateLimiter:
 
     def enforce(self, *, context, ip_address="", limit=None):
         selected_limit = int(limit or self.default_limit)
+        subject = context.user_email or ip_address or "anonymous"
         dimensions = {
-            "user": context.user_email or "anonymous",
-            "endpoint": context.endpoint or "unknown",
-            "action": context.action or "unknown",
+            "endpoint": f"{subject}:{context.endpoint or 'unknown'}",
+            "action": f"{subject}:{context.action or 'unknown'}",
         }
+        if context.user_email:
+            dimensions["user"] = context.user_email
         if ip_address:
             dimensions["ip"] = ip_address
         if context.organization_id:

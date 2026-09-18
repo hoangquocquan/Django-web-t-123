@@ -92,8 +92,10 @@ def foundation_login(request):
 def foundation_logout(request):
     """Revoke the current Django-owned auth token."""
     try:
-        user = _authenticated_user(request)
-        FoundationPermissionService().require_permission(user, "auth", "read")
+        # Possession of an active token is sufficient to revoke that same token.
+        # Requiring a role permission here can strand otherwise valid sessions
+        # (for example, Sales does not need auth:read for normal application use).
+        _authenticated_user(request)
         authorization = _authorization_header(request)
         FoundationAuthService().logout(authorization.replace("Bearer ", "", 1).strip())
     except PermissionDenied as exc:

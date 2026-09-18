@@ -7,7 +7,12 @@ from django.db import transaction
 from apps.ai.services.ollama_client import OllamaClient
 from apps.knowledge.models import KnowledgeAssistantLog, KnowledgeDocument
 from apps.knowledge.services.business_connector import BusinessKnowledgeConnector
-from apps.knowledge.services.rag_pipeline import AIRequestLogService, RagGenerationPipeline, RagPromptTemplate
+from apps.knowledge.services.rag_pipeline import (
+    AIRequestLogService,
+    RagContextBuilder,
+    RagGenerationPipeline,
+    RagPromptTemplate,
+)
 from apps.knowledge.services.search_service import KnowledgeSearchService
 
 
@@ -47,7 +52,12 @@ class KnowledgeAssistantService:
                 status=generation_status,
             )
         else:
-            result = RagGenerationPipeline(ollama_client=self.ollama_client).generate(
+            result = RagGenerationPipeline(
+                ollama_client=self.ollama_client,
+                context_builder=RagContextBuilder(
+                    business_connector=self.business_connector
+                ),
+            ).generate(
                 question,
                 retrieval,
                 user=user,
@@ -103,3 +113,35 @@ class KnowledgeAssistantService:
             return "Không có ngữ cảnh phù hợp để trả lời."
         titles = ", ".join(source["title"] for source in retrieval["sources"])
         return f"Có tài liệu liên quan: {titles}. Vui lòng kiểm tra các nguồn được trích dẫn."
+
+
+class PublicKnowledgeAssistantService:
+    """Public RAG facade that cannot expose private documents or metadata."""
+
+    def __init__(self, assistant=None):
+        if assistant is None:
+            from apps.knowledge.services.business_connector import (
+                PublicBusinessKnowledgeConnector,
+            )
+
+            assistant = KnowledgeAssistantService(
+                business_connector=PublicBusinessKnowledgeConnector()
+            )
+        self.assistant = assistant
+
+    def answer(self, question, limit=3):
+        """Answer from public documents and return a minimal source contract."""
+        result = self.assistant.answer(question, user=None, limit=limit)
+        result["sources"] = [
+            {
+                "id": source.get("id"),
+                "title": source.get("title", ""),
+                "description": source.get("description", ""),
+                "category": source.get("category"),
+                "relevance_score": source.get("relevance_score", 0),
+            }
+            for source in result.get("sources", [])
+        ]
+        result["scope"] = "public_knowledge_only"
+        result["contact_recommended"] = not bool(result["sources"])
+        return result

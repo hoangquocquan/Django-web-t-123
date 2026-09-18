@@ -45,6 +45,11 @@ CANONICAL_COMMAND_ROLE_MATRIX = {
     "order:cancel": frozenset({"Admin", "Manager"}),
 }
 
+CANONICAL_AI_ROLE_MATRIX = {
+    "ai_sales:read": frozenset({"Admin", "Sales"}),
+    "knowledge:read": frozenset({"Admin", "Sales", "Manager"}),
+}
+
 
 ENTITY_PERMISSION_CODES = {
     "customer": "customer:view",
@@ -123,4 +128,28 @@ class CanonicalCommandPermission(BasePermission):
         visibility_code = view.get_visibility_permission_code()
         if not has_exact_permission(user, visibility_code):
             raise exceptions.PermissionDenied("Exact view permission is required.")
+        return True
+
+
+class CanonicalAIUsePermission(BasePermission):
+    """Allow bounded AI assistance to canonical roles with an exact grant."""
+
+    def has_permission(self, request, view):
+        user = getattr(request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            raise exceptions.NotAuthenticated()
+        if not getattr(user, "is_active", False):
+            raise exceptions.AuthenticationFailed("Inactive user.")
+
+        permission_code = view.get_permission_code()
+        role = getattr(user, "role", None)
+        role_name = getattr(role, "name", None)
+        if not getattr(role, "is_active", False):
+            raise exceptions.PermissionDenied("Inactive canonical role.")
+        if role_name not in CANONICAL_AI_ROLE_MATRIX.get(
+            permission_code, frozenset()
+        ):
+            raise exceptions.PermissionDenied("Canonical role is not authorized.")
+        if not has_exact_permission(user, permission_code):
+            raise exceptions.PermissionDenied("Exact AI permission is required.")
         return True

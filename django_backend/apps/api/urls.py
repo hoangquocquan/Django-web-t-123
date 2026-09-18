@@ -56,6 +56,7 @@ from .views.foundation import (
     foundation_users,
 )
 from .views.newsletter import subscribers as newsletter_subscribers
+from .views.public_ai import PublicAssistantView
 from .views.replacement import (
     aws_demo,
     capabilities,
@@ -88,6 +89,11 @@ from .views.transaction_domain import (
 
 urlpatterns = [
     path("canonical/", include("apps.api.canonical_urls")),
+    path(
+        "public/ai/assistant/",
+        PublicAssistantView.as_view(),
+        name="api-public-ai-assistant",
+    ),
     path("admin/login/", admin_login, name="api-admin-login"),
     path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
     path("admin/permissions/", admin_permissions, name="api-admin-permissions"),

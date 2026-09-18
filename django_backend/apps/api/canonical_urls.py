@@ -72,9 +72,23 @@ from apps.api.views.canonical_commands import (
     RfqSubmitCommandView,
     RfqUpdateCommandView,
 )
+from apps.api.views.canonical_ai import (
+    CanonicalKnowledgeAssistantView,
+    CanonicalSalesAssistantView,
+)
 
 
 urlpatterns = [
+    path(
+        "ai/sales-assistant/",
+        CanonicalSalesAssistantView.as_view(),
+        name="canonical-ai-sales-assistant",
+    ),
+    path(
+        "ai/knowledge-assistant/",
+        CanonicalKnowledgeAssistantView.as_view(),
+        name="canonical-ai-knowledge-assistant",
+    ),
     path(
         "customers/commands/create/",
         CustomerCreateCommandView.as_view(),
