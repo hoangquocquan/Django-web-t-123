@@ -28,6 +28,8 @@ from apps.knowledge.services.assistant_service import KnowledgeAssistantService
 from apps.knowledge.services.governance import KnowledgeGovernanceService
 from apps.knowledge.services.document_processor import DocumentProcessor
 from apps.knowledge.services.knowledge_service import KnowledgeService, document_to_dict
+from apps.knowledge.services.public_assistant_service import PublicKnowledgeAssistantService
+from apps.knowledge.services.public_synthetic_rag_demo import PublicSyntheticRagDemoService
 from apps.knowledge.services.pilot_monitoring import PilotMonitoringService
 from apps.knowledge.services.pilot_governance import PilotGovernanceService
 from apps.knowledge.services.pilot_program import PilotProgramService
@@ -724,4 +726,72 @@ def synthetic_rag_chat(request):
         return _governance_error_response(exc)
     result = SyntheticRagWebDemoService().query(message, user=user, limit=3)
     return ok({"question": message, **result})
+
+class PublicSyntheticRagDemoSerializer(serializers.Serializer):
+    """Validate one anonymous localhost demo message."""
+
+    message = serializers.CharField(
+        max_length=1200, allow_blank=False, trim_whitespace=True
+    )
+
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def public_synthetic_rag_demo(request):
+    """Serve a loopback-only public-shaped demo without publishing documents."""
+
+    if not (
+        settings.DEBUG
+        and getattr(settings, "PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED", False)
+        and request.META.get("REMOTE_ADDR") in {"127.0.0.1", "::1"}
+    ):
+        raise Http404("The local synthetic RAG demo is not enabled.")
+    if request.method == "GET":
+        return ok({"enabled": True})
+
+    serializer = PublicSyntheticRagDemoSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    message = serializer.validated_data["message"]
+    try:
+        AIGovernanceService().enforce(
+            user=None,
+            endpoint="public/ai-component-demo",
+            action="chat",
+            text=message,
+            metadata={"dataset_id": "rag_synthetic_demo_v1", "limit": 3},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="public_knowledge",
+            request_source="public_web",
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+    return ok(PublicSyntheticRagDemoService().answer(message))
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def public_knowledge_chat(request):
+    """Answer anonymous questions using approved public documents only."""
+    if not getattr(settings, "PUBLIC_AI_ENABLED", False):
+        raise Http404("Public AI is not released.")
+    serializer = KnowledgeChatSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    question = serializer.validated_data["question"]
+    try:
+        AIGovernanceService().enforce(
+            user=None,
+            endpoint="public/ai/assistant",
+            action="chat",
+            text=question,
+            metadata={"limit": serializer.validated_data["limit"]},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="public_knowledge",
+            request_source="public_web",
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+
+    result = PublicKnowledgeAssistantService().answer(
+        question,
+        limit=serializer.validated_data["limit"],
+    )
+    return ok(result)
 

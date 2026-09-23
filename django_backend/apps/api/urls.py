@@ -18,6 +18,8 @@ from apps.knowledge.views import (
     knowledge_pilot_training_acknowledgement,
     knowledge_pilot_user_transition,
     knowledge_search,
+    public_knowledge_chat,
+    public_synthetic_rag_demo,
     synthetic_rag_chat,
     synthetic_rag_demo_query,
 )
@@ -230,6 +232,16 @@ urlpatterns = [
         name="api-foundation-permission-check",
     ),
     path("public/home/", home, name="api-public-home"),
+    path(
+        "public/ai/assistant/",
+        public_knowledge_chat,
+        name="api-public-knowledge-chat",
+    ),
+    path(
+        "public/ai-component-demo/",
+        public_synthetic_rag_demo,
+        name="api-public-ai-component-demo",
+    ),
     path("news/", news, name="api-news"),
     path("openapi.json", openapi_schema, name="api-openapi-schema"),
     path("version/", version, name="api-version"),

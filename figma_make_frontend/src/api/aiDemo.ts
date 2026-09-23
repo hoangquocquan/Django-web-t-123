@@ -233,4 +233,104 @@ export function askSyntheticRagChat(
   )
 }
 
+export type AiKnowledgeSource = {
+  id?: number | string | null
+  title?: string
+  relevance_score?: number
+}
+
+export type KnowledgeChatResult = {
+  answer: string
+  sources: AiKnowledgeSource[]
+  confidence: number
+  warning: string
+  model: string
+  provider: "ollama-local" | "source-fallback" | string
+  response_time_ms: number
+  generation_status: string
+  source_relevance_score: number
+  hallucination_warning: string
+  publication_state?: "isolated_demo_unapproved" | "public_sources_only" | string
+}
+
+export type PublicComponentDemoResult = {
+  answer: string
+  status: "SUPPORTED" | "UNAVAILABLE"
+  sources: Array<{ title: string; product_code: string }>
+}
+
+async function postPublicAi<T,>(
+  path: string,
+  body: unknown,
+  options: AiRequestOptions = {},
+): Promise<T> {
+  const response = await boundedFetch(
+    globalThis.fetch,
+    `${aiApiBaseUrl()}${path}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: options.signal,
+    },
+    options.timeoutMs ?? DEFAULT_AI_REQUEST_TIMEOUT_MS,
+  )
+  const payload = await parseJson(response)
+  if (response.ok && isSuccessEnvelope<T>(payload)) return payload.data
+  if (!response.ok && isErrorEnvelope(payload)) {
+    throw new CanonicalClientError({
+      kind: errorKind(response.status),
+      code: payload.error.code,
+      message: payload.error.message,
+      status: response.status,
+      details: payload.error.details,
+    })
+  }
+  throw new CanonicalClientError({
+    kind: "protocol",
+    code: "invalid_response_envelope",
+    message: "The server returned an invalid response envelope.",
+    status: response.status,
+  })
+}
+
+export async function publicComponentDemoAvailable(
+  options: AiRequestOptions = {},
+): Promise<boolean> {
+  const response = await boundedFetch(
+    globalThis.fetch,
+    `${aiApiBaseUrl()}public/ai-component-demo/`,
+    { method: "GET", signal: options.signal },
+    options.timeoutMs ?? DEFAULT_AI_REQUEST_TIMEOUT_MS,
+  )
+  if (response.status === 404) return false
+  const payload = await parseJson(response)
+  if (response.ok && isSuccessEnvelope<{ enabled: boolean }>(payload)) {
+    return payload.data.enabled === true
+  }
+  return false
+}
+
+export function askPublicComponentDemo(
+  message: string,
+  options?: AiRequestOptions,
+) {
+  return postPublicAi<PublicComponentDemoResult>(
+    "public/ai-component-demo/",
+    { message },
+    options,
+  )
+}
+
+export function askPublicKnowledgeAssistant(
+  question: string,
+  limit = 5,
+  options?: AiRequestOptions,
+) {
+  return postPublicAi<KnowledgeChatResult>(
+    "public/ai/assistant/",
+    { question, limit },
+    options,
+  )
+}
 
