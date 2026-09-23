@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import hashlib
 
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
-from apps.knowledge.models import DocumentVersion, KnowledgeChunk, KnowledgeEmbedding
+from apps.knowledge.models import KnowledgeAuditEvent, KnowledgeChunk, KnowledgeDocument, KnowledgeEmbedding
+from apps.knowledge.services.access_policy import KnowledgeAccessPolicy
 from apps.knowledge.services.embedding_service import get_embedding_provider
 from apps.knowledge.services.text_processing import TextProcessor
 from apps.knowledge.services.vector_store import DjangoJSONVectorStore
@@ -21,27 +23,32 @@ class KnowledgeIndexer:
         self.vector_store = vector_store or DjangoJSONVectorStore()
 
     def reindex(self, document, created_by_email="", change_note=""):
-        """Không xóa index cũ nếu Ollama hoặc batch embedding thất bại."""
+        """Never embed a draft or publish a revoked/changed revision."""
+        policy = KnowledgeAccessPolicy()
+        document.refresh_from_db()
+        if not policy.can_index(document):
+            raise PermissionDenied("Only an approved current revision may be indexed.")
+        approved_hash = document.approval_hash
+        approved_version = document.version
         clean_content = self.text_processor.clean_text(document.content)
+        if self.content_hash(clean_content) != approved_hash:
+            raise PermissionDenied("Approved content changed before embedding.")
         chunks = self.text_processor.chunk_text(clean_content)
         vectors = self.embedding_service.embed_batch(chunks) if chunks else []
         prepared = list(zip(chunks, vectors))
 
         with transaction.atomic():
-            document.chunks.all().delete()
-            document.content = clean_content
-            document.save(update_fields=["content", "updated_at"])
-            DocumentVersion.objects.get_or_create(
-                document=document,
-                version=document.version,
-                defaults={
-                    "content": clean_content,
-                    "change_note": change_note,
-                    "created_by_email": created_by_email,
-                },
-            )
+            current = KnowledgeDocument.objects.select_for_update().get(pk=document.pk)
+            if (not policy.can_index(current) or current.approval_hash != approved_hash
+                    or current.version != approved_version):
+                raise PermissionDenied("Approval changed during indexing.")
+            revision = current.versions.get(version=approved_version, content_hash=approved_hash)
+            current.chunks.all().delete()
             for index, (chunk_text, vector) in enumerate(prepared):
-                chunk = KnowledgeChunk.objects.create(document=document, content=chunk_text, chunk_index=index)
+                chunk = KnowledgeChunk.objects.create(
+                    document=current, revision=revision, content=chunk_text,
+                    chunk_index=index, section=f"Chunk {index + 1}",
+                )
                 self.vector_store.upsert(
                     chunk=chunk,
                     vector=vector,
@@ -53,6 +60,10 @@ class KnowledgeIndexer:
                         "content_hash": self.content_hash(chunk_text),
                     },
                 )
+            current.status = "INDEXED"
+            current.save(update_fields=["status", "updated_at"])
+            KnowledgeAuditEvent.objects.create(event="indexed", document=current, document_id_snapshot=current.id, version=current.version)
+        document.refresh_from_db()
         return document
 
     def needs_reindex(self, document):
@@ -78,3 +89,5 @@ class KnowledgeIndexer:
     @staticmethod
     def content_hash(content):
         return hashlib.sha256(str(content).encode("utf-8")).hexdigest()
+
+

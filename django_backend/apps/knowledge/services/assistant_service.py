@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.db import transaction
 
 from apps.ai.services.ollama_client import OllamaClient
 from apps.knowledge.models import KnowledgeAssistantLog, KnowledgeDocument
+from apps.knowledge.services.access_policy import KnowledgeAccessPolicy
 from apps.knowledge.services.business_connector import BusinessKnowledgeConnector
 from apps.knowledge.services.rag_pipeline import AIRequestLogService, RagGenerationPipeline, RagPromptTemplate
 from apps.knowledge.services.search_service import KnowledgeSearchService
@@ -27,10 +29,20 @@ class KnowledgeAssistantService:
         sources = retrieval["sources"]
         confidence = retrieval["confidence"]
         warning = ""
+        minimum_generation_confidence = float(
+            getattr(settings, "KNOWLEDGE_ASSISTANT_MIN_CONFIDENCE", 0.5)
+        )
+        if sources and confidence < minimum_generation_confidence:
+            retrieval = {**retrieval, "results": [], "sources": []}
+            sources = []
+            warning = (
+                "Retrieved source relevance is below the assistant confidence "
+                "threshold; the assistant did not ask the model to answer."
+            )
 
-        if KnowledgeDocument.objects.exists() and not sources:
+        if not sources:
             answer = "Không tìm thấy tài liệu phù hợp để trả lời chắc chắn."
-            warning = "No relevant source context found. The assistant did not ask the model to invent an answer."
+            warning = warning or "No relevant source context found. The assistant did not ask the model to invent an answer."
             model = getattr(self.ollama_client, "model", "local-model")
             response_time_ms = 0
             generation_status = "blocked_no_context"
@@ -65,15 +77,25 @@ class KnowledgeAssistantService:
         if confidence < 0.35:
             warning = warning or "Low confidence. Please verify the cited sources."
 
-        KnowledgeAssistantLog.objects.create(
-            question=question,
-            answer=answer,
-            sources=sources,
+        if sources and not KnowledgeAccessPolicy().sources_still_readable(sources, user):
+            answer = "Nguồn đã thay đổi hoặc quyền truy cập đã bị thu hồi. Vui lòng thử lại."
+            sources = []
+            confidence = 0
+            warning = "Source authorization changed during answer generation."
+            generation_status = "blocked_revoked"
+            source_relevance_score = 0
+            hallucination_warning = warning
+
+        interaction = KnowledgeAssistantLog.objects.create(
+            question="",
+            answer="",
+            sources=[{"id": source.get("id"), "version": source.get("version")} for source in sources],
             confidence=confidence,
             warning=warning,
             user_email=getattr(user, "email", "") or "",
         )
         return {
+            "interaction_id": interaction.id,
             "answer": answer,
             "sources": sources,
             "confidence": confidence,
@@ -103,3 +125,5 @@ class KnowledgeAssistantService:
             return "Không có ngữ cảnh phù hợp để trả lời."
         titles = ", ".join(source["title"] for source in retrieval["sources"])
         return f"Có tài liệu liên quan: {titles}. Vui lòng kiểm tra các nguồn được trích dẫn."
+
+

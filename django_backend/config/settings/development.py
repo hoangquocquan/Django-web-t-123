@@ -27,3 +27,24 @@ for origin in CORS_ALLOWED_ORIGINS:  # noqa: F405
         )
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Match the current local demo workstation: this model was observed in Ollama
+# during the AI demo. Operators can still override these values through env.
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")  # noqa: F405
+OLLAMA_GENERATION_MODELS = tuple(
+    item.strip()
+    for item in os.getenv("OLLAMA_GENERATION_MODELS", OLLAMA_MODEL).split(",")  # noqa: F405
+    if item.strip()
+)
+OLLAMA_NUM_PREDICT = env_int("OLLAMA_NUM_PREDICT", 512)  # noqa: F405
+OLLAMA_TIMEOUT_SECONDS = env_int("OLLAMA_TIMEOUT_SECONDS", 60)  # noqa: F405
+
+# Local demo knowledge is seeded with deterministic hash embeddings, so
+# development search must query with the same provider family.
+KNOWLEDGE_EMBEDDING_PROVIDER = os.getenv("KNOWLEDGE_EMBEDDING_PROVIDER", "development-hash")  # noqa: F405
+KNOWLEDGE_MIN_RELEVANCE_SCORE = env_float("KNOWLEDGE_MIN_RELEVANCE_SCORE", 0.33)  # noqa: F405
+
+# Explicit localhost-only public UI demo; production inherits the disabled base flag.
+PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED = env_bool("PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED", True)  # noqa: F405
+
+

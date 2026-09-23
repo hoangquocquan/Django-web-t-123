@@ -19,7 +19,7 @@ class RagContextBuilder:
         """Allow tests to inject a simple business-context provider."""
         self.business_connector = business_connector or BusinessKnowledgeConnector()
 
-    def build(self, question, retrieval):
+    def build(self, question, retrieval, user=None):
         """Return compact model context while keeping source metadata."""
         ranked_results = sorted(
             retrieval.get("results", []),
@@ -34,7 +34,7 @@ class RagContextBuilder:
             context_lines.append(f"[{index}] {source_title} | relevance={score}: {content}")
         return {
             "knowledge_context": "\n".join(context_lines),
-            "business_context": self.business_connector.build_context(question),
+            "business_context": self.business_connector.build_context(question, user=user),
             "ranked_results": ranked_results,
         }
 
@@ -97,11 +97,11 @@ class AIRequestLogService:
         return AIRequestLog.objects.create(
             user_email=getattr(user, "email", "") or "",
             question_hash=hashlib.sha256(normalized_question.encode("utf-8")).hexdigest(),
-            question_preview=normalized_question[:240],
+            question_preview="",
             retrieved_documents=[
                 {
                     "id": source.get("id"),
-                    "title": source.get("title"),
+                    "version": source.get("version"),
                     "relevance_score": source.get("relevance_score", 0),
                 }
                 for source in retrieval.get("sources", [])
@@ -117,13 +117,24 @@ class AIRequestLogService:
 class RagGenerationPipeline:
     """Run retrieval context through local Ollama and return cited output."""
 
-    def __init__(self, ollama_client=None, config_service=None, context_builder=None, evaluator=None, logger=None):
+    def __init__(
+        self,
+        ollama_client=None,
+        config_service=None,
+        context_builder=None,
+        prompt_template=None,
+        evaluator=None,
+        logger=None,
+        answer_transformer=None,
+    ):
         """Allow tests to inject fake dependencies without calling real Ollama."""
         self.config_service = config_service or AIModelConfigService()
         self.ollama_client = ollama_client
         self.context_builder = context_builder or RagContextBuilder()
+        self.prompt_template = prompt_template or RagPromptTemplate()
         self.evaluator = evaluator or RagAnswerEvaluator()
         self.logger = logger or AIRequestLogService()
+        self.answer_transformer = answer_transformer
 
     def generate(self, question, retrieval, user=None, fallback_builder=None):
         """Generate a source-grounded answer and log the AI request."""
@@ -135,8 +146,8 @@ class RagGenerationPipeline:
             temperature=config.temperature,
             token_limit=config.token_limit,
         )
-        context = self.context_builder.build(question, retrieval)
-        prompt = RagPromptTemplate().build(question, context)
+        context = self.context_builder.build(question, retrieval, user=user)
+        prompt = self.prompt_template.build(question, context)
         status = "generated"
         warning = ""
         started = time.perf_counter()
@@ -154,6 +165,9 @@ class RagGenerationPipeline:
             response_time_ms = int((time.perf_counter() - started) * 1000)
             status = "fallback"
             warning = "Ollama is unavailable; returned source-based fallback answer."
+
+        if self.answer_transformer is not None:
+            answer = self.answer_transformer(answer, retrieval, status)
 
         evaluation = self.evaluator.evaluate(answer, retrieval)
         warning = warning or evaluation["hallucination_warning"]
@@ -179,3 +193,5 @@ class RagGenerationPipeline:
             "source_relevance_score": evaluation["source_relevance_score"],
             "hallucination_warning": evaluation["hallucination_warning"],
         }
+
+

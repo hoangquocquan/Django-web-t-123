@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.knowledge.models import KnowledgeDocument
+from apps.knowledge.services.access_policy import KnowledgeAccessPolicy
 from apps.knowledge.services.knowledge_indexer import KnowledgeIndexer
 
 
@@ -23,9 +24,13 @@ class Command(BaseCommand):
                 raise CommandError("Knowledge document does not exist.")
 
         indexer = KnowledgeIndexer()
+        policy = KnowledgeAccessPolicy()
         processed = skipped = failed = 0
         errors = []
         for document in queryset.iterator(chunk_size=max(1, options["batch_size"])):
+            if not policy.can_index(document):
+                skipped += 1
+                continue
             if options["resume"] and not indexer.needs_reindex(document):
                 skipped += 1
                 continue
@@ -48,3 +53,5 @@ class Command(BaseCommand):
             self.stderr.write(f"document={item['document_id']} error={item['error']}")
         if failed:
             raise CommandError(f"{failed} document(s) failed to reindex.")
+
+

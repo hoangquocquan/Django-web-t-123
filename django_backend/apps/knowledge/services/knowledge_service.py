@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from django.db import transaction
+from django.db.models import F
 
-from apps.knowledge.models import DocumentCategory, KnowledgeChunk, KnowledgeDocument
+from apps.knowledge.models import DocumentCategory, DocumentVersion, KnowledgeChunk, KnowledgeDocument
+from apps.knowledge.services.access_policy import KnowledgeAccessPolicy, content_hash
 from apps.knowledge.services.embedding_service import get_embedding_provider
 from apps.knowledge.services.knowledge_indexer import KnowledgeIndexer
 from apps.knowledge.services.text_processing import TextProcessor
@@ -19,10 +21,24 @@ def document_to_dict(document):
         "description": document.description,
         "category": document.category.name if document.category else None,
         "source_type": document.source_type,
-        "source_path": document.source_path,
         "version": document.version,
+        "active_version": document.active_version,
+        "approved_version": document.approved_version,
+        "ai_public_approved": document.ai_public_approved,
+        "revision_date": (document.versions.filter(version=document.version).values_list("created_at", flat=True).first() or document.created_at).isoformat(),
+        "status": document.status,
         "created_by_email": document.created_by_email,
         "permission_level": document.permission_level,
+        "department": document.department,
+        "owner_email": document.owner_email,
+        "effective_date": document.effective_date.isoformat() if document.effective_date else None,
+        "owner_reviewed_at": document.owner_reviewed_at.isoformat() if document.owner_reviewed_at else None,
+        "owner_reviewed_by_email": document.owner_reviewed_by_email,
+        "quality_review_status": document.quality_review_status,
+        "quality_review_reason": document.quality_review_reason or None,
+        "quality_reviewed_at": document.quality_reviewed_at.isoformat() if document.quality_reviewed_at else None,
+        "confidentiality_checked_at": document.confidentiality_checked_at.isoformat() if document.confidentiality_checked_at else None,
+        "pilot_corpus_approved": document.pilot_corpus_approved,
         "metadata": document.metadata,
         "created_at": document.created_at.isoformat() if document.created_at else None,
         "updated_at": document.updated_at.isoformat() if document.updated_at else None,
@@ -38,6 +54,9 @@ def search_result_to_dict(result):
             "id": chunk.id,
             "content": chunk.content,
             "chunk_index": chunk.chunk_index,
+            "section": chunk.section or None,
+            "page": chunk.page,
+            "revision_id": chunk.revision_id,
         },
         "document": document_to_dict(chunk.document),
     }
@@ -62,40 +81,43 @@ class KnowledgeService:
         source_type="text",
         source_path="",
         permission_level="internal",
+        department="",
+        owner_email="",
+        effective_date=None,
         created_by_email="",
         metadata=None,
     ):
-        """Create a managed document and index it for semantic search."""
+        """Create an unindexed draft and immutable initial revision."""
         category = self._category_from_name(category_name)
+        cleaned = self.text_processor.clean_text(content)
         document = KnowledgeDocument.objects.create(
             title=str(title or "").strip() or "Untitled document",
             description=description or "",
             category=category,
-            content=content,
+            content=cleaned,
             source_type=source_type,
             source_path=source_path,
             permission_level=permission_level or "internal",
+            department=department or "",
+            owner_email=owner_email or "",
+            effective_date=effective_date,
             created_by_email=created_by_email or "",
             metadata=metadata or {},
         )
-        KnowledgeIndexer(
-            text_processor=self.text_processor,
-            embedding_service=self.embedding_service,
-        ).reindex(document, created_by_email=created_by_email, change_note="Initial ingestion")
+        DocumentVersion.objects.create(
+            document=document, version=document.version, content=cleaned,
+            content_hash=content_hash(cleaned), change_note="Initial draft",
+            created_by_email=created_by_email,
+        )
         return document
 
     def list_documents(self, user=None):
         """Return documents visible to the current user."""
-        queryset = KnowledgeDocument.objects.select_related("category").all()
-        if not user:
-            return queryset.none()
-        if getattr(getattr(user, "role", None), "name", "") == "admin":
-            return queryset
-        return queryset.filter(permission_level__in=["public", "internal"])
+        return KnowledgeAccessPolicy().eligible_documents(user).select_related("category")
 
     @transaction.atomic
     def ingest_text(self, title, content, source_type="text", source_path="", metadata=None):
-        """Create a document, chunks, and local embeddings."""
+        """Create a draft; explicit review and approval precede indexing."""
         return self.create_document(
             title=title,
             content=content,
@@ -116,16 +138,22 @@ class KnowledgeService:
             metadata=metadata or {},
         )
 
-    def search(self, query, limit=5):
-        """Search chunks for internal service callers without API permission filtering."""
+    def search(self, query, limit=5, user=None):
+        """Retain raw-hit contract but enforce the shared policy before scoring."""
+        policy = KnowledgeAccessPolicy()
+        eligible = policy.eligible_documents(user)
+        queryset = KnowledgeChunk.objects.select_related("document", "revision", "embedding").filter(
+            document__in=eligible, revision__version=F("document__version"),
+        )
+        readable = [chunk for chunk in queryset if policy.can_read_chunk(chunk, user)]
         query_vector = self.embedding_service.embed(query)
-        queryset = KnowledgeChunk.objects.select_related("document", "embedding").all()
-        return self.vector_store.search(
+        hits = self.vector_store.search(
             query_vector=query_vector,
-            queryset=queryset,
+            queryset=readable,
             limit=limit,
             provider=self.embedding_service,
         )
+        return [hit for hit in hits if policy.can_read_chunk(hit["chunk"], user)]
 
     def _category_from_name(self, category_name):
         """Create or reuse a document category from a display name."""
@@ -138,3 +166,5 @@ class KnowledgeService:
             defaults={"name": normalized},
         )
         return category
+
+

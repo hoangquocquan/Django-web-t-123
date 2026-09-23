@@ -1,43 +1,52 @@
-"""Read-only business context connector for the knowledge assistant."""
+"""Explicit, principal-scoped business projections for internal AI only."""
 
 from __future__ import annotations
 
-from apps.business_core.models import BusinessCustomer, BusinessProduct, InventoryItem
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+
+from apps.business_core.models import BusinessCustomer
+from apps.foundation.services import FoundationPermissionService
+from apps.knowledge.models import KnowledgeAuditEvent
 from apps.transaction_domain.models import TransactionOrder
 
 
 class BusinessKnowledgeConnector:
-    """Expose safe read-only domain summaries for AI context."""
+    """Never sample arbitrary rows; requested IDs require domain and row grants."""
 
-    def build_context(self, query):
-        """Return high-level product, customer, inventory, and order context."""
-        return {
-            "products": self._sample(BusinessProduct, ["name", "sku", "category_name", "status"]),
-            "customers": self._sample(BusinessCustomer, ["company_name", "email", "status"]),
-            "inventory": self._sample_inventory(),
-            "orders": self._sample(TransactionOrder, ["order_number", "project_name", "status"]),
-        }
+    def build_context(self, query, *, user=None, customer_id=None, order_id=None):
+        del query  # Natural-language text must not select rows.
+        if customer_id is None and order_id is None:
+            return {}  # The ordinary RAG path has no business-data enrichment.
+        if user is None:
+            self._deny(user)
+        permissions = FoundationPermissionService()
+        result = {}
+        if customer_id is not None:
+            if not permissions.has_permission(user, "customer", "view"):
+                self._deny(user)
+            customer = BusinessCustomer.objects.filter(
+                pk=customer_id, created_by_id=user.id,
+            ).values("id", "company_name", "status").first()
+            if customer is None:
+                self._deny(user)
+            result["customer"] = customer
+        if order_id is not None:
+            if not permissions.has_permission(user, "order", "view"):
+                self._deny(user)
+            order = TransactionOrder.objects.filter(pk=order_id).filter(
+                Q(assigned_to_id=user.id) | Q(created_by_id=user.id),
+            ).values("id", "order_number", "status").first()
+            if order is None:
+                self._deny(user)
+            result["order"] = order
+        return result
 
-    def _sample(self, model, fields):
-        """Read a tiny ORM sample without exposing unrestricted raw data."""
-        rows = []
-        for item in model.objects.all()[:3]:
-            row = {}
-            for field in fields:
-                row[field] = getattr(item, field, "")
-            rows.append(row)
-        return rows
+    @staticmethod
+    def _deny(user):
+        KnowledgeAuditEvent.objects.create(
+            event="denied", decision="denied", actor_id=getattr(user, "id", None),
+        )
+        raise PermissionDenied("Business context is unavailable for this principal.")
 
-    def _sample_inventory(self):
-        """Read safe inventory rows with product and warehouse labels."""
-        rows = []
-        for item in InventoryItem.objects.select_related("product", "warehouse").all()[:3]:
-            rows.append(
-                {
-                    "product": item.product.name,
-                    "warehouse": item.warehouse.code,
-                    "quantity": str(item.quantity),
-                    "reserved_quantity": str(item.reserved_quantity),
-                }
-            )
-        return rows
+

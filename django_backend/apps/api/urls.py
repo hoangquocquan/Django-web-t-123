@@ -7,8 +7,16 @@ from apps.ai_agent.views import agent_run, sales_assistant
 from apps.knowledge.views import (
     knowledge_chat,
     knowledge_document_download,
+    knowledge_document_transition,
     knowledge_documents,
+    knowledge_feedback,
+    knowledge_gap_review,
     knowledge_health,
+    knowledge_human_evaluation,
+    knowledge_pilot_monitoring,
+    knowledge_pilot_program_transition,
+    knowledge_pilot_training_acknowledgement,
+    knowledge_pilot_user_transition,
     knowledge_search,
 )
 
@@ -232,6 +240,11 @@ urlpatterns = [
     ),
     path("knowledge/documents/", knowledge_documents, name="api-knowledge-documents"),
     path(
+        "knowledge/documents/<int:document_id>/<str:transition>/",
+        knowledge_document_transition,
+        name="api-knowledge-document-transition",
+    ),
+    path(
         "knowledge/documents/<int:document_id>/download/",
         knowledge_document_download,
         name="api-knowledge-document-download",
@@ -239,6 +252,33 @@ urlpatterns = [
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
     path("knowledge/health/", knowledge_health, name="api-knowledge-health"),
+    path("knowledge/feedback/", knowledge_feedback, name="api-knowledge-feedback"),
+    path("knowledge/gap-review/", knowledge_gap_review, name="api-knowledge-gap-review"),
+    path(
+        "knowledge/human-evaluation/",
+        knowledge_human_evaluation,
+        name="api-knowledge-human-evaluation",
+    ),
+    path(
+        "knowledge/pilot/monitoring/",
+        knowledge_pilot_monitoring,
+        name="api-knowledge-pilot-monitoring",
+    ),
+    path(
+        "knowledge/pilot/program/<str:transition>/",
+        knowledge_pilot_program_transition,
+        name="api-knowledge-pilot-program-transition",
+    ),
+    path(
+        "knowledge/pilot/training/acknowledge/",
+        knowledge_pilot_training_acknowledgement,
+        name="api-knowledge-pilot-training-acknowledgement",
+    ),
+    path(
+        "knowledge/pilot/users/<int:scope_id>/<str:transition>/",
+        knowledge_pilot_user_transition,
+        name="api-knowledge-pilot-user-transition",
+    ),
     path("agent/run/", agent_run, name="api-agent-run"),
     path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
 ]
