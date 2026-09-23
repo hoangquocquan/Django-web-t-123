@@ -10,7 +10,7 @@
     "format": "oxfmt",
     "format:check:phase6a": "oxfmt --check phase6.config.ts phase6.config.test.ts",
     "format:check:phase6d": "oxfmt --check phase6.config.ts phase6.config.test.ts src/api/phase6c.test.ts",
-    "test": "node --test src/api/canonical.test.ts src/api/phase5b.test.ts src/api/phase5c.test.ts src/api/phase5d.test.ts src/api/phase5e.test.ts src/api/phase6b.test.ts src/api/phase6c.test.ts phase6.config.test.ts",
+    "test": "node --test src/api/canonical.test.ts src/api/phase5b.test.ts src/api/phase5c.test.ts src/api/phase5d.test.ts src/api/phase5e.test.ts src/api/phase6b.test.ts src/api/phase6c.test.ts src/api/publicChatbot.test.ts src/api/publicComponentDemo.test.ts src/api/ragDemo.test.ts src/api/ragChat.test.ts phase6.config.test.ts",
     "test:phase6a": "node --test phase6.config.test.ts",
     "test:phase6b": "node --test src/api/phase6b.test.ts",
     "test:phase6c": "node --test src/api/phase6c.test.ts",

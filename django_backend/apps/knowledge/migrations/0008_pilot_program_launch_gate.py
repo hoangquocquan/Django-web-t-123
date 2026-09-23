@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
     dependencies = [
         ("knowledge", "0007_owner_review_and_gap_analysis"),
-        ("foundation", "0012_phase6a_capability_permissions"),
+        ("foundation", "0010_phase4c_role_activity_and_quotation_archive"),
     ]
 
     operations = [
@@ -30,5 +30,4 @@ class Migration(migrations.Migration):
             options={"db_table": "knowledge_pilot_programs"},
         ),
     ]
-
 
