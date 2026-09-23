@@ -216,3 +216,21 @@ export function askSyntheticRagDemo(
   )
 }
 
+export type RagChatResult = RagDemoResult & {
+  question: string
+}
+
+export function askSyntheticRagChat(
+  token: string,
+  message: string,
+  options?: AiRequestOptions,
+) {
+  return postAi<RagChatResult>(
+    "internal/rag-chat/",
+    token,
+    { message },
+    options,
+  )
+}
+
+

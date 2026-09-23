@@ -27,6 +27,7 @@ import RfqWorkspace from "./components/RfqWorkspace.tsx"
 import QuotationWorkspace from "./components/QuotationWorkspace.tsx"
 import OrderWorkspace from "./components/OrderWorkspace.tsx"
 import RagDemoPage from "./components/RagDemoPage.tsx"
+import RagChatPage from "./components/RagChatPage.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -968,6 +969,7 @@ const adminItems = [
   ["admin-workflows", "Quy trình"],
   ["admin-transactions", "Giao dịch"],
   ["admin-rag-demo", "RAG kỹ thuật"],
+  ["admin-ai-chat", "AI Chat Demo"],
 ]
 const salesItems = [
   ["sales", "Tổng quan bán hàng"],
@@ -1124,6 +1126,7 @@ function AdminPage({
       "admin-workflows": "Quy trình công việc",
       "admin-transactions": "Giao dịch",
       "admin-rag-demo": "Internal RAG Technical Demo",
+      "admin-ai-chat": "AI Component Assistant",
     }[route] || "Quản trị"
   return (
     <SideLayout mode="admin" route={route} go={go}>
@@ -1144,6 +1147,12 @@ function AdminPage({
       </div>
       {route === "admin-rag-demo" ? (
         <RagDemoPage
+          token={session.status === "authenticated" ? token : null}
+          onLoginRequired={() => go("admin-login")}
+          onAuthenticationFailure={onLogout}
+        />
+      ) : route === "admin-ai-chat" ? (
+        <RagChatPage
           token={session.status === "authenticated" ? token : null}
           onLoginRequired={() => go("admin-login")}
           onAuthenticationFailure={onLogout}

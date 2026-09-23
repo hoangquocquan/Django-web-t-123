@@ -691,3 +691,37 @@ def synthetic_rag_demo_query(request):
         return _governance_error_response(exc)
     return ok(SyntheticRagWebDemoService().query(question, user=user, limit=3))
 
+class SyntheticRagChatSerializer(serializers.Serializer):
+    """Validate a bounded message for the internal conversational demo."""
+
+    message = serializers.CharField(
+        max_length=1200, allow_blank=False, trim_whitespace=True
+    )
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def synthetic_rag_chat(request):
+    """Expose the same isolated synthetic RAG pipeline as a chat-shaped API."""
+
+    try:
+        user = _require_synthetic_rag_demo_user(request)
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+    serializer = SyntheticRagChatSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    message = serializer.validated_data["message"]
+    try:
+        AIGovernanceService().enforce(
+            user=user,
+            endpoint="internal/rag-chat",
+            action="chat",
+            text=message,
+            metadata={"dataset_id": "rag_synthetic_demo_v1", "limit": 3},
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+            module="knowledge",
+        )
+    except AIGovernanceError as exc:
+        return _governance_error_response(exc)
+    result = SyntheticRagWebDemoService().query(message, user=user, limit=3)
+    return ok({"question": message, **result})
+
