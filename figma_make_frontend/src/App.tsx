@@ -26,6 +26,7 @@ import {
 import RfqWorkspace from "./components/RfqWorkspace.tsx"
 import QuotationWorkspace from "./components/QuotationWorkspace.tsx"
 import OrderWorkspace from "./components/OrderWorkspace.tsx"
+import RagDemoPage from "./components/RagDemoPage.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -966,6 +967,7 @@ const adminItems = [
   ["admin-orders", "Đơn hàng"],
   ["admin-workflows", "Quy trình"],
   ["admin-transactions", "Giao dịch"],
+  ["admin-rag-demo", "RAG kỹ thuật"],
 ]
 const salesItems = [
   ["sales", "Tổng quan bán hàng"],
@@ -1095,12 +1097,14 @@ function AdminPage({
   route,
   go,
   session,
+  token,
   onLogin,
   onLogout,
 }: {
   route: string
   go: (v: string) => void
   session: SessionState
+  token: string | null
   onLogin: (email: string, password: string) => Promise<void>
   onLogout: () => void
 }) {
@@ -1119,6 +1123,7 @@ function AdminPage({
       "admin-orders": "Đơn hàng sản xuất",
       "admin-workflows": "Quy trình công việc",
       "admin-transactions": "Giao dịch",
+      "admin-rag-demo": "Internal RAG Technical Demo",
     }[route] || "Quản trị"
   return (
     <SideLayout mode="admin" route={route} go={go}>
@@ -1137,7 +1142,13 @@ function AdminPage({
           <Btn onClick={() => go("admin-login")}>Đăng nhập</Btn>
         )}
       </div>
-      {route === "admin" ? (
+      {route === "admin-rag-demo" ? (
+        <RagDemoPage
+          token={session.status === "authenticated" ? token : null}
+          onLoginRequired={() => go("admin-login")}
+          onAuthenticationFailure={onLogout}
+        />
+      ) : route === "admin" ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
             <Stat label="Doanh thu tháng" value="8,42 tỷ ₫" sub="↑ 12,4%" />
@@ -1697,6 +1708,7 @@ export default function App({ dependencies }: {
         route={route}
         go={go}
         session={session}
+        token={authSession.getAccessToken()}
         onLogin={login}
         onLogout={logout}
       />

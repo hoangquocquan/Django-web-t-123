@@ -18,6 +18,7 @@ from apps.knowledge.views import (
     knowledge_pilot_training_acknowledgement,
     knowledge_pilot_user_transition,
     knowledge_search,
+    synthetic_rag_demo_query,
 )
 
 from .views.admin_interface import (
@@ -251,6 +252,11 @@ urlpatterns = [
     ),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
+    path(
+        "internal/rag-demo/query/",
+        synthetic_rag_demo_query,
+        name="api-internal-rag-demo-query",
+    ),
     path("knowledge/health/", knowledge_health, name="api-knowledge-health"),
     path("knowledge/feedback/", knowledge_feedback, name="api-knowledge-feedback"),
     path("knowledge/gap-review/", knowledge_gap_review, name="api-knowledge-gap-review"),
