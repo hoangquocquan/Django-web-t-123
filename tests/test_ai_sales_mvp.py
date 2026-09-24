@@ -32,6 +32,15 @@ class DeterministicComponentRag:
         }
 
 
+class CapturingComponentRag(DeterministicComponentRag):
+    def __init__(self):
+        self.question = ""
+
+    def query(self, question, *, user=None, limit=3):
+        self.question = question
+        return super().query(question, user=user, limit=limit)
+
+
 def assistant():
     return SalesAssistantService(component_rag=DeterministicComponentRag())
 
@@ -51,7 +60,8 @@ def supported_payload():
 
 
 def test_supported_sales_case_is_grounded_and_human_reviewed():
-    result = assistant().analyze(supported_payload())
+    rag = CapturingComponentRag()
+    result = SalesAssistantService(component_rag=rag).analyze(supported_payload())
 
     assert result["status"] == "SUPPORTED"
     assert result["priority"] == "HIGH"
@@ -61,6 +71,8 @@ def test_supported_sales_case_is_grounded_and_human_reviewed():
     assert result["recommended_next_action"] == "REVIEW_PRODUCT_MATCH"
     assert result["human_approval_required"] is True
     assert result["autonomous_action"] is False
+    assert rag.question == "SUS316 CNC machining electropolishing"
+    assert "Synthetic Precision Systems" not in rag.question
 
 
 def test_weather_request_is_unavailable_without_sales_recommendation():

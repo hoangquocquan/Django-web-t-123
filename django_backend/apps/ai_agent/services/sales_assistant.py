@@ -285,10 +285,11 @@ class SalesAssistantService:
 
     @staticmethod
     def _analysis_query(context):
-        return " ".join(
+        technical_fields = " ".join(
             str(context.get(field) or "")
-            for field in ("request", "material", "process", "surface_treatment", "tolerance")
+            for field in ("material", "process", "surface_treatment")
         ).strip()
+        return technical_fields or str(context.get("request") or "").strip()
 
     @staticmethod
     def _is_out_of_scope(query):
