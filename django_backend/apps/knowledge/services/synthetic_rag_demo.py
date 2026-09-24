@@ -727,4 +727,3 @@ def evaluate_retrieval(rows: list[dict[str, str]]) -> dict:
         "cross_category_contamination": contamination,
         "security": security,
     }
-

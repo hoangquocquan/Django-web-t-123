@@ -32,5 +32,3 @@ class Migration(migrations.Migration):
             ("document", models.ForeignKey(to="knowledge.knowledgedocument", on_delete=django.db.models.deletion.SET_NULL, null=True, blank=True)),
         ], options={"db_table": "knowledge_audit_events", "indexes": [models.Index(fields=["event", "created_at"], name="knowledge_audit_event_idx")]}),
     ]
-
-

@@ -66,5 +66,3 @@ class PilotBatchIngestionService:
             decision="allowed", source_ids=ids,
         )
         return {"loaded_count": len(loaded), "documents": loaded}
-
-

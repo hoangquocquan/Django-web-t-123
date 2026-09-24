@@ -361,5 +361,3 @@ class KnowledgePilotProgram(models.Model):
 
     class Meta:
         db_table = "knowledge_pilot_programs"
-
-

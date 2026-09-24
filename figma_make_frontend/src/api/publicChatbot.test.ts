@@ -51,4 +51,3 @@ test("public website exposes a real chatbot route and five safety presets", asyn
   assert.match(app, /isolated_demo_unapproved/)
   assert.match(app, /chưa được\s+chủ dự án duyệt công bố/)
 })
-

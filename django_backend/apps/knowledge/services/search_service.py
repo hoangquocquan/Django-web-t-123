@@ -118,5 +118,3 @@ class KnowledgeSearchService:
     def _can_read(self, document, user):
         """Compatibility shim for callers; uses the same policy as list/download."""
         return KnowledgeAccessPolicy().can_read(document, user)
-
-

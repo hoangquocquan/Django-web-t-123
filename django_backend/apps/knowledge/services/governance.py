@@ -80,5 +80,3 @@ class KnowledgeGovernanceService:
         document.save(update_fields=["status", "active_version", "ai_public_approved", "pilot_corpus_approved", "updated_at"])
         KnowledgeAuditEvent.objects.create(event="archived", document=document, document_id_snapshot=document.id, version=document.version, actor_id=actor.id)
         return document
-
-

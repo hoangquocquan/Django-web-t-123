@@ -73,4 +73,3 @@ class PublicSyntheticRagDemoService:
                 "sources": [],
             }
         return {"answer": answer, "status": "SUPPORTED", "sources": sources}
-

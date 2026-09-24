@@ -356,4 +356,3 @@ def build_public_prompt(question, retrieval):
     """Expose the public prompt builder for focused safety tests."""
     context = PublicRagContextBuilder().build(question, retrieval)
     return RagPromptTemplate().build(question, context)
-

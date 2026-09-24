@@ -95,4 +95,3 @@ class Command(BaseCommand):
             ).count(),
         }
         self.stdout.write(json.dumps(result, ensure_ascii=True, indent=2))
-

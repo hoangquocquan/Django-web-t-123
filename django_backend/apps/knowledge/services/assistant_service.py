@@ -125,5 +125,3 @@ class KnowledgeAssistantService:
             return "Không có ngữ cảnh phù hợp để trả lời."
         titles = ", ".join(source["title"] for source in retrieval["sources"])
         return f"Có tài liệu liên quan: {titles}. Vui lòng kiểm tra các nguồn được trích dẫn."
-
-

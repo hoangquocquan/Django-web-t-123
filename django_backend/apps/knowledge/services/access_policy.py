@@ -129,5 +129,3 @@ class KnowledgeAccessPolicy:
                     ).exists()):
                 return False
         return True
-
-

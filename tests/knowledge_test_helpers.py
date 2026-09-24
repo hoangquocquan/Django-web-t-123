@@ -207,4 +207,3 @@ def create_approved_indexed_knowledge(
         release_public=permission_level == "public",
         department=department,
     )
-

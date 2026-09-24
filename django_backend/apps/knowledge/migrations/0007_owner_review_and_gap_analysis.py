@@ -55,4 +55,3 @@ class Migration(migrations.Migration):
             options={"db_table": "knowledge_gap_reviews"},
         ),
     ]
-

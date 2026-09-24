@@ -176,4 +176,3 @@ def test_public_endpoint_uses_governance_rate_limit(client, settings, monkeypatc
 
     assert response.status_code == 429
     assert response.json()["error"]["code"] == "ai_rate_limited"
-

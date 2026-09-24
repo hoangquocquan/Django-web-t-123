@@ -73,4 +73,3 @@ test("RAG demo page includes input loading answer citation unavailable and error
   assert.match(component, /Which customer ordered the optical sensor housing/)
   assert.match(component, /development-hash-plus-lexical/)
 })
-

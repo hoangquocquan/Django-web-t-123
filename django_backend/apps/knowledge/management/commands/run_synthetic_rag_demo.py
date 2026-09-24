@@ -80,4 +80,3 @@ class Command(BaseCommand):
             target = Path(path)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(json.dumps(report, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
-

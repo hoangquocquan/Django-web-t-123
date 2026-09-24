@@ -149,4 +149,3 @@ class Command(BaseCommand):
         if not isinstance(value, str) or not value.strip():
             raise CommandError(f"{label} must be a non-empty string.")
         return value.strip()
-

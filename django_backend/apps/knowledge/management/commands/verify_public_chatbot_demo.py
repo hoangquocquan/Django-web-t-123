@@ -180,4 +180,3 @@ class Command(BaseCommand):
             if result.get("response_time_ms") != 0:
                 errors.append("policy case must not call generation")
         return errors
-

@@ -51,4 +51,3 @@ test("chat page provides session history, loading, citations and unavailable sta
   assert.match(component, /Thời tiết Tokyo hôm nay thế nào/)
   assert.doesNotMatch(component, /dangerouslySetInnerHTML/)
 })
-

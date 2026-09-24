@@ -31,5 +31,3 @@ class Migration(migrations.Migration):
             field=models.EmailField(blank=True, max_length=254),
         ),
     ]
-
-

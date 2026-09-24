@@ -249,4 +249,3 @@ def test_public_demo_verification_command_refuses_default_database(tmp_path):
 
     with pytest.raises(CommandError, match="isolated chatbot demo"):
         call_command("verify_public_chatbot_demo", str(input_path))
-

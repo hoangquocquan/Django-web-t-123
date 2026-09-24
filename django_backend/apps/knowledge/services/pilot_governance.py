@@ -206,5 +206,3 @@ class PilotGovernanceService:
             actor_id=actor.id, decision="allowed",
         )
         return document
-
-

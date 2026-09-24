@@ -273,4 +273,3 @@ def test_sales_user_cannot_submit_management_evaluation(client, pilot_actors):
     )
     assert response.status_code == 403
     assert not KnowledgeHumanEvaluation.objects.exists()
-

@@ -263,4 +263,3 @@ def test_generation_revocation_suppresses_answer_and_citation(actors, monkeypatc
     assert result["generation_status"] == "blocked_revoked"
     assert result["sources"] == []
     assert "Unsafe stale answer" not in result["answer"]
-

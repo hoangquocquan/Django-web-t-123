@@ -33,4 +33,3 @@ DATABASES["default"] = {
     "ENGINE": "django.db.backends.sqlite3",
     "NAME": PUBLIC_CHATBOT_DEMO_DB_PATH,
 }
-

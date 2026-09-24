@@ -234,4 +234,3 @@ def test_synthetic_prompt_treats_demo_records_as_grounded_not_missing():
     assert "authoritative inside this demo" in prompt
     assert "Answer only with facts explicitly present" in prompt
     assert "price, customer, stock" in prompt
-

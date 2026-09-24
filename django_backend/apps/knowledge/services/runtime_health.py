@@ -89,5 +89,3 @@ class KnowledgeRuntimeHealthService:
                 "reindex_command": "python manage.py reindex_knowledge_embeddings",
             },
         }
-
-

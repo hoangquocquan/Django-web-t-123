@@ -46,5 +46,3 @@ KNOWLEDGE_MIN_RELEVANCE_SCORE = env_float("KNOWLEDGE_MIN_RELEVANCE_SCORE", 0.33)
 
 # Explicit localhost-only public UI demo; production inherits the disabled base flag.
 PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED = env_bool("PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED", True)  # noqa: F405
-
-

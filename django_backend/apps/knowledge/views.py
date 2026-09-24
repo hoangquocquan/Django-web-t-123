@@ -794,4 +794,3 @@ def public_knowledge_chat(request):
         limit=serializer.validated_data["limit"],
     )
     return ok(result)
-

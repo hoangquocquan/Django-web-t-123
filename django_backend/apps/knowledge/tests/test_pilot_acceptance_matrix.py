@@ -120,4 +120,3 @@ def test_controlled_pilot_question_has_authorized_versioned_citation(
         if doc.permission_level == "internal" and doc.department != users[persona].knowledge_scope.department
     }
     assert forbidden.isdisjoint(source_ids)
-

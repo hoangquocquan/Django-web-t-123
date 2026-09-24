@@ -98,5 +98,3 @@ class PilotProgramService:
             event="pilot_suspended", actor_id=actor.id, decision="allowed", source_ids=[],
         )
         return program
-
-

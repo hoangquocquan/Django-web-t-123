@@ -193,5 +193,3 @@ class RagGenerationPipeline:
             "source_relevance_score": evaluation["source_relevance_score"],
             "hallucination_warning": evaluation["hallucination_warning"],
         }
-
-

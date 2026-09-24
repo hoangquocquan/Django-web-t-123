@@ -53,5 +53,3 @@ class Command(BaseCommand):
             self.stderr.write(f"document={item['document_id']} error={item['error']}")
         if failed:
             raise CommandError(f"{failed} document(s) failed to reindex.")
-
-

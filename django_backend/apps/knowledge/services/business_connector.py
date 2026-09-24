@@ -48,5 +48,3 @@ class BusinessKnowledgeConnector:
             event="denied", decision="denied", actor_id=getattr(user, "id", None),
         )
         raise PermissionDenied("Business context is unavailable for this principal.")
-
-

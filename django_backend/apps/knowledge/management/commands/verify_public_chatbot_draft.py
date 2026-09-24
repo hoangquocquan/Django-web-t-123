@@ -140,4 +140,3 @@ class Command(BaseCommand):
             ),
         }
         self.stdout.write(json.dumps({"summary": summary}, ensure_ascii=True))
-

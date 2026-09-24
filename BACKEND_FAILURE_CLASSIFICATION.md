@@ -72,4 +72,3 @@ Categories:
 | E. Genuine regression | 1 |
 | F. Other infrastructure/contract drift | 3 |
 | **Total** | **43** |
-

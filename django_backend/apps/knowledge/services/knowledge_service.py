@@ -166,5 +166,3 @@ class KnowledgeService:
             defaults={"name": normalized},
         )
         return category
-
-

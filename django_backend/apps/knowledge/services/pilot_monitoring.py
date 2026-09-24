@@ -74,5 +74,3 @@ class PilotMonitoringService:
             ),
             "knowledge_gaps": gaps,
         }
-
-
