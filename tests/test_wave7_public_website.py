@@ -93,15 +93,16 @@ def test_public_technology_page_renders(client):
     response = client.get("/technology")
 
     assert response.status_code == 200
-    assert b"CNC process" in response.content
-    assert b"Quality control" in response.content
+    content = response.content.decode()
+    assert "Quy trình sản xuất" in content
+    assert "Đo kiểm 3D CMM" in content
 
 
 def test_public_news_page_renders(client):
     response = client.get("/news")
 
     assert response.status_code == 200
-    assert b"Company updates" in response.content
+    assert "Tin Tức Công Nghệ" in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -184,7 +185,8 @@ def test_public_contact_csrf_success_with_token():
     assert len(list_submissions()) == 1
 
 
-def test_wave7_legacy_public_files_remain():
-    """Wave 7 must not delete the legacy public website during cutover."""
-    assert (PROJECT_ROOT / "backend" / "app.py").exists()
-    assert (PROJECT_ROOT / "frontend" / "index.html").exists()
+def test_wave7_public_runtime_uses_django_and_current_frontend():
+    """The retired backend stays absent while current public assets remain."""
+    assert not (PROJECT_ROOT / "backend").exists()
+    assert (PROJECT_ROOT / "django_backend" / "apps" / "website" / "urls.py").exists()
+    assert (PROJECT_ROOT / "figma_make_frontend" / "index.html").exists()
