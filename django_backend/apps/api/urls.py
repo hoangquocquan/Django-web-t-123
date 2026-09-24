@@ -3,7 +3,7 @@
 from django.urls import include, path
 
 from apps.ai.views import ai_chat, ai_governance_events, ai_health
-from apps.ai_agent.views import agent_run, sales_assistant
+from apps.ai_agent.views import agent_run, internal_ai_sales_analyze, sales_assistant
 from apps.knowledge.views import (
     knowledge_chat,
     knowledge_document_download,
@@ -305,4 +305,9 @@ urlpatterns = [
     ),
     path("agent/run/", agent_run, name="api-agent-run"),
     path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
+    path(
+        "internal/ai-sales/analyze/",
+        internal_ai_sales_analyze,
+        name="api-internal-ai-sales-analyze",
+    ),
 ]

@@ -9,17 +9,90 @@ from apps.ai_agent.services.sales_synthesis import GroundedSalesSynthesisService
 from apps.business_core.models import BusinessCustomer
 from apps.crm.services.crm_platform_service import CrmPlatformService
 from apps.knowledge.services.search_service import KnowledgeSearchService
-from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
+from apps.knowledge.services.synthetic_rag_demo import SyntheticRagWebDemoService
+from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation, SalesRfq
 
 
 class SalesAssistantService:
     """Read sales/CRM/knowledge data and return human-approved suggestions."""
 
-    def __init__(self, knowledge_search=None, facts_service=None, synthesis_service=None):
+    def __init__(
+        self,
+        knowledge_search=None,
+        facts_service=None,
+        synthesis_service=None,
+        component_rag=None,
+    ):
         """Allow tests to inject a deterministic knowledge search service."""
         self.knowledge_search = knowledge_search or KnowledgeSearchService()
         self.facts_service = facts_service or SalesFactsService()
         self.synthesis_service = synthesis_service or GroundedSalesSynthesisService()
+        self.component_rag = component_rag or SyntheticRagWebDemoService()
+
+    def analyze(self, payload, user=None):
+        """Return the internal AI Sales MVP contract without taking business action."""
+        context = self._analysis_context(payload)
+        missing = self._missing_information(context)
+        query = self._analysis_query(context)
+
+        if self._is_out_of_scope(query):
+            return self._analysis_result(
+                status="UNAVAILABLE",
+                context=context,
+                priority="NEEDS_REVIEW",
+                priority_reasons=["The request is outside the manufacturing sales scope."],
+                missing_information=[],
+                next_action="NO_ACTION",
+                next_action_reason="No grounded sales or component recommendation is available.",
+            )
+
+        if self._is_insufficient(context):
+            return self._analysis_result(
+                status="NEEDS_MORE_INFORMATION",
+                context=context,
+                priority="NEEDS_REVIEW",
+                priority_reasons=["Core technical requirements are incomplete."],
+                missing_information=missing,
+                next_action="REQUEST_TECHNICAL_DETAILS",
+                next_action_reason="Material and manufacturing process are required before product matching.",
+            )
+
+        rag = self.component_rag.query(query, user=user, limit=3)
+        sources = self._sales_sources(rag)
+        matched_products = self._matched_products(sources)
+        if rag.get("status") != "SUPPORTED" or not matched_products:
+            return self._analysis_result(
+                status="UNAVAILABLE",
+                context=context,
+                priority="NEEDS_REVIEW",
+                priority_reasons=["No governed component evidence supports a product match."],
+                missing_information=missing,
+                next_action="ESCALATE_ENGINEERING_REVIEW",
+                next_action_reason="Engineering must review the request because RAG returned no supported component.",
+                risks=["Do not claim product capability without an approved source."],
+            )
+
+        priority, reasons = self._priority(context, matched_products, missing)
+        next_action = "REQUEST_TECHNICAL_DETAILS" if missing else "REVIEW_PRODUCT_MATCH"
+        next_reason = (
+            "A human should collect the listed technical details before quotation preparation."
+            if missing
+            else "A human should validate the grounded component match before preparing a quotation."
+        )
+        return self._analysis_result(
+            status="SUPPORTED",
+            context=context,
+            priority=priority,
+            priority_reasons=reasons,
+            missing_information=missing,
+            next_action=next_action,
+            next_action_reason=next_reason,
+            matched_products=matched_products,
+            sources=sources,
+            risks=[
+                "Component matching is advisory and does not confirm price, stock, delivery, certification, or manufacturability."
+            ],
+        )
 
     def handle(self, action, payload, user=None):
         """Dispatch one supported AI sales action."""
@@ -149,6 +222,215 @@ class SalesAssistantService:
                 "hallucination_warning": "",
                 "evaluation": "Operational recommendation from CRM and Sales database, not autonomous execution.",
             },
+        }
+
+    def _analysis_context(self, payload):
+        """Load one canonical RFQ or normalize the controlled synthetic input."""
+        if payload.get("rfq_id"):
+            rfq = (
+                SalesRfq.objects.select_related("customer", "assigned_to", "created_by")
+                .prefetch_related("lines__material", "lines__part", "documents")
+                .get(pk=payload["rfq_id"])
+            )
+            lines = list(rfq.lines.all())
+            material = ", ".join(
+                dict.fromkeys(
+                    f"{line.material.material_code} {line.material.grade}".strip()
+                    for line in lines
+                    if line.material_id
+                )
+            )
+            return {
+                "input_reference": f"rfq:{rfq.pk}",
+                "synthetic": False,
+                "customer_name": rfq.customer.company_name or rfq.customer.contact_name,
+                "known_customer": True,
+                "request": " ".join(
+                    value
+                    for value in [
+                        rfq.project_name,
+                        rfq.notes,
+                        *[f"{line.description} {line.technical_notes}" for line in lines],
+                    ]
+                    if value
+                ),
+                "material": material,
+                "quantity": sum((line.quantity for line in lines), 0) if lines else None,
+                "process": self._first_value(lines, "technical_notes"),
+                "tolerance": self._first_value(lines, "tolerance"),
+                "surface_treatment": "",
+                "drawing_available": rfq.documents.exists(),
+                "deadline": str(rfq.required_delivery_date or ""),
+                "rfq_number": rfq.rfq_number,
+            }
+        return {
+            "input_reference": "synthetic:ad-hoc",
+            "synthetic": True,
+            "customer_name": str(payload.get("customer_name", "")).strip(),
+            "known_customer": bool(str(payload.get("customer_name", "")).strip()),
+            "request": str(payload.get("request", "")).strip(),
+            "material": str(payload.get("material", "")).strip(),
+            "quantity": payload.get("quantity"),
+            "process": str(payload.get("process", "")).strip(),
+            "tolerance": str(payload.get("tolerance", "")).strip(),
+            "surface_treatment": str(payload.get("surface_treatment", "")).strip(),
+            "drawing_available": payload.get("drawing_available"),
+            "deadline": str(payload.get("deadline", "")).strip(),
+            "rfq_number": "",
+        }
+
+    @staticmethod
+    def _first_value(lines, field):
+        return next((str(getattr(line, field, "")).strip() for line in lines if getattr(line, field, "")), "")
+
+    @staticmethod
+    def _analysis_query(context):
+        return " ".join(
+            str(context.get(field) or "")
+            for field in ("request", "material", "process", "surface_treatment", "tolerance")
+        ).strip()
+
+    @staticmethod
+    def _is_out_of_scope(query):
+        lowered = query.casefold()
+        out_of_scope = {"weather", "forecast", "temperature", "thời tiết", "nhiệt độ"}
+        manufacturing = {
+            "cnc", "machining", "precision", "component", "part", "material",
+            "sus", "steel", "aluminium", "aluminum", "electropolish", "milling",
+            "turning", "grinding", "edm", "gia công", "chi tiết", "dung sai",
+        }
+        return any(term in lowered for term in out_of_scope) and not any(
+            term in lowered for term in manufacturing
+        )
+
+    @staticmethod
+    def _is_insufficient(context):
+        query = str(context.get("request", "")).casefold()
+        material = str(context.get("material", "")).strip()
+        process = " ".join(
+            [str(context.get("process", "")), str(context.get("surface_treatment", ""))]
+        ).strip()
+        material_tokens = ("sus", "steel", "aluminium", "aluminum", "bronze", "pom", "titanium", "nhôm", "thép")
+        process_tokens = ("cnc", "machin", "milling", "turning", "grinding", "edm", "polish", "anod", "gia công", "mài")
+        has_material = bool(material) or any(token in query for token in material_tokens)
+        has_process = bool(process) or any(token in query for token in process_tokens)
+        return not (has_material and has_process)
+
+    @staticmethod
+    def _missing_information(context):
+        fields = [
+            ("quantity", "requested quantity"),
+            ("tolerance", "drawing tolerance"),
+            ("surface_treatment", "surface finish requirement"),
+            ("drawing_available", "drawing/document availability"),
+            ("deadline", "required delivery deadline"),
+        ]
+        missing = [label for field, label in fields if context.get(field) in (None, "", False)]
+        if not context.get("material") and not any(
+            term in str(context.get("request", "")).casefold()
+            for term in ("sus", "steel", "aluminium", "aluminum", "bronze", "pom", "titanium", "nhôm", "thép")
+        ):
+            missing.insert(0, "requested material")
+        if not context.get("process") and not any(
+            term in str(context.get("request", "")).casefold()
+            for term in ("cnc", "machin", "milling", "turning", "grinding", "edm", "polish", "anod", "gia công", "mài")
+        ):
+            missing.insert(0, "manufacturing process")
+        return missing
+
+    @staticmethod
+    def _sales_sources(rag):
+        return [
+            {
+                "id": source.get("document_id", source.get("id")),
+                "title": source.get("title", ""),
+                "product_code": source.get("product_code", ""),
+                "citation": source.get("citation", ""),
+                "version": source.get("version"),
+                "revision": source.get("revision"),
+                "relevance_score": source.get("relevance_score", 0),
+            }
+            for source in rag.get("sources", [])
+        ]
+
+    @staticmethod
+    def _matched_products(sources):
+        return [
+            {
+                "product_code": source["product_code"],
+                "title": source["title"],
+                "reason": "The governed RAG result contains matching material/process evidence.",
+                "source_id": source["id"],
+            }
+            for source in sources
+            if source.get("product_code")
+        ]
+
+    @staticmethod
+    def _priority(context, matched_products, missing):
+        reasons = []
+        if context.get("known_customer"):
+            reasons.append("known customer/company context")
+        if context.get("quantity"):
+            reasons.append("requested quantity is provided")
+        if context.get("material") or "sus" in str(context.get("request", "")).casefold():
+            reasons.append("material requirement is clear")
+        if context.get("process") or context.get("surface_treatment") or "polish" in str(context.get("request", "")).casefold():
+            reasons.append("manufacturing or surface process is clear")
+        if matched_products:
+            reasons.append("governed component evidence was found")
+        if len(reasons) >= 4 and len(missing) <= 3:
+            return "HIGH", reasons
+        if len(reasons) >= 3:
+            return "MEDIUM", reasons
+        return "LOW", reasons or ["Limited business and technical context is available."]
+
+    def _analysis_result(
+        self,
+        *,
+        status,
+        context,
+        priority,
+        priority_reasons,
+        missing_information,
+        next_action,
+        next_action_reason,
+        matched_products=None,
+        sources=None,
+        risks=None,
+    ):
+        company = context.get("customer_name") or "customer"
+        request = context.get("request") or "the precision-component request"
+        summary = f"{company}: {request[:400]}"
+        if status == "UNAVAILABLE":
+            draft = "No customer response should be prepared because the request is not supported by governed sales evidence."
+        elif missing_information:
+            draft = (
+                f"Hello {company},\n\nThank you for your request. Before our team reviews a possible component match, "
+                f"please provide: {', '.join(missing_information)}. We will review the information and respond after human technical approval."
+            )
+        else:
+            draft = (
+                f"Hello {company},\n\nThank you for your request. Our team found a potentially relevant component record. "
+                "A sales and engineering colleague will review the technical fit before any quotation or commitment is made."
+            )
+        return {
+            "status": status,
+            "summary": summary,
+            "priority": priority,
+            "priority_reasons": priority_reasons,
+            "matched_products": matched_products or [],
+            "recommended_next_action": next_action,
+            "recommended_next_action_reason": next_action_reason,
+            "draft_response": draft,
+            "risks": risks or [],
+            "missing_information": missing_information,
+            "sources": sources or [],
+            "input_reference": context["input_reference"],
+            "synthetic_input": context["synthetic"],
+            "human_approval_required": True,
+            "autonomous_action": False,
+            "safety_note": "AI recommendation — human review required. No email, quotation, order, price, RFQ, or customer action was executed.",
         }
 
     def _lead_from_payload(self, payload):
