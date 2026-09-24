@@ -254,14 +254,14 @@ urlpatterns = [
     ),
     path("knowledge/documents/", knowledge_documents, name="api-knowledge-documents"),
     path(
-        "knowledge/documents/<int:document_id>/<str:transition>/",
-        knowledge_document_transition,
-        name="api-knowledge-document-transition",
-    ),
-    path(
         "knowledge/documents/<int:document_id>/download/",
         knowledge_document_download,
         name="api-knowledge-document-download",
+    ),
+    path(
+        "knowledge/documents/<int:document_id>/<str:transition>/",
+        knowledge_document_transition,
+        name="api-knowledge-document-transition",
     ),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),

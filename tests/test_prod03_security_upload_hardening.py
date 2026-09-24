@@ -13,16 +13,17 @@ from apps.foundation.services import (
     FoundationTwoFactorService,
     FoundationUserService,
 )
-from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.upload_security import (
     UploadSecurityService,
     stored_file_cleanup,
 )
+from apps.knowledge.services.knowledge_service import KnowledgeService
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.utils import timezone
+from tests.knowledge_test_helpers import approve_and_index_existing_document
 
 PASSWORD = "SecurePass123!"
 
@@ -233,12 +234,21 @@ def test_private_download_requires_auth_and_hides_storage_path(
             "knowledge/uploads/private.txt",
             io.BytesIO(b"private CNC document"),
         )
-        document = KnowledgeDocument.objects.create(
+        document = KnowledgeService().create_document(
             title="Private CNC",
             content="private CNC document",
             source_type="txt",
             source_path=source_path,
-            permission_level="restricted",
+            permission_level="internal",
+            department="SALES",
+            owner_email=foundation_user.email,
+            effective_date=timezone.localdate(),
+            created_by_email=foundation_user.email,
+        )
+        document = approve_and_index_existing_document(
+            document,
+            reader=foundation_user,
+            department="SALES",
         )
         assert (
             client.get(
