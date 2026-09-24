@@ -203,6 +203,15 @@ async function postAi<T,>(
   })
 }
 
+export function postInternalAi<T,>(
+  path: string,
+  token: string,
+  body: unknown,
+  options?: AiRequestOptions,
+) {
+  return postAi<T>(path, token, body, options)
+}
+
 export function askSyntheticRagDemo(
   token: string,
   question: string,

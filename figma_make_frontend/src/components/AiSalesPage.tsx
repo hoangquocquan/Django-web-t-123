@@ -1,11 +1,11 @@
 import { useRef, useState, type FormEvent } from "react"
 
 import { analyzeAiSales, type AiSalesAnalysis, type AiSalesAnalyzeInput } from "../api/aiSales.ts"
-import { CanonicalClientError, type createCanonicalClient } from "../api/canonical.ts"
+import { CanonicalClientError } from "../api/canonical.ts"
 
 type Props = {
   authenticated: boolean
-  client: ReturnType<typeof createCanonicalClient>
+  token: string | null
   onLoginRequired: () => void
   onAuthenticationFailure: () => void
 }
@@ -47,7 +47,7 @@ function list(items: string[], empty: string) {
 
 export default function AiSalesPage({
   authenticated,
-  client,
+  token,
   onLoginRequired,
   onAuthenticationFailure,
 }: Props) {
@@ -61,7 +61,7 @@ export default function AiSalesPage({
     setInput((current) => ({ ...current, [field]: value }))
 
   const run = async (candidate = input) => {
-    if (!authenticated) {
+    if (!authenticated || !token) {
       setError("Bạn cần đăng nhập bằng tài khoản Sales, Manager hoặc Admin.")
       return
     }
@@ -72,7 +72,7 @@ export default function AiSalesPage({
     setError("")
     setResult(null)
     try {
-      setResult(await analyzeAiSales(client, candidate, controller.signal))
+      setResult(await analyzeAiSales(token, candidate, controller.signal))
     } catch (requestError) {
       if (requestError instanceof CanonicalClientError) {
         if (requestError.kind === "authentication") onAuthenticationFailure()

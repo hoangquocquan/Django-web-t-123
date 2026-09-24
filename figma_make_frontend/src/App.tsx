@@ -1312,7 +1312,7 @@ function AdminPage({
       ) : route === "admin-ai-sales" ? (
         <AiSalesPage
           authenticated={session.status === "authenticated"}
-          client={canonicalClient}
+          token={session.status === "authenticated" ? token : null}
           onLoginRequired={() => go("admin-login")}
           onAuthenticationFailure={onLogout}
         />

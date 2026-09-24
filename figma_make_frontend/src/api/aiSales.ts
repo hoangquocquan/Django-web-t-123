@@ -1,4 +1,4 @@
-import type { createCanonicalClient } from "./canonical.ts"
+import { postInternalAi } from "./aiDemo.ts"
 
 export type AiSalesStatus =
   | "SUPPORTED"
@@ -55,18 +55,15 @@ export type AiSalesAnalysis = {
   request_id: string
 }
 
-type CanonicalClient = ReturnType<typeof createCanonicalClient>
-
 export function analyzeAiSales(
-  client: CanonicalClient,
+  token: string,
   input: AiSalesAnalyzeInput,
   signal?: AbortSignal,
 ) {
-  return client.request<AiSalesAnalysis>("internal/ai-sales/analyze/", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(input),
-    signal,
-    timeoutMs: 180_000,
-  })
+  return postInternalAi<AiSalesAnalysis>(
+    "internal/ai-sales/analyze/",
+    token,
+    input,
+    { signal, timeoutMs: 30_000 },
+  )
 }

@@ -3,26 +3,35 @@ import { readFileSync } from "node:fs"
 import test from "node:test"
 
 import { analyzeAiSales, type AiSalesAnalysis } from "./aiSales.ts"
-import type { createCanonicalClient } from "./canonical.ts"
 
 test("AI Sales client posts only to the internal analyze endpoint", async () => {
-  const calls: Array<{ path: string; options: RequestInit & { timeoutMs?: number } }> = []
   const expected = { status: "SUPPORTED" } as AiSalesAnalysis
-  const client = {
-    request: async (path: string, options: RequestInit & { timeoutMs?: number }) => {
-      calls.push({ path, options })
-      return expected
-    },
-  } as unknown as ReturnType<typeof createCanonicalClient>
+  const originalFetch = globalThis.fetch
+  let requestUrl = ""
+  let requestBody = ""
+  let authorization = ""
+  globalThis.fetch = async (input, init) => {
+    requestUrl = String(input)
+    requestBody = String(init?.body)
+    authorization = new Headers(init?.headers).get("authorization") ?? ""
+    return new Response(JSON.stringify({ success: true, data: expected }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    })
+  }
+  let result: AiSalesAnalysis
+  try {
+    result = await analyzeAiSales("session-token", {
+      request: "Need SUS316 electropolished component",
+    })
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 
-  const result = await analyzeAiSales(client, {
-    request: "Need SUS316 electropolished component",
-  })
-
-  assert.equal(result, expected)
-  assert.equal(calls[0].path, "internal/ai-sales/analyze/")
-  assert.equal(calls[0].options.method, "POST")
-  assert.match(String(calls[0].options.body), /SUS316/)
+  assert.deepEqual(result, expected)
+  assert.equal(requestUrl, "/api/v1/internal/ai-sales/analyze/")
+  assert.equal(authorization, "Bearer session-token")
+  assert.match(requestBody, /SUS316/)
 })
 
 test("AI Sales page exposes human review, structured output, and three demo cases", () => {
