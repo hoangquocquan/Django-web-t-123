@@ -4,6 +4,7 @@ from apps.business_core.models import BusinessCustomer, BusinessProduct
 from apps.crm.models import CrmCustomerProfile, CrmInteraction, CrmTimelineEvent
 from apps.foundation.services import FoundationAuthService, FoundationUserService
 from apps.knowledge.services.knowledge_service import KnowledgeService
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 from apps.sales.models import SalesActivity, SalesLead, SalesOpportunity, SalesQuotation
 
 
@@ -188,12 +189,12 @@ def test_crm_customer_profile_and_interaction_timeline(client, sales_admin):
 
 @pytest.mark.django_db
 def test_ai_sales_assistant_uses_rag_and_keeps_human_approval(client, sales_admin):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="CNC shaft capability",
-        content="MecPrecision supports CNC shaft machining, fixture design, quality inspection, and quotation review.",
+        content="MecPrecision supports CNC shaft machining, fixture design, and quality inspection.",
         category_name="Sales",
         permission_level="internal",
-        created_by_email=sales_admin.email,
+        reader=sales_admin,
     )
     lead = SalesLead.objects.create(
         company="AI Lead Co",

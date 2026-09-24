@@ -567,7 +567,7 @@ class DemoDataGenerator:
             material = self.random.choice(self.materials)
             content = (
                 f"Demo knowledge document {index}. Type: {doc_type}. "
-                f"MecPrecision can support CNC machining, fixture design, quality inspection, and quotation review. "
+                f"MecPrecision can support CNC machining, fixture design, and quality inspection. "
                 f"For material questions, {material} may be selected based on tolerance, corrosion resistance, and production volume. "
                 "This is fictional demo content for AI search testing only."
             )

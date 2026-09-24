@@ -47,8 +47,9 @@ def test_document_intelligence_ingests_txt_and_adds_metadata(tmp_path, knowledge
     assert document.title == "CNC Shaft Spec"
     assert metadata["classification"] in {"technical", "quality"}
     assert metadata["human_approval_required"] is True
-    assert document.chunks.exists()
-    assert result.citations
+    assert document.status == "DRAFT"
+    assert not document.chunks.exists()
+    assert result.citations == []
 
 
 @pytest.mark.django_db

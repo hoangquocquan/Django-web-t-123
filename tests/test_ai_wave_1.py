@@ -10,6 +10,7 @@ from apps.foundation.services import FoundationAuthService, FoundationUserServic
 from apps.knowledge.models import KnowledgeDocument, KnowledgeEmbedding
 from apps.knowledge.services.embedding_service import LocalEmbeddingService
 from apps.knowledge.services.knowledge_service import KnowledgeService
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -45,10 +46,9 @@ def bearer_header(user):
 
 @pytest.mark.django_db
 def test_rag_ingests_document_chunks_and_embeddings():
-    document = KnowledgeService().ingest_text(
+    document = create_approved_indexed_knowledge(
         title="CNC Capability",
         content="MecPrecision provides CNC machining, precision shafts, and fixture manufacturing.",
-        source_type="markdown",
     )
 
     assert KnowledgeDocument.objects.count() == 1
@@ -58,9 +58,10 @@ def test_rag_ingests_document_chunks_and_embeddings():
 
 @pytest.mark.django_db
 def test_rag_semantic_search_returns_relevant_documents():
-    KnowledgeService().ingest_text(
+    create_approved_indexed_knowledge(
         title="Fixture Manufacturing",
         content="Fixture and jig manufacturing for CNC inspection and production.",
+        permission_level="public",
     )
 
     results = KnowledgeService().search("CNC fixture", limit=3)
@@ -93,9 +94,10 @@ def test_knowledge_search_api_requires_authentication(client):
 
 @pytest.mark.django_db
 def test_knowledge_search_api_returns_results(client, viewer_user):
-    KnowledgeService().ingest_text(
+    create_approved_indexed_knowledge(
         title="Precision Shaft",
         content="Precision shaft machining with CNC turning and strict tolerance control.",
+        reader=viewer_user,
     )
 
     response = client.post(

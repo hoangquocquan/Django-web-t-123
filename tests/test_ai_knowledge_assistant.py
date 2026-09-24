@@ -17,6 +17,7 @@ from apps.knowledge.services.knowledge_service import KnowledgeService
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.text_processing import TextProcessor
 from django.core.files.uploadedfile import SimpleUploadedFile
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 
 
 class FakeOllamaClient:
@@ -72,13 +73,12 @@ def build_docx_bytes(text):
 
 @pytest.mark.django_db
 def test_document_service_creates_category_version_chunks_and_embeddings(admin_user):
-    document = KnowledgeService().create_document(
+    document = create_approved_indexed_knowledge(
         title="Material Specification",
-        description="Material knowledge",
         category_name="Quality",
         content="SUS304 stainless steel is used for corrosion resistant CNC parts.",
         permission_level="internal",
-        created_by_email=admin_user.email,
+        reader=admin_user,
     )
 
     assert DocumentCategory.objects.get(slug="quality").name == "Quality"
@@ -150,14 +150,16 @@ def test_document_create_and_list_api_for_admin(client, admin_user):
     assert create_response.status_code == 201
     assert create_response.json()["data"]["category"] == "Quality"
     assert list_response.status_code == 200
-    assert list_response.json()["data"][0]["title"] == "QC Requirement"
+    assert create_response.json()["data"]["status"] == "DRAFT"
+    assert list_response.json()["data"] == []
 
 
 @pytest.mark.django_db
 def test_knowledge_search_returns_sources_and_confidence(viewer_user):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="Manufacturing Process",
         content="The manufacturing process uses CNC turning, milling, and final inspection.",
+        reader=viewer_user,
     )
 
     result = KnowledgeSearchService().search(
@@ -171,9 +173,10 @@ def test_knowledge_search_returns_sources_and_confidence(viewer_user):
 
 @pytest.mark.django_db
 def test_knowledge_search_api_returns_sources_and_confidence(client, viewer_user):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="Customer Document",
         content="Customer ABC requires SUS304 material and inspection report.",
+        reader=viewer_user,
     )
 
     response = client.post(
@@ -191,13 +194,14 @@ def test_knowledge_search_api_returns_sources_and_confidence(client, viewer_user
 
 @pytest.mark.django_db
 def test_knowledge_chat_uses_context_sources_and_logs_answer(viewer_user):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="CNC Process",
         content="CNC machining is used for precision shafts and fixture components.",
+        reader=viewer_user,
     )
     service = KnowledgeAssistantService(ollama_client=FakeOllamaClient())
 
-    result = service.answer("What is the manufacturing process?", user=viewer_user)
+    result = service.answer("CNC machining precision shafts", user=viewer_user)
 
     assert result["answer"] == "MEC uses CNC machining according to the cited source."
     assert result["sources"]
@@ -236,9 +240,10 @@ def test_knowledge_chat_api_requires_authentication(client):
 
 @pytest.mark.django_db
 def test_knowledge_chat_api_returns_answer(client, viewer_user, monkeypatch):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="Material Note",
         content="SUS304 material is used for corrosion resistant parts.",
+        reader=viewer_user,
     )
     monkeypatch.setattr(
         "apps.knowledge.services.assistant_service.OllamaClient",

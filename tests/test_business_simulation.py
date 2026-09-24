@@ -9,6 +9,7 @@ from apps.foundation.models import FoundationUser
 from apps.knowledge.models import KnowledgeDocument
 from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
 from scripts import business_simulation
+from tests.knowledge_test_helpers import approve_and_index_existing_document
 
 
 @pytest.mark.django_db
@@ -17,6 +18,28 @@ def test_business_simulation_creates_complete_fictional_flow(tmp_path, monkeypat
     monkeypatch.setattr(business_simulation, "SIMULATION_REPORT", tmp_path / "MEC_BUSINESS_SIMULATION_REPORT.md")
     monkeypatch.setattr(business_simulation, "SIMULATION_EVIDENCE", tmp_path / "business_simulation.json")
     monkeypatch.setattr(business_simulation, "EXECUTIVE_DASHBOARD", tmp_path / "executive_dashboard.json")
+    original_simulate_ai = business_simulation.simulate_ai
+
+    def simulate_ai_with_governed_demo_knowledge(master):
+        for document in KnowledgeDocument.objects.filter(
+            title__in=[
+                "MEC Product Catalogue",
+                "CNC Precision Shaft Technical Specification",
+                "MEC Quality Procedure",
+                "Manufacturing Guideline",
+            ]
+        ):
+            approve_and_index_existing_document(
+                document,
+                reader=master["users"]["sales_manager"],
+            )
+        return original_simulate_ai(master)
+
+    monkeypatch.setattr(
+        business_simulation,
+        "simulate_ai",
+        simulate_ai_with_governed_demo_knowledge,
+    )
 
     with override_settings(MEDIA_ROOT=tmp_path / "media"):
         result = business_simulation.run_simulation()

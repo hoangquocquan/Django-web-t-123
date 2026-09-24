@@ -15,6 +15,7 @@ from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.vector_store import DjangoJSONVectorStore
 from django.core.management import call_command
 from django.test import override_settings
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 
 
 class FakeResponse:
@@ -100,9 +101,10 @@ def test_ollama_embedding_rejects_invalid_vectors(vectors, error_text):
 @pytest.mark.django_db
 def test_reindex_keeps_old_index_when_embedding_fails():
     fallback = DevelopmentHashEmbeddingProvider()
-    document = KnowledgeService(embedding_service=fallback).create_document(
+    document = create_approved_indexed_knowledge(
         title="CNC capability",
         content="MEC Precision gia công trục CNC chính xác.",
+        embedding_service=fallback,
     )
     old_chunk_ids = list(document.chunks.values_list("id", flat=True))
 
@@ -119,9 +121,10 @@ def test_reindex_keeps_old_index_when_embedding_fails():
 @pytest.mark.django_db
 def test_reindex_is_idempotent_and_model_change_is_detected():
     provider = DevelopmentHashEmbeddingProvider()
-    document = KnowledgeService(embedding_service=provider).create_document(
+    document = create_approved_indexed_knowledge(
         title="Fixture inspection",
         content="Fixture kiểm tra hỗ trợ đo kiểm chất lượng.",
+        embedding_service=provider,
     )
     indexer = KnowledgeIndexer(embedding_service=provider)
 
@@ -138,15 +141,17 @@ def test_reindex_is_idempotent_and_model_change_is_detected():
 @pytest.mark.django_db
 def test_vietnamese_and_english_retrieval_use_matching_provider():
     provider = DevelopmentHashEmbeddingProvider()
-    KnowledgeService(embedding_service=provider).create_document(
+    create_approved_indexed_knowledge(
         title="Gia công CNC",
         content="MEC Precision cung cấp dịch vụ gia công CNC chính xác.",
         permission_level="public",
+        embedding_service=provider,
     )
-    KnowledgeService(embedding_service=provider).create_document(
+    create_approved_indexed_knowledge(
         title="Fixture",
         content="Inspection fixture for quality measurement.",
         permission_level="public",
+        embedding_service=provider,
     )
 
     vietnamese = KnowledgeSearchService(embedding_service=provider).search(
