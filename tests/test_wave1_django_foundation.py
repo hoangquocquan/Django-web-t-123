@@ -48,11 +48,11 @@ def bearer_header(user):
 
 
 @pytest.mark.django_db
-def test_foundation_migrations_seed_roles_permissions_and_legacy_users():
+def test_foundation_migrations_seed_roles_and_permissions_without_legacy_artifact():
     assert FoundationRole.objects.filter(name__in=["admin", "editor", "viewer"]).count() == 3
     assert FoundationPermission.objects.filter(code="*:*").exists()
     assert FoundationPermission.objects.filter(code="*:read").exists()
-    assert FoundationUser.objects.filter(legacy_admin_id__isnull=False).count() >= 1
+    assert FoundationUser._meta.get_field("legacy_admin_id").null is True
 
 
 @pytest.mark.django_db

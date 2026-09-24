@@ -52,6 +52,18 @@ def foundation_admin():
     )
 
 
+@pytest.fixture
+def business_product():
+    """Create deterministic Django-owned product data for inventory tests."""
+    return BusinessProductService().create_product(
+        name="Inventory Fixture Product",
+        slug="inventory-fixture-product",
+        sku="INV-FIXTURE-001",
+        price="25.00",
+        status="published",
+    )
+
+
 def bearer_header(user):
     """Create one Bearer token header for the Django-owned foundation auth API."""
     token, _token_row = FoundationAuthService().login(user.email, "SecurePass123!")
@@ -59,11 +71,10 @@ def bearer_header(user):
 
 
 @pytest.mark.django_db
-def test_wave2_migrations_seed_products_customers_and_inventory():
-    assert BusinessProduct.objects.filter(legacy_product_id__isnull=False).count() >= 1
-    assert BusinessCustomer.objects.filter(legacy_customer_id__isnull=False).count() >= 1
+def test_wave2_migrations_prepare_inventory_without_requiring_legacy_artifact():
     assert InventoryWarehouse.objects.filter(code="MAIN").exists()
-    assert InventoryItem.objects.select_related("product", "warehouse").count() >= 1
+    assert BusinessProduct._meta.get_field("legacy_product_id").null is True
+    assert BusinessCustomer._meta.get_field("legacy_customer_id").null is True
 
 
 @pytest.mark.django_db
@@ -102,11 +113,9 @@ def test_business_customer_service_owns_new_customer_writes():
 
 
 @pytest.mark.django_db
-def test_inventory_service_adjusts_stock_transactionally():
-    product = BusinessProduct.objects.first()
-    warehouse = InventoryWarehouse.objects.first()
+def test_inventory_service_adjusts_stock_transactionally(business_product):
     item = InventoryService().create_item(
-        product=product,
+        product=business_product,
         warehouse=InventoryWarehouse.objects.create(code="QA", name="QA Warehouse"),
         quantity="5",
         reorder_point="2",
@@ -120,17 +129,14 @@ def test_inventory_service_adjusts_stock_transactionally():
         created_by="wave2-admin@example.com",
     )
 
-    assert product
-    assert warehouse
     assert updated.quantity == 8
     assert InventoryTransaction.objects.filter(item=item, transaction_type="receipt").exists()
 
 
 @pytest.mark.django_db
-def test_inventory_service_blocks_negative_stock():
-    product = BusinessProduct.objects.first()
+def test_inventory_service_blocks_negative_stock(business_product):
     warehouse = InventoryWarehouse.objects.create(code="NEG", name="Negative Test")
-    item = InventoryService().create_item(product=product, warehouse=warehouse, quantity="1")
+    item = InventoryService().create_item(product=business_product, warehouse=warehouse, quantity="1")
 
     with pytest.raises(Exception):
         InventoryService().adjust_stock(item=item, quantity_delta="-2", transaction_type="issue")
@@ -210,11 +216,10 @@ def test_business_customer_api_create_and_update(client, foundation_admin):
 
 
 @pytest.mark.django_db
-def test_inventory_api_adjusts_stock(client, foundation_admin):
+def test_inventory_api_adjusts_stock(client, foundation_admin, business_product):
     headers = bearer_header(foundation_admin)
-    product = BusinessProduct.objects.first()
     warehouse = InventoryWarehouse.objects.create(code="API", name="API Warehouse")
-    item = InventoryService().create_item(product=product, warehouse=warehouse, quantity="10")
+    item = InventoryService().create_item(product=business_product, warehouse=warehouse, quantity="10")
 
     response = client.post(
         f"/api/v1/inventory/items/{item.id}/adjust/",
