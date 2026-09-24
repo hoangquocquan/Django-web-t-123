@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from scripts.phase12_2_api_benchmark import GET_SCENARIOS, run_benchmark
 from scripts.phase12_2_database_performance_check import run_database_check
 from tests.performance.phase12_2_load_test import run_load_scenario
+from tests.legacy_sqlite_helpers import create_legacy_sqlite_fixture
 
 
 API_RESULT = PROJECT_ROOT / "docs" / "performance" / "api_benchmark_result.json"
@@ -65,8 +66,10 @@ def test_no_production_modification():
 
 @pytest.mark.django_db(databases="__all__")
 def test_benchmark_helpers_can_run_in_isolation(tmp_path):
+    database = create_legacy_sqlite_fixture(tmp_path / "legacy.sqlite")
     api_result = run_benchmark(iterations=1, output_path=tmp_path / "api.json", scenarios=GET_SCENARIOS[:2])
     db_result = run_database_check(
+        database_path=database,
         report_path=tmp_path / "db.md",
         json_path=tmp_path / "db.json",
         dashboard_path=tmp_path / "dashboard.md",

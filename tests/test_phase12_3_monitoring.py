@@ -8,6 +8,10 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.phase12_3_health_check import run_health_check
+from tests.legacy_sqlite_helpers import (
+    create_legacy_sqlite_fixture,
+    django_sqlite_database_config,
+)
 
 
 MONITORING_DIR = PROJECT_ROOT / "docs" / "monitoring"
@@ -19,7 +23,13 @@ def read_text(path):
     return Path(path).read_text(encoding="utf-8")
 
 
-def test_health_check_works(tmp_path):
+def test_health_check_works(tmp_path, monkeypatch, settings):
+    database = create_legacy_sqlite_fixture(tmp_path / "legacy.sqlite")
+    monkeypatch.setitem(
+        settings.DATABASES,
+        "legacy",
+        django_sqlite_database_config(database),
+    )
     result = run_health_check(output_path=tmp_path / "health.json")
 
     assert result["status"] == "HEALTHY"

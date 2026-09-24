@@ -20,14 +20,14 @@ from apps.crm.models import Customer as LegacyCustomer
 from apps.crm.repositories.customer_repository import CustomerRepository
 from apps.foundation.models import FoundationUser
 from apps.foundation.services import FoundationAuthService, FoundationUserService
-from scripts.copy_legacy_database_for_test import copy_legacy_database
+from tests.legacy_sqlite_helpers import create_legacy_sqlite_fixture
 
 
 @pytest.fixture
 def legacy_db(tmp_path):
     """Return a read-only copied legacy database path."""
-    return copy_legacy_database(
-        destination=tmp_path / "legacy_database" / "mecprecision-test.sqlite"
+    return create_legacy_sqlite_fixture(
+        tmp_path / "legacy_database" / "mecprecision-test.sqlite"
     )
 
 
