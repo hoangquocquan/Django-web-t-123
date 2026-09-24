@@ -1,12 +1,14 @@
 import pytest
+from datetime import date
 from django.test import override_settings
 
 from apps.ai.models import AIGovernanceEvent
 from apps.ai_agent import views as ai_views
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
-from apps.business_core.models import BusinessCustomer
+from apps.business_core.models import BusinessCustomer, BusinessMaterial
 from apps.foundation.models import FoundationPermission, FoundationRole
 from apps.foundation.services import FoundationAuthService, FoundationUserService
+from apps.sales.models import SalesRfq, SalesRfqLine
 
 
 class DeterministicComponentRag:
@@ -92,6 +94,48 @@ def test_incomplete_request_asks_for_missing_information():
     assert "requested material" in result["missing_information"]
     assert "manufacturing process" in result["missing_information"]
     assert result["recommended_next_action"] == "REQUEST_TECHNICAL_DETAILS"
+
+
+@pytest.mark.django_db
+def test_persisted_rfq_context_uses_canonical_business_ids():
+    user = _user("admin", "ai-sales-rfq-admin@example.com")
+    customer = BusinessCustomer.objects.create(
+        company_name="Canonical RFQ Customer",
+        contact_name="Buyer",
+    )
+    material = BusinessMaterial.objects.create(
+        material_code="SUS316",
+        name="Stainless steel",
+        grade="SUS316",
+        created_by=user,
+    )
+    rfq = SalesRfq.objects.create(
+        rfq_number="RFQ-AI-SALES-001",
+        customer=customer,
+        project_name="Electropolished precision housing",
+        quote_due_at=date(2026, 11, 1),
+        required_delivery_date=date(2026, 12, 1),
+        created_by=user,
+    )
+    SalesRfqLine.objects.create(
+        rfq=rfq,
+        line_number=1,
+        material=material,
+        description="SUS316 precision housing",
+        quantity=100,
+        required_delivery_date=date(2026, 12, 1),
+        tolerance="per drawing",
+        technical_notes="CNC machining and electropolishing",
+        drawing_required=True,
+    )
+
+    result = assistant().analyze({"rfq_id": rfq.id}, user=user)
+
+    assert result["status"] == "SUPPORTED"
+    assert result["input_reference"] == f"rfq:{rfq.id}"
+    assert result["synthetic_input"] is False
+    assert result["matched_products"][0]["product_code"] == "SYN-RAG-0011"
+    assert result["human_approval_required"] is True
 
 
 def _grant_internal_ai_sales(role_name):
