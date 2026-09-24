@@ -1,0 +1,7 @@
+{
+  "phase": "AI-05",
+  "depends_on": ["AI-01", "AI-02", "AI-03", "AI-04"],
+  "tasks": ["review contract", "fail-closed gate", "AI Factory integration", "n8n integration", "tests", "real Ollama review"],
+  "execution": "SERIALIZED",
+  "reason": "The tasks share the review contract and orchestration entrypoints."
+}

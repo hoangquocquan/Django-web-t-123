@@ -1,0 +1,8 @@
+{
+  "engine": "Redis",
+  "container": "mecprecision-vietnam-redis-1",
+  "healthy": true,
+  "authenticated": true,
+  "django_cache_probe": true,
+  "production_cache": false
+}

@@ -1,0 +1,6 @@
+03b17e4 feat(ai-sales): add grounded ollama sales synthesis
+29 files changed, 916 insertions(+), 38 deletions(-)
+
+Tests: 16 focused PASS; 380 regression PASS.
+Real demo: local llama3 synthesis PASS with deterministic score and three grounded sources.
+Ollama review: PASS; fallback not used; Critical 0; High 0.

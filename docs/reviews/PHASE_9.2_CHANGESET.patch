@@ -1,0 +1,1322 @@
+diff --git a/django_backend/apps/api/tests/test_api_hardening.py b/django_backend/apps/api/tests/test_api_hardening.py
+new file mode 100644
+index 0000000..3dd6dac
+--- /dev/null
++++ b/django_backend/apps/api/tests/test_api_hardening.py
+@@ -0,0 +1,100 @@
++"""Production readiness tests for Phase 9.2 API hardening."""
++
++from django.db import connections
++from django.test.utils import CaptureQueriesContext
++import pytest
++
++
++LIST_ENDPOINTS = [
++    "/api/v1/catalog/products/",
++    "/api/v1/catalog/categories/",
++    "/api/v1/catalog/materials/",
++    "/api/v1/crm/customers/",
++    "/api/v1/crm/contact-requests/",
++    "/api/v1/sales/quotes/",
++    "/api/v1/cms/pages/",
++    "/api/v1/cms/menu/",
++]
++
++
++@pytest.mark.parametrize("url", LIST_ENDPOINTS)
++def test_list_endpoints_return_pagination_schema(client, legacy_db, url):
++    """List APIs must expose pagination metadata for production clients."""
++    response = client.get(f"{url}?limit=1&offset=0")
++    data = response.json()["data"]
++
++    assert response.status_code == 200
++    assert set(data.keys()) == {"count", "limit", "offset", "next_offset", "results"}
++    assert data["limit"] == 1
++    assert data["offset"] == 0
++    assert len(data["results"]) <= 1
++
++
++def test_invalid_pagination_returns_consistent_400(client, legacy_db):
++    """Invalid pagination input should fail before reaching business logic."""
++    response = client.get("/api/v1/catalog/products/?limit=abc")
++    body = response.json()
++
++    assert response.status_code == 400
++    assert body["success"] is False
++    assert body["error"]["code"] == "invalid_pagination"
++
++
++@pytest.mark.parametrize("method", ["post", "put", "patch", "delete"])
++@pytest.mark.parametrize(
++    "url",
++    [
++        "/api/v1/catalog/products/",
++        "/api/v1/crm/customers/",
++        "/api/v1/sales/quotes/",
++        "/api/v1/cms/pages/",
++        "/api/v1/auth/profile/",
++    ],
++)
++def test_unsafe_methods_are_blocked_across_business_apis(client, legacy_db, method, url):
++    """All business APIs remain read-only before database ownership migration."""
++    request_method = getattr(client, method)
++    response = request_method(url, data={}, content_type="application/json")
++
++    assert response.status_code in {403, 405}
++
++
++def test_catalog_product_list_query_count_is_bounded(client, legacy_db):
++    """Product list should use count plus one joined page query."""
++    with CaptureQueriesContext(connections["legacy"]) as captured:
++        response = client.get("/api/v1/catalog/products/?limit=5")
++
++    assert response.status_code == 200
++    assert len(captured) <= 2
++
++
++def test_crm_customer_list_query_count_is_bounded(client, legacy_db):
++    """Customer list may use count, page query and notes prefetch."""
++    with CaptureQueriesContext(connections["legacy"]) as captured:
++        response = client.get("/api/v1/crm/customers/?limit=5")
++
++    assert response.status_code == 200
++    assert len(captured) <= 3
++
++
++def test_sensitive_auth_words_do_not_appear_in_auth_api_payload(client, legacy_db):
++    """Auth preparation endpoints must not leak credential/session internals."""
++    response = client.get("/api/v1/auth/profile/?admin_id=1")
++    serialized_payload = str(response.json()).lower()
++
++    assert response.status_code == 200
++    assert "password_hash" not in serialized_payload
++    assert "session_id" not in serialized_payload
++    assert "reset_token" not in serialized_payload
++    assert "two_factor_code" not in serialized_payload
++
++
++def test_legacy_database_remains_read_only_after_api_requests(client, legacy_db):
++    """API reads should not mutate the copied legacy database fixture."""
++    before_size = legacy_db.stat().st_size
++
++    client.get("/api/v1/catalog/products/?limit=2")
++    client.get("/api/v1/crm/contact-requests/?limit=2")
++    client.get("/api/v1/sales/quotes/?limit=2")
++
++    assert legacy_db.stat().st_size == before_size
+diff --git a/django_backend/apps/api/tests/test_business_api_cutover.py b/django_backend/apps/api/tests/test_business_api_cutover.py
+index 698c3d5..3e8ed77 100644
+--- a/django_backend/apps/api/tests/test_business_api_cutover.py
++++ b/django_backend/apps/api/tests/test_business_api_cutover.py
+@@ -22,7 +22,6 @@ from apps.sales.services.quotation_service import QuotationService
+         "/api/v1/sales/quotes/",
+         "/api/v1/cms/pages/",
+         "/api/v1/cms/menu/",
+-        "/api/v1/auth/permissions/",
+     ],
+ )
+ def test_read_only_business_list_endpoints_return_success(client, legacy_db, url):
+@@ -33,6 +32,8 @@ def test_read_only_business_list_endpoints_return_success(client, legacy_db, url
+     assert response.status_code == 200
+     assert body["success"] is True
+     assert "data" in body
++    assert "results" in body["data"]
++    assert "limit" in body["data"]
+ 
+ 
+ def test_catalog_product_detail_endpoint_uses_legacy_data(client, legacy_db):
+diff --git a/django_backend/apps/api/views/catalog.py b/django_backend/apps/api/views/catalog.py
+index 157c94e..4c506ae 100644
+--- a/django_backend/apps/api/views/catalog.py
++++ b/django_backend/apps/api/views/catalog.py
+@@ -9,7 +9,7 @@ from apps.api.serializers.catalog import (
+     product_detail_to_dict,
+     product_to_dict,
+ )
+-from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.api.views.helpers import handle_not_found, ok, paginated_ok
+ from apps.catalog.services.catalog_service import CatalogService
+ 
+ 
+@@ -18,7 +18,7 @@ from apps.catalog.services.catalog_service import CatalogService
+ def products(request):
+     """Return read-only product list through the Catalog service layer."""
+     service = CatalogService()
+-    return list_ok(product_to_dict(product) for product in service.list_products())
++    return paginated_ok(request, service.list_products(), product_to_dict)
+ 
+ 
+ @api_view(["GET"])
+@@ -37,7 +37,7 @@ def product_detail(request, product_id):
+ def categories(request):
+     """Return read-only product categories through the Catalog service layer."""
+     service = CatalogService()
+-    return list_ok(category_to_dict(category) for category in service.list_categories())
++    return paginated_ok(request, service.list_categories(), category_to_dict)
+ 
+ 
+ @api_view(["GET"])
+@@ -45,4 +45,4 @@ def categories(request):
+ def materials(request):
+     """Return read-only manufacturing materials through the Catalog service."""
+     service = CatalogService()
+-    return list_ok(material_to_dict(material) for material in service.list_materials())
++    return paginated_ok(request, service.list_materials(), material_to_dict)
+diff --git a/django_backend/apps/api/views/cms.py b/django_backend/apps/api/views/cms.py
+index 50bc797..9529878 100644
+--- a/django_backend/apps/api/views/cms.py
++++ b/django_backend/apps/api/views/cms.py
+@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
+ 
+ from apps.api.permissions import ReadOnlyApiPermission
+ from apps.api.serializers.cms import menu_item_to_dict, page_to_dict
+-from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.api.views.helpers import handle_not_found, ok, paginated_ok
+ from apps.cms.services.cms_service import CmsService
+ 
+ 
+@@ -13,7 +13,7 @@ from apps.cms.services.cms_service import CmsService
+ def pages(request):
+     """Return published dynamic pages through the CMS service layer."""
+     service = CmsService()
+-    return list_ok(page_to_dict(page) for page in service.list_public_pages())
++    return paginated_ok(request, service.list_public_pages(), page_to_dict)
+ 
+ 
+ @api_view(["GET"])
+@@ -33,7 +33,4 @@ def menu(request):
+     """Return nested menu items for one location, defaulting to header."""
+     location = request.query_params.get("location", "header")
+     service = CmsService()
+-    return list_ok(
+-        menu_item_to_dict(item)
+-        for item in service.list_navigation(location=location)
+-    )
++    return paginated_ok(request, service.list_navigation(location=location), menu_item_to_dict)
+diff --git a/django_backend/apps/api/views/crm.py b/django_backend/apps/api/views/crm.py
+index bb5f98b..ee75a31 100644
+--- a/django_backend/apps/api/views/crm.py
++++ b/django_backend/apps/api/views/crm.py
+@@ -8,7 +8,7 @@ from apps.api.serializers.crm import (
+     customer_detail_to_dict,
+     customer_to_dict,
+ )
+-from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.api.views.helpers import handle_not_found, ok, paginated_ok
+ from apps.crm.services.crm_service import CrmService
+ 
+ 
+@@ -17,7 +17,7 @@ from apps.crm.services.crm_service import CrmService
+ def customers(request):
+     """Return customer profiles through the CRM service layer."""
+     service = CrmService()
+-    return list_ok(customer_to_dict(customer) for customer in service.list_customer_profiles())
++    return paginated_ok(request, service.list_customer_profiles(), customer_to_dict)
+ 
+ 
+ @api_view(["GET"])
+@@ -36,7 +36,4 @@ def customer_detail(request, customer_id):
+ def contact_requests(request):
+     """Return public contact requests without changing read/status fields."""
+     service = CrmService()
+-    return list_ok(
+-        contact_request_to_dict(contact)
+-        for contact in service.list_contact_requests()
+-    )
++    return paginated_ok(request, service.list_contact_requests(), contact_request_to_dict)
+diff --git a/django_backend/apps/api/views/helpers.py b/django_backend/apps/api/views/helpers.py
+index 7b6d35d..43a8c89 100644
+--- a/django_backend/apps/api/views/helpers.py
++++ b/django_backend/apps/api/views/helpers.py
+@@ -4,23 +4,96 @@ from django.core.exceptions import ObjectDoesNotExist
+ from rest_framework import status
+ from rest_framework.response import Response
+ 
++DEFAULT_LIMIT = 20
++MAX_LIMIT = 100
++
+ 
+ def ok(data):
+-    """Return the standard success envelope for Phase 9.1 APIs."""
++    """Return the standard success envelope for business APIs."""
+     return Response({"success": True, "data": data})
+ 
+ 
++def bad_request(code, message):
++    """Return a consistent 400 response for invalid API input."""
++    return Response(
++        {
++            "success": False,
++            "error": {
++                "code": code,
++                "message": message,
++            },
++        },
++        status=status.HTTP_400_BAD_REQUEST,
++    )
++
++
++def _positive_int(value, default):
++    """Parse a non-negative integer query parameter."""
++    if value in {None, ""}:
++        return default
++    try:
++        parsed = int(value)
++    except (TypeError, ValueError):
++        return None
++    if parsed < 0:
++        return None
++    return parsed
++
++
++def pagination_from_request(request):
++    """Read and clamp pagination parameters for list APIs."""
++    limit = _positive_int(request.query_params.get("limit"), DEFAULT_LIMIT)
++    offset = _positive_int(request.query_params.get("offset"), 0)
++
++    if limit is None or offset is None:
++        return None, bad_request(
++            "invalid_pagination",
++            "`limit` and `offset` must be non-negative integers.",
++        )
++
++    return {
++        "limit": min(limit, MAX_LIMIT),
++        "offset": offset,
++    }, None
++
++
+ def list_ok(items):
+-    """Return a list response with a count for frontend pagination readiness."""
++    """Return a non-paginated list response for compatibility helpers."""
+     materialized_items = list(items)
+     return ok(
+         {
+             "count": len(materialized_items),
++            "limit": len(materialized_items),
++            "offset": 0,
++            "next_offset": None,
+             "results": materialized_items,
+         }
+     )
+ 
+ 
++def paginated_ok(request, queryset, serializer):
++    """Return a paginated list response without loading unnecessary rows."""
++    pagination, error_response = pagination_from_request(request)
++    if error_response:
++        return error_response
++
++    limit = pagination["limit"]
++    offset = pagination["offset"]
++    total_count = queryset.count()
++    page_items = queryset[offset : offset + limit]
++    next_offset = offset + limit if offset + limit < total_count else None
++
++    return ok(
++        {
++            "count": total_count,
++            "limit": limit,
++            "offset": offset,
++            "next_offset": next_offset,
++            "results": [serializer(item) for item in page_items],
++        }
++    )
++
++
+ def not_found(resource_name):
+     """Return a consistent 404 response without exposing internals."""
+     return Response(
+diff --git a/django_backend/apps/api/views/sales.py b/django_backend/apps/api/views/sales.py
+index 9e54254..be4be14 100644
+--- a/django_backend/apps/api/views/sales.py
++++ b/django_backend/apps/api/views/sales.py
+@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
+ 
+ from apps.api.permissions import ReadOnlyApiPermission
+ from apps.api.serializers.sales import quote_detail_to_dict, quote_file_to_dict, quote_to_dict
+-from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.api.views.helpers import handle_not_found, ok, paginated_ok
+ from apps.sales.services.quotation_service import QuotationService
+ 
+ 
+@@ -13,7 +13,7 @@ from apps.sales.services.quotation_service import QuotationService
+ def quotes(request):
+     """Return quote request headers through the Sales service layer."""
+     service = QuotationService()
+-    return list_ok(quote_to_dict(quote) for quote in service.list_quotes())
++    return paginated_ok(request, service.list_quotes(), quote_to_dict)
+ 
+ 
+ @api_view(["GET"])
+@@ -32,7 +32,4 @@ def quote_detail(request, quote_id):
+ def quote_files(request, quote_id):
+     """Return quote file metadata without changing physical files."""
+     service = QuotationService()
+-    return list_ok(
+-        quote_file_to_dict(file_obj)
+-        for file_obj in service.list_quote_files(quote_id)
+-    )
++    return paginated_ok(request, service.list_quote_files(quote_id), quote_file_to_dict)
+diff --git a/docs/api/API_REFERENCE.md b/docs/api/API_REFERENCE.md
+new file mode 100644
+index 0000000..e51a740
+--- /dev/null
++++ b/docs/api/API_REFERENCE.md
+@@ -0,0 +1,83 @@
++# API Reference
++
++## Scope
++
++This reference covers the Django read-only API layer prepared in Phase 9.1 and
++hardened in Phase 9.2. These APIs read from the legacy SQLite database through
++service and repository boundaries.
++
++## Common Response Format
++
++Success:
++
++```json
++{
++  "success": true,
++  "data": {}
++}
++```
++
++List success:
++
++```json
++{
++  "success": true,
++  "data": {
++    "count": 25,
++    "limit": 20,
++    "offset": 0,
++    "next_offset": 20,
++    "results": []
++  }
++}
++```
++
++Error:
++
++```json
++{
++  "success": false,
++  "error": {
++    "code": "not_found",
++    "message": "Product was not found."
++  }
++}
++```
++
++## Pagination
++
++List endpoints support:
++
++| Parameter | Type | Default | Maximum | Description |
++|---|---:|---:|---:|---|
++| `limit` | integer | 20 | 100 | Number of rows returned |
++| `offset` | integer | 0 | n/a | Row offset from the start |
++
++Invalid pagination returns `400` with error code `invalid_pagination`.
++
++## Endpoints
++
++| Endpoint | Method | Request format | Response format | Permissions | Legacy dependency | Migration status |
++|---|---|---|---|---|---|---|
++| `/api/health` | GET | none | legacy health JSON | public read | legacy database file check | cutover |
++| `/api/v1/health` | GET | none | legacy health JSON | public read | legacy database file check | cutover |
++| `/api/v1/catalog/products/` | GET | `limit`, `offset` | paginated products | read-only | `products`, `product_categories` | cutover-ready |
++| `/api/v1/catalog/products/<id>/` | GET | path id | product detail | read-only | `products`, `product_images` | cutover-ready |
++| `/api/v1/catalog/categories/` | GET | `limit`, `offset` | paginated categories | read-only | `product_categories` | cutover-ready |
++| `/api/v1/catalog/materials/` | GET | `limit`, `offset` | paginated materials | read-only | `materials` | cutover-ready |
++| `/api/v1/crm/customers/` | GET | `limit`, `offset` | paginated customers | read-only | `customers`, `customer_notes` | cutover-ready |
++| `/api/v1/crm/customers/<id>/` | GET | path id | customer detail | read-only | `customers`, `customer_notes` | cutover-ready |
++| `/api/v1/crm/contact-requests/` | GET | `limit`, `offset` | paginated contacts | read-only | `contact_requests` | cutover-ready |
++| `/api/v1/sales/quotes/` | GET | `limit`, `offset` | paginated quotes | read-only | `quote_requests`, `customers` | cutover-ready |
++| `/api/v1/sales/quotes/<id>/` | GET | path id | quote detail | read-only | `quote_requests`, `quote_request_items`, `quote_files` | cutover-ready |
++| `/api/v1/sales/quotes/<id>/files/` | GET | `limit`, `offset` | paginated file metadata | read-only | `quote_files` | cutover-ready |
++| `/api/v1/cms/pages/` | GET | `limit`, `offset` | paginated pages | read-only | `cms_pages` | cutover-ready |
++| `/api/v1/cms/pages/<slug>/` | GET | path slug | page detail | read-only | `cms_pages` | cutover-ready |
++| `/api/v1/cms/menu/` | GET | `location`, `limit`, `offset` | paginated nested menu items | read-only | `cms_menu_items` | cutover-ready |
++| `/api/v1/auth/profile/` | GET | `admin_id` or `X-Demo-Admin-Id` | safe profile fields | read-only | `admin_users` | preparation only |
++| `/api/v1/auth/permissions/` | GET | `role` | permission matrix | read-only | static matrix | preparation only |
++
++## Permission Policy
++
++Only safe HTTP methods are allowed for business APIs. `POST`, `PUT`, `PATCH`,
++and `DELETE` are rejected until write API transaction design is approved.
+diff --git a/docs/api/API_VERSIONING_STRATEGY.md b/docs/api/API_VERSIONING_STRATEGY.md
+new file mode 100644
+index 0000000..95512f2
+--- /dev/null
++++ b/docs/api/API_VERSIONING_STRATEGY.md
+@@ -0,0 +1,44 @@
++# API Versioning Strategy
++
++## Current Policy
++
++New Django APIs use the `/api/v1/` prefix.
++
++Examples:
++
++```http
++GET /api/v1/catalog/products/
++GET /api/v1/crm/customers/
++GET /api/v1/sales/quotes/
++```
++
++The legacy-compatible health endpoint remains available at `/api/health` to
++protect old integrations.
++
++## Backward Compatibility
++
++Within `v1`:
++
++- do not remove response fields without a minor phase and review approval
++- add new optional fields only when tests and docs are updated
++- keep error envelope stable
++- keep pagination keys stable: `count`, `limit`, `offset`, `next_offset`, `results`
++
++## Future Version Strategy
++
++Create `/api/v2/` only when a breaking change is required, such as:
++
++- database ownership migration changes response semantics
++- write APIs introduce new workflow contracts
++- authentication cutover changes permission behavior
++- field names or nested structures must change
++
++## Deprecation Rule
++
++Before retiring a version:
++
++1. document affected endpoints
++2. provide replacement endpoint
++3. run contract tests for both versions
++4. create rollback plan
++5. obtain architecture approval
+diff --git a/docs/api/OPENAPI_READINESS.md b/docs/api/OPENAPI_READINESS.md
+new file mode 100644
+index 0000000..7060d08
+--- /dev/null
++++ b/docs/api/OPENAPI_READINESS.md
+@@ -0,0 +1,45 @@
++# OpenAPI Readiness
++
++## Goal
++
++Prepare the API layer for future Swagger/OpenAPI documentation without adding
++new packages in Phase 9.2.
++
++## Serializer Coverage
++
++Current serializer helper coverage:
++
++- Catalog products, images, categories, materials
++- CRM customers, notes, contact requests
++- Sales quote headers, items, files
++- CMS pages and nested menu items
++- Auth preparation profile
++
++## Schema Requirements
++
++Future OpenAPI integration should describe:
++
++- common success envelope
++- common error envelope
++- pagination schema
++- endpoint parameters such as `limit`, `offset`, `location`, `role`, `admin_id`
++- 403 read-only enforcement
++- 404 not found response
++- 400 invalid pagination response
++
++## Documentation Gaps
++
++- No generated schema yet.
++- Serializer helpers are not DRF `Serializer` classes yet.
++- No examples exported to machine-readable YAML/JSON yet.
++- Real auth requirement is documented but not enforced as a production gate.
++
++## Future Swagger Integration Plan
++
++1. Select approved package, such as `drf-spectacular`, in a future phase.
++2. Convert serializer helpers or wrap them with explicit DRF serializers.
++3. Add schema views under an internal route.
++4. Protect Swagger UI behind admin/auth boundary.
++5. Add schema generation test in CI.
++
++No package installation is performed in Phase 9.2.
+diff --git a/docs/codex-prompts/PHASE_9.2_API_HARDENING_PRODUCTION_READINESS.md b/docs/codex-prompts/PHASE_9.2_API_HARDENING_PRODUCTION_READINESS.md
+new file mode 100644
+index 0000000..8c9cc63
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_9.2_API_HARDENING_PRODUCTION_READINESS.md
+@@ -0,0 +1,504 @@
++# TASK: Phase 9.2 - API Hardening & Production Readiness
++
++
++Project:
++
++mecprecision-vietnam
++
++
++
++====================================================
++SAVE THIS PROMPT
++====================================================
++
++
++Save this entire task specification into:
++
++
++C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\codex-prompts
++
++
++Filename:
++
++
++PHASE_9.2_API_HARDENING_PRODUCTION_READINESS.md
++
++
++
++====================================================
++STATUS
++====================================================
++
++
++Completed:
++
++
++Phase 9 - API Health Cutover
++
++Phase 9.1 - Business API Cutover
++
++
++
++Approved capabilities:
++
++
++- Django API routing
++- Business read-only APIs
++- Service based architecture
++- Repository boundaries
++- Legacy database read-only access
++
++
++
++====================================================
++OBJECTIVE
++====================================================
++
++
++Harden Django API layer before:
++
++Phase 10 - Database Ownership Migration.
++
++
++
++Goal:
++
++
++Make API layer production-ready
++without changing database ownership.
++
++
++
++====================================================
++IMPORTANT RULES
++====================================================
++
++
++DO NOT:
++
++
++- migrate database
++- change managed=False models
++- write to legacy database
++- shutdown legacy system
++- enable public write APIs
++- implement full authentication cutover
++
++
++
++ONLY:
++
++
++- improve API reliability
++- improve API security
++- improve API documentation
++- improve API performance
++- create production readiness checks
++
++
++
++====================================================
++READ DOCUMENTS FIRST
++====================================================
++
++
++Before implementation read:
++
++
++docs/testing/PHASE_TESTING_STANDARD.md
++
++
++docs/migration/API_CUTOVER_STRATEGY.md
++
++
++docs/migration/API_CUTOVER_ROLLBACK_PLAN.md
++
++
++docs/security/API_SECURITY_REVIEW.md
++
++
++docs/api/API_CUTOVER_MATRIX.md
++
++
++docs/architecture/adr/
++
++
++
++====================================================
++TASK 1
++====================================================
++
++
++API Documentation.
++
++
++
++Create:
++
++
++docs/api/API_REFERENCE.md
++
++
++
++Include:
++
++
++- endpoint list
++- HTTP methods
++- request format
++- response format
++- permissions
++- legacy dependency
++- migration status
++
++
++
++Create:
++
++
++docs/api/API_VERSIONING_STRATEGY.md
++
++
++
++Include:
++
++
++- /api/v1 policy
++- backward compatibility
++- future version strategy
++
++
++
++====================================================
++TASK 2
++====================================================
++
++
++OpenAPI Preparation.
++
++
++
++Create:
++
++
++docs/api/OPENAPI_READINESS.md
++
++
++
++Include:
++
++
++- serializer coverage
++- schema requirements
++- documentation gaps
++- future Swagger integration plan
++
++
++
++DO NOT install unnecessary packages.
++
++
++
++====================================================
++TASK 3
++====================================================
++
++
++API Performance Review.
++
++
++
++Create:
++
++
++docs/performance/API_PERFORMANCE_REVIEW.md
++
++
++
++Review:
++
++
++- query count
++- N+1 queries
++- pagination requirement
++- large dataset handling
++- response time baseline
++
++
++
++Add tests for:
++
++
++- query count
++- pagination
++- serializer efficiency
++
++
++
++====================================================
++TASK 4
++====================================================
++
++
++API Security Hardening.
++
++
++
++Create:
++
++
++docs/security/API_SECURITY_HARDENING.md
++
++
++
++Review:
++
++
++- authentication boundary
++- permission enforcement
++- sensitive fields
++- readonly protection
++- CSRF considerations
++- rate limit requirements
++
++
++
++Implement:
++
++
++- stronger readonly permission tests
++- sensitive data exposure tests
++
++
++
++====================================================
++TASK 5
++====================================================
++
++
++API Monitoring Preparation.
++
++
++
++Create:
++
++
++docs/operations/API_MONITORING_PLAN.md
++
++
++
++Include:
++
++
++- request logging
++- error tracking
++- health monitoring
++- metrics
++- alert requirements
++
++
++
++DO NOT deploy monitoring tools.
++
++
++
++====================================================
++TASK 6
++====================================================
++
++
++API Test Improvement.
++
++
++
++Add tests:
++
++
++- endpoint availability
++- permission tests
++- response schema tests
++- invalid request handling
++- regression tests
++
++
++
++Required command:
++
++
++python manage.py check
++
++
++pytest
++
++
++.\scripts\run_migration_test.ps1
++
++
++
++Expected:
++
++
++All tests PASS.
++
++
++
++====================================================
++TASK 7
++====================================================
++
++
++Create API Production Checklist.
++
++
++
++Create:
++
++
++docs/operations/API_PRODUCTION_READINESS_CHECKLIST.md
++
++
++
++Checklist:
++
++
++Architecture
++
++Security
++
++Performance
++
++Testing
++
++Monitoring
++
++Rollback
++
++Documentation
++
++
++
++====================================================
++TASK 8
++====================================================
++
++
++Create Review Package.
++
++
++
++Create:
++
++
++docs/reviews/
++
++
++PHASE_9.2_REVIEW_SUMMARY.md
++
++
++PHASE_9.2_CHANGESET.patch
++
++
++
++Summary:
++
++
++Objective
++
++Changes
++
++API impact
++
++Security impact
++
++Performance impact
++
++Testing results
++
++Risks
++
++Recommendation
++
++
++
++====================================================
++GIT REQUIREMENTS
++====================================================
++
++
++Create branch:
++
++
++migration/phase-9.2-api-hardening
++
++
++
++Commit:
++
++
++git add .
++
++
++git commit -m "feat: harden api production readiness"
++
++
++
++Create tag:
++
++
++phase-9.2-api-hardening-complete
++
++
++
++====================================================
++FINAL OUTPUT
++====================================================
++
++
++Return:
++
++
++1.
++
++Branch name
++
++
++2.
++
++Base commit
++
++
++3.
++
++Final commit
++
++
++4.
++
++Documentation created
++
++
++5.
++
++Tests result
++
++
++6.
++
++Review package location
++
++
++7.
++
++Git tag
++
++
++
++FINAL STATUS:
++
++
++WAITING FOR ARCHITECT REVIEW
++
++
++STOP.
++
++DO NOT START PHASE 10.
+\ No newline at end of file
+diff --git a/docs/operations/API_MONITORING_PLAN.md b/docs/operations/API_MONITORING_PLAN.md
+new file mode 100644
+index 0000000..73e013d
+--- /dev/null
++++ b/docs/operations/API_MONITORING_PLAN.md
+@@ -0,0 +1,58 @@
++# API Monitoring Plan
++
++## Request Logging
++
++Production API logging should capture:
++
++- request path
++- HTTP method
++- response status
++- duration
++- user/admin ID after auth cutover
++- request ID/correlation ID
++
++Do not log passwords, tokens, session IDs or uploaded file contents.
++
++## Error Tracking
++
++Track:
++
++- 400 invalid request spikes
++- 403 permission rejections
++- 404 not found spikes
++- 500 exceptions
++- legacy database connection failures
++
++## Health Monitoring
++
++Monitor:
++
++- `GET /api/health`
++- `GET /api/v1/health`
++- Django process availability
++- legacy SQLite file availability
++
++## Metrics
++
++Required metrics before production traffic:
++
++- request count by endpoint
++- p50/p95/p99 latency
++- error rate by endpoint
++- database query count/timing
++- response payload size
++
++## Alert Requirements
++
++Alert when:
++
++- health endpoint reports degraded state
++- error rate exceeds agreed threshold
++- p95 latency exceeds agreed threshold
++- database read failures occur
++- unsafe method attempts spike unexpectedly
++
++## Tooling Boundary
++
++Phase 9.2 documents monitoring requirements only. It does not deploy external
++monitoring, tracing or alerting tools.
+diff --git a/docs/operations/API_PRODUCTION_READINESS_CHECKLIST.md b/docs/operations/API_PRODUCTION_READINESS_CHECKLIST.md
+new file mode 100644
+index 0000000..1a0dc4a
+--- /dev/null
++++ b/docs/operations/API_PRODUCTION_READINESS_CHECKLIST.md
+@@ -0,0 +1,56 @@
++# API Production Readiness Checklist
++
++## Architecture
++
++- [x] API routes are centralized in `apps.api`.
++- [x] API views call services only.
++- [x] Services call repositories.
++- [x] Repositories own ORM access.
++- [x] Legacy database remains read-only.
++
++## Security
++
++- [x] Unsafe methods are blocked.
++- [x] Sensitive auth fields are not exposed.
++- [x] Login cutover is not implemented accidentally.
++- [ ] Real production authentication approved.
++- [ ] Rate limiting approved.
++
++## Performance
++
++- [x] List endpoints support pagination.
++- [x] Representative query count tests exist.
++- [x] API views avoid direct ORM access.
++- [ ] Production latency baseline collected.
++- [ ] Caching strategy approved if needed.
++
++## Testing
++
++- [x] `python manage.py check`
++- [x] API endpoint tests
++- [x] permission tests
++- [x] response schema tests
++- [x] invalid request tests
++- [x] full regression tests
++
++## Monitoring
++
++- [x] Monitoring plan documented.
++- [ ] Request logging implementation approved.
++- [ ] Metrics collection approved.
++- [ ] Alert thresholds approved.
++
++## Rollback
++
++- [x] Health rollback plan exists.
++- [x] API cutover strategy exists.
++- [ ] Production route rollback tested with real proxy/router.
++
++## Documentation
++
++- [x] API reference
++- [x] API versioning strategy
++- [x] OpenAPI readiness document
++- [x] Performance review
++- [x] Security hardening document
++- [x] Monitoring plan
+diff --git a/docs/performance/API_PERFORMANCE_REVIEW.md b/docs/performance/API_PERFORMANCE_REVIEW.md
+new file mode 100644
+index 0000000..293bb6c
+--- /dev/null
++++ b/docs/performance/API_PERFORMANCE_REVIEW.md
+@@ -0,0 +1,58 @@
++# API Performance Review
++
++## Scope
++
++Phase 9.2 reviews read-only Django APIs before any database ownership migration.
++
++## Query Count
++
++Current tests cover bounded query counts for representative endpoints:
++
++- catalog product list: count query plus joined page query
++- CRM customer list: count query plus page query plus notes prefetch
++
++Repositories remain responsible for `select_related` and `prefetch_related`.
++API views must not call ORM directly.
++
++## N+1 Query Review
++
++Known protections:
++
++- products use `select_related("category")`
++- CRM customers use preloaded notes
++- sales quotes use `select_related("customer")`
++- quote detail loads items and files through repository methods
++- CMS menu preloads child menu items
++
++## Pagination Requirement
++
++All list endpoints now support `limit` and `offset`.
++
++Defaults:
++
++- `limit`: 20
++- `offset`: 0
++- maximum `limit`: 100
++
++Invalid pagination returns `400`.
++
++## Large Dataset Handling
++
++The API slices querysets before serialization. This avoids serializing full
++tables for list endpoints and gives frontend clients a stable paging contract.
++
++## Response Time Baseline
++
++No production traffic baseline exists yet. Before production cutover, add:
++
++- p50/p95/p99 response time tracking
++- database query timing
++- slow endpoint logging
++- endpoint-level alerting
++
++## Remaining Performance Risks
++
++- Detail endpoints with large related collections may need page-level slicing in
++  a future phase.
++- Search/filtering is not yet implemented.
++- No caching is enabled at the Django API layer.
+diff --git a/docs/security/API_SECURITY_HARDENING.md b/docs/security/API_SECURITY_HARDENING.md
+new file mode 100644
+index 0000000..6a8e8ad
+--- /dev/null
++++ b/docs/security/API_SECURITY_HARDENING.md
+@@ -0,0 +1,65 @@
++# API Security Hardening
++
++## Authentication Boundary
++
++Full authentication cutover is not implemented in Phase 9.2. Business APIs must
++be treated as internal readiness APIs until real authentication and authorization
++are approved.
++
++## Permission Enforcement
++
++`ReadOnlyApiPermission` allows only safe methods:
++
++- `GET`
++- `HEAD`
++- `OPTIONS`
++
++Unsafe methods are rejected:
++
++- `POST`
++- `PUT`
++- `PATCH`
++- `DELETE`
++
++## Sensitive Fields
++
++Auth preparation APIs must not expose:
++
++- password hashes
++- session IDs
++- reset tokens
++- 2FA codes
++- raw login attempts
++
++Tests verify that credential/session words do not appear in auth profile
++payloads.
++
++## Readonly Protection
++
++Readonly protection is layered:
++
++1. unmanaged legacy models
++2. read-only legacy database connection
++3. repository boundary
++4. service boundary
++5. read-only API permission
++6. unsafe-method tests
++
++## CSRF Considerations
++
++Because Phase 9.2 APIs are read-only, CSRF risk is limited. Future authenticated
++write APIs must define CSRF/session/token policy before implementation.
++
++## Rate Limit Requirements
++
++No rate limiting tool is deployed in Phase 9.2. Before public exposure, add:
++
++- per-IP limit
++- per-user limit after auth cutover
++- burst protection
++- logging for throttled requests
++
++## Recommendation
++
++Do not expose business API endpoints publicly until auth cutover, rate limiting
++and monitoring are approved.

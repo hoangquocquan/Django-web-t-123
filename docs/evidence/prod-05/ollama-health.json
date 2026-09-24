@@ -1,0 +1,8 @@
+{
+  "endpoint_reachable": true,
+  "model": "llama3",
+  "model_available": true,
+  "response_received": true,
+  "schema_valid": true,
+  "fallback_used": false
+}

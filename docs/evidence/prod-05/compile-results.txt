@@ -1,0 +1,2 @@
+PASS
+Python compileall completed without errors for django_backend, scripts, and tests.

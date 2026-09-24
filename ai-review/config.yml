@@ -1,0 +1,43 @@
+# AI Phase Review Engine configuration.
+# File này chỉ dùng cấu hình an toàn, không chứa secret thật.
+
+ollama:
+  url: http://localhost:11434
+  model: llama3
+  required: true
+  timeout_seconds: 120
+  max_retries: 3
+  prompt_version: ai-review-v2.0
+
+required_checks:
+  - evidence_collection
+  - rule_validation
+  - test_execution
+  - ollama_review
+  - report_generation
+
+required_files:
+  - docs/ai-review/AI_PHASE_REVIEW_ENGINE_ARCHITECTURE.md
+  - docs/codex-prompts/PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md
+  - ai-review/evidence_collector.py
+  - ai-review/requirement_validator.py
+  - ai-review/test_executor.py
+  - ai-review/ollama_phase_reviewer.py
+  - ai-review/report_generator.py
+  - ai-review/run_phase_review.py
+  - ai-review/config.yml
+  - tests/test_phase13_5_ai_review_engine.py
+
+ignored_files:
+  - docs.zip
+  - ai-review/evidence/current_phase.json
+  - ai-review/results/rule_validation.json
+  - ai-review/results/test_result.json
+  - ai-review/results/ai_review.json
+
+security_rules:
+  production_approval_allowed: false
+  code_auto_modify_allowed: false
+  failed_test_bypass_allowed: false
+  external_ai_allowed: false
+  human_approval_required: true

@@ -1,0 +1,38 @@
+{
+  "phase": "PROD-07",
+  "status": "PASS",
+  "results": {
+    "django_check": "PASS",
+    "migration_drift": "PASS",
+    "review_v3_focused": {"passed": 90, "failed": 0},
+    "full_regression": {"passed": 546, "failed": 0, "duration_seconds": 62.87},
+    "mypy": "PASS",
+    "bandit": "PASS",
+    "prod_06_runtime": "PASS",
+    "prod_06_uat": {"passed": 100, "failed": 0},
+    "load_smoke": {"requests": 140, "errors": 0, "p95_ms": 55.01},
+    "backup_restore": "RESTORE_TEST_PASS",
+    "n8n_hmac": {"status": "PASS", "phase_advanced": false},
+    "ollama_runtime": {
+      "endpoint_reachable": true,
+      "model_list_received": true,
+      "models": ["nomic-embed-text:latest", "llama3:latest"],
+      "selected_model": "llama3",
+      "selected_model_available": true
+    }
+  },
+  "critical_findings": 0,
+  "high_findings": 0,
+  "failed_required": [],
+  "safety": {
+    "production_deployed": false,
+    "staging_deployed_by_prod_07": false,
+    "merge_performed": false,
+    "push_performed": false,
+    "tag_created": false,
+    "human_release_approval_required": true,
+    "human_production_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

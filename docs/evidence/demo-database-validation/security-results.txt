@@ -1,0 +1,10 @@
+Ruff: PASS
+Targeted mypy with --ignore-missing-imports --follow-imports=skip: PASS
+Bandit: PASS, zero High findings in validation code
+External AI used: false
+Local Ollama only: true
+Human approval required: true
+Auto merge: false
+Auto deploy: false
+Unexpected local auth-token write during Mandatory review: detected
+Compensating token recovery: completed

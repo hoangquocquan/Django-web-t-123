@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "endpoint": "http://localhost:11434",
+  "endpoint_reachable": true,
+  "generation_model": "llama3:latest",
+  "generation_model_available": true,
+  "embedding_model": "nomic-embed-text:latest",
+  "embedding_model_available": true,
+  "external_ai_used": false
+}

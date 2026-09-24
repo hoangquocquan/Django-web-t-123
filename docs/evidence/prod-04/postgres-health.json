@@ -1,0 +1,1 @@
+{"status":"PASS","engine":"PostgreSQL 16","django_migrations":"current","rag_documents":2,"rag_chunks":2,"rag_embeddings":2,"n8n_persistence":true}

@@ -1,0 +1,11 @@
+Phase: PROD-05
+Branch: codex/production-readiness-full
+Platform: Windows local development workspace
+Python: 3.12.10
+Django: 5.2.16
+Database target: PostgreSQL 16 Compose service
+Cache target: Redis 7 Compose service
+AI target: local Ollama llama3
+Docker: Desktop 4.74.0, Engine 29.4.3, desktop-linux context
+Runtime stack: web, PostgreSQL, Redis, and n8n healthy
+Production deployment: false

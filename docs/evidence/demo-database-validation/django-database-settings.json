@@ -1,0 +1,12 @@
+﻿{
+    "engine":  "django.db.backends.sqlite3",
+    "path":  "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\\db.sqlite3",
+    "exists":  true,
+    "in_memory":  false,
+    "size_bytes":  5087232,
+    "last_modified_epoch":  1785672211.9228296,
+    "readable":  true,
+    "writable":  true,
+    "sqlite_header_valid":  true,
+    "sha256":  "a9f0a9ad2e43a8f8023ca6f99345cd5a1ae6cc5bdd7578a44006f7966f51114d"
+}

@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "available": true,
+  "version": "Redis 7.4.10",
+  "health": "healthy",
+  "authenticated_ping": "PONG",
+  "django_cache_set_get": "PASS",
+  "host_port_exposed": false
+}

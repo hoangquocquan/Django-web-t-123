@@ -1,0 +1,32 @@
+{
+  "wave": "django-wave-2",
+  "objective": "Migrate Django business core ownership for product, customer, and inventory.",
+  "domains": [
+    "product",
+    "customer",
+    "inventory"
+  ],
+  "legacy_preserved": true,
+  "production_deployed": false,
+  "legacy_deleted": false,
+  "destructive_migration": false,
+  "new_api_prefixes": [
+    "/api/v1/business/",
+    "/api/v1/inventory/"
+  ],
+  "tests": {
+    "django_check": "PASS",
+    "makemigrations_check": "PASS",
+    "migrate": "PASS",
+    "wave_tests": "PASS: 10 tests",
+    "full_pytest": "PASS: 208 tests",
+    "ai_factory": "PASS"
+  },
+  "ai_review": {
+    "status": "AI_SOFTWARE_FACTORY_COMPLETE",
+    "decision": "PASS",
+    "human_approval_required": true,
+    "production_approved_by_ai": false
+  },
+  "expected_status": "DJANGO_BUSINESS_CORE_WAVE_COMPLETE"
+}

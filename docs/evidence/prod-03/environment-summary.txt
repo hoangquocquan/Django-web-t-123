@@ -1,0 +1,11 @@
+Phase: PROD-03
+Date: 2026-08-02
+Branch: codex/production-readiness-full
+OS: Windows 11 host with Docker Desktop Linux containers
+Python: 3.12.10
+Django: 5.2.16
+Database: PostgreSQL 16-alpine local Compose service
+Cache: Redis 7-alpine local Compose service
+Application runtime: Gunicorn 23.0.0, non-root appuser
+Ollama: local http://127.0.0.1:11434, llama3 available
+Deployment performed: false

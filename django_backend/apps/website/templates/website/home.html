@@ -1,0 +1,209 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <!-- High Impact Hero Section -->
+  <section class="hero-section" style="background-image: linear-gradient(135deg, rgba(11, 37, 69, 0.94) 0%, rgba(6, 25, 51, 0.82) 60%, rgba(19, 127, 236, 0.4) 100%), url('{{ hero_image }}');">
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>GIA CÔNG CƠ KHÍ CHÍNH XÁC CNC • ISO 9001:2015</span>
+      </div>
+      <h1 class="hero-title">Giải Pháp Cơ Khí Chính Xác Hàng Đầu Cho Nhà Máy</h1>
+      <p class="hero-subtitle">
+        Chuyên sản xuất linh kiện CNC, đồ gá lắp ráp & kiểm tra (Jigs), cụm chi tiết máy chính xác cao với tiêu chuẩn quốc tế và đáp ứng tiến độ khắt khe.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="{% url 'website:products' %}">
+          <span>Khám phá sản phẩm</span>
+          <span class="btn-arrow">→</span>
+        </a>
+        <a class="btn btn-outline" href="{% url 'website:contact' %}">Yêu cầu báo giá kỹ thuật</a>
+      </div>
+    </div>
+
+    <!-- Floating Stats Bar -->
+    <div class="hero-stats-wrapper">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-number">10+</span>
+            <span class="stat-label">Năm kinh nghiệm</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">±0.005<small>mm</small></span>
+            <span class="stat-label">Độ chính xác gia công</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">500+</span>
+            <span class="stat-label">Dự án hoàn thành</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Kiểm tra CMM chất lượng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Company Intro Section -->
+  <section class="section section-intro">
+    <div class="container split-grid">
+      <div class="intro-text">
+        <span class="eyebrow">Năng lực sản xuất</span>
+        <h2>Thiết kế & Gia công chuẩn xác cho mọi khâu sản xuất</h2>
+        <p class="lead-text">MecPrecision VIETNAM sở hữu hệ thống máy phay, tiện CNC hiện đại cùng đội ngũ kỹ sư giàu kinh nghiệm, đáp ứng dung sai khắt khe nhất của đối tác Nhật Bản, Hàn Quốc & Châu Âu.</p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">⚙️</div>
+            <div>
+              <h4>Phay & Tiện CNC 3 - 5 Trục</h4>
+              <p>Gia công trên vật liệu nhôm, thép hợp kim, inox, nhựa kỹ thuật, titan.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🔍</div>
+            <div>
+              <h4>Kiểm định CMM 3D</h4>
+              <p>Đo kiểm kích thước hình học chính xác tuyệt đối trước khi giao hàng.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🚀</div>
+            <div>
+              <h4>Tiến độ giao hàng nhanh</h4>
+              <p>Hỗ trợ làm mẫu prototype cấp tốc từ 3 - 5 ngày làm việc.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="intro-card-box">
+        <div class="highlight-box">
+          <span class="highlight-tag">ƯU THẾ NỔI BẬT</span>
+          <h3>Tại sao chọn MecPrecision?</h3>
+          <ul class="check-list">
+            <li>✓ Quy trình quản lý chất lượng đạt chuẩn ISO 9001:2015</li>
+            <li>✓ Hỗ trợ tư vấn tối ưu hóa bản vẽ thiết kế (DFM) miễn phí</li>
+            <li>✓ Bảo mật bản vẽ & thông tin kỹ thuật khách hàng tuyệt đối</li>
+            <li>✓ Đáp ứng số lượng từ mẫu đơn chiếc đến sản xuất hàng loạt</li>
+          </ul>
+          <a class="btn btn-secondary text-center" href="{% url 'website:technology' %}">Xem chi tiết công nghệ</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products Section -->
+  <section class="section section-products bg-soft">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <span class="eyebrow">Danh mục sản phẩm</span>
+          <h2>Sản phẩm nổi bật</h2>
+        </div>
+        <a class="link-more" href="{% url 'website:products' %}">
+          <span>Xem tất cả sản phẩm</span>
+          <span>→</span>
+        </a>
+      </div>
+
+      <div class="card-grid">
+        {% for product in featured_products %}
+          <article class="product-card">
+            <div class="product-media">
+              {% if product.main_image %}
+                <img src="{{ product.main_image }}" alt="{{ product.name }}" loading="lazy" />
+              {% else %}
+                <div class="placeholder-img"><span>🔧 MecPrecision</span></div>
+              {% endif %}
+              <span class="category-badge">{{ product.category_name|default:"Gia công CNC" }}</span>
+            </div>
+            <div class="product-body">
+              <h3 class="product-title">
+                <a href="{% url 'website:product-detail' product.slug %}">{{ product.name }}</a>
+              </h3>
+              <p class="product-desc">{{ product.short_description|default:product.description|truncatechars:110 }}</p>
+              <div class="product-footer">
+                <a class="btn-text" href="{% url 'website:product-detail' product.slug %}">
+                  <span>Chi tiết</span>
+                  <span>→</span>
+                </a>
+                <a class="btn-quote-sm" href="{% url 'website:contact' %}">Báo giá</a>
+              </div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-state">
+            <p>Đang cập nhật danh mục sản phẩm từ hệ thống...</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Technology Highlights (Dark Band) -->
+  <section class="section section-tech dark-band">
+    <div class="container">
+      <div class="section-header light">
+        <div>
+          <span class="eyebrow light">Giải pháp công nghệ</span>
+          <h2>Năng lực trang thiết bị & Quy trình</h2>
+        </div>
+        <a class="link-more light" href="{% url 'website:technology' %}">
+          <span>Tìm hiểu thêm</span>
+          <span>→</span>
+        </a>
+      </div>
+
+      <div class="capability-grid">
+        {% for capability in capabilities %}
+          <article class="tech-card">
+            <div class="tech-icon">⚡</div>
+            <h3>{{ capability.title }}</h3>
+            <p>{{ capability.content|truncatechars:140 }}</p>
+          </article>
+        {% empty %}
+          <article class="tech-card">
+            <div class="tech-icon">⚙️</div>
+            <h3>Gia công Phay CNC</h3>
+            <p>Hệ thống máy phay CNC 3 trục, 4 trục & 5 trục gia công các chi tiết phức tạp độ chính xác cao.</p>
+          </article>
+          <article class="tech-card">
+            <div class="tech-icon">🌀</div>
+            <h3>Gia công Tiện CNC</h3>
+            <p>Tiện chính xác trục, bạc, ống lót với độ bóng bề mặt Ra 0.8um.</p>
+          </article>
+          <article class="tech-card">
+            <div class="tech-icon">🔬</div>
+            <h3>Đo kiểm 3D CMM</h3>
+            <p>Máy đo tọa độ 3 chiều CMM Mitutoyo đảm bảo sai số đúng bản vẽ.</p>
+          </article>
+          <article class="tech-card">
+            <div class="tech-icon">🛡️</div>
+            <h3>Xử lý bề mặt</h3>
+            <p>Anodizing nhôm, mạ niken, tôi chân không, sơn tĩnh điện bảo vệ chi tiết.</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Banner -->
+  <section class="section section-cta">
+    <div class="container">
+      <div class="cta-box">
+        <div class="cta-content">
+          <h2>Bạn có bản vẽ thiết kế cần báo giá gia công?</h2>
+          <p>Gửi file CAD/STEP hoặc PDF cho chúng tôi. Đội ngũ kỹ thuật MecPrecision sẽ phản hồi báo giá trong vòng 24 giờ làm việc.</p>
+        </div>
+        <div class="cta-action">
+          <a class="btn btn-primary btn-large" href="{% url 'website:contact' %}">
+            <span>Gửi bản vẽ báo giá</span>
+            <span>✉️</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

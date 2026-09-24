@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "docker": {
+    "web": "healthy",
+    "postgres": "healthy",
+    "redis": "healthy",
+    "n8n": "healthy"
+  },
+  "django_health": {"status_code": 200, "database": "ok", "redis_enabled": true},
+  "n8n_health": {"status_code": 200, "status": "ok"},
+  "ollama_health": {"status_code": 200, "local": true},
+  "production_modified": false
+}

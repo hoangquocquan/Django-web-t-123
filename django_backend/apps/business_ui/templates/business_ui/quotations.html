@@ -1,0 +1,51 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Quotations{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Quotation</p>
+      <h1>Danh sách báo giá</h1>
+    </div>
+  </section>
+  {% if can_write %}
+    <form class="panel form compact-form" method="post" action="{% url 'business_ui:quotation-create' %}">
+      {% csrf_token %}
+      <h2>Tạo báo giá nháp</h2>
+      <div class="form-grid">
+        <label>Opportunity
+          <select name="opportunity_id"><option value="">Chưa liên kết</option>{% for opportunity in opportunities %}<option value="{{ opportunity.id }}">{{ opportunity.title }}</option>{% endfor %}</select>
+        </label>
+        <label>Khách hàng
+          <select name="customer_id"><option value="">Chưa liên kết</option>{% for customer in customers %}<option value="{{ customer.id }}">{{ customer }}</option>{% endfor %}</select>
+        </label>
+        <label>Sản phẩm
+          <select name="product_id"><option value="">Khác</option>{% for product in products %}<option value="{{ product.id }}">{{ product.name }}</option>{% endfor %}</select>
+        </label>
+        <label>Mô tả <input name="description" required /></label>
+        <label>Số lượng <input name="quantity" type="number" min="0.01" step="0.01" value="1" /></label>
+        <label>Đơn giá <input name="unit_price" type="number" min="0" step="0.01" value="0" /></label>
+        <label>Giảm giá <input name="discount" type="number" min="0" step="0.01" value="0" /></label>
+      </div>
+      <button class="button" type="submit">Lưu nháp</button>
+    </form>
+  {% endif %}
+  <section class="panel">
+    <table>
+      <thead><tr><th>Số báo giá</th><th>Khách hàng</th><th>Status</th><th>Approval</th><th>Total</th><th></th></tr></thead>
+      <tbody>
+        {% for quotation in quotations %}
+          <tr>
+            <td>{{ quotation.quotation_number }}</td>
+            <td>{% if quotation.customer %}{{ quotation.customer }}{% else %}-{% endif %}</td>
+            <td>{{ quotation.status }}</td>
+            <td>{{ quotation.approval_status }}</td>
+            <td>{{ quotation.total }}</td>
+            <td><a href="{% url 'business_ui:quotation-detail' quotation.id %}">Chi tiết</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">Chưa có báo giá.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

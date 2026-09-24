@@ -1,0 +1,561 @@
+diff --git a/django_backend/README.md b/django_backend/README.md
+index 0d27908..1a94947 100644
+--- a/django_backend/README.md
++++ b/django_backend/README.md
+@@ -1,4 +1,4 @@
+-# Django Backend - Phase 2 Foundation
++# Django Backend - Migration Foundation
+ 
+ This folder contains the parallel Django backend for the `mecprecision-vietnam` migration.
+ 
+@@ -72,7 +72,15 @@ PostgreSQL URLs are prepared for future phases, but Phase 2 does not migrate any
+ 
+ ## Health APIs
+ 
+-Versioned API:
++Phase 9 starts API cutover with a low-risk read-only health endpoint.
++
++Legacy-compatible route now served by Django:
++
++```http
++GET /api/health
++```
++
++Versioned route:
+ 
+ ```http
+ GET /api/v1/health/
+@@ -88,12 +96,27 @@ Expected response:
+ 
+ ```json
+ {
+-  "success": true,
+-  "message": "Django foundation ready",
+-  "phase": 2
++  "status": "ok",
++  "api_version": "1.1.0",
++  "environment": "development",
++  "database": "ok",
++  "sqlite_version": "3.x.x",
++  "redis_enabled": false
+ }
+ ```
+ 
++Cutover status:
++
++```http
++GET /api/v1/cutover/health/
++```
++
++Rollback smoke endpoint:
++
++```http
++GET /api/v1/cutover/health/rollback/
++```
++
+ ## Run Checks
+ 
+ ```powershell
+diff --git a/django_backend/apps/core/api_compatibility.py b/django_backend/apps/core/api_compatibility.py
+new file mode 100644
+index 0000000..25e6a7b
+--- /dev/null
++++ b/django_backend/apps/core/api_compatibility.py
+@@ -0,0 +1,124 @@
++"""Compatibility helpers for the first controlled API cutover.
++
++Phase 9 intentionally starts with the lowest-risk endpoint: health check.
++This module keeps the response compatible with the legacy `/api/health`
++contract while Django begins serving the route.
++"""
++
++from pathlib import Path
++import os
++import sqlite3
++from urllib.parse import unquote, urlparse
++
++from django.conf import settings
++
++
++LEGACY_HEALTH_ENDPOINT = "/api/health"
++DJANGO_HEALTH_ENDPOINT = "/api/v1/health"
++ROLLBACK_STATUS_ENDPOINT = "/api/v1/cutover/health/rollback"
++LEGACY_API_VERSION = "1.1.0"
++
++
++def _env_bool(name, default=False):
++    """Read a legacy-style boolean environment variable safely."""
++    value = os.getenv(name)
++    if value is None:
++        return default
++    return value.strip().lower() in {"1", "true", "yes", "on"}
++
++
++def _legacy_database_path():
++    """Convert the configured legacy database URI into a local file path.
++
++    Django opens the legacy SQLite database in read-only URI mode. For the
++    health check we only need to verify that the file exists; no SQL query is
++    executed and no schema is modified.
++    """
++    legacy_config = settings.DATABASES.get("legacy", {})
++    database_name = str(legacy_config.get("NAME", ""))
++    if not database_name:
++        return None
++
++    if database_name.startswith("file:"):
++        parsed = urlparse(database_name)
++        path = unquote(parsed.path)
++        if len(path) > 2 and path[0] == "/" and path[2] == ":":
++            path = path[1:]
++        return Path(path)
++
++    return Path(database_name)
++
++
++def is_legacy_database_available():
++    """Return True when the legacy SQLite file configured for Django exists."""
++    database_path = _legacy_database_path()
++    return bool(database_path and database_path.exists())
++
++
++def build_legacy_health_response():
++    """Build the same public health payload shape used by legacy backend.
++
++    This function is the compatibility adapter. If an old client expects
++    `status`, `api_version`, `database`, or `redis_enabled`, it can continue
++    reading those keys after the route is served by Django.
++    """
++    database_ok = is_legacy_database_available()
++    return {
++        "status": "ok" if database_ok else "degraded",
++        "api_version": LEGACY_API_VERSION,
++        "environment": os.getenv("MEC_ENV", "development"),
++        "database": "ok" if database_ok else "missing",
++        "sqlite_version": sqlite3.sqlite_version,
++        "redis_enabled": _env_bool("MEC_REDIS_CACHE_ENABLED", False),
++    }
++
++
++def build_cutover_status_response():
++    """Describe which endpoint has been cut over and how it is protected."""
++    return {
++        "success": True,
++        "phase": 9,
++        "cutover": {
++            "endpoint": LEGACY_HEALTH_ENDPOINT,
++            "django_endpoint": DJANGO_HEALTH_ENDPOINT,
++            "legacy_endpoint": LEGACY_HEALTH_ENDPOINT,
++            "status": "enabled",
++            "type": "read_only_health_check",
++        },
++        "compatibility_contract": {
++            "preserved_keys": [
++                "status",
++                "api_version",
++                "environment",
++                "database",
++                "sqlite_version",
++                "redis_enabled",
++            ],
++            "write_api_cutover": False,
++            "auth_cutover": False,
++        },
++        "rollback": {
++            "status_endpoint": ROLLBACK_STATUS_ENDPOINT,
++            "strategy": "route /api/health back to legacy backend if contract tests fail",
++        },
++    }
++
++
++def build_health_rollback_response():
++    """Return rollback instructions without mutating runtime configuration."""
++    return {
++        "success": True,
++        "phase": 9,
++        "rollback_ready": True,
++        "endpoint": LEGACY_HEALTH_ENDPOINT,
++        "actions": [
++            "remove Django route/proxy rule for /api/health",
++            "restore legacy backend route /api/health as the active target",
++            "run health contract tests again",
++        ],
++        "safety": {
++            "database_changed": False,
++            "legacy_code_changed": False,
++            "write_api_cutover": False,
++        },
++    }
+diff --git a/django_backend/apps/core/urls.py b/django_backend/apps/core/urls.py
+index adf3709..42970f0 100644
+--- a/django_backend/apps/core/urls.py
++++ b/django_backend/apps/core/urls.py
+@@ -1,10 +1,17 @@
+ """URL routing for the core app."""
+ 
+-from django.urls import path
++from django.urls import path, re_path
+ 
+-from .views import health_check
++from .views import api_cutover_status, health_check, health_rollback_status
+ 
+ 
+ urlpatterns = [
+-    path("health/", health_check, name="health"),
++    re_path(r"^health/?$", health_check, name="health"),
++    re_path(r"^cutover/health/?$", api_cutover_status, name="health-cutover-status"),
++    re_path(
++        r"^cutover/health/rollback/?$",
++        health_rollback_status,
++        name="health-rollback-status",
++    ),
++    path("cutover/", api_cutover_status, name="api-cutover-status"),
+ ]
+diff --git a/django_backend/apps/core/views.py b/django_backend/apps/core/views.py
+index 6625664..6c6b0b6 100644
+--- a/django_backend/apps/core/views.py
++++ b/django_backend/apps/core/views.py
+@@ -1,8 +1,14 @@
+-"""Infrastructure-only health check views for migration Phase 2."""
++"""Infrastructure and compatibility views for the Django migration backend."""
+ 
+ from rest_framework.decorators import api_view
+ from rest_framework.response import Response
+ 
++from .api_compatibility import (
++    build_cutover_status_response,
++    build_health_rollback_response,
++    build_legacy_health_response,
++)
++
+ 
+ @api_view(["GET"])
+ def root_health(request):
+@@ -10,19 +16,25 @@ def root_health(request):
+     return Response(
+         {
+             "success": True,
+-            "message": "Django foundation ready",
+-            "phase": 2,
++            "message": "Django migration backend ready",
++            "phase": 9,
+         }
+     )
+ 
+ 
+ @api_view(["GET"])
+ def health_check(request):
+-    """Return the Phase 2 health check response."""
+-    return Response(
+-        {
+-            "success": True,
+-            "message": "Django foundation ready",
+-            "phase": 2,
+-        }
+-    )
++    """Serve the legacy-compatible health API from Django."""
++    return Response(build_legacy_health_response())
++
++
++@api_view(["GET"])
++def api_cutover_status(request):
++    """Show the selected Phase 9 cutover route and compatibility contract."""
++    return Response(build_cutover_status_response())
++
++
++@api_view(["GET"])
++def health_rollback_status(request):
++    """Expose the rollback plan for the health endpoint cutover."""
++    return Response(build_health_rollback_response())
+diff --git a/django_backend/tests/test_health.py b/django_backend/tests/test_health.py
+index 53d4bec..9d5c254 100644
+--- a/django_backend/tests/test_health.py
++++ b/django_backend/tests/test_health.py
+@@ -1,13 +1,71 @@
+-"""Tests for Phase 2 infrastructure health endpoints."""
++"""Contract tests for the first Phase 9 API cutover endpoint."""
+ 
+ 
+-def test_api_v1_health_returns_phase_2_ready(client):
+-    """The versioned health API proves the Django foundation is reachable."""
+-    response = client.get("/api/v1/health/")
++import pytest
++
++
++LEGACY_HEALTH_KEYS = {
++    "status",
++    "api_version",
++    "environment",
++    "database",
++    "sqlite_version",
++    "redis_enabled",
++}
++
++
++@pytest.mark.parametrize(
++    "url",
++    [
++        "/api/health",
++        "/api/health/",
++        "/api/v1/health",
++        "/api/v1/health/",
++    ],
++)
++def test_health_cutover_preserves_legacy_contract(client, legacy_db, url):
++    """Django must keep the same health payload shape as the legacy endpoint."""
++    response = client.get(url)
++    body = response.json()
++
++    assert response.status_code == 200
++    assert set(body.keys()) == LEGACY_HEALTH_KEYS
++    assert body["status"] == "ok"
++    assert body["api_version"] == "1.1.0"
++    assert body["database"] == "ok"
++    assert isinstance(body["redis_enabled"], bool)
++
++
++def test_health_cutover_status_documents_route_switch(client):
++    """The cutover status endpoint explains what route Django now serves."""
++    response = client.get("/api/v1/cutover/health/")
++    body = response.json()
+ 
+     assert response.status_code == 200
+-    assert response.json() == {
+-        "success": True,
+-        "message": "Django foundation ready",
+-        "phase": 2,
+-    }
++    assert body["success"] is True
++    assert body["phase"] == 9
++    assert body["cutover"]["endpoint"] == "/api/health"
++    assert body["cutover"]["status"] == "enabled"
++    assert body["compatibility_contract"]["write_api_cutover"] is False
++    assert body["compatibility_contract"]["auth_cutover"] is False
++
++
++def test_health_rollback_endpoint_is_read_only_smoke_test(client):
++    """Rollback endpoint returns instructions only; it does not mutate config."""
++    response = client.get("/api/v1/cutover/health/rollback/")
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["success"] is True
++    assert body["rollback_ready"] is True
++    assert body["safety"]["database_changed"] is False
++    assert body["safety"]["legacy_code_changed"] is False
++    assert body["safety"]["write_api_cutover"] is False
++
++
++def test_health_cutover_rejects_write_method(client):
++    """The first cutover endpoint is read-only and must reject POST writes."""
++    response = client.post("/api/health", data={}, content_type="application/json")
++
++    assert response.status_code == 405
++    assert "detail" in response.json()
+diff --git a/docs/migration/API_CUTOVER_ROLLBACK_PLAN.md b/docs/migration/API_CUTOVER_ROLLBACK_PLAN.md
+new file mode 100644
+index 0000000..df6d344
+--- /dev/null
++++ b/docs/migration/API_CUTOVER_ROLLBACK_PLAN.md
+@@ -0,0 +1,44 @@
++# API Cutover Rollback Plan
++
++## Endpoint
++
++```http
++GET /api/health
++```
++
++## Rollback Trigger
++
++Rollback if any of these checks fail:
++
++- contract tests detect a response shape mismatch
++- health endpoint returns unexpected non-200 status
++- proxy or frontend route cannot reach Django reliably
++- monitoring shows degraded behavior after cutover
++
++## Rollback Steps
++
++1. Remove or disable the Django route/proxy rule for `/api/health`.
++2. Route `/api/health` back to the legacy backend.
++3. Run legacy health smoke test.
++4. Run Django contract tests to confirm the issue is isolated.
++5. Document the rollback reason in the phase review notes.
++
++## Safety
++
++This rollback is safe because Phase 9 health cutover:
++
++- does not write database data
++- does not change legacy code
++- does not migrate schema
++- does not affect authentication/session handling
++
++## Smoke Endpoint
++
++Django exposes a read-only rollback status endpoint:
++
++```http
++GET /api/v1/cutover/health/rollback/
++```
++
++This endpoint only explains the rollback plan. It does not mutate runtime
++configuration.
+diff --git a/docs/migration/API_CUTOVER_STRATEGY.md b/docs/migration/API_CUTOVER_STRATEGY.md
+new file mode 100644
+index 0000000..46106fc
+--- /dev/null
++++ b/docs/migration/API_CUTOVER_STRATEGY.md
+@@ -0,0 +1,62 @@
++# API Cutover Strategy
++
++## Phase 9 Goal
++
++Move one low-risk legacy API route to Django while preserving compatibility and
++keeping rollback simple.
++
++## Selected Route
++
++`GET /api/health`
++
++Reasons:
++
++- read-only
++- no authentication required
++- no business transaction
++- no database mutation
++- simple response contract
++
++## Adapter Pattern
++
++The Django core app owns an API compatibility adapter:
++
++```text
++request
++  -> Django URL route
++  -> core view
++  -> compatibility adapter
++  -> legacy-compatible JSON response
++```
++
++## Route Strategy
++
++Both unversioned and versioned routes are supported:
++
++```http
++GET /api/health
++GET /api/v1/health
++```
++
++The unversioned route protects old clients. The versioned route becomes the
++standard for new integrations.
++
++## Validation Strategy
++
++Automated tests must verify:
++
++- legacy-compatible response keys
++- endpoint accepts trailing and non-trailing slash
++- cutover metadata is available
++- rollback smoke endpoint is available
++- write methods are rejected
++
++## Future Cutover Rule
++
++Future API routes should only be moved after:
++
++- ORM/service parity is approved
++- contract tests exist
++- rollback plan is documented
++- write APIs have transaction tests
++- auth APIs have security approval
+diff --git a/docs/migration/API_HEALTH_CUTOVER_CONTRACT.md b/docs/migration/API_HEALTH_CUTOVER_CONTRACT.md
+new file mode 100644
+index 0000000..50d561c
+--- /dev/null
++++ b/docs/migration/API_HEALTH_CUTOVER_CONTRACT.md
+@@ -0,0 +1,45 @@
++# API Health Cutover Contract
++
++## Selected Endpoint
++
++Phase 9 cuts over only the low-risk health check endpoint.
++
++Legacy endpoint:
++
++```http
++GET /api/health
++```
++
++Django endpoints:
++
++```http
++GET /api/health
++GET /api/health/
++GET /api/v1/health
++GET /api/v1/health/
++```
++
++## Preserved Response Shape
++
++The Django compatibility adapter preserves the public keys from the legacy
++`get_health_status()` response:
++
++| Key | Meaning |
++|---|---|
++| `status` | Overall service state: `ok` or `degraded` |
++| `api_version` | Legacy API version value |
++| `environment` | Runtime environment |
++| `database` | Legacy SQLite availability |
++| `sqlite_version` | SQLite runtime version |
++| `redis_enabled` | Whether legacy Redis cache is enabled |
++
++## Cutover Boundary
++
++This phase does not cut over write APIs, authentication, CMS CRUD, catalog CRUD,
++CRM workflows, or quotation workflows.
++
++## Compatibility Rule
++
++Old clients must be able to call `/api/health` and continue reading the same
++top-level keys. Any future additions must be documented and covered by contract
++tests before approval.
+diff --git a/docs/migration/MIGRATION_ROADMAP.md b/docs/migration/MIGRATION_ROADMAP.md
+index 89dbec0..42474cd 100644
+--- a/docs/migration/MIGRATION_ROADMAP.md
++++ b/docs/migration/MIGRATION_ROADMAP.md
+@@ -58,20 +58,28 @@ Sales Quotation Hardening & Transaction Governance
+ 
+ CMS Migration
+ 
++### Phase 8
++
++Authentication Migration
++
++Auth read-only mapping, permission matrix, security review, hash compatibility
++checks, and rollback plan.
++
+ ### Migration Testing Standard
+ 
+ Migration Testing Standard Completed.
+ 
+ ## Current
+ 
+-### Phase 8
++### Phase 9
+ 
+-Authentication Migration
++API Cutover
+ 
+-Phase này tạo read-only auth mapping, permission matrix, security review, hash compatibility checks và rollback plan mà không thay đổi legacy login/session behavior.
++Cut over only the read-only `/api/health` endpoint to Django while preserving
++the legacy response contract and documenting rollback.
+ 
+ ## Planned
+ 
+-### Phase 9
++### Phase 10
+ 
+-API Cutover
++Production cutover planning

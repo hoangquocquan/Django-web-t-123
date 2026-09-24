@@ -1,0 +1,8 @@
+{
+  "status": "NOT_VERIFIED",
+  "available": false,
+  "endpoint": "http://127.0.0.1:5678/healthz",
+  "reason": "Unable to connect to the local n8n endpoint",
+  "impact": "Not required for PROD-01; live orchestration belongs to PROD-04",
+  "retry_command": "Invoke-WebRequest http://127.0.0.1:5678/healthz"
+}

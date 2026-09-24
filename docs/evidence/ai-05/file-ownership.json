@@ -1,0 +1,10 @@
+{
+  "phase": "AI-05",
+  "owners": {
+    "review_engine": ["ai-review/", "scripts/ollama_phase_reviewer.py"],
+    "factory": ["ai-factory/run_ai_factory.py"],
+    "orchestration": ["scripts/n8n_*.py", "n8n/workflows/phase_automation_controller.json"],
+    "tests": ["tests/test_ai_mandatory_review_gate.py", "tests/test_phase13_*.py"],
+    "documentation": ["docs/codex-prompts/", "docs/evidence/ai-05/", "docs/reviews/"]
+  }
+}

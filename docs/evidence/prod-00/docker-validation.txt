@@ -1,0 +1,8 @@
+STATUS: PASS_WITH_WARNINGS
+CONFIG_COMMAND: docker compose -f docker-compose.yml config --quiet
+CONFIG_EXIT_CODE: 0
+DOCKER_CLIENT: available, version 29.4.3
+DOCKER_DAEMON: unavailable
+CONFIG_WARNING: Access denied reading C:/Users/hoang/.docker/config.json
+IMPACT: Compose syntax is valid, but no build, container health, PostgreSQL, or Redis runtime claim is made.
+RETRY_COMMAND: Start Docker Desktop, then run docker version and docker compose up --build.

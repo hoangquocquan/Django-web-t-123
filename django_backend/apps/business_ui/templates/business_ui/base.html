@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Business UI{% endblock %} - MecPrecision</title>
+    <link rel="stylesheet" href="{% static 'business_ui/business.css' %}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="{% url 'business_ui:dashboard' %}">
+        <span class="brand-mark">M</span>
+        <span>MecPrecision Business</span>
+      </a>
+      <nav>
+        <a href="{% url 'website:home' %}">Website</a>
+        <a href="{% url 'admin_ui:dashboard' %}">CMS Admin</a>
+        <a href="{% url 'admin_ui:logout' %}">Logout</a>
+      </nav>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        {% for item in navigation %}
+          <a class="{% if item.key == active %}active{% endif %}" href="{{ item.url }}">{{ item.label }}</a>
+        {% endfor %}
+      </aside>
+      <main class="main">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>
+

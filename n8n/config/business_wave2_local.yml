@@ -1,0 +1,13 @@
+mode: local_only
+webhook_validation: hmac_sha256
+secret_env: N8N_BUSINESS_WAVE2_SECRET
+workflows:
+  - website_lead
+  - document_update
+  - sales_follow_up
+safety:
+  auto_deploy_production: false
+  auto_send_external_email: false
+  bypass_human_approval: false
+  external_ai_api: false
+

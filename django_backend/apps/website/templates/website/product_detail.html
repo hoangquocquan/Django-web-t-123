@@ -1,0 +1,88 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="section" style="padding-top: 48px;">
+    <div class="container split-grid">
+      <div class="product-media-box" style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--line-border); background: var(--bg-subtle);">
+        {% if product.main_image %}
+          <img src="{{ product.main_image }}" alt="{{ product.name }}" style="width: 100%; aspect-ratio: 4/3; object-fit: cover;" />
+        {% else %}
+          <div class="placeholder-img" style="aspect-ratio: 4/3;"><span>🔧 MecPrecision Custom Component</span></div>
+        {% endif %}
+      </div>
+
+      <div class="product-info-box">
+        <span class="category-badge" style="position: static; display: inline-block; margin-bottom: 12px;">{{ product.category_name|default:"Chi tiết cơ khí" }}</span>
+        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">{{ product.name }}</h1>
+        <p style="font-size: 16px; color: var(--slate-muted); line-height: 1.6; margin-bottom: 24px;">
+          {{ product.description|default:product.short_description|default:"Sản phẩm gia công cơ khí chính xác theo bản vẽ kỹ thuật của khách hàng." }}
+        </p>
+
+        <div class="spec-list" style="background: var(--bg-soft); border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--line-border); margin-bottom: 24px;">
+          <h4 style="margin-bottom: 16px; font-size: 15px;">Thông số & Tiêu chuẩn</h4>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line-border); padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="color: var(--slate-muted); font-size: 14px;">Mã chi tiết (SKU):</span>
+            <strong style="font-size: 14px;">{{ product.sku|default:"Custom CNC" }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line-border); padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="color: var(--slate-muted); font-size: 14px;">Dung sai đạt được:</span>
+            <strong style="font-size: 14px;">±0.005mm đến ±0.01mm</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line-border); padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="color: var(--slate-muted); font-size: 14px;">Vật liệu phổ biến:</span>
+            <strong style="font-size: 14px;">Nhôm A6061, Thép C45, Inox 304, Nhựa POM</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--slate-muted); font-size: 14px;">Trạng thái sản xuất:</span>
+            <strong style="color: var(--accent-blue); font-size: 14px;">Sẵn sàng nhận hàng</strong>
+          </div>
+        </div>
+
+        <div class="action-buttons" style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <a class="btn btn-primary" href="{% url 'website:contact' %}">
+            <span>Yêu cầu báo giá kỹ thuật</span>
+            <span>✉️</span>
+          </a>
+          <a class="btn btn-outline" href="{% url 'website:products' %}" style="color: var(--slate-body); border-color: var(--line-border);">
+            <span>Quay lại danh mục</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Products -->
+  <section class="section bg-soft">
+    <div class="container">
+      <div class="section-header">
+        <h2>Sản phẩm liên quan</h2>
+        <a class="link-more" href="{% url 'website:products' %}">Xem tất cả →</a>
+      </div>
+
+      <div class="card-grid">
+        {% for item in related_products %}
+          <article class="product-card">
+            <div class="product-media">
+              {% if item.main_image %}
+                <img src="{{ item.main_image }}" alt="{{ item.name }}" />
+              {% else %}
+                <div class="placeholder-img"><span>🔧 MecPrecision</span></div>
+              {% endif %}
+              <span class="category-badge">{{ item.category_name|default:"Gia công CNC" }}</span>
+            </div>
+            <div class="product-body">
+              <h3 class="product-title">
+                <a href="{% url 'website:product-detail' item.slug %}">{{ item.name }}</a>
+              </h3>
+              <p class="product-desc">{{ item.short_description|truncatechars:90 }}</p>
+              <div class="product-footer">
+                <a class="btn-text" href="{% url 'website:product-detail' item.slug %}">Chi tiết →</a>
+              </div>
+            </div>
+          </article>
+        {% empty %}
+          <p style="color: var(--slate-muted);">Chưa có sản phẩm liên quan khác.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

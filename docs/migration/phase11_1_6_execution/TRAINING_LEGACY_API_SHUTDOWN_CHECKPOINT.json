@@ -1,0 +1,22 @@
+{
+  "phase": "11.1.6.8",
+  "created_at": "2026-07-27T12:13:44.444902+00:00",
+  "environment": "TRAINING",
+  "before_state": {
+    "environment": "TRAINING",
+    "legacy_route": "/api/*",
+    "legacy_available": true,
+    "replacement_route": "/api/v1/*",
+    "replacement_available": true,
+    "legacy_disabled_in_training": false,
+    "production_route_changed": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "database_modified": false,
+    "updated_at": "2026-07-27T12:13:44.444902+00:00"
+  },
+  "restore_action": "restore_training_legacy_api_route_state",
+  "production_shutdown_allowed": false,
+  "production_shutdown_executed": false,
+  "artifact": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\TRAINING_LEGACY_API_SHUTDOWN_CHECKPOINT.json"
+}

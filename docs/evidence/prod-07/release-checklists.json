@@ -1,0 +1,18 @@
+{
+  "environment_names_documented": true,
+  "secret_values_absent": true,
+  "backup_restore_verified": true,
+  "rollback_documented": true,
+  "smoke_test_documented": true,
+  "monitoring_documented": true,
+  "migration_manifest_created": true,
+  "dependency_manifest_created": true,
+  "human_approval_required": true,
+  "auto_merge": false,
+  "auto_deploy": false,
+  "approval_bypass_detected": false,
+  "merge_authorized": false,
+  "release_authorized": false,
+  "deployment_authorized": false,
+  "production_authorized": false
+}

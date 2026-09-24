@@ -1,0 +1,44 @@
+{
+  "phase": "11.2",
+  "status": "BACKUP_CHECKPOINT_CREATED",
+  "created_at": "2026-07-27T12:23:09+00:00",
+  "metadata": {
+    "database_name": "mecprecision.sqlite",
+    "environment": "TRAINING",
+    "archive_type": "LEGACY_DATABASE_ARCHIVE",
+    "created_date": "2026-07-27T12:23:09+00:00",
+    "source_version": "765f73f093c86de201749d371eb9148d9da467a1",
+    "backup_location": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite",
+    "verification_status": "PENDING",
+    "owner": "migration-training-operator"
+  },
+  "manifest": {
+    "phase": "11.2",
+    "created_at": "2026-07-27T12:23:09+00:00",
+    "source_database": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\backend\\database\\mecprecision.sqlite",
+    "backup_location": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite",
+    "checksum_location": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite.sha256",
+    "metadata_location": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\archive_metadata.json",
+    "backup_size_bytes": 544768,
+    "source_checksum_before": "2b631bd26d1cd18b7fa446fa0092116f71a68ff9e1553b3f77a526fef495e849",
+    "source_checksum_after": "2b631bd26d1cd18b7fa446fa0092116f71a68ff9e1553b3f77a526fef495e849",
+    "backup_checksum": "2b631bd26d1cd18b7fa446fa0092116f71a68ff9e1553b3f77a526fef495e849",
+    "source_database_modified": false,
+    "sqlite_integrity_check": "ok",
+    "archive_package_type": "directory_manifest",
+    "database_file_committed_to_git": false
+  },
+  "safety": {
+    "source_database_deleted": false,
+    "source_database_modified": false,
+    "production_database_modified": false,
+    "irreversible_migration_executed": false
+  },
+  "artifacts": {
+    "backup": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite",
+    "checksum": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite.sha256",
+    "metadata": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\archive_metadata.json",
+    "manifest": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\metadata\\archive_package_manifest.json",
+    "checkpoint": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\reports\\BACKUP_CHECKPOINT.json"
+  }
+}

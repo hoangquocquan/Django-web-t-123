@@ -1,0 +1,4 @@
+STATUS: PASS
+COMMAND: python django_backend/manage.py makemigrations --check --dry-run
+EXIT_CODE: 0
+OUTPUT: No changes detected

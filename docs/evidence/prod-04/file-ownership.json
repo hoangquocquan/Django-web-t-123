@@ -1,0 +1,8 @@
+{
+  "ai_runtime": "django_backend/apps/ai/services",
+  "knowledge_runtime": "django_backend/apps/knowledge",
+  "api_boundary": "django_backend/apps/api",
+  "n8n_runtime": "docker-compose.yml and n8n/workflows",
+  "tests": "tests and django_backend/apps/api/tests",
+  "documentation": "docs/codex-prompts, docs/n8n, docs/reviews, docs/evidence/prod-04"
+}

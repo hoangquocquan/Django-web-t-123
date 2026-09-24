@@ -529,3 +529,444 @@ PHASE 2 - DJANGO FOUNDATION
 ```
 
 Stop here and wait for review.
+
+## 10. Phase 1 Review Update - Migration Philosophy
+
+The migration philosophy is:
+
+1. Incremental migration.
+2. Backward compatibility first.
+3. Rollback before cutover.
+4. Legacy system remains operational until Django parity is proven.
+
+This means Django should be introduced as a parallel system, not as a replacement on day one.
+
+The legacy Python backend remains the source of truth during early phases. Django can read, compare, and later write only after validation.
+
+Key rules:
+
+- Do not remove legacy routes during migration.
+- Do not move all modules at once.
+- Do not change database schema before model mapping is reviewed.
+- Do not switch authentication early.
+- Do not migrate write workflows before read parity exists.
+- Every migrated module must have a rollback path.
+
+## 11. Phase 1 Review Update - Phase A To H Migration Plan
+
+The migration plan is organized into business-safe phases. Each phase includes dependencies, risk, rollback approach, and validation method.
+
+### Phase A - Foundation
+
+Scope:
+
+- config
+- core
+- common utilities
+- logging
+- error handling
+
+Dependencies:
+
+- No business module dependency.
+- Environment configuration must be reviewed first.
+
+Risk:
+
+- Low business risk.
+- Medium architecture risk if `core` becomes too large.
+
+Rollback approach:
+
+- Disable Django foundation service.
+- Keep legacy backend as active runtime.
+- No database rollback required.
+
+Validation method:
+
+- Django health check works.
+- Django settings load from environment.
+- Logging and error response format are consistent.
+- `core` contains only health, middleware, exceptions, logging, and constants.
+
+### Phase B - Catalog
+
+Scope:
+
+- categories
+- materials
+- machines
+- processes
+- products
+
+Dependencies:
+
+- Phase A foundation.
+- Database mapping for catalog tables.
+- API compatibility layer for public product endpoints.
+- Media read-only strategy for existing image/file paths.
+
+Risk:
+
+- Medium/high because products connect to categories, specs, images, materials, processes, SEO, and public pages.
+
+Rollback approach:
+
+- Keep legacy `/api/products` and product admin routes active.
+- Use Django read-only endpoints first.
+- Revert route/proxy/frontend config to legacy if mismatch appears.
+
+Validation method:
+
+- Compare product count between legacy SQL and Django ORM.
+- Compare product list response fields.
+- Compare product detail response fields.
+- Validate category, material, machine, and process relationships.
+- Validate image/file paths remain usable.
+
+### Phase C - CRM
+
+Scope:
+
+- customers
+- contacts
+
+Dependencies:
+
+- Phase A foundation.
+- Database mapping for customer/contact tables.
+- Event/notification behavior documented before write migration.
+
+Risk:
+
+- Medium because contact requests are business leads.
+- Customer data may be referenced by quotation.
+
+Rollback approach:
+
+- Start with read-only CRM views.
+- Keep legacy contact submit route active until Django write behavior is tested.
+- Restore from backup if a write migration creates incorrect records.
+
+Validation method:
+
+- Compare customer/contact counts.
+- Validate contact status values.
+- Validate contact detail fields.
+- Test contact form validation in staging before cutover.
+
+### Phase D - Sales
+
+Scope:
+
+- quotation
+- quote items
+- quote files
+
+Dependencies:
+
+- Phase A foundation.
+- Phase B catalog.
+- Phase C CRM.
+- Media read-only support for quote files.
+- Transaction strategy approved.
+
+Risk:
+
+- High because quotation creates multi-table business records and may trigger events/jobs/notifications.
+
+Rollback approach:
+
+- Keep legacy quote request write route active.
+- Add Django quotation as read-only first.
+- Before write cutover, backup database and test transaction rollback.
+- If Django quote write fails, route back to legacy and restore affected rows if necessary.
+
+Validation method:
+
+- Compare quote request counts.
+- Validate quote request -> quote items relationship.
+- Validate quote files path behavior.
+- Validate transaction rollback on partial failure.
+- Validate status workflow: pending, processing, quoted, completed.
+
+### Phase E - Content
+
+Scope:
+
+- news
+- CMS pages
+- menus
+- banners
+
+Dependencies:
+
+- Phase A foundation.
+- Content table mapping.
+- Media read-only support for thumbnails and banners.
+- API compatibility layer for news/public content endpoints.
+
+Risk:
+
+- Medium because content affects public pages, SEO, and navigation.
+
+Rollback approach:
+
+- Keep existing public HTML/page rendering active.
+- Expose Django content APIs in parallel.
+- Revert menu/page/banner data source to legacy if output differs.
+
+Validation method:
+
+- Compare news/category/tag counts.
+- Validate page slug behavior.
+- Validate menu nested structure.
+- Validate banner status/date visibility.
+- Validate SEO metadata fields.
+
+### Phase F - Security
+
+Scope:
+
+- accounts
+- permissions
+- admin
+
+Dependencies:
+
+- Phase A foundation.
+- Admin user/session/password table mapping.
+- Permission matrix review.
+- CSRF/session/password reset strategy.
+
+Risk:
+
+- Very high because security affects all admin access.
+
+Rollback approach:
+
+- Keep legacy login/logout/session routes active.
+- Do not overwrite existing password hashes in bulk.
+- Keep legacy session cookie behavior available during transition.
+- If Django auth fails, route all admin traffic back to legacy.
+
+Validation method:
+
+- Validate login/logout.
+- Validate password reset.
+- Validate account lock/unlock.
+- Validate role/permission access.
+- Validate CSRF for admin writes.
+- Validate session expiration and multi-device sessions.
+
+### Phase G - AI
+
+Scope:
+
+- chatbot
+- translation
+- content/SEO generation
+- contact summary
+- quote analysis
+- PDF/catalogue reading
+- developer assistant
+
+Dependencies:
+
+- Phase A foundation.
+- Catalog/content/CRM/sales read APIs.
+- Ollama availability/fallback strategy.
+- Admin permission strategy for admin-only AI features.
+
+Risk:
+
+- Medium because AI can be slow, unavailable, or produce inaccurate output.
+- High if AI is allowed to write data directly.
+
+Rollback approach:
+
+- Keep AI advisory/non-mutating at first.
+- If Ollama is unavailable, return controlled fallback text.
+- Disable AI endpoints without affecting core website operation.
+
+Validation method:
+
+- Test Ollama online and offline behavior.
+- Validate timeout behavior.
+- Validate prompt does not expose secrets.
+- Validate AI output is marked as suggestion unless approved by admin.
+
+### Phase H - Dashboard
+
+Scope:
+
+- dashboard counts
+- charts
+- online users
+- visits
+- contacts
+- quote summaries
+- AI operational insights
+
+Dependencies:
+
+- Phase B catalog.
+- Phase C CRM.
+- Phase D sales.
+- Phase E content.
+- Phase F security for admin-only dashboard.
+
+Risk:
+
+- Medium because dashboard aggregates many modules and can show wrong numbers if dependencies are incomplete.
+
+Rollback approach:
+
+- Keep legacy dashboard active.
+- Add Django dashboard read-only first.
+- Revert admin dashboard route to legacy if counts differ.
+
+Validation method:
+
+- Compare product count.
+- Compare news count.
+- Compare contact count.
+- Compare quote count.
+- Compare 7-day, 30-day, and 12-month chart values.
+
+## 12. Phase 1 Review Update - Planning Consistency Notes
+
+The Phase A-H plan is consistent with the original detailed Phase 0-11 migration plan:
+
+- Phase A maps to Django foundation and core setup.
+- Phase B maps to catalog/category/product migration.
+- Phase C maps to customer/contact migration.
+- Phase D maps to quotation migration.
+- Phase E maps to content/CMS migration.
+- Phase F maps to auth/admin/security migration.
+- Phase G maps to AI migration.
+- Phase H maps to dashboard migration.
+
+The important correction is that authentication remains late even though some user tables can be mapped earlier as read-only data.
+
+## 13. Phase 3.2 Update - Phase 4 Preparation Requirements
+
+Before Phase 4 creates read-only unmanaged Django ORM models, the following architecture rules must be approved.
+
+### Multi Database Requirement
+
+Phase 4 should use two database aliases:
+
+```text
+default = Django internal database
+legacy  = existing SQLite legacy database
+```
+
+Rules:
+
+- `default` is for Django internal tables and future Django-managed data.
+- `legacy` is for unmanaged read-only legacy models.
+- Do not run migrations against `legacy`.
+- Do not write to `legacy` in Phase 4.
+
+Reference:
+
+- `DJANGO_MULTI_DATABASE_STRATEGY.md`
+
+### Read-Only ORM Requirement
+
+All legacy ORM models in Phase 4 must be:
+
+```python
+class Meta:
+    managed = False
+    db_table = "legacy_table_name"
+```
+
+Read-only protection must include:
+
+- unmanaged models,
+- service/repository-only access,
+- future `LegacyReadOnlyModel` concept,
+- tests proving writes are blocked,
+- no Django admin write registration.
+
+Reference:
+
+- `ORM_READONLY_PROTECTION.md`
+
+### Testing Requirement
+
+Phase 4 must include:
+
+- connection test,
+- model mapping test,
+- relationship test,
+- read-only protection test,
+- data integrity/count parity test,
+- repository parity test.
+
+Reference:
+
+- `ORM_TEST_STRATEGY.md`
+
+### Catalog Slice Order
+
+Phase 4A catalog order:
+
+```text
+4A.1 Foundation
+  - ProductCategory
+  - Material
+  - Machine
+  - ManufacturingProcess
+
+4A.2 Product
+  - Product
+  - ProductImage
+  - ProductSpec
+
+4A.3 Relationships
+  - ProductMaterial
+  - ProductProcess
+  - CapabilityMachine
+```
+
+Capability should be mapped before `CapabilityMachine`.
+
+Reference:
+
+- `CATALOG_ORM_MIGRATION_PLAN.md`
+
+### Access Layer Requirement
+
+Future data access should follow:
+
+```text
+API
+  -> Service Layer
+  -> Repository Adapter
+  -> Unmanaged Django ORM
+  -> Legacy Database
+```
+
+Rules:
+
+- API must not directly call ORM.
+- Business logic must not live inside models.
+- Repository/service pattern remains the safety boundary.
+
+Reference:
+
+- `LEGACY_ACCESS_LAYER_STRATEGY.md`
+
+### Phase 4 Stop Conditions
+
+Stop and request architecture review if:
+
+- a model requires schema changes,
+- a composite key cannot be mapped safely,
+- a media field tempts conversion to `ImageField`/`FileField`,
+- an auth/session/password table requires behavior migration,
+- a view-backed model is needed for writes,
+- a test would mutate the real legacy SQLite database.

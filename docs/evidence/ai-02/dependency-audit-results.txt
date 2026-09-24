@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = pip-audit availability not established.
+RETRY_COMMAND = pip-audit
+IMPACT = Dependency vulnerabilities are not asserted.

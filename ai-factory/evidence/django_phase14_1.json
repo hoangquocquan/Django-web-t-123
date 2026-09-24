@@ -1,0 +1,71 @@
+{
+  "phase": "14.1",
+  "selected_domain": "newsletter_subscribers",
+  "migration_status": "MIGRATION_APPLIED",
+  "django_ownership": {
+    "app": "apps.newsletter",
+    "model": "NewsletterSubscriber",
+    "managed": true,
+    "table": "newsletter_subscribers",
+    "service": "apps.newsletter.services.NewsletterService",
+    "api": "/api/v1/newsletter/subscribers/"
+  },
+  "legacy_compatibility": {
+    "legacy_backend_removed": false,
+    "legacy_database_modified": false,
+    "legacy_readonly_model_retained": "apps.cms.models.NewsletterSubscriber",
+    "legacy_repository_retained": "apps.cms.repositories.newsletter_repository.NewsletterRepository"
+  },
+  "migration_files": [
+    "django_backend/apps/newsletter/migrations/0001_initial.py",
+    "django_backend/apps/newsletter/migrations/0002_import_legacy_subscribers.py"
+  ],
+  "api_changes": [
+    "django_backend/apps/api/serializers/newsletter.py",
+    "django_backend/apps/api/views/newsletter.py",
+    "django_backend/apps/api/urls.py"
+  ],
+  "tests": [
+    {
+      "command": "pytest tests/test_phase14_1_django_ownership.py",
+      "status": "PASS",
+      "result": "8 passed"
+    },
+    {
+      "command": "pytest",
+      "status": "PASS",
+      "result": "188 passed"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "status": "PASS",
+      "result": "No changes detected"
+    },
+    {
+      "command": "python ai-factory/run_ai_factory.py --phase 14.1",
+      "status": "PASS",
+      "result": "AI_SOFTWARE_FACTORY_COMPLETE"
+    }
+  ],
+  "ai_review": {
+    "status": "PASS",
+    "report": "docs/reviews/PHASE_AI_REVIEW_REPORT.md",
+    "factory_report": "docs/reviews/AI_SOFTWARE_FACTORY_REPORT.md"
+  },
+  "risk_assessment": {
+    "overall": "LOW",
+    "reason": "Newsletter subscribers are low dependency and isolated from catalog, sales, and auth ownership.",
+    "remaining_risks": [
+      "Other CMS tables remain legacy-owned.",
+      "Legacy backend still exists.",
+      "Production routing is not changed in this phase."
+    ]
+  },
+  "safety": {
+    "production_deployed": false,
+    "code_auto_merged": false,
+    "all_modules_migrated": false,
+    "legacy_system_removed": false,
+    "human_approval_required": true
+  }
+}

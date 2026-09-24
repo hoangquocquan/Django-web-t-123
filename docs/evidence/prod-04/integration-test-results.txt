@@ -1,0 +1,4 @@
+STATUS=PASS
+RESULT=238 passed
+COMMAND=powershell -ExecutionPolicy Bypass -File scripts/run_migration_test.ps1
+CORRECTION=Updated stale anonymous-access expectations and moved direct ORM queries from views to services.

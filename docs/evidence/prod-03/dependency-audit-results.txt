@@ -1,0 +1,4 @@
+Production requirements pip-audit: PASS, no known vulnerabilities
+Development requirements pip-audit: PASS, no known vulnerabilities
+Audit used an isolated workspace cache after the default user cache was permission-blocked.
+Container CVE audit: NOT_RUN; Docker Scout requires Docker ID authentication.

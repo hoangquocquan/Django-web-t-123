@@ -1,0 +1,66 @@
+{
+  "status": "TRAINING_ONLY",
+  "ready_for_shutdown": false,
+  "evidence_type": "STAGING_SIMULATION_EVIDENCE",
+  "environment": "STAGING_SIMULATION",
+  "simulation": true,
+  "source": "iis_w3c_logs_and_csv",
+  "approved_by": "architect-review",
+  "server": "TRAINING-IIS-SERVER",
+  "iis_site": "MECPrecision-Web",
+  "site_id": "1",
+  "input_dir": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input",
+  "collection_period": "2026-07-19T13:03:28Z - 2026-07-26T12:55:04Z",
+  "data_sources": [
+    {
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_api_evidence.csv",
+      "records": 1200,
+      "type": "csv"
+    },
+    {
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_logs\\u_ex_training.log",
+      "records": 1200,
+      "type": "log"
+    }
+  ],
+  "required_files": {
+    "iis_logs_found": 1,
+    "csv_export": {
+      "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_api_evidence.csv",
+      "exists": true,
+      "fieldnames": [
+        "timestamp",
+        "source",
+        "client",
+        "endpoint",
+        "status_code",
+        "user_agent"
+      ],
+      "row_count": 1200,
+      "errors": []
+    }
+  },
+  "total_requests": 2400,
+  "legacy_requests": 0,
+  "django_requests": 2400,
+  "unknown_clients": 0,
+  "error_requests": 116,
+  "error_rate": 0.048333,
+  "known_clients": [
+    "10.0.0.10",
+    "10.0.0.11",
+    "10.0.0.12",
+    "10.0.0.13",
+    "10.0.0.14"
+  ],
+  "legacy_routes_disabled": false,
+  "routes_changed": false,
+  "proxy_modified": false,
+  "iis_modified": false,
+  "database_modified": false,
+  "shutdown_executed": false,
+  "errors": [],
+  "decision": "TRAINING_ONLY",
+  "elapsed_seconds": 0.0261,
+  "generated_at": "2026-07-26T13:53:44.527382+00:00"
+}

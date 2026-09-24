@@ -1,0 +1,36 @@
+{
+  "phase": "PROD-05",
+  "decision": "BLOCKED",
+  "state": "BLOCKED_SAFELY",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "f84dd708531754efce43317cb99a0ad5174e5297",
+  "phase_commit": "c11cb4e59151a49a32dae791461977299af8a31c",
+  "tests": {
+    "focused_passed": 23,
+    "regression_passed": 500,
+    "migration_regression_passed": 238,
+    "failed": 0
+  },
+  "runtime": {
+    "live_backup": "BLOCKED",
+    "live_isolated_restore": "BLOCKED_NOT_STARTED",
+    "dependency_audit": "NOT_RERUN_NETWORK_RESTRICTED"
+  },
+  "ollama_review": {
+    "decision": "BLOCKED",
+    "review_completed": true,
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 1,
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  },
+  "next_phase_started": false
+}

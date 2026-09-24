@@ -1,0 +1,100 @@
+{
+  "status": "BLOCKED",
+  "gate_state": "BLOCKED",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "BLOCKED",
+    "summary": "The review has been successfully completed and the code is deemed safe for deployment.",
+    "migration_findings": [
+      "django_backend/apps/foundation/migrations/0005_add_sales_approval_permission.py",
+      "django_backend/apps/foundation/migrations/0006_add_login_audit_and_two_factor_challenges.py"
+    ],
+    "recommended_actions": [
+      "Deploy the code to production",
+      "Proceed with deployment"
+    ],
+    "security_findings": [
+      "No security findings were reported during this review.",
+      "Production or deployment authorization language is prohibited."
+    ],
+    "missing_requirements": [],
+    "requirements_checked": [
+      "SECRET_KEY",
+      "ALLOWED_HOSTS",
+      "CSRF_TRUSTED_ORIGINS",
+      "POSTGRES_DB",
+      "POSTGRES_USER",
+      "POSTGRES_PASSWORD",
+      "REDIS_PASSWORD",
+      "METRICS_BEARER_TOKEN",
+      "N8N_ENCRYPTION_KEY",
+      "N8N_WEBHOOK_SECRET",
+      "WEB_PORT",
+      "UPLOAD_MAX_BYTES",
+      "ALLOWED_EXTERNAL_HOSTS"
+    ],
+    "critical_findings": [],
+    "test_findings": [],
+    "medium_findings": [
+      "No medium findings were reported during this review."
+    ],
+    "high_findings": [
+      "No high findings were reported during this review."
+    ],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_merge": false,
+      "auto_deploy": false,
+      "human_approval_required": true,
+      "approval_bypass_detected": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The review has been successfully completed and the code is deemed safe for deployment.",
+  "issues": [
+    "No high findings were reported during this review.",
+    "No medium findings were reported during this review."
+  ],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{\n  \"decision\": \"PASS\",\n  \"summary\": \"The review has been successfully completed and the code is deemed safe for deployment.\",\n  \"migration_findings\": [\n    \"django_backend/apps/foundation/migrations/0005_add_sales_approval_permission.py\",\n    \"django_backend/apps/foundation/migrations/0006_add_login_audit_and_two_factor_challenges.py\"\n  ],\n  \"recommended_actions\": [\n    \"Deploy the code to production\",\n    \"Proceed with deployment\"\n  ],\n  \"security_findings\": [\n    \"No security findings were reported during this review.\"\n  ],\n  \"missing_requirements\": [],\n  \"requirements_checked\": [\n    \"SECRET_KEY\",\n    \"ALLOWED_HOSTS\",\n    \"CSRF_TRUSTED_ORIGINS\",\n    \"POSTGRES_DB\",\n    \"POSTGRES_USER\",\n    \"POSTGRES_PASSWORD\",\n    \"REDIS_PASSWORD\",\n    \"METRICS_BEARER_TOKEN\",\n    \"N8N_ENCRYPTION_KEY\",\n    \"N8N_WEBHOOK_SECRET\",\n    \"WEB_PORT\",\n    \"UPLOAD_MAX_BYTES\",\n    \"ALLOWED_EXTERNAL_HOSTS\"\n  ],\n  \"critical_findings\": [],\n  \"test_findings\": [\n     ],\n  \"medium_findings\": [\n    \"No medium findings were reported during this review.\"\n  ],\n  \"high_findings\": [\n    \"No high findings were reported during this review.\"\n  ],\n  \"requires_human_review\": true,\n  \"safety_gates\": {\n    \"auto_merge\": false,\n    \"auto_deploy\": false,\n    \"human_approval_required\": true,\n    \"approval_bypass_detected\": false\n  },\n  \"model\": \"llama3\",\n  \"prompt_version\": \"ai-review-v2.1\"\n}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "48aacd51e5944e2fea3286a4ad6bbbf9266799b08e5c89b39d4f1f42ea5d1d42",
+    "review_output_sha256": "cf40c92fdc24c2c84b8a08b6019d6bdcb0c8519089b7170a4520b840da8f4e77",
+    "actual_diff_sha256": "b44a3be087be7cac576a0bc0fd1f1a46a2bca15f5702a71943fb8690934becf7",
+    "base_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+    "current_commit": "791a44da6e10d4bdaee11b29e1ed1cbb881ce353",
+    "correlation_id": "93a7f21e-9318-4237-9d09-d3445fc238cd"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "PROD-07",
+  "created_at": "2026-08-02T09:10:56+00:00"
+}

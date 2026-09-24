@@ -1,0 +1,126 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "PROD-06 STAGING UAT VALIDATION",
+    "medium_findings": [],
+    "migration_findings": [],
+    "high_findings": [],
+    "requirements_checked": [
+      "n8n_health",
+      "ollama_models"
+    ],
+    "recommended_actions": [],
+    "security_findings": [],
+    "test_findings": [],
+    "critical_findings": [],
+    "missing_requirements": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "deployment_authorized": false,
+      "auto_deploy": false,
+      "release_authorized": false,
+      "approval_bypass_detected": false,
+      "human_approval_required": true,
+      "auto_merge": false,
+      "production_authorized": false,
+      "merge_authorized": false
+    },
+    "full_diff_coverage": true,
+    "reviewed_chunk_ids": [
+      "django_backend/apps/api/views/crm.py#1",
+      "django_backend/apps/api/views/crm.py#2",
+      "django_backend/apps/api/views/crm.py#3",
+      "django_backend/config/settings/staging.py#1",
+      "scripts/prod06_load_test.py#1",
+      "scripts/prod06_load_test.py#2",
+      "scripts/prod06_load_test.py#3",
+      "scripts/prod06_n8n_live_check.py#1",
+      "scripts/prod06_n8n_live_check.py#2",
+      "scripts/prod06_staging_validate.py#1",
+      "scripts/prod06_staging_validate.py#2",
+      "scripts/prod06_staging_validate.py#3",
+      "scripts/prod06_staging_validate.py#4"
+    ],
+    "model": "llama3",
+    "prompt_version": "ai-review-v3.0"
+  },
+  "summary": "PROD-06 STAGING UAT VALIDATION",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_list_received": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "model_digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+    "family": "llama",
+    "ollama_version": "0.32.5",
+    "prompt_version": "ai-review-v3.0",
+    "context_tokens": 16384,
+    "temperature": 0.0,
+    "num_predict": 1200,
+    "error": "",
+    "response": "{\n  \"decision\": \"PASS\",\n  \"summary\": \"PROD-06 STAGING UAT VALIDATION\",\n  \"medium_findings\": [],\n  \"migration_findings\": [],\n  \"high_findings\": [],\n  \"requirements_checked\": [\"n8n_health\", \"ollama_models\"],\n  \"recommended_actions\": [],\n  \"security_findings\": [],\n  \"test_findings\": [],\n  \"critical_findings\": [],\n  \"missing_requirements\": [],\n  \"requires_human_review\": true,\n  \"safety_gates\": {\n    \"deployment_authorized\": false,\n    \"auto_deploy\": false,\n    \"release_authorized\": false,\n    \"approval_bypass_detected\": false,\n    \"human_approval_required\": true,\n    \"auto_merge\": false,\n    \"production_authorized\": false,\n    \"merge_authorized\": false\n  },\n  \"full_diff_coverage\": true,\n  \"reviewed_chunk_ids\": [\"django_backend/apps/api/views/crm.py#1\",\"django_backend/apps/api/views/crm.py#2\",\"django_backend/apps/api/views/crm.py#3\",\"django_backend/config/settings/staging.py#1\",\"scripts/prod06_load_test.py#1\",\"scripts/prod06_load_test.py#2\",\"scripts/prod06_load_test.py#3\",\"scripts/prod06_n8n_live_check.py#1\",\"scripts/prod06_n8n_live_check.py#2\",\"scripts/prod06_staging_validate.py#1\",\"scripts/prod06_staging_validate.py#2\",\"scripts/prod06_staging_validate.py#3\",\"scripts/prod06_staging_validate.py#4\"],\n  \"model\": \"llama3\",\n  \"prompt_version\": \"ai-review-v3.0\"\n}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v3.0",
+    "review_input_sha256": "3c130edd7483b33098dc9e9d8529b4851c329492821007ef4bdf53fd42690ee2",
+    "review_output_sha256": "2e503e20771cb750705f47a8690f11c21bbd52a59bb2a95114f5d721cae0e718",
+    "actual_diff_sha256": "9f2aac3e3240ee26b24365bceec621c34f9a59b2ede1f5f30382c92fd5bce968",
+    "base_commit": "81c0d2ecd2f9e533718bfe5b2c86cf66af24260b",
+    "current_commit": "3aa911026eeef07d0dccff42588505380d0baea4",
+    "correlation_id": "da8a7765-a109-48c6-804f-855aae06f673",
+    "full_diff_coverage": true,
+    "reviewed_chunk_ids": [
+      "django_backend/apps/api/views/crm.py#1",
+      "django_backend/apps/api/views/crm.py#2",
+      "django_backend/apps/api/views/crm.py#3",
+      "django_backend/config/settings/staging.py#1",
+      "scripts/prod06_load_test.py#1",
+      "scripts/prod06_load_test.py#2",
+      "scripts/prod06_load_test.py#3",
+      "scripts/prod06_n8n_live_check.py#1",
+      "scripts/prod06_n8n_live_check.py#2",
+      "scripts/prod06_staging_validate.py#1",
+      "scripts/prod06_staging_validate.py#2",
+      "scripts/prod06_staging_validate.py#3",
+      "scripts/prod06_staging_validate.py#4"
+    ]
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false,
+    "merge_authorized": false,
+    "release_authorized": false,
+    "deployment_authorized": false,
+    "production_authorized": false
+  },
+  "phase": "PROD-06",
+  "created_at": "2026-08-02T11:15:30+00:00",
+  "artifact_manifest": {
+    "path": "docs\\reviews\\PROD_06_STAGING_UAT_RESULT_V3_artifact_manifest.json",
+    "signature_status": "SIGNATURE_NOT_AVAILABLE"
+  }
+}

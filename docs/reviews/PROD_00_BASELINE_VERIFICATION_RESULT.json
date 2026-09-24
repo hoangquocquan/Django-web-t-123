@@ -1,0 +1,41 @@
+{
+  "phase": "PROD-00",
+  "decision": "PASS_WITH_WARNINGS",
+  "state": "READY_FOR_NEXT_PHASE",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+  "phase_commit": "e88809c1b78e8f7023f05794daa8f1d7e41791ad",
+  "tests": {
+    "focused_passed": 60,
+    "integration_passed": 25,
+    "regression_passed": 455,
+    "failed": 0
+  },
+  "security": {
+    "critical": 0,
+    "high": 0,
+    "medium_inherited_test_only": 5,
+    "project_dependency_audit": "PASS"
+  },
+  "runtime": {
+    "ollama": "PASS",
+    "docker_daemon": "NOT_VERIFIED",
+    "postgres": "NOT_VERIFIED",
+    "redis": "NOT_VERIFIED",
+    "n8n": "NOT_VERIFIED"
+  },
+  "ollama_review": {
+    "decision": "PASS",
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 1,
+    "critical": 0,
+    "high": 0
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"PASS","endpoint_reachable":true,"model_available":true,"response_received":true,"generation_model":"llama3","embedding_model":"nomic-embed-text","bilingual_sources":[2,2],"confidence":{"vi":0.8755,"en":0.8916},"grounded_generation":"generated","citation_warning":""}

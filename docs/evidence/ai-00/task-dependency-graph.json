@@ -1,0 +1,11 @@
+{
+  "AI-00": [],
+  "AI-01": ["AI-00"],
+  "AI-02": ["AI-00", "AI-01-settings-contract"],
+  "AI-03": ["AI-01", "AI-02"],
+  "AI-04": ["AI-03"],
+  "AI-05": ["AI-01", "AI-02", "AI-03", "AI-04"],
+  "AI-06": ["AI-01", "AI-02", "AI-03", "AI-04", "AI-05"],
+  "parallel_execution": false,
+  "reason": "Shared settings, migrations, URL registry and fixtures require serialization."
+}

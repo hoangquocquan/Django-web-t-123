@@ -1,0 +1,13 @@
+Ruff lint: PASS
+Ruff format check: PASS
+Targeted mypy: PASS
+Bandit: PASS, 0 Critical/High/Medium findings in changed security area
+Secret pattern scan: PASS
+Forbidden staged path scan: PASS
+Security headers on production-like HTTP response: PASS
+Anonymous/unauthorized access: blocked
+Brute-force lockout: PASS
+Token expiry/revocation/rotation: PASS
+Unsafe uploads and URLs: blocked
+Docker Scout: NOT_RUN because Docker ID login is required
+gitleaks/trivy: NOT_RUN because tools are not installed

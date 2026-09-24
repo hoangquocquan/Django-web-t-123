@@ -1,0 +1,168 @@
+﻿{
+    "status":  "PASS",
+    "provider_health":  {
+                            "available":  true,
+                            "provider":  "ollama-local",
+                            "endpoint":  "http://localhost:11434",
+                            "model":  "nomic-embed-text",
+                            "model_available":  true,
+                            "dimensions":  768,
+                            "models":  [
+                                           "nomic-embed-text:latest",
+                                           "llama3:latest"
+                                       ]
+                        },
+    "embedding_dimension":  768,
+    "embedding_nonzero":  true,
+    "document_count":  105,
+    "stored_embedding_count":  105,
+    "access_context":  "read-only admin-shaped runtime context; no database user created",
+    "vietnamese_retrieval":  {
+                                 "query":  "gia cong truc CNC chinh xac",
+                                 "confidence":  0.5124,
+                                 "sources":  [
+                                                 {
+                                                     "id":  2,
+                                                     "title":  "CNC Precision Shaft Technical Specification",
+                                                     "description":  "Document Intelligence import: technical",
+                                                     "category":  "technical",
+                                                     "source_type":  "txt",
+                                                     "source_path":  "knowledge/uploads/cnc-shaft-technical-specification.txt",
+                                                     "version":  1,
+                                                     "created_by_email":  "technical.engineer.demo@mecprecision.vn",
+                                                     "permission_level":  "internal",
+                                                     "metadata":  {
+                                                                      "document_intelligence":  {
+                                                                                                    "classification":  "technical",
+                                                                                                    "confidence":  0.61,
+                                                                                                    "approval_status":  "pending_review",
+                                                                                                    "version_status":  "current",
+                                                                                                    "source_citation":  "cnc-shaft-technical-specification.txt",
+                                                                                                    "extraction_method":  "plain_text_extraction",
+                                                                                                    "human_approval_required":  true
+                                                                                                }
+                                                                  },
+                                                     "created_at":  "2026-07-30T16:11:54.942003+00:00",
+                                                     "updated_at":  "2026-08-01T15:06:35.918255+00:00",
+                                                     "relevance_score":  0.5124
+                                                 },
+                                                 {
+                                                     "id":  4,
+                                                     "title":  "Manufacturing Guideline",
+                                                     "description":  "Document Intelligence import: technical",
+                                                     "category":  "technical",
+                                                     "source_type":  "txt",
+                                                     "source_path":  "knowledge/uploads/manufacturing-guideline.txt",
+                                                     "version":  1,
+                                                     "created_by_email":  "technical.engineer.demo@mecprecision.vn",
+                                                     "permission_level":  "internal",
+                                                     "metadata":  {
+                                                                      "document_intelligence":  {
+                                                                                                    "classification":  "technical",
+                                                                                                    "confidence":  0.61,
+                                                                                                    "approval_status":  "pending_review",
+                                                                                                    "version_status":  "current",
+                                                                                                    "source_citation":  "manufacturing-guideline.txt",
+                                                                                                    "extraction_method":  "plain_text_extraction",
+                                                                                                    "human_approval_required":  true
+                                                                                                }
+                                                                  },
+                                                     "created_at":  "2026-07-30T16:11:54.944064+00:00",
+                                                     "updated_at":  "2026-08-01T15:06:40.173978+00:00",
+                                                     "relevance_score":  0.5032
+                                                 }
+                                             ],
+                                 "result_count":  2
+                             },
+    "english_retrieval":  {
+                              "query":  "precision CNC shaft machining capability",
+                              "confidence":  0.8106,
+                              "sources":  [
+                                              {
+                                                  "id":  2,
+                                                  "title":  "CNC Precision Shaft Technical Specification",
+                                                  "description":  "Document Intelligence import: technical",
+                                                  "category":  "technical",
+                                                  "source_type":  "txt",
+                                                  "source_path":  "knowledge/uploads/cnc-shaft-technical-specification.txt",
+                                                  "version":  1,
+                                                  "created_by_email":  "technical.engineer.demo@mecprecision.vn",
+                                                  "permission_level":  "internal",
+                                                  "metadata":  {
+                                                                   "document_intelligence":  {
+                                                                                                 "classification":  "technical",
+                                                                                                 "confidence":  0.61,
+                                                                                                 "approval_status":  "pending_review",
+                                                                                                 "version_status":  "current",
+                                                                                                 "source_citation":  "cnc-shaft-technical-specification.txt",
+                                                                                                 "extraction_method":  "plain_text_extraction",
+                                                                                                 "human_approval_required":  true
+                                                                                             }
+                                                               },
+                                                  "created_at":  "2026-07-30T16:11:54.942003+00:00",
+                                                  "updated_at":  "2026-08-01T15:06:35.918255+00:00",
+                                                  "relevance_score":  0.8106
+                                              },
+                                              {
+                                                  "id":  1,
+                                                  "title":  "MEC Product Catalogue",
+                                                  "description":  "Document Intelligence import: technical",
+                                                  "category":  "technical",
+                                                  "source_type":  "txt",
+                                                  "source_path":  "knowledge/uploads/product-catalogue.txt",
+                                                  "version":  1,
+                                                  "created_by_email":  "technical.engineer.demo@mecprecision.vn",
+                                                  "permission_level":  "internal",
+                                                  "metadata":  {
+                                                                   "document_intelligence":  {
+                                                                                                 "classification":  "technical",
+                                                                                                 "confidence":  0.6,
+                                                                                                 "approval_status":  "pending_review",
+                                                                                                 "version_status":  "current",
+                                                                                                 "source_citation":  "product-catalogue.txt",
+                                                                                                 "extraction_method":  "plain_text_extraction",
+                                                                                                 "human_approval_required":  true
+                                                                                             }
+                                                               },
+                                                  "created_at":  "2026-07-30T16:11:54.924512+00:00",
+                                                  "updated_at":  "2026-08-01T15:06:33.788500+00:00",
+                                                  "relevance_score":  0.7053
+                                              },
+                                              {
+                                                  "id":  110,
+                                                  "title":  "Manual QA CNC Inspection Sample",
+                                                  "description":  "Document Intelligence import: quality",
+                                                  "category":  "quality",
+                                                  "source_type":  "txt",
+                                                  "source_path":  "knowledge/uploads/qa_technical_sample.txt",
+                                                  "version":  1,
+                                                  "created_by_email":  "ceo@demo.mecprecision.local",
+                                                  "permission_level":  "internal",
+                                                  "metadata":  {
+                                                                   "document_intelligence":  {
+                                                                                                 "classification":  "quality",
+                                                                                                 "confidence":  0.68,
+                                                                                                 "approval_status":  "ready_for_review",
+                                                                                                 "version_status":  "current",
+                                                                                                 "source_citation":  "qa_technical_sample.txt",
+                                                                                                 "extraction_method":  "plain_text_extraction",
+                                                                                                 "human_approval_required":  true
+                                                                                             }
+                                                               },
+                                                  "created_at":  "2026-08-01T01:05:15.040093+00:00",
+                                                  "updated_at":  "2026-08-01T15:10:24.974673+00:00",
+                                                  "relevance_score":  0.6846
+                                              }
+                                          ],
+                              "result_count":  3
+                          },
+    "no_context":  {
+                       "query":  "du bao thoi tiet sao Hoa",
+                       "confidence":  0,
+                       "sources":  [
+
+                                   ],
+                       "result_count":  0
+                   },
+    "external_ai_used":  false
+}

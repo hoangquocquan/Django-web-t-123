@@ -1,0 +1,1651 @@
+diff --git a/django_backend/apps/accounts/services/auth_compatibility_service.py b/django_backend/apps/accounts/services/auth_compatibility_service.py
+index 7e5bff6..2d7dcb1 100644
+--- a/django_backend/apps/accounts/services/auth_compatibility_service.py
++++ b/django_backend/apps/accounts/services/auth_compatibility_service.py
+@@ -59,6 +59,14 @@ class PasswordHashInspector:
+ class PermissionMatrix:
+     """Map legacy admin/editor/viewer roles to permission decisions."""
+ 
++    def permissions_for_role(self, role):
++        """Return a safe, serializable permission map for one role."""
++        role_permissions = ROLE_PERMISSIONS.get(role, {})
++        return {
++            module_name: sorted(actions)
++            for module_name, actions in role_permissions.items()
++        }
++
+     def has_permission(self, role, module_name, action="read"):
+         """Return whether a role can perform an action on a module."""
+         role_permissions = ROLE_PERMISSIONS.get(role)
+@@ -92,6 +100,10 @@ class AuthCompatibilityService:
+             "two_factor_enabled": user.two_factor_enabled,
+         }
+ 
++    def get_permissions_for_role(self, role):
++        """Return safe permission metadata without changing sessions or tokens."""
++        return self.permission_matrix.permissions_for_role(role)
++
+     def inspect_user_password_hash(self, email):
+         """Inspect hash compatibility without returning the hash value."""
+         user = self.admin_user_repository.get_user_for_credential_check(email)
+diff --git a/django_backend/apps/api/__init__.py b/django_backend/apps/api/__init__.py
+new file mode 100644
+index 0000000..f043e9a
+--- /dev/null
++++ b/django_backend/apps/api/__init__.py
+@@ -0,0 +1 @@
++"""Central read-only API layer for migrated business modules."""
+diff --git a/django_backend/apps/api/apps.py b/django_backend/apps/api/apps.py
+new file mode 100644
+index 0000000..902f112
+--- /dev/null
++++ b/django_backend/apps/api/apps.py
+@@ -0,0 +1,10 @@
++"""Django app config for the central API routing layer."""
++
++from django.apps import AppConfig
++
++
++class ApiConfig(AppConfig):
++    """Register the API layer without owning database models."""
++
++    default_auto_field = "django.db.models.BigAutoField"
++    name = "apps.api"
+diff --git a/django_backend/apps/api/permissions.py b/django_backend/apps/api/permissions.py
+new file mode 100644
+index 0000000..c6a9c53
+--- /dev/null
++++ b/django_backend/apps/api/permissions.py
+@@ -0,0 +1,17 @@
++"""Permission helpers for Phase 9.1 read-only business APIs."""
++
++from rest_framework.permissions import SAFE_METHODS, BasePermission
++
++
++class ReadOnlyApiPermission(BasePermission):
++    """Allow only safe HTTP methods during business API cutover.
++
++    Phase 9.1 prepares read-only APIs. Write methods are blocked at the
++    permission layer even if a future view accidentally accepts them.
++    """
++
++    message = "Phase 9.1 business APIs are read-only."
++
++    def has_permission(self, request, view):
++        """Return True only for GET/HEAD/OPTIONS requests."""
++        return request.method in SAFE_METHODS
+diff --git a/django_backend/apps/api/serializers/__init__.py b/django_backend/apps/api/serializers/__init__.py
+new file mode 100644
+index 0000000..530e558
+--- /dev/null
++++ b/django_backend/apps/api/serializers/__init__.py
+@@ -0,0 +1 @@
++"""Serializer functions for Phase 9.1 read-only APIs."""
+diff --git a/django_backend/apps/api/serializers/auth.py b/django_backend/apps/api/serializers/auth.py
+new file mode 100644
+index 0000000..a62f8c5
+--- /dev/null
++++ b/django_backend/apps/api/serializers/auth.py
+@@ -0,0 +1,13 @@
++"""Serializer helpers for authentication preparation APIs."""
++
++
++def profile_to_dict(profile):
++    """Return only safe profile fields, never password hashes or tokens."""
++    return {
++        "id": profile["id"],
++        "full_name": profile["full_name"],
++        "email": profile["email"],
++        "role": profile["role"],
++        "is_active": profile["is_active"],
++        "two_factor_enabled": profile["two_factor_enabled"],
++    }
+diff --git a/django_backend/apps/api/serializers/catalog.py b/django_backend/apps/api/serializers/catalog.py
+new file mode 100644
+index 0000000..4831cec
+--- /dev/null
++++ b/django_backend/apps/api/serializers/catalog.py
+@@ -0,0 +1,64 @@
++"""Serializer helpers for read-only catalog API responses."""
++
++
++def category_to_dict(category):
++    """Convert a category ORM object into safe JSON fields."""
++    return {
++        "id": category.id,
++        "name": category.name,
++        "slug": category.slug,
++        "description": category.description,
++        "sort_order": category.sort_order,
++    }
++
++
++def material_to_dict(material):
++    """Convert a material ORM object into safe JSON fields."""
++    return {
++        "id": material.id,
++        "name": material.name,
++        "standard": material.standard,
++        "description": material.description,
++    }
++
++
++def product_image_to_dict(image):
++    """Convert a product image ORM object into JSON."""
++    return {
++        "id": image.id,
++        "image_url": image.image_url,
++        "alt_text": image.alt_text,
++        "sort_order": image.sort_order,
++    }
++
++
++def product_to_dict(product):
++    """Convert a product ORM object into a compact API representation."""
++    return {
++        "id": product.id,
++        "name": product.name,
++        "slug": product.slug,
++        "sku": product.sku,
++        "price": product.price,
++        "status": product.status,
++        "short_description": product.short_description,
++        "description": product.description,
++        "main_image": product.main_image,
++        "thumbnail_url": product.thumbnail_url,
++        "category": category_to_dict(product.category),
++        "seo": {
++            "title": product.seo_title,
++            "description": product.seo_description,
++            "keywords": product.seo_keywords,
++            "canonical_url": product.canonical_url,
++            "robots": product.robots,
++        },
++        "published_at": product.published_at,
++    }
++
++
++def product_detail_to_dict(detail):
++    """Convert product detail service result into JSON."""
++    product = product_to_dict(detail["product"])
++    product["images"] = [product_image_to_dict(image) for image in detail["images"]]
++    return product
+diff --git a/django_backend/apps/api/serializers/cms.py b/django_backend/apps/api/serializers/cms.py
+new file mode 100644
+index 0000000..db102e0
+--- /dev/null
++++ b/django_backend/apps/api/serializers/cms.py
+@@ -0,0 +1,40 @@
++"""Serializer helpers for read-only CMS API responses."""
++
++
++def page_to_dict(page):
++    """Convert a CMS page ORM object into JSON."""
++    return {
++        "id": page.id,
++        "title": page.title,
++        "slug": page.slug,
++        "content": page.content,
++        "seo_title": page.seo_title,
++        "seo_description": page.seo_description,
++        "status": page.status,
++        "sort_order": page.sort_order,
++        "created_at": page.created_at,
++        "updated_at": page.updated_at,
++    }
++
++
++def menu_item_to_dict(item):
++    """Convert a menu item and its already-prefetched children into JSON."""
++    return {
++        "id": item.id,
++        "location": item.location,
++        "label": item.label,
++        "url": item.url,
++        "sort_order": item.sort_order,
++        "status": item.status,
++        "children": [
++            {
++                "id": child.id,
++                "location": child.location,
++                "label": child.label,
++                "url": child.url,
++                "sort_order": child.sort_order,
++                "status": child.status,
++            }
++            for child in item.children.all()
++        ],
++    }
+diff --git a/django_backend/apps/api/serializers/crm.py b/django_backend/apps/api/serializers/crm.py
+new file mode 100644
+index 0000000..e3df6a9
+--- /dev/null
++++ b/django_backend/apps/api/serializers/crm.py
+@@ -0,0 +1,51 @@
++"""Serializer helpers for read-only CRM API responses."""
++
++
++def customer_note_to_dict(note):
++    """Convert a customer note into JSON."""
++    return {
++        "id": note.id,
++        "note": note.note,
++        "created_by": note.created_by,
++        "created_at": note.created_at,
++    }
++
++
++def customer_to_dict(customer):
++    """Convert a customer ORM object into API-safe JSON."""
++    return {
++        "id": customer.id,
++        "company_name": customer.company_name,
++        "contact_name": customer.contact_name,
++        "email": customer.email,
++        "phone": customer.phone,
++        "country": customer.country,
++        "created_at": customer.created_at,
++    }
++
++
++def customer_detail_to_dict(detail):
++    """Convert customer detail service result into JSON."""
++    customer = customer_to_dict(detail["customer"])
++    customer["notes"] = [customer_note_to_dict(note) for note in detail["notes"]]
++    return customer
++
++
++def contact_request_to_dict(contact):
++    """Convert a public contact request into JSON for CMS operators."""
++    return {
++        "id": contact.id,
++        "name": contact.name,
++        "contact": contact.contact,
++        "message": contact.message,
++        "status": contact.status,
++        "is_read": contact.is_read,
++        "note": contact.note,
++        "company": contact.company,
++        "phone": contact.phone,
++        "email": contact.email,
++        "country": contact.country,
++        "interested_product": contact.interested_product,
++        "attachment_url": contact.attachment_url,
++        "created_at": contact.created_at,
++    }
+diff --git a/django_backend/apps/api/serializers/sales.py b/django_backend/apps/api/serializers/sales.py
+new file mode 100644
+index 0000000..b43d486
+--- /dev/null
++++ b/django_backend/apps/api/serializers/sales.py
+@@ -0,0 +1,52 @@
++"""Serializer helpers for read-only sales quotation API responses."""
++
++from apps.api.serializers.catalog import material_to_dict, product_to_dict
++from apps.api.serializers.crm import customer_to_dict
++
++
++def quote_file_to_dict(file_obj):
++    """Convert quote file metadata without touching the physical file."""
++    return {
++        "id": file_obj.id,
++        "file_name": file_obj.file_name,
++        "file_url": file_obj.file_url,
++        "file_type": file_obj.file_type,
++        "uploaded_at": file_obj.uploaded_at,
++    }
++
++
++def quote_item_to_dict(item):
++    """Convert one quote line item while preserving linked master data."""
++    return {
++        "id": item.id,
++        "drawing_code": item.drawing_code,
++        "quantity": item.quantity,
++        "tolerance": item.tolerance,
++        "note": item.note,
++        "product": product_to_dict(item.product) if item.product else None,
++        "material": material_to_dict(item.material) if item.material else None,
++    }
++
++
++def quote_to_dict(quote):
++    """Convert a quote header into JSON."""
++    return {
++        "id": quote.id,
++        "project_name": quote.project_name,
++        "message": quote.message,
++        "status": quote.status,
++        "assigned_to": quote.assigned_to,
++        "internal_note": quote.internal_note,
++        "quoted_at": quote.quoted_at,
++        "completed_at": quote.completed_at,
++        "created_at": quote.created_at,
++        "customer": customer_to_dict(quote.customer),
++    }
++
++
++def quote_detail_to_dict(detail):
++    """Convert quote detail service result into JSON."""
++    quote = quote_to_dict(detail["quote"])
++    quote["items"] = [quote_item_to_dict(item) for item in detail["items"]]
++    quote["files"] = [quote_file_to_dict(file_obj) for file_obj in detail["files"]]
++    return quote
+diff --git a/django_backend/apps/api/tests/__init__.py b/django_backend/apps/api/tests/__init__.py
+new file mode 100644
+index 0000000..66bf084
+--- /dev/null
++++ b/django_backend/apps/api/tests/__init__.py
+@@ -0,0 +1 @@
++"""Tests for the central business API cutover layer."""
+diff --git a/django_backend/apps/api/tests/test_business_api_cutover.py b/django_backend/apps/api/tests/test_business_api_cutover.py
+new file mode 100644
+index 0000000..698c3d5
+--- /dev/null
++++ b/django_backend/apps/api/tests/test_business_api_cutover.py
+@@ -0,0 +1,134 @@
++"""Tests for Phase 9.1 read-only business API cutover."""
++
++from pathlib import Path
++
++import pytest
++
++from apps.accounts.repositories.auth_repository import AdminUserRepository
++from apps.catalog.services.catalog_service import CatalogService
++from apps.cms.services.cms_service import CmsService
++from apps.crm.services.crm_service import CrmService
++from apps.sales.services.quotation_service import QuotationService
++
++
++@pytest.mark.parametrize(
++    "url",
++    [
++        "/api/v1/catalog/products/",
++        "/api/v1/catalog/categories/",
++        "/api/v1/catalog/materials/",
++        "/api/v1/crm/customers/",
++        "/api/v1/crm/contact-requests/",
++        "/api/v1/sales/quotes/",
++        "/api/v1/cms/pages/",
++        "/api/v1/cms/menu/",
++        "/api/v1/auth/permissions/",
++    ],
++)
++def test_read_only_business_list_endpoints_return_success(client, legacy_db, url):
++    """List endpoints must return a consistent success envelope."""
++    response = client.get(url)
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["success"] is True
++    assert "data" in body
++
++
++def test_catalog_product_detail_endpoint_uses_legacy_data(client, legacy_db):
++    """Product detail endpoint exposes product data and gallery image list."""
++    product = CatalogService().list_products().first()
++
++    response = client.get(f"/api/v1/catalog/products/{product.id}/")
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["data"]["id"] == product.id
++    assert "category" in body["data"]
++    assert "images" in body["data"]
++
++
++def test_crm_customer_detail_endpoint_includes_notes(client, legacy_db):
++    """Customer detail endpoint returns notes through the CRM service."""
++    customer = CrmService().list_customer_profiles().first()
++
++    response = client.get(f"/api/v1/crm/customers/{customer.id}/")
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["data"]["id"] == customer.id
++    assert "notes" in body["data"]
++
++
++def test_sales_quote_detail_and_files_endpoints(client, legacy_db):
++    """Sales endpoints expose quote detail and file metadata as read-only JSON."""
++    quote = QuotationService().list_quotes().first()
++
++    detail_response = client.get(f"/api/v1/sales/quotes/{quote.id}/")
++    files_response = client.get(f"/api/v1/sales/quotes/{quote.id}/files/")
++
++    assert detail_response.status_code == 200
++    assert detail_response.json()["data"]["id"] == quote.id
++    assert "items" in detail_response.json()["data"]
++    assert "files" in detail_response.json()["data"]
++    assert files_response.status_code == 200
++    assert "results" in files_response.json()["data"]
++
++
++def test_cms_page_detail_endpoint_uses_slug(client, legacy_db):
++    """CMS page detail endpoint resolves published pages by slug."""
++    page = CmsService().list_public_pages().first()
++
++    response = client.get(f"/api/v1/cms/pages/{page.slug}/")
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["data"]["slug"] == page.slug
++
++
++def test_auth_profile_does_not_expose_password_hash(client, legacy_db):
++    """Auth preparation endpoint must not expose password hashes or tokens."""
++    admin_user = AdminUserRepository().list_users().first()
++
++    response = client.get(f"/api/v1/auth/profile/?admin_id={admin_user.id}")
++    body = response.json()
++
++    assert response.status_code == 200
++    assert body["data"]["id"] == admin_user.id
++    assert "password_hash" not in body["data"]
++    assert "token" not in body["data"]
++
++
++def test_business_api_rejects_write_methods(client, legacy_db):
++    """Phase 9.1 APIs are read-only and must reject write attempts."""
++    response = client.post(
++        "/api/v1/catalog/products/",
++        data={"name": "Should not write"},
++        content_type="application/json",
++    )
++
++    assert response.status_code == 403
++    assert "detail" in response.json()
++
++
++def test_missing_business_resource_returns_consistent_404(client, legacy_db):
++    """Missing detail routes must return a consistent JSON error."""
++    response = client.get("/api/v1/catalog/products/999999/")
++    body = response.json()
++
++    assert response.status_code == 404
++    assert body["success"] is False
++    assert body["error"]["code"] == "not_found"
++
++
++def test_api_views_do_not_access_orm_directly():
++    """API view modules must call services instead of direct ORM managers."""
++    views_root = Path(__file__).resolve().parents[1] / "views"
++    view_source = "\n".join(
++        path.read_text(encoding="utf-8")
++        for path in views_root.glob("*.py")
++        if path.name != "__init__.py"
++    )
++
++    assert ".objects" not in view_source
++    assert ".using(" not in view_source
+diff --git a/django_backend/apps/api/urls.py b/django_backend/apps/api/urls.py
+new file mode 100644
+index 0000000..47976e3
+--- /dev/null
++++ b/django_backend/apps/api/urls.py
+@@ -0,0 +1,28 @@
++"""Central URL map for read-only migrated business APIs."""
++
++from django.urls import path
++
++from .views.auth import permissions, profile
++from .views.catalog import categories, materials, product_detail, products
++from .views.cms import menu, page_detail, pages
++from .views.crm import contact_requests, customer_detail, customers
++from .views.sales import quote_detail, quote_files, quotes
++
++
++urlpatterns = [
++    path("catalog/products/", products, name="api-catalog-products"),
++    path("catalog/products/<int:product_id>/", product_detail, name="api-catalog-product-detail"),
++    path("catalog/categories/", categories, name="api-catalog-categories"),
++    path("catalog/materials/", materials, name="api-catalog-materials"),
++    path("crm/customers/", customers, name="api-crm-customers"),
++    path("crm/customers/<int:customer_id>/", customer_detail, name="api-crm-customer-detail"),
++    path("crm/contact-requests/", contact_requests, name="api-crm-contact-requests"),
++    path("sales/quotes/", quotes, name="api-sales-quotes"),
++    path("sales/quotes/<int:quote_id>/", quote_detail, name="api-sales-quote-detail"),
++    path("sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"),
++    path("cms/pages/", pages, name="api-cms-pages"),
++    path("cms/pages/<slug:slug>/", page_detail, name="api-cms-page-detail"),
++    path("cms/menu/", menu, name="api-cms-menu"),
++    path("auth/profile/", profile, name="api-auth-profile"),
++    path("auth/permissions/", permissions, name="api-auth-permissions"),
++]
+diff --git a/django_backend/apps/api/views/__init__.py b/django_backend/apps/api/views/__init__.py
+new file mode 100644
+index 0000000..a8bf3be
+--- /dev/null
++++ b/django_backend/apps/api/views/__init__.py
+@@ -0,0 +1 @@
++"""Read-only API views grouped by business domain."""
+diff --git a/django_backend/apps/api/views/auth.py b/django_backend/apps/api/views/auth.py
+new file mode 100644
+index 0000000..97aad62
+--- /dev/null
++++ b/django_backend/apps/api/views/auth.py
+@@ -0,0 +1,41 @@
++"""Authentication preparation API views for Phase 9.1."""
++
++from rest_framework.decorators import api_view, permission_classes
++
++from apps.accounts.services.auth_compatibility_service import AuthCompatibilityService
++from apps.api.permissions import ReadOnlyApiPermission
++from apps.api.serializers.auth import profile_to_dict
++from apps.api.views.helpers import handle_not_found, ok
++
++
++def _admin_id_from_request(request):
++    """Read demo admin ID without creating sessions or tokens."""
++    return request.headers.get("X-Demo-Admin-Id") or request.query_params.get("admin_id", "1")
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def profile(request):
++    """Return safe profile fields only; login/session cutover is not implemented."""
++    service = AuthCompatibilityService()
++    admin_id = _admin_id_from_request(request)
++    return handle_not_found(
++        "Admin profile",
++        lambda: ok(profile_to_dict(service.get_user_auth_profile(admin_id))),
++    )
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def permissions(request):
++    """Return safe role permissions without mutating auth state."""
++    role = request.query_params.get("role", "viewer")
++    service = AuthCompatibilityService()
++    return ok(
++        {
++            "role": role,
++            "permissions": service.get_permissions_for_role(role),
++            "login_cutover": False,
++            "session_mutation": False,
++        }
++    )
+diff --git a/django_backend/apps/api/views/catalog.py b/django_backend/apps/api/views/catalog.py
+new file mode 100644
+index 0000000..157c94e
+--- /dev/null
++++ b/django_backend/apps/api/views/catalog.py
+@@ -0,0 +1,48 @@
++"""Read-only Catalog API views for Phase 9.1 cutover."""
++
++from rest_framework.decorators import api_view, permission_classes
++
++from apps.api.permissions import ReadOnlyApiPermission
++from apps.api.serializers.catalog import (
++    category_to_dict,
++    material_to_dict,
++    product_detail_to_dict,
++    product_to_dict,
++)
++from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.catalog.services.catalog_service import CatalogService
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def products(request):
++    """Return read-only product list through the Catalog service layer."""
++    service = CatalogService()
++    return list_ok(product_to_dict(product) for product in service.list_products())
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def product_detail(request, product_id):
++    """Return one product detail through the Catalog service layer."""
++    service = CatalogService()
++    return handle_not_found(
++        "Product",
++        lambda: ok(product_detail_to_dict(service.get_product_detail(product_id))),
++    )
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def categories(request):
++    """Return read-only product categories through the Catalog service layer."""
++    service = CatalogService()
++    return list_ok(category_to_dict(category) for category in service.list_categories())
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def materials(request):
++    """Return read-only manufacturing materials through the Catalog service."""
++    service = CatalogService()
++    return list_ok(material_to_dict(material) for material in service.list_materials())
+diff --git a/django_backend/apps/api/views/cms.py b/django_backend/apps/api/views/cms.py
+new file mode 100644
+index 0000000..50bc797
+--- /dev/null
++++ b/django_backend/apps/api/views/cms.py
+@@ -0,0 +1,39 @@
++"""Read-only CMS API views for Phase 9.1 cutover."""
++
++from rest_framework.decorators import api_view, permission_classes
++
++from apps.api.permissions import ReadOnlyApiPermission
++from apps.api.serializers.cms import menu_item_to_dict, page_to_dict
++from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.cms.services.cms_service import CmsService
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def pages(request):
++    """Return published dynamic pages through the CMS service layer."""
++    service = CmsService()
++    return list_ok(page_to_dict(page) for page in service.list_public_pages())
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def page_detail(request, slug):
++    """Return one published dynamic page by slug."""
++    service = CmsService()
++    return handle_not_found(
++        "CMS page",
++        lambda: ok(page_to_dict(service.get_public_page(slug))),
++    )
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def menu(request):
++    """Return nested menu items for one location, defaulting to header."""
++    location = request.query_params.get("location", "header")
++    service = CmsService()
++    return list_ok(
++        menu_item_to_dict(item)
++        for item in service.list_navigation(location=location)
++    )
+diff --git a/django_backend/apps/api/views/crm.py b/django_backend/apps/api/views/crm.py
+new file mode 100644
+index 0000000..bb5f98b
+--- /dev/null
++++ b/django_backend/apps/api/views/crm.py
+@@ -0,0 +1,42 @@
++"""Read-only CRM API views for Phase 9.1 cutover."""
++
++from rest_framework.decorators import api_view, permission_classes
++
++from apps.api.permissions import ReadOnlyApiPermission
++from apps.api.serializers.crm import (
++    contact_request_to_dict,
++    customer_detail_to_dict,
++    customer_to_dict,
++)
++from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.crm.services.crm_service import CrmService
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def customers(request):
++    """Return customer profiles through the CRM service layer."""
++    service = CrmService()
++    return list_ok(customer_to_dict(customer) for customer in service.list_customer_profiles())
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def customer_detail(request, customer_id):
++    """Return one customer with notes through the CRM service layer."""
++    service = CrmService()
++    return handle_not_found(
++        "Customer",
++        lambda: ok(customer_detail_to_dict(service.get_customer_profile(customer_id))),
++    )
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def contact_requests(request):
++    """Return public contact requests without changing read/status fields."""
++    service = CrmService()
++    return list_ok(
++        contact_request_to_dict(contact)
++        for contact in service.list_contact_requests()
++    )
+diff --git a/django_backend/apps/api/views/helpers.py b/django_backend/apps/api/views/helpers.py
+new file mode 100644
+index 0000000..7b6d35d
+--- /dev/null
++++ b/django_backend/apps/api/views/helpers.py
+@@ -0,0 +1,43 @@
++"""Small response helpers shared by read-only API views."""
++
++from django.core.exceptions import ObjectDoesNotExist
++from rest_framework import status
++from rest_framework.response import Response
++
++
++def ok(data):
++    """Return the standard success envelope for Phase 9.1 APIs."""
++    return Response({"success": True, "data": data})
++
++
++def list_ok(items):
++    """Return a list response with a count for frontend pagination readiness."""
++    materialized_items = list(items)
++    return ok(
++        {
++            "count": len(materialized_items),
++            "results": materialized_items,
++        }
++    )
++
++
++def not_found(resource_name):
++    """Return a consistent 404 response without exposing internals."""
++    return Response(
++        {
++            "success": False,
++            "error": {
++                "code": "not_found",
++                "message": f"{resource_name} was not found.",
++            },
++        },
++        status=status.HTTP_404_NOT_FOUND,
++    )
++
++
++def handle_not_found(resource_name, callback):
++    """Run a callback and convert Django DoesNotExist into API 404 JSON."""
++    try:
++        return callback()
++    except ObjectDoesNotExist:
++        return not_found(resource_name)
+diff --git a/django_backend/apps/api/views/sales.py b/django_backend/apps/api/views/sales.py
+new file mode 100644
+index 0000000..9e54254
+--- /dev/null
++++ b/django_backend/apps/api/views/sales.py
+@@ -0,0 +1,38 @@
++"""Read-only Sales quotation API views for Phase 9.1 cutover."""
++
++from rest_framework.decorators import api_view, permission_classes
++
++from apps.api.permissions import ReadOnlyApiPermission
++from apps.api.serializers.sales import quote_detail_to_dict, quote_file_to_dict, quote_to_dict
++from apps.api.views.helpers import handle_not_found, list_ok, ok
++from apps.sales.services.quotation_service import QuotationService
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def quotes(request):
++    """Return quote request headers through the Sales service layer."""
++    service = QuotationService()
++    return list_ok(quote_to_dict(quote) for quote in service.list_quotes())
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def quote_detail(request, quote_id):
++    """Return one quote with items and files through the Sales service layer."""
++    service = QuotationService()
++    return handle_not_found(
++        "Quote",
++        lambda: ok(quote_detail_to_dict(service.get_quote_detail(quote_id))),
++    )
++
++
++@api_view(["GET"])
++@permission_classes([ReadOnlyApiPermission])
++def quote_files(request, quote_id):
++    """Return quote file metadata without changing physical files."""
++    service = QuotationService()
++    return list_ok(
++        quote_file_to_dict(file_obj)
++        for file_obj in service.list_quote_files(quote_id)
++    )
+diff --git a/django_backend/apps/catalog/repositories/material_repository.py b/django_backend/apps/catalog/repositories/material_repository.py
+new file mode 100644
+index 0000000..bf1f268
+--- /dev/null
++++ b/django_backend/apps/catalog/repositories/material_repository.py
+@@ -0,0 +1,14 @@
++"""Read-only repository adapter for catalog materials."""
++
++from apps.catalog.models import Material
++from apps.catalog.repositories.base import LegacyCatalogRepository
++
++
++class MaterialRepository(LegacyCatalogRepository):
++    """Access legacy materials through the Django ORM read-only mapping."""
++
++    model = Material
++
++    def list_materials(self):
++        """Return all manufacturing materials from the legacy database."""
++        return self.queryset().all()
+diff --git a/django_backend/apps/catalog/services/catalog_service.py b/django_backend/apps/catalog/services/catalog_service.py
+index aee5155..d935405 100644
+--- a/django_backend/apps/catalog/services/catalog_service.py
++++ b/django_backend/apps/catalog/services/catalog_service.py
+@@ -1,14 +1,23 @@
+ """Catalog read-only service layer."""
+ 
++from apps.catalog.repositories.category_repository import CategoryRepository
++from apps.catalog.repositories.material_repository import MaterialRepository
+ from apps.catalog.repositories.product_repository import ProductRepository
+ 
+ 
+ class CatalogService:
+     """Read-only catalog service that depends on repository adapters only."""
+ 
+-    def __init__(self, product_repository=None):
++    def __init__(
++        self,
++        product_repository=None,
++        category_repository=None,
++        material_repository=None,
++    ):
+         """Allow tests to pass a repository double later if needed."""
+         self.product_repository = product_repository or ProductRepository()
++        self.category_repository = category_repository or CategoryRepository()
++        self.material_repository = material_repository or MaterialRepository()
+ 
+     def list_products(self):
+         """Return products without business transformation in Phase 4A."""
+@@ -22,3 +31,11 @@ class CatalogService:
+             "product": product,
+             "images": images,
+         }
++
++    def list_categories(self):
++        """Return catalog categories through the repository boundary."""
++        return self.category_repository.list_categories()
++
++    def list_materials(self):
++        """Return catalog materials through the repository boundary."""
++        return self.material_repository.list_materials()
+diff --git a/django_backend/apps/crm/services/crm_service.py b/django_backend/apps/crm/services/crm_service.py
+index f8cb4bc..7745874 100644
+--- a/django_backend/apps/crm/services/crm_service.py
++++ b/django_backend/apps/crm/services/crm_service.py
+@@ -5,19 +5,19 @@ from apps.crm.repositories.customer_repository import CustomerRepository
+ 
+ 
+ class CrmService:
+-    """Service CRM chỉ đọc, phụ thuộc repository thay vì gọi ORM trực tiếp."""
++    """Read-only CRM service that depends on repositories, not direct ORM."""
+ 
+     def __init__(self, customer_repository=None, contact_repository=None):
+-        """Cho phép test truyền repository giả để kiểm tra service độc lập."""
++        """Allow tests to pass repository doubles for isolated service checks."""
+         self.customer_repository = customer_repository or CustomerRepository()
+         self.contact_repository = contact_repository or ContactRequestRepository()
+ 
+     def list_customer_profiles(self):
+-        """Trả về khách hàng kèm ghi chú đã preload."""
++        """Return customers with notes preloaded by the repository."""
+         return self.customer_repository.list_customers_with_notes()
+ 
+     def get_customer_profile(self, customer_id):
+-        """Trả về một khách hàng và danh sách ghi chú liên quan."""
++        """Return one customer and the related care notes."""
+         customer = self.customer_repository.get_customer(customer_id)
+         notes = self.customer_repository.list_customer_notes(customer_id)
+         return {
+@@ -26,9 +26,13 @@ class CrmService:
+         }
+ 
+     def list_recent_contacts(self, limit=10):
+-        """Trả về danh sách liên hệ mới nhất."""
++        """Return recent public contact requests."""
+         return self.contact_repository.list_recent_contacts(limit=limit)
+ 
++    def list_contact_requests(self):
++        """Return all public contact requests through the repository boundary."""
++        return self.contact_repository.list_contacts()
++
+     def get_contact(self, contact_id):
+-        """Trả về một liên hệ theo ID."""
++        """Return one public contact request by ID."""
+         return self.contact_repository.get_contact(contact_id)
+diff --git a/django_backend/apps/sales/services/quotation_service.py b/django_backend/apps/sales/services/quotation_service.py
+index 5227f23..fee7c29 100644
+--- a/django_backend/apps/sales/services/quotation_service.py
++++ b/django_backend/apps/sales/services/quotation_service.py
+@@ -24,3 +24,7 @@ class QuotationService:
+             "items": items,
+             "files": files,
+         }
++
++    def list_quote_files(self, quote_id):
++        """Return uploaded files for one quote without changing file metadata."""
++        return self.quotation_repository.list_quote_files(quote_id)
+diff --git a/django_backend/config/settings/base.py b/django_backend/config/settings/base.py
+index acac5e5..b962a96 100644
+--- a/django_backend/config/settings/base.py
++++ b/django_backend/config/settings/base.py
+@@ -85,6 +85,7 @@ INSTALLED_APPS = [
+     "rest_framework",
+     "apps.core",
+     "apps.common",
++    "apps.api",
+     "apps.catalog",
+     "apps.crm",
+     "apps.sales",
+diff --git a/django_backend/config/urls.py b/django_backend/config/urls.py
+index 0d4e466..6a5a819 100644
+--- a/django_backend/config/urls.py
++++ b/django_backend/config/urls.py
+@@ -11,4 +11,5 @@ urlpatterns = [
+     path("admin/", admin.site.urls),
+     path("api/", include("apps.core.urls")),
+     path("api/v1/", include("apps.core.urls")),
++    path("api/v1/", include("apps.api.urls")),
+ ]
+diff --git a/docs/api/API_CUTOVER_MATRIX.md b/docs/api/API_CUTOVER_MATRIX.md
+new file mode 100644
+index 0000000..b88d217
+--- /dev/null
++++ b/docs/api/API_CUTOVER_MATRIX.md
+@@ -0,0 +1,44 @@
++# API Cutover Matrix
++
++## Purpose
++
++Phase 9.1 prepares Django as the read-only application API layer for migrated
++business modules. The legacy database remains the source of data and all access
++must pass through service and repository boundaries.
++
++## Matrix
++
++| Domain | Endpoint | Service used | Read/Write status | Legacy dependency | Migration status |
++|---|---|---|---|---|---|
++| Catalog | `GET /api/v1/catalog/products/` | `CatalogService.list_products()` | Read-only | `products`, `product_categories` | Cutover-ready |
++| Catalog | `GET /api/v1/catalog/products/<id>/` | `CatalogService.get_product_detail()` | Read-only | `products`, `product_images` | Cutover-ready |
++| Catalog | `GET /api/v1/catalog/categories/` | `CatalogService.list_categories()` | Read-only | `product_categories` | Cutover-ready |
++| Catalog | `GET /api/v1/catalog/materials/` | `CatalogService.list_materials()` | Read-only | `materials` | Cutover-ready |
++| CRM | `GET /api/v1/crm/customers/` | `CrmService.list_customer_profiles()` | Read-only | `customers`, `customer_notes` | Cutover-ready |
++| CRM | `GET /api/v1/crm/customers/<id>/` | `CrmService.get_customer_profile()` | Read-only | `customers`, `customer_notes` | Cutover-ready |
++| CRM | `GET /api/v1/crm/contact-requests/` | `CrmService.list_contact_requests()` | Read-only | `contact_requests` | Cutover-ready |
++| Sales | `GET /api/v1/sales/quotes/` | `QuotationService.list_quotes()` | Read-only | `quote_requests`, `customers` | Cutover-ready |
++| Sales | `GET /api/v1/sales/quotes/<id>/` | `QuotationService.get_quote_detail()` | Read-only | `quote_requests`, `quote_request_items`, `quote_files` | Cutover-ready |
++| Sales | `GET /api/v1/sales/quotes/<id>/files/` | `QuotationService.list_quote_files()` | Read-only | `quote_files` | Cutover-ready |
++| CMS | `GET /api/v1/cms/pages/` | `CmsService.list_public_pages()` | Read-only | `cms_pages` | Cutover-ready |
++| CMS | `GET /api/v1/cms/pages/<slug>/` | `CmsService.get_public_page()` | Read-only | `cms_pages` | Cutover-ready |
++| CMS | `GET /api/v1/cms/menu/` | `CmsService.list_navigation()` | Read-only | `cms_menu_items` | Cutover-ready |
++| Auth | `GET /api/v1/auth/profile/` | `AuthCompatibilityService.get_user_auth_profile()` | Read-only | `admin_users` | Preparation only |
++| Auth | `GET /api/v1/auth/permissions/` | `AuthCompatibilityService.get_permissions_for_role()` | Read-only | static role matrix | Preparation only |
++
++## Architecture Rule
++
++```text
++API View
++  -> Service Layer
++  -> Repository Layer
++  -> Django ORM using("legacy")
++  -> Legacy SQLite
++```
++
++No API view may call `.objects` or `.using("legacy")` directly.
++
++## Cutover Boundary
++
++Phase 9.1 does not introduce write APIs, login cutover, session mutation, token
++generation, or database ownership migration.
+diff --git a/docs/codex-prompts/PHASE_9.1_BUSINESS_API_CUTOVER.md b/docs/codex-prompts/PHASE_9.1_BUSINESS_API_CUTOVER.md
+new file mode 100644
+index 0000000..ae7d418
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_9.1_BUSINESS_API_CUTOVER.md
+@@ -0,0 +1,571 @@
++# TASK: Phase 9.1 - Business API Cutover
++
++
++Project:
++
++mecprecision-vietnam
++
++
++
++====================================================
++SAVE THIS PROMPT
++====================================================
++
++
++Save this entire task specification into:
++
++
++C:\Users\hoang\Documents\Codex\mecprecision-vietnam\docs\codex-prompts
++
++
++Filename:
++
++
++PHASE_9.1_BUSINESS_API_CUTOVER.md
++
++
++
++====================================================
++STATUS
++====================================================
++
++
++Completed:
++
++
++Phase 9 - API Health Cutover
++
++
++
++Approved:
++
++
++- Django API routing
++- compatibility adapter pattern
++- health endpoint cutover
++- rollback documentation
++- regression testing
++
++
++
++====================================================
++OBJECTIVE
++====================================================
++
++
++Extend Phase 9 from health API validation
++to business domain API readiness.
++
++
++
++Goal:
++
++
++Django becomes the application API layer
++for migrated business modules.
++
++
++
++====================================================
++IMPORTANT RULES
++====================================================
++
++
++DO NOT:
++
++
++- migrate database ownership
++- change managed=False models
++- write to legacy database
++- shutdown legacy system
++- change production traffic immediately
++- create destructive migrations
++
++
++
++ONLY:
++
++
++- create read-only business APIs
++- preserve legacy contracts
++- validate service architecture
++- prepare application cutover
++
++
++
++====================================================
++READ REQUIRED DOCUMENTS
++====================================================
++
++
++Before implementation read:
++
++
++docs/testing/PHASE_TESTING_STANDARD.md
++
++
++docs/migration/API_CUTOVER_STRATEGY.md
++
++
++docs/migration/API_CUTOVER_ROLLBACK_PLAN.md
++
++
++docs/migration/CATALOG_MIGRATION_PLAYBOOK.md
++
++
++docs/migration/CRM_MIGRATION_CHECKLIST.md
++
++
++docs/migration/SALES_MIGRATION_PLAYBOOK.md
++
++
++docs/architecture/adr/
++
++
++
++====================================================
++ARCHITECTURE RULE
++====================================================
++
++
++API layer MUST follow:
++
++
++API View
++
++
++    ↓
++
++
++Service Layer
++
++
++    ↓
++
++
++Repository Layer
++
++
++    ↓
++
++
++Django ORM
++
++
++    ↓
++
++
++Legacy Database
++
++
++
++DO NOT:
++
++
++Put business logic inside API views.
++
++
++
++====================================================
++TASK 1
++====================================================
++
++
++Create API foundation structure:
++
++
++django_backend/apps/api/
++
++
++Structure:
++
++
++api/
++
++├── urls.py
++
++├── permissions.py
++
++├── serializers/
++
++├── views/
++
++└── tests/
++
++
++
++Purpose:
++
++
++Central API routing layer.
++
++
++
++====================================================
++TASK 2
++====================================================
++
++
++Create read-only APIs for Catalog.
++
++
++
++Endpoints:
++
++
++GET /api/v1/catalog/products/
++
++GET /api/v1/catalog/products/<id>/
++
++
++GET /api/v1/catalog/categories/
++
++GET /api/v1/catalog/materials/
++
++
++
++Requirements:
++
++
++- use existing catalog services
++- no direct ORM access
++- preserve read-only behavior
++
++
++
++====================================================
++TASK 3
++====================================================
++
++
++Create read-only APIs for CRM.
++
++
++
++Endpoints:
++
++
++GET /api/v1/crm/customers/
++
++GET /api/v1/crm/customers/<id>/
++
++
++GET /api/v1/crm/contact-requests/
++
++
++
++Requirements:
++
++
++- use CRM service layer
++- no customer data modification
++
++
++
++====================================================
++TASK 4
++====================================================
++
++
++Create read-only APIs for Sales.
++
++
++
++Endpoints:
++
++
++GET /api/v1/sales/quotes/
++
++GET /api/v1/sales/quotes/<id>/
++
++
++GET /api/v1/sales/quotes/<id>/files/
++
++
++
++Requirements:
++
++
++- use Sales service
++- preserve quotation snapshot behavior
++- no write operations
++
++
++
++====================================================
++TASK 5
++====================================================
++
++
++Create read-only APIs for CMS.
++
++
++
++Endpoints:
++
++
++GET /api/v1/cms/pages/
++
++GET /api/v1/cms/pages/<slug>/
++
++
++GET /api/v1/cms/menu/
++
++
++
++Requirements:
++
++
++- preserve menu hierarchy
++- preserve content structure
++
++
++
++====================================================
++TASK 6
++====================================================
++
++
++Authentication API preparation.
++
++
++
++DO NOT implement login cutover.
++
++
++
++Only prepare:
++
++
++GET /api/v1/auth/profile/
++
++
++GET /api/v1/auth/permissions/
++
++
++
++Requirements:
++
++
++- no password exposure
++- no session mutation
++- no token changes
++
++
++
++====================================================
++TASK 7
++====================================================
++
++
++API Documentation.
++
++
++
++Create:
++
++
++docs/api/API_CUTOVER_MATRIX.md
++
++
++
++Include:
++
++
++Domain
++
++Endpoint
++
++Service used
++
++Read/Write status
++
++Legacy dependency
++
++Migration status
++
++
++
++====================================================
++TASK 8
++====================================================
++
++
++Security Review.
++
++
++
++Create:
++
++
++docs/security/API_SECURITY_REVIEW.md
++
++
++
++Review:
++
++
++- permission handling
++- authentication boundary
++- sensitive data exposure
++- readonly enforcement
++
++
++
++====================================================
++TASK 9
++====================================================
++
++
++Testing.
++
++
++
++Must run:
++
++
++python manage.py check
++
++
++pytest
++
++
++.\scripts\run_migration_test.ps1
++
++
++
++Required tests:
++
++
++- API endpoint tests
++- permission tests
++- readonly tests
++- regression tests
++
++
++
++====================================================
++TASK 10
++====================================================
++
++
++Create review package.
++
++
++
++Create:
++
++
++docs/reviews/
++
++
++PHASE_9.1_REVIEW_SUMMARY.md
++
++
++PHASE_9.1_CHANGESET.patch
++
++
++
++Summary must include:
++
++
++Objective
++
++Endpoints created
++
++Architecture impact
++
++Database impact
++
++Security review
++
++Tests
++
++Risks
++
++Recommendation
++
++
++
++====================================================
++GIT
++====================================================
++
++
++Create branch:
++
++
++migration/phase-9.1-business-api-cutover
++
++
++
++Commit:
++
++
++git add .
++
++
++git commit -m "feat: add business api cutover"
++
++
++
++Create tag:
++
++
++phase-9.1-business-api-cutover-complete
++
++
++
++====================================================
++FINAL OUTPUT
++====================================================
++
++
++Return:
++
++
++1.
++
++Branch name
++
++
++2.
++
++Base commit hash
++
++
++3.
++
++Final commit hash
++
++
++4.
++
++API endpoints created
++
++
++5.
++
++Tests result
++
++
++6.
++
++Review package location
++
++
++7.
++
++Git tag
++
++
++
++FINAL STATUS:
++
++
++WAITING FOR ARCHITECT REVIEW
++
++
++STOP.
++
++DO NOT START PHASE 10.
+\ No newline at end of file
+diff --git a/docs/security/API_SECURITY_REVIEW.md b/docs/security/API_SECURITY_REVIEW.md
+new file mode 100644
+index 0000000..f9c8832
+--- /dev/null
++++ b/docs/security/API_SECURITY_REVIEW.md
+@@ -0,0 +1,70 @@
++# API Security Review
++
++## Phase
++
++Phase 9.1 - Business API Cutover
++
++## Permission Handling
++
++The central API layer uses `ReadOnlyApiPermission`, which allows only safe HTTP
++methods: `GET`, `HEAD`, and `OPTIONS`.
++
++Write methods such as `POST`, `PUT`, `PATCH`, and `DELETE` are rejected before
++any business service can perform work.
++
++## Authentication Boundary
++
++Login cutover is intentionally not implemented in Phase 9.1.
++
++The auth preparation endpoints are read-only:
++
++- `GET /api/v1/auth/profile/`
++- `GET /api/v1/auth/permissions/`
++
++The profile endpoint reads a demo admin ID from query/header for compatibility
++testing only. It does not create sessions, issue tokens, refresh sessions, or
++verify passwords.
++
++## Sensitive Data Exposure
++
++The auth profile serializer exposes only:
++
++- ID
++- full name
++- email
++- role
++- active status
++- 2FA enabled flag
++
++It does not expose:
++
++- password hashes
++- reset tokens
++- session IDs
++- 2FA codes
++- login attempt internals
++
++## Readonly Enforcement
++
++Database safety is preserved by:
++
++- unmanaged `managed = False` models
++- legacy database alias opened read-only
++- repository boundaries
++- service-only API access
++- read-only permission class
++- tests that reject write attempts
++
++## Remaining Risks
++
++- Production authentication must be reviewed separately before auth cutover.
++- Business read APIs currently expose operational data and should be protected
++  by real authentication before public deployment.
++- Future write APIs require transaction tests and rollback strategy before
++  approval.
++
++## Recommendation
++
++Approve Phase 9.1 only as an internal read-only API readiness layer. Do not
++expose business endpoints publicly until authentication and authorization
++cutover are approved.

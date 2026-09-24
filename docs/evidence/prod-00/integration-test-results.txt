@@ -1,0 +1,4 @@
+STATUS: PASS
+COMMAND: python -m pytest tests/test_wave1_django_foundation.py tests/test_wave4_legacy_reduction.py tests/test_wave7_public_website.py -q
+EXIT_CODE: 0
+RESULT: 25 passed in 1.78s

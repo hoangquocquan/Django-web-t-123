@@ -1,0 +1,5 @@
+﻿STATUS: PASS
+COMMAND: python django_backend/manage.py check
+EXIT_CODE: 0
+OUTPUT:
+System check identified no issues (0 silenced).

@@ -1,0 +1,7 @@
+{
+  "status": "NOT_VERIFIED",
+  "client_available": false,
+  "runtime_reachable": false,
+  "reason": "redis-cli is unavailable; Docker daemon is not running",
+  "required_by": "PROD-02 and PROD-04"
+}

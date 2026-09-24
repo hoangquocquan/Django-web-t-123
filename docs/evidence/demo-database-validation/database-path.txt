@@ -1,0 +1,1 @@
+C:\Users\hoang\Documents\Codex\mecprecision-vietnam\django_backend\db.sqlite3

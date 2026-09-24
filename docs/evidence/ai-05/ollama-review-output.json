@@ -1,0 +1,43 @@
+{
+  "status": "BLOCKED",
+  "gate_state": "BLOCKED",
+  "review_completed": false,
+  "schema_valid": false,
+  "fallback_used": false,
+  "attempts": 3,
+  "review": {},
+  "summary": "Mandatory local Ollama review did not complete successfully.",
+  "issues": [
+    "invalid_schema: Review treats the expected later human gate as a technical finding.",
+    "invalid_schema: Review treats the expected later human gate as a technical finding.",
+    "invalid_schema: Review treats the expected later human gate as a technical finding."
+  ],
+  "recommendation": "Fix review availability or evidence, rerun tests, then rerun mandatory review.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "available": false,
+    "model_available": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "invalid_schema: Review treats the expected later human gate as a technical finding.; invalid_schema: Review treats the expected later human gate as a technical finding.; invalid_schema: Review treats the expected later human gate as a technical finding.",
+    "response": ""
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.0",
+    "review_input_sha256": "1c0f1fe8b28d65e9836f2f43e60a1dedcacffea1698bfe7764e4444c700bb4e1"
+  },
+  "failure_reason": "invalid_review",
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "AI-05",
+  "created_at": "2026-08-01T16:40:11+00:00"
+}

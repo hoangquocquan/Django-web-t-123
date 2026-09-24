@@ -1,0 +1,2 @@
+STATUS = PASS
+RESULT = 18 passed in 1.73s.

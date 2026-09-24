@@ -1,0 +1,128 @@
+{
+  "status": "BLOCKED",
+  "gate_state": "BLOCKED",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "BLOCKED",
+    "summary": "Database validation report for DEMO_DATABASE",
+    "migration_findings": [],
+    "critical_findings": [],
+    "test_findings": [],
+    "requirements_checked": [
+      "docs/evidence/demo-database-validation/environment-summary.txt",
+      "reason: Handled by deterministic documentation contract."
+    ],
+    "missing_requirements": [],
+    "security_findings": [
+      "path: docs/evidence/demo-database-validation/ollama-review-output.json",
+      "reason: Handled by deterministic documentation contract."
+    ],
+    "medium_findings": [
+      "path: docs/evidence/demo-database-validation/database-file-metadata.json",
+      "reason: Handled by deterministic documentation contract."
+    ],
+    "high_findings": [
+      "path: docs/evidence/demo-database-validation/mandatory-ollama-run.txt",
+      "reason: Handled by deterministic documentation contract."
+    ],
+    "recommended_actions": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "deployment_authorized": false,
+      "human_approval_required": true,
+      "production_authorized": false,
+      "approval_bypass_detected": false,
+      "auto_merge": false,
+      "auto_deploy": false,
+      "release_authorized": false,
+      "merge_authorized": false
+    },
+    "full_diff_coverage": true,
+    "reviewed_chunk_ids": [
+      "django_backend/apps/core/demo_database_validation.py#1",
+      "django_backend/apps/core/demo_database_validation.py#2",
+      "django_backend/apps/core/demo_database_validation.py#3",
+      "django_backend/apps/core/demo_database_validation.py#4",
+      "django_backend/apps/core/demo_database_validation.py#5",
+      "django_backend/apps/core/demo_database_validation.py#6",
+      "django_backend/apps/core/management/commands/validate_demo_database.py#1"
+    ],
+    "model": "llama3",
+    "prompt_version": "ai-review-v3.0"
+  },
+  "summary": "Database validation report for DEMO_DATABASE",
+  "issues": [
+    "path: docs/evidence/demo-database-validation/mandatory-ollama-run.txt",
+    "reason: Handled by deterministic documentation contract.",
+    "path: docs/evidence/demo-database-validation/database-file-metadata.json",
+    "reason: Handled by deterministic documentation contract."
+  ],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_list_received": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "model_digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+    "family": "llama",
+    "ollama_version": "0.32.5",
+    "prompt_version": "ai-review-v3.0",
+    "context_tokens": 8192,
+    "temperature": 0.0,
+    "num_predict": 1200,
+    "error": "",
+    "response": "{\n  \"decision\": \"PASS\",\n  \"summary\": \"Database validation report for DEMO_DATABASE\",\n  \"migration_findings\": [],\n  \"critical_findings\": [],\n  \"test_findings\": [\n    ],\n  \"requirements_checked\": [\n      \"docs/evidence/demo-database-validation/environment-summary.txt\",\n      \"reason: Handled by deterministic documentation contract.\"\n    ],\n    \"missing_requirements\": [],\n    \"security_findings\": [\n      \"path: docs/evidence/demo-database-validation/ollama-review-output.json\",\n      \"reason: Handled by deterministic documentation contract.\"\n    ],\n    \"medium_findings\": [\n      \"path: docs/evidence/demo-database-validation/database-file-metadata.json\",\n      \"reason: Handled by deterministic documentation contract.\"\n    ],\n    \"high_findings\": [\n      \"path: docs/evidence/demo-database-validation/mandatory-ollama-run.txt\",\n      \"reason: Handled by deterministic documentation contract.\"\n    ],\n    \"recommended_actions\": [],\n    \"requires_human_review\": true,\n    \"safety_gates\": {\n      \"deployment_authorized\": false,\n      \"human_approval_required\": true,\n      \"production_authorized\": false,\n      \"approval_bypass_detected\": false,\n      \"auto_merge\": false,\n      \"auto_deploy\": false,\n      \"release_authorized\": false,\n      \"merge_authorized\": false\n    },\n    \"full_diff_coverage\": true,\n    \"reviewed_chunk_ids\": [\"django_backend/apps/core/demo_database_validation.py#1\",\"django_backend/apps/core/demo_database_validation.py#2\",\"django_backend/apps/core/demo_database_validation.py#3\",\"django_backend/apps/core/demo_database_validation.py#4\",\"django_backend/apps/core/demo_database_validation.py#5\",\"django_backend/apps/core/demo_database_validation.py#6\",\"django_backend/apps/core/management/commands/validate_demo_database.py#1\"],\n    \"model\": \"llama3\",\n    \"prompt_version\": \"ai-review-v3.0\"\n}"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v3.0",
+    "review_input_sha256": "72c9cd160229536465c7ab1f9a4e82be44d201956250ab496be5877543d19d88",
+    "review_output_sha256": "9f5a49adf05e9e9c6007e95ba006fab4ea68537bc860e3a51ffcf4224ba15f53",
+    "actual_diff_sha256": "c0cd1b650a41ffab169e61d56bcbf78f0c2ec7c92f51b1dbf8c932a2b738dcf1",
+    "base_commit": "2ce8edbb3a58e4a7e2e44dfa781da74f32b57a25",
+    "current_commit": "2ce8edbb3a58e4a7e2e44dfa781da74f32b57a25",
+    "correlation_id": "ed439314-8249-48e3-915c-a1b9fc6b94a4",
+    "full_diff_coverage": true,
+    "reviewed_chunk_ids": [
+      "django_backend/apps/core/demo_database_validation.py#1",
+      "django_backend/apps/core/demo_database_validation.py#2",
+      "django_backend/apps/core/demo_database_validation.py#3",
+      "django_backend/apps/core/demo_database_validation.py#4",
+      "django_backend/apps/core/demo_database_validation.py#5",
+      "django_backend/apps/core/demo_database_validation.py#6",
+      "django_backend/apps/core/management/commands/validate_demo_database.py#1"
+    ]
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false,
+    "merge_authorized": false,
+    "release_authorized": false,
+    "deployment_authorized": false,
+    "production_authorized": false
+  },
+  "phase": "DEMO-DATABASE-VALIDATION",
+  "created_at": "2026-08-02T12:16:09+00:00",
+  "artifact_manifest": {
+    "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\ai-review\\results\\ai_review_artifact_manifest.json",
+    "signature_status": "SIGNATURE_NOT_AVAILABLE"
+  }
+}

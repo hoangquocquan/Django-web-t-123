@@ -1,0 +1,18 @@
+Status: PASS
+
+Project production manifest audited:
+django_backend/requirements-prod.txt
+
+Command:
+pip-audit --disable-pip --no-deps -r django_backend/requirements-prod.txt
+
+Result:
+No known vulnerabilities found.
+
+An initial environment-wide audit reported vulnerabilities in unrelated packages
+installed in the shared Python environment. That result is not used as project
+evidence because those packages are absent from the production requirements file.
+
+STATUS = PASS
+SCOPE = pinned Django production dependencies
+NETWORK = PyPI reachable during the final audit

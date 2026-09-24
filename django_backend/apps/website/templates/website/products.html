@@ -1,0 +1,62 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Danh mục sản phẩm</span>
+      <h1>Linh Kiện & Đồ Gá Cơ Khí Chính Xác CNC</h1>
+      <p>Cung cấp trục, bạc, bánh răng, cụm linh kiện máy và jigs kiểm tra chất lượng cao cho các ngành công nghiệp phụ trợ, ô tô & điện tử.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <form method="get" class="filter-bar">
+        <div class="form-group" style="margin-bottom:0; flex-grow: 1; max-width: 320px;">
+          <label for="categorySelect">Lọc theo nhóm sản phẩm</label>
+          <select id="categorySelect" name="category" onchange="this.form.submit()">
+            <option value="">-- Tất cả danh mục --</option>
+            {% for category in categories %}
+              <option value="{{ category }}" {% if category == active_category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if active_category %}
+          <a class="btn-quote-sm" href="{% url 'website:products' %}" style="padding: 10px 16px;">Xóa bộ lọc ✕</a>
+        {% endif %}
+      </form>
+
+      <div class="card-grid">
+        {% for product in products %}
+          <article class="product-card">
+            <div class="product-media">
+              {% if product.main_image %}
+                <img src="{{ product.main_image }}" alt="{{ product.name }}" loading="lazy" />
+              {% else %}
+                <div class="placeholder-img"><span>⚙️ MecPrecision</span></div>
+              {% endif %}
+              <span class="category-badge">{{ product.category_name|default:"Chi tiết cơ khí" }}</span>
+            </div>
+            <div class="product-body">
+              <h3 class="product-title">
+                <a href="{% url 'website:product-detail' product.slug %}">{{ product.name }}</a>
+              </h3>
+              <p class="product-desc">{{ product.short_description|default:product.description|truncatechars:140 }}</p>
+              <div class="product-footer">
+                <a class="btn-text" href="{% url 'website:product-detail' product.slug %}">
+                  <span>Xem chi tiết</span>
+                  <span>→</span>
+                </a>
+                <a class="btn-quote-sm" href="{% url 'website:contact' %}">Yêu cầu báo giá</a>
+              </div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 48px; text-align: center; background: var(--bg-soft); border-radius: var(--radius-lg);">
+            <p style="font-size: 16px; color: var(--slate-muted); margin-bottom: 16px;">Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.</p>
+            <a class="btn btn-primary" href="{% url 'website:products' %}">Xem tất cả sản phẩm</a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

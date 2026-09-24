@@ -1,0 +1,94 @@
+{
+  "name": "MEC Precision Phase Review Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/phase_validator.py"
+      },
+      "id": "phase-validator",
+      "name": "Run Phase Validator",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "command": "pytest tests/test_phase12_4_ai_devops.py"
+      },
+      "id": "phase-tests",
+      "name": "Run Phase Tests",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:11434/api/generate",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "{ \"model\": \"llama3.1\", \"prompt\": \"Review the latest migration phase using validator and test results. Never approve production.\", \"stream\": false }"
+      },
+      "id": "ollama-review",
+      "name": "Ask Ollama Reviewer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/ollama_phase_reviewer.py"
+      },
+      "id": "report-generation",
+      "name": "Generate AI Review Report",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "message": "AI phase review completed. Human approval is still required."
+      },
+      "id": "notification",
+      "name": "Notify Reviewer",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1200, 0]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Run Phase Validator", "type": "main", "index": 0}]]
+    },
+    "Run Phase Validator": {
+      "main": [[{"node": "Run Phase Tests", "type": "main", "index": 0}]]
+    },
+    "Run Phase Tests": {
+      "main": [[{"node": "Ask Ollama Reviewer", "type": "main", "index": 0}]]
+    },
+    "Ask Ollama Reviewer": {
+      "main": [[{"node": "Generate AI Review Report", "type": "main", "index": 0}]]
+    },
+    "Generate AI Review Report": {
+      "main": [[{"node": "Notify Reviewer", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "safety": {
+      "autoDeploy": false,
+      "autoApproveProduction": false,
+      "humanReviewRequired": true
+    }
+  }
+}
+

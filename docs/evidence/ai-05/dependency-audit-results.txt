@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = pip-audit was available but was deferred because AI-05 changed no dependency manifest and the mandatory Ollama gate blocked the phase.
+RETRY_COMMAND = pip-audit
+IMPACT = Dependency CVE status is not refreshed for AI-05.

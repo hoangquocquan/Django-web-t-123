@@ -1,0 +1,10 @@
+{
+  "phase": "PROD-04",
+  "depends_on": ["PROD-00", "PROD-01", "PROD-02", "PROD-03"],
+  "components": {
+    "django_ai": ["ollama", "redis", "postgresql"],
+    "rag": ["ollama_generation", "ollama_embedding", "postgresql_vectors"],
+    "n8n": ["postgresql", "django_health", "hmac_secret", "human_approval"]
+  },
+  "next_phase": "PROD-05"
+}

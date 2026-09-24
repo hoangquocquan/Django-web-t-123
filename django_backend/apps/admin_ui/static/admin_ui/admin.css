@@ -1,0 +1,271 @@
+:root {
+  color-scheme: light;
+  --ink: #092f5f;
+  --muted: #5f6f85;
+  --line: #d7e2ef;
+  --panel: #ffffff;
+  --soft: #f3f7fb;
+  --blue: #1685e5;
+  --blue-dark: #0a4f94;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--soft);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: var(--blue-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-topbar {
+  align-items: center;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.brand,
+.admin-user {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--ink);
+  border-radius: 6px;
+  color: #fff;
+  display: inline-flex;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  min-height: calc(100vh - 64px);
+}
+
+.admin-sidebar {
+  background: #082c55;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+}
+
+.admin-sidebar a {
+  border-radius: 6px;
+  color: #dcecff;
+  padding: 11px 12px;
+}
+
+.admin-sidebar a.active,
+.admin-sidebar a:hover {
+  background: var(--blue);
+  color: #fff;
+}
+
+.admin-main {
+  padding: 28px;
+}
+
+.page-heading {
+  margin-bottom: 20px;
+}
+
+.page-heading h1 {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+
+.page-heading p,
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.metric-grid,
+.admin-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.metric-card,
+.admin-form,
+.table-panel,
+.login-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 26px rgba(9, 47, 95, 0.07);
+  padding: 18px;
+}
+
+.metric-card span {
+  color: var(--muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.metric-card strong {
+  font-size: 30px;
+}
+
+.admin-form p {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.inline-form input,
+.inline-form select {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+  min-height: 40px;
+  padding: 9px 10px;
+  width: 100%;
+}
+
+.admin-form textarea {
+  min-height: 90px;
+}
+
+button,
+.secondary-action {
+  background: var(--blue);
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 16px;
+}
+
+.secondary-action {
+  background: #63758c;
+  margin-left: 8px;
+}
+
+.wide-form {
+  max-width: 760px;
+}
+
+.table-panel {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  min-width: 720px;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.badge {
+  background: #e8f3ff;
+  border: 1px solid #c8def8;
+  border-radius: 999px;
+  display: inline-block;
+  padding: 4px 9px;
+}
+
+.messages {
+  margin-bottom: 16px;
+}
+
+.message {
+  border-radius: 6px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+}
+
+.message.success {
+  background: #e7f8ef;
+  color: #116235;
+}
+
+.message.error {
+  background: #ffe8e8;
+  color: #8d1d1d;
+}
+
+.login-body {
+  align-items: center;
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-panel {
+  max-width: 430px;
+  width: 100%;
+}
+
+.login-brand {
+  margin-bottom: 18px;
+}
+
+.inline-form {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(90px, 1fr) minmax(120px, 1fr) minmax(130px, 2fr) auto;
+}
+
+@media (max-width: 860px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .inline-form {
+    grid-template-columns: 1fr;
+  }
+}

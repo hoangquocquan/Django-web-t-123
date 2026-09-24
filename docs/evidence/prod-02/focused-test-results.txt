@@ -1,0 +1,4 @@
+COMMAND=pytest -q tests/test_prod02_production_infrastructure.py tests/test_phase13_1_docker_build.py tests/test_phase12_1_security.py
+STATUS=PASS
+RESULT=18 passed in 2.27s
+COVERAGE=fail-fast variables, PostgreSQL/Redis schemes, secure settings, Gunicorn, non-root image contract, exclusions, health probes, backward security tests

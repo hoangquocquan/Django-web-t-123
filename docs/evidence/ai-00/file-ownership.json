@@ -1,0 +1,11 @@
+{
+  "phase": "AI-00",
+  "allowed_paths": [
+    "docs/codex-prompts/AI_SYSTEM_HARDENING_V2_MASTER.md",
+    "docs/codex-prompts/AI_00_REPRODUCIBLE_BASELINE.md",
+    "docs/reviews/AI_SYSTEM_HARDENING_V2_*",
+    "docs/reviews/AI_00_REPRODUCIBLE_BASELINE_*",
+    "docs/evidence/ai-00/*"
+  ],
+  "protected_untracked_files": ["docs.zip", "docs/reviews.zip", "mecprecision.zip"]
+}

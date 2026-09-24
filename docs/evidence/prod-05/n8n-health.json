@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "container": "mecprecision-vietnam-n8n-1",
+  "container_health": "healthy",
+  "health_endpoint_status": 200,
+  "runtime_entries_restored": 7,
+  "versioned_workflows_restored": 5,
+  "production_data_modified": false
+}

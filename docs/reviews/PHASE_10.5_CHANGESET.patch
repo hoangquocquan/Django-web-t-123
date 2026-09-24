@@ -1,0 +1,541 @@
+diff --git a/django_backend/tests/test_phase10_production_cutover.py b/django_backend/tests/test_phase10_production_cutover.py
+new file mode 100644
+index 0000000..969c9d3
+--- /dev/null
++++ b/django_backend/tests/test_phase10_production_cutover.py
+@@ -0,0 +1,68 @@
++"""Tests for Phase 10.5 production cutover workflow gates."""
++
++import hashlib
++
++from scripts.phase10_post_cutover_validation import evaluate_post_cutover_validation
++from scripts.phase10_production_cutover import (
++    EXPECTED_OPERATOR_CONFIRMATION,
++    evaluate_cutover_execution,
++)
++
++
++def test_production_cutover_blocks_without_operator_controls():
++    """Execution must remain safely blocked when approvals are missing."""
++    result = evaluate_cutover_execution({})
++
++    assert result["status"] == "blocked_safely"
++    assert result["production_cutover_executed"] is False
++    assert result["destructive_actions_executed"] is False
++    assert result["traffic_switched"] is False
++
++
++def test_production_cutover_allows_only_manual_steps_when_controls_are_complete(tmp_path):
++    """Complete mocked controls allow manual cutover but still execute nothing."""
++    backup = tmp_path / "legacy-final.sqlite"
++    backup.write_bytes(b"backup")
++    checksum = hashlib.sha256(b"backup").hexdigest()
++    env = {
++        "PHASE10_MAINTENANCE_WINDOW_APPROVED": "approved",
++        "PHASE10_LEGACY_WRITE_FREEZE_APPROVED": "approved",
++        "PHASE10_ROLLBACK_APPROVED": "approved",
++        "PHASE10_FINAL_BACKUP_VERIFIED": "approved",
++        "PHASE10_PRODUCTION_DATABASE_URL": "postgresql://prod_user:secret@db:5432/mecprecision",
++        "PHASE10_FINAL_BACKUP_PATH": str(backup),
++        "PHASE10_FINAL_BACKUP_SHA256": checksum,
++        "PHASE10_ROLLBACK_OWNER": "database-owner",
++        "PHASE10_CUTOVER_APPROVAL_ID": "APPROVAL-10.5",
++        "PHASE10_OPERATOR_CONFIRMATION": EXPECTED_OPERATOR_CONFIRMATION,
++        "PHASE10_EXECUTE_CUTOVER_APPROVED": "approved",
++    }
++
++    result = evaluate_cutover_execution(env)
++
++    assert result["status"] == "ready_for_manual_cutover"
++    assert result["manual_cutover_allowed"] is True
++    assert result["production_cutover_executed"] is False
++    assert result["database_migration_executed"] is False
++
++
++def test_post_cutover_validation_blocks_before_cutover_marker():
++    """Post-cutover validation should not query production before cutover is marked."""
++    result = evaluate_post_cutover_validation({})
++
++    assert result["status"] == "blocked_safely"
++    assert result["post_cutover_validation_executed"] is False
++    assert result["errors"]
++
++
++def test_post_cutover_validation_rejects_dryrun_database_even_after_marker():
++    """Production validation must reject dry-run database names."""
++    env = {
++        "PHASE10_CUTOVER_COMPLETED": "completed",
++        "PHASE10_PRODUCTION_DATABASE_URL": "postgresql://user:secret@localhost:5432/mecprecision_dryrun",
++    }
++
++    result = evaluate_post_cutover_validation(env)
++
++    assert result["status"] == "blocked_safely"
++    assert "non-production" in " ".join(result["errors"]).lower()
+diff --git a/docs/codex-prompts/PHASE_10.5_PRODUCTION_CUTOVER_EXECUTION.md b/docs/codex-prompts/PHASE_10.5_PRODUCTION_CUTOVER_EXECUTION.md
+new file mode 100644
+index 0000000..2ef2ec8
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_10.5_PRODUCTION_CUTOVER_EXECUTION.md
+@@ -0,0 +1,36 @@
++# Phase 10.5 - Production Cutover Execution & Validation
++
++## Objective
++
++Prepare a controlled production database ownership transition from legacy
++database reader mode to Django PostgreSQL owner mode.
++
++## Safety Boundary
++
++This phase creates execution workflow, validation workflow and documentation.
++It must not execute production migration unless all approvals, final backup,
++rollback owner and operator confirmation are present.
++
++## Required Controls
++
++- approval ID
++- maintenance window
++- backup verification
++- rollback owner
++- operator confirmation
++
++## Required Outputs
++
++- `docs/migration/PRODUCTION_CUTOVER_EXECUTION_CHECKLIST.md`
++- `scripts/phase10_production_cutover.py`
++- `scripts/phase10_post_cutover_validation.py`
++- `docs/migration/PRODUCTION_ROLLBACK_EXECUTION_GUIDE.md`
++- `docs/migration/PRODUCTION_CUTOVER_REPORT.md`
++- `docs/reviews/PHASE_10.5_CHANGESET.patch`
++- `docs/reviews/PHASE_10.5_REVIEW_SUMMARY.md`
++
++## Final Status
++
++WAITING FOR ARCHITECT REVIEW
++
++Do not start Phase 11.
+diff --git a/docs/migration/PRODUCTION_CUTOVER_EXECUTION_CHECKLIST.md b/docs/migration/PRODUCTION_CUTOVER_EXECUTION_CHECKLIST.md
+new file mode 100644
+index 0000000..8ee7976
+--- /dev/null
++++ b/docs/migration/PRODUCTION_CUTOVER_EXECUTION_CHECKLIST.md
+@@ -0,0 +1,42 @@
++# Production Cutover Execution Checklist
++
++## Phase
++
++Phase 10.5 - Production Cutover Execution & Validation
++
++## Before Cutover
++
++- [ ] Approval confirmed
++- [ ] Maintenance window confirmed
++- [ ] Backup completed
++- [ ] Backup checksum verified
++- [ ] Rollback owner assigned
++- [ ] Monitoring ready
++- [ ] Operator confirmation recorded
++- [ ] Production secrets loaded from approved secret manager
++
++## During Cutover
++
++- [ ] Freeze legacy writes
++- [ ] Final data synchronization
++- [ ] Execute database migration
++- [ ] Enable Django PostgreSQL ownership
++- [ ] Validate services
++- [ ] Keep writes disabled until validation gates pass
++
++## After Cutover
++
++- [ ] API health check
++- [ ] Authentication test
++- [ ] Business flow test
++- [ ] Data validation
++- [ ] Monitor errors
++- [ ] Confirm rollback window remains open
++- [ ] Record final decision
++
++## Current Repository Status
++
++```text
++CUTOVER EXECUTION WORKFLOW PREPARED
++PRODUCTION CUTOVER NOT EXECUTED
++```
+diff --git a/docs/migration/PRODUCTION_CUTOVER_REPORT.md b/docs/migration/PRODUCTION_CUTOVER_REPORT.md
+new file mode 100644
+index 0000000..9a99805
+--- /dev/null
++++ b/docs/migration/PRODUCTION_CUTOVER_REPORT.md
+@@ -0,0 +1,51 @@
++# Production Cutover Report
++
++## Date
++
++TBD
++
++## Operator
++
++TBD
++
++## Approval ID
++
++TBD
++
++## Backup Information
++
++| Item | Value |
++|---|---|
++| Backup path | TBD |
++| Backup size | TBD |
++| Backup SHA256 | TBD |
++| Backup verified by | TBD |
++
++## Migration Result
++
++```text
++NOT EXECUTED
++```
++
++## Validation Result
++
++```text
++PENDING
++```
++
++## Rollback Status
++
++```text
++ROLLBACK READY REQUIRED BEFORE EXECUTION
++```
++
++## Final Decision
++
++```text
++WAITING FOR APPROVAL
++```
++
++## Notes
++
++This report is a template. Do not mark cutover complete until production
++validation passes and the rollback owner signs off.
+diff --git a/docs/migration/PRODUCTION_ROLLBACK_EXECUTION_GUIDE.md b/docs/migration/PRODUCTION_ROLLBACK_EXECUTION_GUIDE.md
+new file mode 100644
+index 0000000..8588b2b
+--- /dev/null
++++ b/docs/migration/PRODUCTION_ROLLBACK_EXECUTION_GUIDE.md
+@@ -0,0 +1,46 @@
++# Production Rollback Execution Guide
++
++## Phase
++
++Phase 10.5 - Production Cutover Execution & Validation
++
++## Rollback Triggers
++
++- migration failure
++- data inconsistency
++- API failure
++- authentication failure
++- monitoring error spike
++- operator stop decision
++
++## Rollback Steps
++
++1. Stop traffic to Django PostgreSQL owner path.
++2. Keep writes disabled.
++3. Restore database from verified backup.
++4. Revert production database configuration.
++5. Route traffic back to legacy service.
++6. Validate system health.
++7. Run API contract smoke tests.
++8. Run authentication/session smoke tests.
++9. Keep monitoring enabled.
++10. Record incident and corrective phase.
++
++## Required Rollback Evidence
++
++| Evidence | Required |
++|---|---|
++| Rollback owner | Yes |
++| Backup path | Yes |
++| Backup checksum | Yes |
++| Restore command reviewed | Yes |
++| Traffic route-back command reviewed | Yes |
++| API smoke result | Yes |
++| Auth smoke result | Yes |
++
++## Current Status
++
++```text
++ROLLBACK GUIDE PREPARED
++ROLLBACK NOT EXECUTED
++```
+diff --git a/scripts/phase10_post_cutover_validation.py b/scripts/phase10_post_cutover_validation.py
+new file mode 100644
+index 0000000..a0e3503
+--- /dev/null
++++ b/scripts/phase10_post_cutover_validation.py
+@@ -0,0 +1,159 @@
++"""Phase 10.5 post-cutover validation gate.
++
++The script validates whether post-cutover checks are ready to run. Without an
++explicit cutover-completed marker it reports a safe blocked status instead of
++querying production or assuming traffic was switched.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++from urllib.parse import urlparse
++
++try:
++    from scripts.phase10_readiness_snapshot import EXPECTED_TABLES
++    from scripts.check_phase10_postgres_connection import (
++        check_postgres_connection,
++        mask_database_url,
++    )
++    from scripts.phase10_cutover_readiness import validate_production_database_url
++except ImportError:  # pragma: no cover - used when running this file directly.
++    from phase10_readiness_snapshot import EXPECTED_TABLES
++    from check_phase10_postgres_connection import (
++        check_postgres_connection,
++        mask_database_url,
++    )
++    from phase10_cutover_readiness import validate_production_database_url
++
++
++CUTOVER_COMPLETED_ENV = "PHASE10_CUTOVER_COMPLETED"
++VALIDATION_DATABASE_URL_ENV = "PHASE10_PRODUCTION_DATABASE_URL"
++
++
++def flag_enabled(value):
++    """Return True when a validation flag is explicitly enabled."""
++    return str(value or "").strip().lower() in {"1", "true", "yes", "completed"}
++
++
++def validate_table_availability(database_url, expected_tables=None):
++    """Validate expected table availability in a configured PostgreSQL database."""
++    expected_tables = expected_tables or EXPECTED_TABLES
++    try:
++        import psycopg
++    except ImportError:
++        return {
++            "checked": False,
++            "available_tables": [],
++            "missing_tables": expected_tables,
++            "errors": ["psycopg is not installed."],
++        }
++
++    errors = []
++    available_tables = []
++    try:
++        with psycopg.connect(database_url, connect_timeout=5) as connection:
++            with connection.cursor() as cursor:
++                cursor.execute(
++                    """
++                    SELECT table_name
++                    FROM information_schema.tables
++                    WHERE table_schema = 'public'
++                    """
++                )
++                available_tables = sorted(row[0] for row in cursor.fetchall())
++    except Exception as exc:  # pragma: no cover - depends on production env.
++        errors.append(f"Post-cutover table availability check failed: {exc}")
++
++    missing_tables = [
++        table_name for table_name in expected_tables if table_name not in available_tables
++    ]
++    return {
++        "checked": not errors,
++        "available_tables": available_tables,
++        "missing_tables": missing_tables,
++        "errors": errors,
++    }
++
++
++def evaluate_post_cutover_validation(env=None):
++    """Evaluate post-cutover validation readiness and results."""
++    env = env or os.environ
++    cutover_completed = flag_enabled(env.get(CUTOVER_COMPLETED_ENV))
++    database_url = env.get(VALIDATION_DATABASE_URL_ENV, "")
++    database_validation = validate_production_database_url(database_url)
++    errors = []
++
++    if not cutover_completed:
++        errors.append(f"{CUTOVER_COMPLETED_ENV} is not set to completed.")
++    errors.extend(database_validation["errors"])
++
++    connection = {
++        "connection_checked": False,
++        "connection_ok": False,
++        "errors": [],
++    }
++    tables = {
++        "checked": False,
++        "available_tables": [],
++        "missing_tables": EXPECTED_TABLES,
++        "errors": [],
++    }
++
++    if cutover_completed and not database_validation["errors"]:
++        connection = check_postgres_connection(database_url)
++        if connection["connection_ok"]:
++            tables = validate_table_availability(database_url)
++            errors.extend(tables["errors"])
++            if tables["missing_tables"]:
++                errors.append(
++                    f"Missing expected production tables: {len(tables['missing_tables'])}"
++                )
++        else:
++            errors.extend(connection["errors"])
++
++    status = "passed" if cutover_completed and not errors else "blocked_safely"
++    return {
++        "status": status,
++        "post_cutover_validation_executed": cutover_completed and not database_validation["errors"],
++        "production_database_url": mask_database_url(database_url),
++        "database": {
++            "name": urlparse(database_url).path.lstrip("/") if database_url else "",
++            "validation": database_validation,
++            "connection": connection,
++            "tables": tables,
++        },
++        "application": {
++            "django_health": "run python manage.py check",
++            "api_health": "run approved API smoke tests",
++        },
++        "business": {
++            "catalog_access": "pending real cutover",
++            "crm_access": "pending real cutover",
++            "sales_access": "pending real cutover",
++            "cms_access": "pending real cutover",
++            "authentication": "pending real cutover",
++        },
++        "errors": errors,
++    }
++
++
++def main():
++    """CLI entrypoint for Phase 10.5 post-cutover validation."""
++    parser = argparse.ArgumentParser(description="Phase 10.5 post-cutover validation")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when validation is blocked. Default exits 0 for safe blocking.",
++    )
++    args = parser.parse_args()
++    result = evaluate_post_cutover_validation()
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["status"] == "passed":
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/phase10_production_cutover.py b/scripts/phase10_production_cutover.py
+new file mode 100644
+index 0000000..3fc692d
+--- /dev/null
++++ b/scripts/phase10_production_cutover.py
+@@ -0,0 +1,97 @@
++"""Phase 10.5 controlled production cutover execution gate.
++
++This script does not perform destructive actions. It validates whether a human
++operator has provided the required production approvals, final backup metadata,
++rollback owner and explicit confirmation before manual cutover steps may begin.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++
++try:
++    from scripts.phase10_cutover_readiness import evaluate_cutover_readiness
++except ImportError:  # pragma: no cover - used when running this file directly.
++    from phase10_cutover_readiness import evaluate_cutover_readiness
++
++
++OPERATOR_CONFIRMATION_ENV = "PHASE10_OPERATOR_CONFIRMATION"
++EXPECTED_OPERATOR_CONFIRMATION = "I_UNDERSTAND_PRODUCTION_CUTOVER"
++EXECUTION_APPROVAL_ENV = "PHASE10_EXECUTE_CUTOVER_APPROVED"
++
++
++def confirmation_matches(value):
++    """Return True only for the explicit production cutover confirmation phrase."""
++    return str(value or "").strip() == EXPECTED_OPERATOR_CONFIRMATION
++
++
++def approval_enabled(value):
++    """Return True when the execution approval flag is explicitly enabled."""
++    return str(value or "").strip().lower() in {"1", "true", "yes", "approved"}
++
++
++def evaluate_cutover_execution(env=None):
++    """Evaluate whether manual production cutover execution may proceed."""
++    env = env or os.environ
++    readiness = evaluate_cutover_readiness(env)
++    operator_confirmed = confirmation_matches(env.get(OPERATOR_CONFIRMATION_ENV))
++    execution_approved = approval_enabled(env.get(EXECUTION_APPROVAL_ENV))
++    errors = list(readiness["errors"])
++
++    if not operator_confirmed:
++        errors.append(
++            "Missing explicit operator confirmation "
++            f"({OPERATOR_CONFIRMATION_ENV}={EXPECTED_OPERATOR_CONFIRMATION})."
++        )
++    if not execution_approved:
++        errors.append(f"Missing execution approval flag ({EXECUTION_APPROVAL_ENV}).")
++
++    allowed = readiness["ready_for_cutover"] and operator_confirmed and execution_approved
++    return {
++        "status": "ready_for_manual_cutover" if allowed else "blocked_safely",
++        "manual_cutover_allowed": allowed,
++        "production_cutover_executed": False,
++        "destructive_actions_executed": False,
++        "database_migration_executed": False,
++        "traffic_switched": False,
++        "legacy_database_removed": False,
++        "readiness": readiness,
++        "operator_confirmation": {
++            "required_phrase": EXPECTED_OPERATOR_CONFIRMATION,
++            "provided": operator_confirmed,
++        },
++        "execution_approval": {
++            "environment_variable": EXECUTION_APPROVAL_ENV,
++            "approved": execution_approved,
++        },
++        "manual_steps": [
++            "freeze legacy writes",
++            "run final production migration with approved operator",
++            "switch production database configuration",
++            "run post-cutover validation",
++            "enable writes only after validation gates pass",
++        ],
++        "errors": errors,
++    }
++
++
++def main():
++    """CLI entrypoint for Phase 10.5 cutover execution gate."""
++    parser = argparse.ArgumentParser(description="Phase 10.5 production cutover gate")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when cutover is blocked. Default exits 0 for safe blocking.",
++    )
++    args = parser.parse_args()
++    result = evaluate_cutover_execution()
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["manual_cutover_allowed"]:
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

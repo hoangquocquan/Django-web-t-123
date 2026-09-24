@@ -1,0 +1,10 @@
+{
+  "phase": "PROD-02",
+  "depends_on": ["PROD-01"],
+  "required_by": ["PROD-03", "PROD-04", "PROD-05", "PROD-06"],
+  "runtime_dependencies": {
+    "web": ["PostgreSQL", "Redis"],
+    "postgres": [],
+    "redis": []
+  }
+}

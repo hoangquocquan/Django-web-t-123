@@ -1,0 +1,21 @@
+services:
+  phase10-postgres-dryrun:
+    image: postgres:16
+    container_name: mecprecision_phase10_dryrun_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mecprecision_dryrun
+      POSTGRES_USER: dryrun_user
+      POSTGRES_PASSWORD: dryrun_password_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - phase10_postgres_dryrun_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dryrun_user -d mecprecision_dryrun"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  phase10_postgres_dryrun_data:

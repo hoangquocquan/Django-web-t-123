@@ -1,0 +1,82 @@
+{
+  "status": "BLOCKED_SAFELY",
+  "execution_status": "NOT_EXECUTED",
+  "reason": "Pre-shutdown validation did not pass.",
+  "validation": {
+    "status": "BLOCKED_SAFELY",
+    "execution_allowed": false,
+    "evidence_status": "INCOMPLETE_EVIDENCE_PACKAGE",
+    "approval_status": "PENDING_OR_INCOMPLETE",
+    "evidence": {
+      "ready_for_shutdown": false,
+      "legacy_requests": 0,
+      "django_requests": 0,
+      "unknown_clients": 0
+    },
+    "approval": {
+      "technical_approval": false,
+      "business_approval": false,
+      "rollback_owner": false,
+      "maintenance_window": false,
+      "monitoring_ready": false
+    },
+    "errors": [
+      "Django `/api/v1/...` traffic was not observed.",
+      "Production evidence is not COMPLETE_EVIDENCE_PACKAGE.",
+      "Production evidence is not marked ready_for_shutdown.",
+      "Replacement `/api/v1/*` traffic must be observed.",
+      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\TECHNICAL_APPROVAL.md.",
+      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\BUSINESS_APPROVAL.md.",
+      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\ROLLBACK_OWNER.md.",
+      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\MAINTENANCE_WINDOW.md.",
+      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\monitoring\\MONITORING_READINESS_CONFIRMATION.md."
+    ],
+    "safety": {
+      "legacy_code_deleted": false,
+      "database_deleted": false,
+      "database_archived": false,
+      "migrations_removed": false,
+      "approval_gate_bypassed": false
+    },
+    "elapsed_seconds": 0.0037
+  },
+  "execution_record": {
+    "phase": "11.1.6",
+    "created_at": "2026-07-26T01:58:59.473701+00:00",
+    "validation_status": "BLOCKED_SAFELY",
+    "api_state_before": {
+      "legacy_route": "/api/*",
+      "legacy_route_expected_available_before_shutdown": true,
+      "replacement_route": "/api/v1/*",
+      "replacement_route_expected_available": true,
+      "source_code_changed": false,
+      "database_changed": false,
+      "production_proxy_changed_by_script": false
+    },
+    "rollback_checkpoint": {
+      "created_at": "2026-07-26T01:58:59.473701+00:00",
+      "rollback_route": "/api/*",
+      "replacement_route": "/api/v1/*",
+      "restore_action": "restore_previous_router_or_proxy_rule",
+      "legacy_code_available": true,
+      "database_unchanged": true
+    },
+    "route_disable_plan": {
+      "action": "disable_legacy_api_route_in_production_router",
+      "legacy_route": "/api/*",
+      "keep_active": "/api/v1/*",
+      "operator_note": "Apply only during the approved maintenance window after READY_TO_EXECUTE.",
+      "script_applies_change": false
+    },
+    "legacy_routes_disabled_by_script": false,
+    "api_v1_kept_active": true,
+    "source_code_changed": false,
+    "database_changed": false
+  },
+  "post_shutdown_validation": null,
+  "elapsed_seconds": 0.0037,
+  "artifacts": {
+    "execution_record": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json",
+    "rollback_checkpoint": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json"
+  }
+}

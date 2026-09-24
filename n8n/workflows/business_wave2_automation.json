@@ -1,0 +1,28 @@
+{
+  "name": "Business AI Wave 2 Local Automation",
+  "active": false,
+  "nodes": [
+    {"name": "Webhook Validation", "type": "local.hmac", "position": [100, 100]},
+    {"name": "Website Lead To CRM", "type": "local.workflow", "position": [320, 40]},
+    {"name": "AI Lead Analysis", "type": "local.ai_suggestion", "position": [540, 40]},
+    {"name": "New Document OCR", "type": "local.document_intelligence", "position": [320, 160]},
+    {"name": "Knowledge Update", "type": "local.knowledge_update", "position": [540, 160]},
+    {"name": "Sales Follow Up Reminder", "type": "local.reminder", "position": [320, 280]},
+    {"name": "Human Approval Gate", "type": "local.approval", "position": [760, 160]}
+  ],
+  "connections": {
+    "Webhook Validation": ["Website Lead To CRM", "New Document OCR", "Sales Follow Up Reminder"],
+    "Website Lead To CRM": ["AI Lead Analysis"],
+    "AI Lead Analysis": ["Human Approval Gate"],
+    "New Document OCR": ["Knowledge Update"],
+    "Knowledge Update": ["Human Approval Gate"],
+    "Sales Follow Up Reminder": ["Human Approval Gate"]
+  },
+  "meta": {
+    "localOnly": true,
+    "productionDeploymentIncluded": false,
+    "externalAiApiIncluded": false,
+    "humanApprovalRequired": true
+  }
+}
+

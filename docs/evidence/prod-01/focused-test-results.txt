@@ -1,0 +1,6 @@
+COMMAND=pytest -q tests/test_prod01_business_ui_uat.py tests/test_business_ui.py tests/test_sales_crm_ai.py
+STATUS=PASS
+RESULT=15 passed in 2.44s
+COVERAGE=role matrix, permissions, Sales workflow, CRM workflow, approval, handoff, CSRF, validation, structured AI templates
+SAFETY_CORRECTION_COMMAND=pytest -q tests/test_ai_mandatory_review_gate.py tests/test_prod01_business_ui_uat.py tests/test_business_ui.py tests/test_sales_crm_ai.py
+SAFETY_CORRECTION_RESULT=67 passed in 2.72s

@@ -1,0 +1,1 @@
+"""Django-owned newsletter domain."""

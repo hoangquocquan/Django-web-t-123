@@ -1,0 +1,49 @@
+groups:
+  - name: mecprecision-production
+    rules:
+      - alert: MecPrecisionDependencyDown
+        expr: mecprecision_dependency_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "A required MEC Precision dependency is unavailable"
+      - alert: MecPrecisionHighErrorRate
+        expr: |
+          sum(rate(mecprecision_http_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(mecprecision_http_requests_total[5m])), 1)
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Django HTTP 5xx rate is above 5 percent"
+      - alert: MecPrecisionDiskPressure
+        expr: mecprecision_host_disk_usage_ratio > 0.80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Application disk usage is above 80 percent"
+      - alert: MecPrecisionMemoryPressure
+        expr: mecprecision_host_memory_usage_ratio > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Application memory usage is above 85 percent"
+      - alert: MecPrecisionLoginFailures
+        expr: mecprecision_login_failures_5m > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Repeated login failures require security review"
+      - alert: MecPrecisionMetricsMissing
+        expr: absent(mecprecision_dependency_up{dependency="database"})
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Production metrics have stopped"

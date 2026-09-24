@@ -1,0 +1,17 @@
+M .dockerignore
+M .gitignore
+M Dockerfile
+A .env.production.example
+M django_backend/apps/core/api_compatibility.py
+M django_backend/config/settings/production.py
+A django_backend/requirements-prod.txt
+M django_backend/requirements.txt
+M docker-compose.yml
+M tests/test_phase12_1_security.py
+A tests/test_prod02_production_infrastructure.py
+A docs/codex-prompts/PROD_02_PRODUCTION_INFRASTRUCTURE.md
+A docs/evidence/prod-02/*
+A docs/reviews/PROD_02_PRODUCTION_INFRASTRUCTURE_REVIEW.md
+A docs/reviews/PROD_02_PRODUCTION_INFRASTRUCTURE_RESULT.json
+M docs/reviews/PRODUCTION_READINESS_PHASE_STATUS.md
+M docs/reviews/PRODUCTION_READINESS_COMMIT_MANIFEST.md

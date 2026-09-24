@@ -1,0 +1,7 @@
+{
+  "status": "NOT_VERIFIED",
+  "available": false,
+  "reason": "Live n8n is not a PROD-02 dependency and localhost:5678 remains unavailable",
+  "impact": "Must pass in PROD-04",
+  "retry_command": "Invoke-WebRequest http://127.0.0.1:5678/healthz"
+}

@@ -1,0 +1,35 @@
+{
+  "phase": "PROD-01",
+  "decision": "PASS_WITH_WARNINGS",
+  "state": "READY_FOR_NEXT_PHASE",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "da5030ee1ac69d2eb21d666a562d249064736a28",
+  "phase_commit": "6ce0dd43136dc5c3591b9a8467448fd97939dbb9",
+  "tests": {
+    "prod01_focused_passed": 15,
+    "reviewer_correction_and_focused_passed": 67,
+    "regression_passed": 462,
+    "browser_e2e": "PASS",
+    "failed": 0
+  },
+  "security": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "dependency_audit": "PASS"
+  },
+  "ollama_review": {
+    "decision": "PASS",
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 2,
+    "critical": 0,
+    "high": 0
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

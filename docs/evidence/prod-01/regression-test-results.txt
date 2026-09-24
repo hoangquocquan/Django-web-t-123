@@ -1,0 +1,4 @@
+COMMAND=pytest -q
+STATUS=PASS
+RESULT=462 passed in 51.54s
+FAILED=0

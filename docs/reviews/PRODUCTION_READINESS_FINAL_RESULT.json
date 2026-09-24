@@ -1,0 +1,23 @@
+{
+  "pipeline_status": "PRODUCTION_READINESS_BLOCKED",
+  "phase": "PROD-07",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "65b77beefbb80f715baf5d30f2a70c22d7bb5d44",
+  "release_candidate_commit": "791a44da6e10d4bdaee11b29e1ed1cbb881ce353",
+  "final_reviewed_commit": "4470334455198c7e248ef77b67572ce8c4495af7",
+  "prod_06": "PASS",
+  "prod_07": "BLOCKED_REQUIRES_HUMAN",
+  "migrations_created": 0,
+  "production_deployed": false,
+  "mandatory_review": "BLOCKED",
+  "critical_findings": 1,
+  "high_findings": 1,
+  "finding_semantics": "Negative placeholder prose was emitted into non-empty finding arrays; no source vulnerability is asserted by this result.",
+  "fallback_used": false,
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

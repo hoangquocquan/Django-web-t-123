@@ -1,0 +1,14 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Customer Detail - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>{{ customer.company_name|default:customer.contact_name }}</h1>
+    <p>Customer #{{ customer.id }}</p>
+  </section>
+  <form method="post" class="admin-form wide-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update customer</button>
+    <a class="secondary-action" href="{% url 'admin_ui:customers' %}">Back</a>
+  </form>
+{% endblock %}

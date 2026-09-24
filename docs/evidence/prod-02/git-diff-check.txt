@@ -1,0 +1,3 @@
+COMMAND=git diff --check
+STATUS=PASS
+DETAIL=No whitespace errors; Windows line-ending advisories only.

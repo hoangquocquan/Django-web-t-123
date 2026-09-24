@@ -1,0 +1,48 @@
+{
+  "phase": "PROD-06",
+  "decision": "PASS",
+  "state": "READY_FOR_NEXT_PHASE",
+  "commit": "3aa911026eeef07d0dccff42588505380d0baea4",
+  "focused_tests": 99,
+  "full_regression": 512,
+  "load_test": {
+    "virtual_users": 20,
+    "requests": 140,
+    "errors": 0,
+    "p50_ms": 63.46,
+    "p95_ms": 696.27,
+    "p99_ms": 747.8,
+    "status": "PASS"
+  },
+  "runtime": {
+    "django": "PASS",
+    "postgres": "PASS",
+    "redis": "PASS",
+    "ollama": "PASS",
+    "n8n_live": "PASS",
+    "backup_restore": "PASS",
+    "rollback": "PASS"
+  },
+  "security": {
+    "decision": "PASS_WITH_EXPLAINED_WARNINGS",
+    "critical_findings": 0,
+    "high_findings": 0,
+    "docker_scout": "BLOCKED_BY_ENVIRONMENT"
+  },
+  "mandatory_ollama_review": {
+    "decision": "PASS",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

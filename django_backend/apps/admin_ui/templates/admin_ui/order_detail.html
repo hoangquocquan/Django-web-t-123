@@ -1,0 +1,14 @@
+{% extends "admin_ui/base.html" %}
+{% block title %}Order Detail - MEC Admin{% endblock %}
+{% block content %}
+  <section class="page-heading">
+    <h1>{{ order.order_number }}</h1>
+    <p>Status: <span class="badge">{{ order.status }}</span></p>
+  </section>
+  <form method="post" class="admin-form wide-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update order</button>
+    <a class="secondary-action" href="{% url 'admin_ui:orders' %}">Back</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,5 @@
+STATUS = NOT_PASS
+Ruff found legacy import-order/format findings across older scripts and tests.
+The functional F841 findings introduced/exposed in modified orchestration files were corrected.
+RETRY_COMMAND = ruff check ai-factory ai-review scripts tests
+IMPACT = Style debt only; focused and full runtime tests pass.

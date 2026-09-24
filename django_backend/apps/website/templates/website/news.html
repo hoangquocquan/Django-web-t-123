@@ -1,0 +1,38 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Tin tức & Sự kiện</span>
+      <h1>Tin Tức Công Nghệ & Bản Tin MecPrecision</h1>
+      <p>Cập nhật những xu hướng công nghệ gia công CNC mới nhất, thông tin dự án và các bài viết chia sẻ kinh nghiệm kỹ thuật cơ khí.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="card-grid">
+        {% for item in news_items %}
+          <article class="product-card">
+            <div class="product-body">
+              <span class="category-badge" style="position: static; display: inline-block; margin-bottom: 12px;">{{ item.category|default:"Tin công nghệ" }}</span>
+              <h3 class="product-title">
+                <a href="{% url 'website:news-detail' item.slug %}">{{ item.title }}</a>
+              </h3>
+              <p class="product-desc">{{ item.seo_description|default:item.content|truncatechars:140 }}</p>
+              <div class="product-footer">
+                <a class="btn-text" href="{% url 'website:news-detail' item.slug %}">
+                  <span>Đọc bài viết</span>
+                  <span>→</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 48px; text-align: center; background: var(--bg-soft); border-radius: var(--radius-lg);">
+            <p style="font-size: 16px; color: var(--slate-muted);">Hiện chưa có bài viết tin tức mới nào. Hãy quay lại sau!</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

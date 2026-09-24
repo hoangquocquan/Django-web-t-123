@@ -1,0 +1,2 @@
+6ce0dd4 feat(business-ui): complete role-based sales and crm workflows
+48 files changed, 2030 insertions(+), 80 deletions(-)

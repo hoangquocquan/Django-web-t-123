@@ -1,0 +1,81 @@
+{% extends "website/base.html" %}
+{% block content %}
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Công nghệ & Quy trình</span>
+      <h1>Năng Lực Gia Công & Kiểm Đỉnh Chất Lượng CNC</h1>
+      <p>Trang bị máy móc hiện đại, quy trình quản lý ISO 9001:2015 và đội ngũ kỹ thuật lành nghề để đáp ứng chuẩn xác từng chi tiết cơ khí.</p>
+    </div>
+  </section>
+
+  <!-- Process Steps -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <span class="eyebrow">Quy trình sản xuất</span>
+          <h2>4 Bước tiêu chuẩn sản xuất tại MecPrecision</h2>
+        </div>
+      </div>
+
+      <div class="capability-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+          <div style="font-size: 28px; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px;">01</div>
+          <h3 style="color: var(--slate-dark);">Thẩm định bản vẽ (DFM)</h3>
+          <p style="color: var(--slate-muted);">Phân tích bản vẽ CAD/STEP, tư vấn tối ưu hóa dung sai, vật liệu và phương án gia công tiết kiệm chi phí.</p>
+        </article>
+        
+        <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+          <div style="font-size: 28px; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px;">02</div>
+          <h3 style="color: var(--slate-dark);">Lập trình CAM & Phay/Tiện</h3>
+          <p style="color: var(--slate-muted);">Lập trình đường dao chuẩn xác bằng phần mềm Mastercam/NX, cài đặt đồ gá (jig) và gia công CNC 3 - 5 trục.</p>
+        </article>
+
+        <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+          <div style="font-size: 28px; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px;">03</div>
+          <h3 style="color: var(--slate-dark);">Đo kiểm 3D CMM</h3>
+          <p style="color: var(--slate-muted);">Kiểm tra kích thước hình học bằng máy đo CMM 3D Mitutoyo, đo độ nhám bề mặt Ra và xuất báo cáo QA/QC.</p>
+        </article>
+
+        <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+          <div style="font-size: 28px; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px;">04</div>
+          <h3 style="color: var(--slate-dark);">Xử lý bề mặt & Đóng gói</h3>
+          <p style="color: var(--slate-muted);">Xử lý Anodize, mạ niken, xỉn đen hoặc nhuộm màu theo yêu cầu. Đóng gói hút chân không an toàn khi vận chuyển.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Capability Grid -->
+  <section class="section bg-soft">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <span class="eyebrow">Trang thiết bị</span>
+          <h2>Danh mục năng lực kỹ thuật</h2>
+        </div>
+      </div>
+
+      <div class="capability-grid">
+        {% for capability in capabilities %}
+          <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+            <div class="tech-icon">⚡</div>
+            <h3 style="color: var(--slate-dark);">{{ capability.title }}</h3>
+            <p style="color: var(--slate-muted);">{{ capability.content }}</p>
+          </article>
+        {% empty %}
+          <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+            <div class="tech-icon">⚙️</div>
+            <h3 style="color: var(--slate-dark);">Trung tâm gia công Phay CNC 5 Trục</h3>
+            <p style="color: var(--slate-muted);">Gia công bánh răng xoắn, cánh quạt, khuôn mẫu phức tạp đạt độ bóng bề mặt cực cao.</p>
+          </article>
+          <article class="tech-card" style="background: var(--bg-card); border-color: var(--line-border);">
+            <div class="tech-icon">🌀</div>
+            <h3 style="color: var(--slate-dark);">Máy Tiện CNC Chính Xác</h3>
+            <p style="color: var(--slate-muted);">Tiện tự động cấp phôi liên tục, gia công trục truyền động dài với dung sai ±0.005mm.</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

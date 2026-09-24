@@ -1,0 +1,60 @@
+{
+  "phase": "PROD-06",
+  "created_at": "2026-08-02T11:12:30+00:00",
+  "status": "PASS",
+  "virtual_users": 20,
+  "requests": 140,
+  "duration_seconds": 0.41,
+  "requests_per_second": 343.06,
+  "errors": 0,
+  "error_rate": 0.0,
+  "p50_ms": 42.23,
+  "p95_ms": 55.01,
+  "p99_ms": 120.81,
+  "thresholds": {
+    "max_error_rate": 0.01,
+    "max_p95_ms": 2000
+  },
+  "endpoints": {
+    "health": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 52.38
+    },
+    "dashboard": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 49.74
+    },
+    "customer": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 51.2
+    },
+    "lead": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 51.99
+    },
+    "quotation": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 47.03
+    },
+    "knowledge": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 46.83
+    },
+    "ai": {
+      "requests": 20,
+      "errors": 0,
+      "p95_ms": 61.29
+    }
+  },
+  "bottleneck": "ai",
+  "safety": {
+    "read_only_requests": true,
+    "production_modified": false
+  }
+}

@@ -1,0 +1,12 @@
+﻿{
+    "status":  "PASS",
+    "command":  "python -m pytest tests/test_ai_governance_v2.py -q",
+    "result":  ".............                                                            [100%]\n13 passed in 1.48s",
+    "vietnamese_injection_blocked":  true,
+    "english_injection_blocked":  true,
+    "pii_redaction_verified":  true,
+    "rate_limit_verified":  true,
+    "audit_event_verified":  true,
+    "redis_runtime_configured":  false,
+    "redis_fallback":  "django-cache development fallback with explicit warning"
+}

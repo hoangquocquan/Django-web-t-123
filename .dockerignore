@@ -1,12 +1,35 @@
-# Các file/thư mục dưới đây không cần đưa vào Docker image.
-# Bỏ chúng ra giúp image nhẹ hơn và tránh copy nhầm dữ liệu local.
+# Cac file va thu muc duoi day khong can dua vao Docker image.
+# Bo chung ra giup image nhe hon va tranh copy nham du lieu local.
 __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
+**/.pytest_cache/
 .git/
+**/.git/
 .env
+.env.*
+**/.env
+**/.env.*
+docs.zip
+*.zip
+*.sqlite
+*.sqlite3
+*.db
+**/*.zip
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+backups/
+archive/
+docs/migration/production_evidence/input/
+*.log
+**/*.log
 
-# Log và file upload là dữ liệu runtime, không nên đóng cứng vào image.
+# Log va file upload la du lieu runtime, khong nen dong cung vao image.
 backend/logs/
 backend/uploads/
+django_backend/logs/
+django_backend/media/
+django_backend/staticfiles/

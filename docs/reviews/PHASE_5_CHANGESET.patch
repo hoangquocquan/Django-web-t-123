@@ -1,0 +1,544 @@
+diff --git a/django_backend/apps/crm/__init__.py b/django_backend/apps/crm/__init__.py
+new file mode 100644
+index 0000000..3286623
+--- /dev/null
++++ b/django_backend/apps/crm/__init__.py
+@@ -0,0 +1 @@
++"""CRM read-only migration app."""
+diff --git a/django_backend/apps/crm/apps.py b/django_backend/apps/crm/apps.py
+new file mode 100644
+index 0000000..2f3622c
+--- /dev/null
++++ b/django_backend/apps/crm/apps.py
+@@ -0,0 +1,10 @@
++"""CRM app configuration."""
++
++from django.apps import AppConfig
++
++
++class CrmConfig(AppConfig):
++    """Register the CRM read-only ORM app."""
++
++    default_auto_field = "django.db.models.BigAutoField"
++    name = "apps.crm"
+diff --git a/django_backend/apps/crm/models.py b/django_backend/apps/crm/models.py
+new file mode 100644
+index 0000000..89c21e4
+--- /dev/null
++++ b/django_backend/apps/crm/models.py
+@@ -0,0 +1,75 @@
++"""Read-only unmanaged ORM models for legacy CRM tables."""
++
++from django.db import models
++
++from apps.common.models import LegacyReadOnlyModel
++
++
++class Customer(LegacyReadOnlyModel):
++    """Khách hàng hoặc công ty đã gửi thông tin cho MecPrecision."""
++
++    id = models.IntegerField(primary_key=True)
++    company_name = models.TextField(blank=True, null=True)
++    contact_name = models.TextField()
++    email = models.TextField(blank=True, null=True)
++    phone = models.TextField(blank=True, null=True)
++    country = models.TextField(default="Vietnam", blank=True, null=True)
++    created_at = models.TextField()
++
++    class Meta:
++        managed = False
++        db_table = "customers"
++        ordering = ["-created_at", "-id"]
++
++    def __str__(self):
++        return self.company_name or self.contact_name
++
++
++class CustomerNote(LegacyReadOnlyModel):
++    """Ghi chú chăm sóc khách hàng trong CRM legacy."""
++
++    id = models.IntegerField(primary_key=True)
++    customer = models.ForeignKey(
++        Customer,
++        db_column="customer_id",
++        on_delete=models.CASCADE,
++        related_name="notes",
++    )
++    note = models.TextField()
++    created_by = models.TextField(blank=True, null=True)
++    created_at = models.TextField()
++
++    class Meta:
++        managed = False
++        db_table = "customer_notes"
++        ordering = ["-created_at", "-id"]
++
++    def __str__(self):
++        return self.note
++
++
++class ContactRequest(LegacyReadOnlyModel):
++    """Form liên hệ public được lưu trong database legacy."""
++
++    id = models.IntegerField(primary_key=True)
++    name = models.TextField()
++    contact = models.TextField()
++    message = models.TextField(blank=True, null=True)
++    status = models.TextField(default="new")
++    created_at = models.TextField()
++    is_read = models.BooleanField(default=False)
++    note = models.TextField(blank=True, null=True)
++    company = models.TextField(blank=True, null=True)
++    phone = models.TextField(blank=True, null=True)
++    email = models.TextField(blank=True, null=True)
++    country = models.TextField(blank=True, null=True)
++    interested_product = models.TextField(blank=True, null=True)
++    attachment_url = models.TextField(blank=True, null=True)
++
++    class Meta:
++        managed = False
++        db_table = "contact_requests"
++        ordering = ["-created_at", "-id"]
++
++    def __str__(self):
++        return f"{self.name} - {self.status}"
+diff --git a/django_backend/apps/crm/repositories/__init__.py b/django_backend/apps/crm/repositories/__init__.py
+new file mode 100644
+index 0000000..9233504
+--- /dev/null
++++ b/django_backend/apps/crm/repositories/__init__.py
+@@ -0,0 +1 @@
++"""CRM repository adapters."""
+diff --git a/django_backend/apps/crm/repositories/base.py b/django_backend/apps/crm/repositories/base.py
+new file mode 100644
+index 0000000..83727a7
+--- /dev/null
++++ b/django_backend/apps/crm/repositories/base.py
+@@ -0,0 +1,15 @@
++"""Repository nền cho các model CRM đọc từ database legacy."""
++
++
++class LegacyCrmRepository:
++    """Chuẩn hóa cách repository CRM truy cập database alias `legacy`."""
++
++    database_alias = "legacy"
++    model = None
++
++    def queryset(self):
++        """Tạo QuerySet gốc luôn trỏ tới database legacy."""
++        if self.model is None:
++            raise NotImplementedError("Repository con phải khai báo model.")
++
++        return self.model.objects.using(self.database_alias)
+diff --git a/django_backend/apps/crm/repositories/contact_repository.py b/django_backend/apps/crm/repositories/contact_repository.py
+new file mode 100644
+index 0000000..ba0bcf0
+--- /dev/null
++++ b/django_backend/apps/crm/repositories/contact_repository.py
+@@ -0,0 +1,26 @@
++"""Read-only repository adapter for CRM contact requests."""
++
++from apps.crm.models import ContactRequest
++from apps.crm.repositories.base import LegacyCrmRepository
++
++
++class ContactRequestRepository(LegacyCrmRepository):
++    """Đọc dữ liệu form liên hệ từ legacy CRM database."""
++
++    model = ContactRequest
++
++    def list_contacts(self):
++        """Trả về toàn bộ liên hệ theo thứ tự mới nhất."""
++        return self.queryset().all()
++
++    def list_recent_contacts(self, limit=10):
++        """Trả về các liên hệ mới nhất để dashboard hoặc CRM dùng."""
++        return self.list_contacts()[:limit]
++
++    def list_contacts_by_status(self, status):
++        """Lọc liên hệ theo trạng thái như new, processing, done."""
++        return self.queryset().filter(status=status)
++
++    def get_contact(self, contact_id):
++        """Lấy một liên hệ theo legacy ID."""
++        return self.queryset().get(id=contact_id)
+diff --git a/django_backend/apps/crm/repositories/customer_repository.py b/django_backend/apps/crm/repositories/customer_repository.py
+new file mode 100644
+index 0000000..a795743
+--- /dev/null
++++ b/django_backend/apps/crm/repositories/customer_repository.py
+@@ -0,0 +1,34 @@
++"""Read-only repository adapter for CRM customers."""
++
++from django.db.models import Prefetch
++
++from apps.crm.models import Customer, CustomerNote
++from apps.crm.repositories.base import LegacyCrmRepository
++
++
++class CustomerRepository(LegacyCrmRepository):
++    """Đọc dữ liệu khách hàng từ legacy CRM database."""
++
++    model = Customer
++
++    def list_customers(self):
++        """Trả về danh sách khách hàng."""
++        return self.queryset().all()
++
++    def list_customers_with_notes(self):
++        """Trả về khách hàng và preload ghi chú để tránh N+1 queries."""
++        return self.list_customers().prefetch_related(
++            Prefetch("notes", queryset=self.customer_note_queryset())
++        )
++
++    def get_customer(self, customer_id):
++        """Lấy một khách hàng theo legacy ID."""
++        return self.queryset().get(id=customer_id)
++
++    def customer_note_queryset(self):
++        """Tạo QuerySet ghi chú khách hàng trên database legacy."""
++        return CustomerNote.objects.using(self.database_alias)
++
++    def list_customer_notes(self, customer_id):
++        """Lấy ghi chú của một khách hàng."""
++        return self.customer_note_queryset().filter(customer_id=customer_id)
+diff --git a/django_backend/apps/crm/services/__init__.py b/django_backend/apps/crm/services/__init__.py
+new file mode 100644
+index 0000000..e1a1bdc
+--- /dev/null
++++ b/django_backend/apps/crm/services/__init__.py
+@@ -0,0 +1 @@
++"""CRM service layer."""
+diff --git a/django_backend/apps/crm/services/crm_service.py b/django_backend/apps/crm/services/crm_service.py
+new file mode 100644
+index 0000000..f8cb4bc
+--- /dev/null
++++ b/django_backend/apps/crm/services/crm_service.py
+@@ -0,0 +1,34 @@
++"""Read-only CRM service layer."""
++
++from apps.crm.repositories.contact_repository import ContactRequestRepository
++from apps.crm.repositories.customer_repository import CustomerRepository
++
++
++class CrmService:
++    """Service CRM chỉ đọc, phụ thuộc repository thay vì gọi ORM trực tiếp."""
++
++    def __init__(self, customer_repository=None, contact_repository=None):
++        """Cho phép test truyền repository giả để kiểm tra service độc lập."""
++        self.customer_repository = customer_repository or CustomerRepository()
++        self.contact_repository = contact_repository or ContactRequestRepository()
++
++    def list_customer_profiles(self):
++        """Trả về khách hàng kèm ghi chú đã preload."""
++        return self.customer_repository.list_customers_with_notes()
++
++    def get_customer_profile(self, customer_id):
++        """Trả về một khách hàng và danh sách ghi chú liên quan."""
++        customer = self.customer_repository.get_customer(customer_id)
++        notes = self.customer_repository.list_customer_notes(customer_id)
++        return {
++            "customer": customer,
++            "notes": notes,
++        }
++
++    def list_recent_contacts(self, limit=10):
++        """Trả về danh sách liên hệ mới nhất."""
++        return self.contact_repository.list_recent_contacts(limit=limit)
++
++    def get_contact(self, contact_id):
++        """Trả về một liên hệ theo ID."""
++        return self.contact_repository.get_contact(contact_id)
+diff --git a/django_backend/apps/crm/tests/__init__.py b/django_backend/apps/crm/tests/__init__.py
+new file mode 100644
+index 0000000..c4f7f72
+--- /dev/null
++++ b/django_backend/apps/crm/tests/__init__.py
+@@ -0,0 +1 @@
++"""CRM ORM tests."""
+diff --git a/django_backend/apps/crm/tests/test_crm_orm.py b/django_backend/apps/crm/tests/test_crm_orm.py
+new file mode 100644
+index 0000000..39fae34
+--- /dev/null
++++ b/django_backend/apps/crm/tests/test_crm_orm.py
+@@ -0,0 +1,128 @@
++"""Validation tests for Phase 5 read-only CRM ORM mappings."""
++
++from django.db import connections
++import pytest
++
++from apps.crm.models import ContactRequest, Customer, CustomerNote
++from apps.crm.repositories.contact_repository import ContactRequestRepository
++from apps.crm.repositories.customer_repository import CustomerRepository
++from apps.crm.services.crm_service import CrmService
++
++
++def table_count(table_name):
++    """Đếm trực tiếp số dòng trong một bảng legacy để so với ORM."""
++    with connections["legacy"].cursor() as cursor:
++        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
++        return cursor.fetchone()[0]
++
++
++def test_customer_model_table_mapping_matches_legacy_count(legacy_db):
++    """Customer model phải map đúng bảng `customers`."""
++    assert Customer.objects.using("legacy").count() == table_count("customers")
++
++
++def test_contact_request_model_table_mapping_matches_legacy_count(legacy_db):
++    """ContactRequest model phải map đúng bảng `contact_requests`."""
++    assert ContactRequest.objects.using("legacy").count() == table_count("contact_requests")
++
++
++def test_customer_note_model_table_mapping_matches_legacy_count(legacy_db):
++    """CustomerNote model phải map đúng bảng `customer_notes`, kể cả khi bảng đang rỗng."""
++    assert CustomerNote.objects.using("legacy").count() == table_count("customer_notes")
++
++
++def test_customer_notes_relationship_is_available(legacy_db):
++    """Quan hệ Customer -> CustomerNote phải truy cập được qua related_name `notes`."""
++    customer = Customer.objects.using("legacy").prefetch_related("notes").first()
++
++    assert customer is not None
++    assert list(customer.notes.all()) == list(
++        CustomerNote.objects.using("legacy").filter(customer_id=customer.id)
++    )
++
++
++def test_crm_models_block_instance_save_and_delete(legacy_db):
++    """CRM legacy model phải chặn ghi dữ liệu qua instance."""
++    customer = Customer.objects.using("legacy").first()
++
++    with pytest.raises(RuntimeError):
++        customer.save()
++
++    with pytest.raises(RuntimeError):
++        customer.delete()
++
++
++def test_crm_models_block_bulk_update_and_delete(legacy_db):
++    """CRM legacy queryset phải chặn bulk update/delete."""
++    queryset = ContactRequest.objects.using("legacy").filter(status="new")
++
++    with pytest.raises(RuntimeError):
++        queryset.update(status="done")
++
++    with pytest.raises(RuntimeError):
++        queryset.delete()
++
++
++def test_customer_repository_reads_from_legacy_database(legacy_db):
++    """CustomerRepository phải tạo QuerySet trên alias `legacy`."""
++    queryset = CustomerRepository().list_customers()
++
++    assert queryset._db == "legacy"
++    assert list(queryset)
++
++
++def test_contact_repository_reads_from_legacy_database(legacy_db):
++    """ContactRequestRepository phải tạo QuerySet trên alias `legacy`."""
++    queryset = ContactRequestRepository().list_contacts()
++
++    assert queryset._db == "legacy"
++    assert list(queryset)
++
++
++def test_crm_service_uses_repository_for_customer_profile(legacy_db):
++    """CrmService lấy customer profile thông qua repository."""
++    customer = Customer.objects.using("legacy").first()
++    service = CrmService()
++
++    profile = service.get_customer_profile(customer.id)
++
++    assert profile["customer"].id == customer.id
++    assert "notes" in profile
++
++
++def test_crm_service_can_use_repository_doubles_without_orm():
++    """Service dễ test độc lập vì chỉ phụ thuộc interface repository."""
++
++    class FakeCustomerRepository:
++        """Repository giả cho luồng customer."""
++
++        def list_customers_with_notes(self):
++            return ["customer-a"]
++
++        def get_customer(self, customer_id):
++            return {"id": customer_id}
++
++        def list_customer_notes(self, customer_id):
++            return [f"note-for-{customer_id}"]
++
++    class FakeContactRepository:
++        """Repository giả cho luồng contact."""
++
++        def list_recent_contacts(self, limit=10):
++            return [f"contact-{limit}"]
++
++        def get_contact(self, contact_id):
++            return {"id": contact_id}
++
++    service = CrmService(
++        customer_repository=FakeCustomerRepository(),
++        contact_repository=FakeContactRepository(),
++    )
++
++    assert service.list_customer_profiles() == ["customer-a"]
++    assert service.get_customer_profile(7) == {
++        "customer": {"id": 7},
++        "notes": ["note-for-7"],
++    }
++    assert service.list_recent_contacts(limit=3) == ["contact-3"]
++    assert service.get_contact(9) == {"id": 9}
+diff --git a/django_backend/config/settings/base.py b/django_backend/config/settings/base.py
+index a87049e..657379b 100644
+--- a/django_backend/config/settings/base.py
++++ b/django_backend/config/settings/base.py
+@@ -86,6 +86,7 @@ INSTALLED_APPS = [
+     "apps.core",
+     "apps.common",
+     "apps.catalog",
++    "apps.crm",
+ ]
+ 
+ 
+diff --git a/django_backend/tests/test_crm_query_patterns.py b/django_backend/tests/test_crm_query_patterns.py
+new file mode 100644
+index 0000000..9eb4285
+--- /dev/null
++++ b/django_backend/tests/test_crm_query_patterns.py
+@@ -0,0 +1,36 @@
++"""Test query pattern CRM để Phase 5 làm mẫu cho module sau."""
++
++from apps.crm.repositories.contact_repository import ContactRequestRepository
++from apps.crm.repositories.customer_repository import CustomerRepository
++
++
++def test_customer_list_uses_single_query(legacy_db, django_assert_num_queries):
++    """Danh sách khách hàng chưa cần relationship nên chỉ dùng một query."""
++    repository = CustomerRepository()
++
++    with django_assert_num_queries(1, using="legacy"):
++        customers = list(repository.list_customers())
++
++    assert customers
++
++
++def test_customer_list_with_notes_prefetches_notes(legacy_db, django_assert_num_queries):
++    """Danh sách khách hàng kèm ghi chú dùng prefetch để tránh N+1 queries."""
++    repository = CustomerRepository()
++
++    with django_assert_num_queries(2, using="legacy"):
++        customers = list(repository.list_customers_with_notes())
++        note_groups = [list(customer.notes.all()) for customer in customers]
++
++    assert customers
++    assert len(note_groups) == len(customers)
++
++
++def test_recent_contacts_uses_single_query(legacy_db, django_assert_num_queries):
++    """Danh sách liên hệ mới nhất chỉ cần một query."""
++    repository = ContactRequestRepository()
++
++    with django_assert_num_queries(1, using="legacy"):
++        contacts = list(repository.list_recent_contacts(limit=5))
++
++    assert contacts
+diff --git a/docs/migration/CRM_MIGRATION_LIMITATIONS.md b/docs/migration/CRM_MIGRATION_LIMITATIONS.md
+new file mode 100644
+index 0000000..64e5744
+--- /dev/null
++++ b/docs/migration/CRM_MIGRATION_LIMITATIONS.md
+@@ -0,0 +1,66 @@
++# CRM Migration Limitations
++
++## Scope In Phase 5
++
++Phase 5 chỉ triển khai lát cắt CRM read-only trong Django.
++
++Các bảng được map:
++
++- `customers`
++- `customer_notes`
++- `contact_requests`
++
++## What Is Intentionally Not Included
++
++- Không tạo API CRM.
++- Không tạo serializer.
++- Không tạo CRUD.
++- Không thay đổi form liên hệ public.
++- Không ghi database legacy.
++- Không migrate dữ liệu sang database Django mới.
++- Không map `quote_requests`, `quote_request_items`, `quote_files` vì các bảng này thuộc Phase 6 Sales / Quotation Migration.
++
++## Contact Request Relationship Note
++
++`contact_requests` hiện là bảng form liên hệ độc lập, không có khóa ngoại tới `customers`.
++
++Vì vậy Django không tạo quan hệ giả giữa `ContactRequest` và `Customer`.
++Nếu sau này muốn liên kết contact với customer, cần có phase riêng để thiết kế:
++
++- matching rule theo email/phone/company,
++- quy trình merge duplicate customer,
++- migration hoặc bảng liên kết mới,
++- rollback strategy.
++
++## Customer Notes Relationship
++
++`customer_notes.customer_id` có foreign key tới `customers.id`.
++
++Phase 5 đã map quan hệ này bằng:
++
++```python
++Customer.notes
++```
++
++Hiện database demo có thể chưa có nhiều note, nhưng relationship vẫn được test bằng row parity và prefetch behavior.
++
++## Read-Only Rule
++
++Tất cả CRM models kế thừa `LegacyReadOnlyModel`.
++
++Điều này chặn:
++
++- `save()`
++- `delete()`
++- bulk `update()`
++- bulk `delete()`
++
++## Future Readiness
++
++Phase 5 tạo pattern để các module CRM sau này có thể mở rộng:
++
++- CRM API read-only,
++- customer detail screen,
++- contact management screen,
++- customer merge workflow,
++- integration với quotation trong Phase 6.
+diff --git a/docs/migration/MIGRATION_ROADMAP.md b/docs/migration/MIGRATION_ROADMAP.md
+index c8c7541..2a83742 100644
+--- a/docs/migration/MIGRATION_ROADMAP.md
++++ b/docs/migration/MIGRATION_ROADMAP.md
+@@ -38,18 +38,14 @@ Phase này củng cố test fixture, kiểm tra database routing, review composi
+ 
+ ## Current
+ 
+-### Phase 4.2
++### Phase 5
+ 
+-Catalog ORM Stabilization & Migration Readiness
++CRM Migration
+ 
+-Phase này chuẩn hóa repository, kiểm tra query count và tạo playbook để CRM, Sales, CMS có thể đi theo cùng một pattern.
++Phase này tạo ORM read-only cho customers, customer notes và contact requests, đồng thời chuẩn hóa repository/service boundary cho CRM.
+ 
+ ## Planned
+ 
+-### Phase 5
+-
+-CRM Migration
+-
+ ### Phase 6
+ 
+ Sales / Quotation Migration

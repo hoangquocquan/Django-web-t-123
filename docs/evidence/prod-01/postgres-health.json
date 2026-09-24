@@ -1,0 +1,7 @@
+{
+  "status": "NOT_VERIFIED",
+  "available": false,
+  "reason": "psql and pg_isready are not installed or not available on PATH",
+  "impact": "Not required for PROD-01; blocks a production infrastructure claim in PROD-02",
+  "retry_command": "psql --version; pg_isready"
+}

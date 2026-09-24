@@ -1,0 +1,38 @@
+{
+  "phase": "PROD-03",
+  "decision": "PASS_WITH_WARNINGS",
+  "state": "READY_FOR_NEXT_PHASE",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "02a79c4b882f3f7cabeb8463e422048d8346668d",
+  "phase_commit": "0f2f0c0fd2d5dfd22f39bab187bf95b5543a85a2",
+  "migration": "foundation.0006_add_login_audit_and_two_factor_challenges",
+  "tests": {
+    "focused_passed": 42,
+    "regression_passed": 479,
+    "failed": 0,
+    "postgres_migration": "PASS",
+    "redis_integration": "PASS",
+    "docker_runtime": "PASS"
+  },
+  "security": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "dependency_audit": "PASS",
+    "container_cve_scan": "NOT_RUN_DOCKER_ID_REQUIRED"
+  },
+  "ollama_review": {
+    "decision": "PASS",
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 1,
+    "critical": 0,
+    "high": 0
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

@@ -1,0 +1,17 @@
+STATUS: RECORDED
+REPOSITORY_ROOT: C:/Users/hoang/Documents/Codex/mecprecision-vietnam
+BRANCH: codex/ai-06-final-integration
+PYTHON: 3.12.10
+DJANGO: 5.2.16
+OLLAMA_ENDPOINT: http://localhost:11434
+GENERATION_MODEL: llama3:latest
+REVIEW_MODEL: llama3:latest
+EMBEDDING_MODEL: nomic-embed-text:latest
+DEFAULT_DATABASE: django.db.backends.sqlite3 / django_backend/db.sqlite3
+LEGACY_DATABASE: django.db.backends.sqlite3 / read-only SQLite URI
+REDIS_CONFIGURED: false
+REDIS_RATE_LIMIT_ENABLED: false
+EXTERNAL_AI_USED: false
+AUTO_MERGE: false
+AUTO_DEPLOY: false
+HUMAN_APPROVAL_REQUIRED: true

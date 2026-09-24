@@ -1,0 +1,27 @@
+{
+  "phase": "DEMO-DATABASE-VALIDATION",
+  "status": "FAIL",
+  "technical_tests": {
+    "django_check": "PASS",
+    "migration_drift": "PASS",
+    "focused_tests": "8 passed",
+    "full_regression": "554 passed",
+    "ruff": "PASS",
+    "targeted_mypy": "PASS",
+    "bandit_high_findings": 0
+  },
+  "database_validation": {
+    "orm_sqlite_counts_consistent": true,
+    "original_database_modified": true,
+    "critical_findings": 0,
+    "high_findings": 1,
+    "blocking_finding": "SQ-DEMO-000208 has a negative total of -38.00",
+    "database_change": "Mandatory review revoked auth token 16; compensating recovery completed"
+  },
+  "safety": {
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

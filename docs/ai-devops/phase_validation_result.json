@@ -1,0 +1,74 @@
+{
+  "phase": "13.5",
+  "created_at": "2026-08-01T01:12:12+00:00",
+  "status": "PASS",
+  "missing": [],
+  "warnings": [],
+  "notes": [
+    "Working tree has uncommitted phase changes."
+  ],
+  "checked_files": [
+    {
+      "path": "docs\\codex-prompts\\PHASE_13.5_AI_PHASE_REVIEW_ENGINE.md",
+      "exists": true,
+      "size_bytes": 852
+    },
+    {
+      "path": "docs\\ai-review\\AI_PHASE_REVIEW_ENGINE_ARCHITECTURE.md",
+      "exists": true,
+      "size_bytes": 1652
+    },
+    {
+      "path": "ai-review\\config.yml",
+      "exists": true,
+      "size_bytes": 1084
+    },
+    {
+      "path": "ai-review\\evidence_collector.py",
+      "exists": true,
+      "size_bytes": 4809
+    },
+    {
+      "path": "ai-review\\requirement_validator.py",
+      "exists": true,
+      "size_bytes": 5624
+    },
+    {
+      "path": "ai-review\\test_executor.py",
+      "exists": true,
+      "size_bytes": 5683
+    },
+    {
+      "path": "ai-review\\ollama_phase_reviewer.py",
+      "exists": true,
+      "size_bytes": 6234
+    },
+    {
+      "path": "ai-review\\report_generator.py",
+      "exists": true,
+      "size_bytes": 4155
+    },
+    {
+      "path": "ai-review\\run_phase_review.py",
+      "exists": true,
+      "size_bytes": 2341
+    },
+    {
+      "path": "tests\\test_phase13_5_ai_review_engine.py",
+      "exists": true,
+      "size_bytes": 4698
+    }
+  ],
+  "git": {
+    "branch": "feature/demo-data-generation",
+    "status_short": "M ai-review/evidence/current_phase.json\n M ai-review/results/rule_validation.json\n M docs/ai-devops/phase_validation_result.json\n M docs/reviews/business_simulation_automation/document_update.json\n M docs/reviews/business_simulation_automation/sales_follow_up.json\n M docs/reviews/business_simulation_automation/website_lead.json\n?? docs.zip\n?? docs/reviews/MANUAL_QA_BUG_REPORT.md\n?? docs/reviews/MANUAL_QA_FINAL_REPORT.md\n?? docs/reviews/manual_qa_automation/\n?? docs/reviews/manual_qa_screenshots/",
+    "expected_tag": "phase-13.5-ai-review-ready",
+    "expected_tag_present": true
+  },
+  "safety": {
+    "production_modified": false,
+    "auto_deploy": false,
+    "auto_approve_production": false,
+    "human_review_required": true
+  }
+}

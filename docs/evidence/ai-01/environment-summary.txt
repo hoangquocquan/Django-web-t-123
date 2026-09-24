@@ -1,0 +1,10 @@
+Baseline: e10b456d21e1c190b2944fbe79befb88d81d4763
+Branch: codex/ai-01-vector-search
+Python: 3.12.10
+Django: 5.2.16
+Ollama: http://localhost:11434
+Embedding model: nomic-embed-text:latest
+Embedding dimension: 768
+Vector backend: django-json-development-fallback
+Production vector backend: false
+External AI used: false

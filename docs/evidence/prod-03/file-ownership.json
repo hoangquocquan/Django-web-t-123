@@ -1,0 +1,16 @@
+{
+  "phase": "PROD-03",
+  "owned_areas": [
+    "django_backend/apps/foundation",
+    "django_backend/apps/api/authentication.py",
+    "django_backend/apps/api/permissions.py",
+    "django_backend/apps/common/security.py",
+    "django_backend/apps/common/middleware.py",
+    "django_backend/apps/knowledge/services/upload_security.py",
+    "django_backend/apps/knowledge/views.py",
+    "django_backend/config/settings/base.py",
+    "tests/test_prod03_security_upload_hardening.py"
+  ],
+  "parallel_tasks": [],
+  "reason_serialized": "Shared settings, authentication, URL registry, models, and migrations required ordered edits."
+}

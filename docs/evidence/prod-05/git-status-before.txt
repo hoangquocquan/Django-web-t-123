@@ -1,0 +1,6 @@
+PROD-04 metadata baseline was clean except three pre-existing untracked user ZIP files:
+docs.zip
+docs/reviews.zip
+mecprecision.zip
+
+Those files were not read, modified, staged, or committed by PROD-05.

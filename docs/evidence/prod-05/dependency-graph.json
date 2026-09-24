@@ -1,0 +1,10 @@
+{
+  "phase": "PROD-05",
+  "depends_on": ["PROD-00", "PROD-01", "PROD-02", "PROD-03", "PROD-04"],
+  "blocks": ["PROD-06", "PROD-07"],
+  "runtime": {
+    "metrics": ["Django", "Redis", "PostgreSQL", "Ollama", "n8n"],
+    "backup": ["PostgreSQL", "media volume", "n8n data volume", "n8n workflows"],
+    "restore_test": ["checksums", "temporary filesystem", "isolated PostgreSQL database", "Django migration check", "database smoke test"]
+  }
+}

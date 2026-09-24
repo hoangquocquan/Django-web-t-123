@@ -1,0 +1,308 @@
+"""Central URL map for migrated business APIs and legacy replacements."""
+
+from django.urls import include, path
+
+from apps.ai.views import ai_chat, ai_governance_events, ai_health
+from apps.ai_agent.views import agent_run, sales_assistant
+from apps.knowledge.views import (
+    knowledge_chat,
+    knowledge_document_download,
+    knowledge_document_transition,
+    knowledge_documents,
+    knowledge_feedback,
+    knowledge_gap_review,
+    knowledge_health,
+    knowledge_human_evaluation,
+    knowledge_pilot_monitoring,
+    knowledge_pilot_program_transition,
+    knowledge_pilot_training_acknowledgement,
+    knowledge_pilot_user_transition,
+    knowledge_search,
+    public_knowledge_chat,
+    public_synthetic_rag_demo,
+    synthetic_rag_chat,
+    synthetic_rag_demo_query,
+)
+
+from .views.admin_interface import (
+    admin_customer_detail,
+    admin_customers,
+    admin_dashboard,
+    admin_inventory_adjust,
+    admin_inventory_items,
+    admin_inventory_warehouses,
+    admin_login,
+    admin_order_detail,
+    admin_orders,
+    admin_permissions,
+    admin_product_detail,
+    admin_products,
+    admin_transactions,
+    admin_workflows,
+)
+from .views.auth import permissions, profile
+from .views.business_core import (
+    business_customer_detail,
+    business_customers,
+    business_product_detail,
+    business_products,
+    inventory_adjust,
+    inventory_items,
+    inventory_warehouses,
+)
+from .views.catalog import categories, materials, product_detail, products
+from .views.cms import menu, page_detail, pages
+from .views.crm import (
+    contact_requests,
+    crm_customer_interactions,
+    customer_detail,
+    customers,
+)
+from .views.foundation import (
+    foundation_login,
+    foundation_logout,
+    foundation_permission_check,
+    foundation_roles,
+    foundation_rotate_token,
+    foundation_user_profile,
+    foundation_users,
+)
+from .views.newsletter import subscribers as newsletter_subscribers
+from .views.replacement import (
+    aws_demo,
+    capabilities,
+    external_weather,
+    home,
+    news,
+    openapi_schema,
+    version,
+)
+from .views.sales import (
+    quote_detail,
+    quote_files,
+    quotes,
+    sales_dashboard,
+    sales_lead_transition,
+    sales_leads,
+    sales_opportunities,
+    sales_quotations,
+)
+from .views.transaction_domain import (
+    order_detail as transaction_order_detail,
+)
+from .views.transaction_domain import (
+    orders as transaction_orders,
+)
+from .views.transaction_domain import (
+    transactions,
+    workflows,
+)
+
+urlpatterns = [
+    path("canonical/", include("apps.api.canonical_urls")),
+    path("admin/login/", admin_login, name="api-admin-login"),
+    path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
+    path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
+    path("admin/products/", admin_products, name="api-admin-products"),
+    path(
+        "admin/products/<int:product_id>/",
+        admin_product_detail,
+        name="api-admin-product-detail",
+    ),
+    path("admin/customers/", admin_customers, name="api-admin-customers"),
+    path(
+        "admin/customers/<int:customer_id>/",
+        admin_customer_detail,
+        name="api-admin-customer-detail",
+    ),
+    path(
+        "admin/inventory/warehouses/",
+        admin_inventory_warehouses,
+        name="api-admin-inventory-warehouses",
+    ),
+    path(
+        "admin/inventory/items/",
+        admin_inventory_items,
+        name="api-admin-inventory-items",
+    ),
+    path(
+        "admin/inventory/items/<int:item_id>/adjust/",
+        admin_inventory_adjust,
+        name="api-admin-inventory-adjust",
+    ),
+    path("admin/orders/", admin_orders, name="api-admin-orders"),
+    path(
+        "admin/orders/<int:order_id>/",
+        admin_order_detail,
+        name="api-admin-order-detail",
+    ),
+    path("admin/workflows/", admin_workflows, name="api-admin-workflows"),
+    path("admin/transactions/", admin_transactions, name="api-admin-transactions"),
+    path("catalog/products/", products, name="api-catalog-products"),
+    path(
+        "catalog/products/<int:product_id>/",
+        product_detail,
+        name="api-catalog-product-detail",
+    ),
+    path("catalog/categories/", categories, name="api-catalog-categories"),
+    path("catalog/materials/", materials, name="api-catalog-materials"),
+    path("catalog/capabilities/", capabilities, name="api-catalog-capabilities"),
+    path("business/products/", business_products, name="api-business-products"),
+    path(
+        "business/products/<int:product_id>/",
+        business_product_detail,
+        name="api-business-product-detail",
+    ),
+    path("crm/customers/", customers, name="api-crm-customers"),
+    path(
+        "crm/customers/<int:customer_id>/",
+        customer_detail,
+        name="api-crm-customer-detail",
+    ),
+    path(
+        "crm/customers/<int:customer_id>/interactions/",
+        crm_customer_interactions,
+        name="api-crm-customer-interactions",
+    ),
+    path("crm/contact-requests/", contact_requests, name="api-crm-contact-requests"),
+    path("business/customers/", business_customers, name="api-business-customers"),
+    path(
+        "business/customers/<int:customer_id>/",
+        business_customer_detail,
+        name="api-business-customer-detail",
+    ),
+    path(
+        "inventory/warehouses/", inventory_warehouses, name="api-inventory-warehouses"
+    ),
+    path("inventory/items/", inventory_items, name="api-inventory-items"),
+    path(
+        "inventory/items/<int:item_id>/adjust/",
+        inventory_adjust,
+        name="api-inventory-adjust",
+    ),
+    path("sales/quotes/", quotes, name="api-sales-quotes"),
+    path("sales/quotes/<int:quote_id>/", quote_detail, name="api-sales-quote-detail"),
+    path(
+        "sales/quotes/<int:quote_id>/files/", quote_files, name="api-sales-quote-files"
+    ),
+    path("sales/leads/", sales_leads, name="api-sales-leads"),
+    path(
+        "sales/leads/<int:lead_id>/transition/",
+        sales_lead_transition,
+        name="api-sales-lead-transition",
+    ),
+    path("sales/opportunities/", sales_opportunities, name="api-sales-opportunities"),
+    path("sales/quotations/", sales_quotations, name="api-sales-quotations"),
+    path("sales/dashboard/", sales_dashboard, name="api-sales-dashboard"),
+    path("orders/", transaction_orders, name="api-transaction-orders"),
+    path(
+        "orders/<int:order_id>/",
+        transaction_order_detail,
+        name="api-transaction-order-detail",
+    ),
+    path("workflows/", workflows, name="api-transaction-workflows"),
+    path("transactions/", transactions, name="api-transaction-history"),
+    path("cms/pages/", pages, name="api-cms-pages"),
+    path("cms/pages/<slug:slug>/", page_detail, name="api-cms-page-detail"),
+    path("cms/menu/", menu, name="api-cms-menu"),
+    path(
+        "newsletter/subscribers/",
+        newsletter_subscribers,
+        name="api-newsletter-subscribers",
+    ),
+    path("auth/profile/", profile, name="api-auth-profile"),
+    path("auth/permissions/", permissions, name="api-auth-permissions"),
+    path("foundation/auth/login/", foundation_login, name="api-foundation-login"),
+    path("foundation/auth/logout/", foundation_logout, name="api-foundation-logout"),
+    path(
+        "foundation/auth/rotate/", foundation_rotate_token, name="api-foundation-rotate"
+    ),
+    path("foundation/users/", foundation_users, name="api-foundation-users"),
+    path(
+        "foundation/users/<int:user_id>/profile/",
+        foundation_user_profile,
+        name="api-foundation-user-profile",
+    ),
+    path(
+        "foundation/permissions/roles/", foundation_roles, name="api-foundation-roles"
+    ),
+    path(
+        "foundation/permissions/check/",
+        foundation_permission_check,
+        name="api-foundation-permission-check",
+    ),
+    path("public/home/", home, name="api-public-home"),
+    path(
+        "public/ai/assistant/",
+        public_knowledge_chat,
+        name="api-public-knowledge-chat",
+    ),
+    path(
+        "public/ai-component-demo/",
+        public_synthetic_rag_demo,
+        name="api-public-ai-component-demo",
+    ),
+    path("news/", news, name="api-news"),
+    path("openapi.json", openapi_schema, name="api-openapi-schema"),
+    path("version/", version, name="api-version"),
+    path("demo/aws/", aws_demo, name="api-demo-aws"),
+    path("demo/external/weather/", external_weather, name="api-demo-external-weather"),
+    path("ai/health/", ai_health, name="api-ai-health"),
+    path("ai/chat/", ai_chat, name="api-ai-chat"),
+    path(
+        "ai/governance/events/", ai_governance_events, name="api-ai-governance-events"
+    ),
+    path("knowledge/documents/", knowledge_documents, name="api-knowledge-documents"),
+    path(
+        "knowledge/documents/<int:document_id>/download/",
+        knowledge_document_download,
+        name="api-knowledge-document-download",
+    ),
+    path(
+        "knowledge/documents/<int:document_id>/<str:transition>/",
+        knowledge_document_transition,
+        name="api-knowledge-document-transition",
+    ),
+    path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
+    path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
+    path(
+        "internal/rag-demo/query/",
+        synthetic_rag_demo_query,
+        name="api-internal-rag-demo-query",
+    ),
+    path(
+        "internal/rag-chat/",
+        synthetic_rag_chat,
+        name="api-internal-rag-chat",
+    ),
+    path("knowledge/health/", knowledge_health, name="api-knowledge-health"),
+    path("knowledge/feedback/", knowledge_feedback, name="api-knowledge-feedback"),
+    path("knowledge/gap-review/", knowledge_gap_review, name="api-knowledge-gap-review"),
+    path(
+        "knowledge/human-evaluation/",
+        knowledge_human_evaluation,
+        name="api-knowledge-human-evaluation",
+    ),
+    path(
+        "knowledge/pilot/monitoring/",
+        knowledge_pilot_monitoring,
+        name="api-knowledge-pilot-monitoring",
+    ),
+    path(
+        "knowledge/pilot/program/<str:transition>/",
+        knowledge_pilot_program_transition,
+        name="api-knowledge-pilot-program-transition",
+    ),
+    path(
+        "knowledge/pilot/training/acknowledge/",
+        knowledge_pilot_training_acknowledgement,
+        name="api-knowledge-pilot-training-acknowledgement",
+    ),
+    path(
+        "knowledge/pilot/users/<int:scope_id>/<str:transition>/",
+        knowledge_pilot_user_transition,
+        name="api-knowledge-pilot-user-transition",
+    ),
+    path("agent/run/", agent_run, name="api-agent-run"),
+    path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
+]

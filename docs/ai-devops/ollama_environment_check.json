@@ -1,0 +1,22 @@
+{
+  "phase": "12.4.1",
+  "created_at": "2026-07-27T13:40:39+00:00",
+  "available": true,
+  "endpoint": "http://localhost:11434",
+  "api_endpoint": "http://localhost:11434/api/tags",
+  "selected_model": "llama3",
+  "selected_model_available": true,
+  "models": [
+    "llama3:latest"
+  ],
+  "model_count": 1,
+  "api_status_code": 200,
+  "error": "",
+  "status": "READY",
+  "safety": {
+    "external_ai_used": false,
+    "project_code_sent_outside_local_machine": false,
+    "auto_approve_production": false,
+    "human_review_required": true
+  }
+}

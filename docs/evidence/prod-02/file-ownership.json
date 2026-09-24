@@ -1,0 +1,12 @@
+{
+  "phase": "PROD-02",
+  "owners": {
+    "production_settings": "Django fail-fast security and service configuration",
+    "Dockerfile": "non-root Gunicorn image and static build",
+    "docker-compose.yml": "local production-like PostgreSQL and Redis stack",
+    "requirements-prod.txt": "pinned runtime dependency contract",
+    "health_adapter": "production database and Redis readiness"
+  },
+  "legacy_modified": false,
+  "production_deployed": false
+}

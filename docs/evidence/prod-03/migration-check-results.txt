@@ -1,0 +1,5 @@
+Command: python django_backend/manage.py makemigrations --check --dry-run
+Result: PASS, no model drift
+Migration created: foundation.0006_add_login_audit_and_two_factor_challenges
+PostgreSQL apply result: PASS
+Second PostgreSQL apply result: No migrations to apply

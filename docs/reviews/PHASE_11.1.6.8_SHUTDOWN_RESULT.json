@@ -1,0 +1,101 @@
+{
+  "phase": "11.1.6.8",
+  "created_at": "2026-07-27T12:13:44.447134+00:00",
+  "environment": "TRAINING",
+  "status": "TRAINING_SHUTDOWN_SUCCESS",
+  "precheck": {
+    "status": "PASS",
+    "training_decision": "READY_TO_EXECUTE_TRAINING",
+    "training_evidence_status": "TRAINING_ONLY",
+    "production_decision": "BLOCKED_SAFELY",
+    "production_safety": {
+      "shutdown_executed": false,
+      "legacy_api_disabled": false,
+      "iis_modified": false,
+      "proxy_modified": false,
+      "routes_changed": false,
+      "database_modified": false
+    },
+    "errors": []
+  },
+  "legacy_route": "/api/*",
+  "replacement_route": "/api/v1/*",
+  "training_legacy_disabled": true,
+  "api_v1_active": true,
+  "before_state": {
+    "environment": "TRAINING",
+    "legacy_route": "/api/*",
+    "legacy_available": true,
+    "replacement_route": "/api/v1/*",
+    "replacement_available": true,
+    "legacy_disabled_in_training": false,
+    "production_route_changed": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "database_modified": false,
+    "updated_at": "2026-07-27T12:13:44.444902+00:00"
+  },
+  "after_state": {
+    "environment": "TRAINING",
+    "legacy_route": "/api/*",
+    "legacy_available": false,
+    "replacement_route": "/api/v1/*",
+    "replacement_available": true,
+    "legacy_disabled_in_training": true,
+    "production_route_changed": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "database_modified": false,
+    "updated_at": "2026-07-27T12:13:44.445908+00:00",
+    "training_shutdown_executed": true
+  },
+  "traffic_verification": {
+    "status": "PASS",
+    "checks": {
+      "before_legacy_available": true,
+      "before_replacement_available": true,
+      "after_legacy_disabled": true,
+      "after_replacement_available": true,
+      "production_unchanged": true
+    },
+    "errors": []
+  },
+  "checkpoint": {
+    "phase": "11.1.6.8",
+    "created_at": "2026-07-27T12:13:44.444902+00:00",
+    "environment": "TRAINING",
+    "before_state": {
+      "environment": "TRAINING",
+      "legacy_route": "/api/*",
+      "legacy_available": true,
+      "replacement_route": "/api/v1/*",
+      "replacement_available": true,
+      "legacy_disabled_in_training": false,
+      "production_route_changed": false,
+      "iis_modified": false,
+      "proxy_modified": false,
+      "database_modified": false,
+      "updated_at": "2026-07-27T12:13:44.444902+00:00"
+    },
+    "restore_action": "restore_training_legacy_api_route_state",
+    "production_shutdown_allowed": false,
+    "production_shutdown_executed": false,
+    "artifact": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\TRAINING_LEGACY_API_SHUTDOWN_CHECKPOINT.json"
+  },
+  "safety": {
+    "production_shutdown_executed": false,
+    "production_legacy_api_disabled": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "routes_changed": false,
+    "database_modified": false,
+    "external_system_modified": false
+  },
+  "elapsed_seconds": 0.0031,
+  "artifacts": {
+    "shutdown_result": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\reviews\\PHASE_11.1.6.8_SHUTDOWN_RESULT.json",
+    "traffic_verification": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\reviews\\PHASE_11.1.6.8_TRAFFIC_VERIFICATION.md",
+    "execution_report": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\reviews\\PHASE_11.1.6.8_TRAINING_SHUTDOWN_REPORT.md",
+    "training_state": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\TRAINING_LEGACY_API_ROUTE_STATE.json"
+  }
+}

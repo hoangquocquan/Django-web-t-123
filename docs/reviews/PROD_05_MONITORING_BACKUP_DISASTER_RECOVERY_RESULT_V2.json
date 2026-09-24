@@ -1,0 +1,60 @@
+{
+  "phase": "PROD-05",
+  "decision": "PASS",
+  "state": "READY_FOR_NEXT_PHASE",
+  "branch": "codex/production-readiness-full",
+  "baseline_commit": "f84dd708531754efce43317cb99a0ad5174e5297",
+  "phase_commit": "c11cb4e59151a49a32dae791461977299af8a31c",
+  "backup": {
+    "status": "PASS",
+    "package": "backups/prod05/20260802T070951Z",
+    "created_at": "2026-08-02T07:09:51.183519+00:00",
+    "manifest_sha256": "8a2f9f767dfdc4bc6adae040c0a1a9eecbcfd5a6919f5c52d45d7d15c1eecd53",
+    "checksums_valid": true,
+    "package_committed": false
+  },
+  "restore": {
+    "status": "RESTORE_TEST_PASS",
+    "target": "temporary PostgreSQL database and temporary filesystem",
+    "postgresql": "PASS",
+    "media": "PASS_EMPTY_SOURCE_VOLUME",
+    "n8n": "PASS",
+    "production_data_modified": false
+  },
+  "dependency_audit": {
+    "status": "PASS",
+    "scope": "django_backend/requirements-prod.txt",
+    "known_vulnerabilities": 0
+  },
+  "tests": {
+    "focused_passed": 23,
+    "mandatory_review_and_prod05_passed": 66,
+    "regression_passed": 503,
+    "migration_regression_passed": 238,
+    "failed": 0
+  },
+  "ollama_review": {
+    "decision": "PASS",
+    "gate_state": "WAITING_HUMAN_APPROVAL",
+    "review_completed": true,
+    "schema_valid": true,
+    "fallback_used": false,
+    "attempts": 1,
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "model": "llama3",
+    "review_input_sha256": "d3413e232f5a38c9d048227e248eaca317be4d4ab08a205f8eed6fbd06caa6e9",
+    "review_output_sha256": "f59e7892e7bee25cf739740263ebdf32e7e41606628bbcd2989f06c3ecb31be9"
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  },
+  "prod06_eligible_after_human_approval": true,
+  "next_phase_started": false
+}

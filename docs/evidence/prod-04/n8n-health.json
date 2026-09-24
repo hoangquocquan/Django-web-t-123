@@ -1,0 +1,1 @@
+{"status":"PASS","version":"2.21.7","healthy":true,"postgres_persistence":true,"workflow_published":true,"valid_webhook_status":200,"invalid_signature_status":401,"unsafe_auto_deploy_status":401,"correlation_id_preserved":true,"human_approval_required":true,"phase_advanced":false,"auto_merge":false,"auto_deploy":false}

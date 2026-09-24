@@ -1,0 +1,7 @@
+STATUS=PASS
+PRODUCTION_REQUIREMENTS=No known vulnerabilities found
+DEVELOPMENT_REQUIREMENTS=No known vulnerabilities found
+DOCKER_SCOUT=NOT_RUN
+REASON=Docker ID authentication required
+RETRY_COMMAND=docker login; docker scout cves mecprecision-vietnam:prod-local --only-severity critical,high
+IMPACT=Container CVE inventory is not independently confirmed by Docker Scout.

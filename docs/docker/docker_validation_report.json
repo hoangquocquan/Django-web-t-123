@@ -1,0 +1,51 @@
+{
+  "phase": "13.1",
+  "created_at": "2026-07-27T14:32:50+00:00",
+  "status": "DOCKER_VALIDATION_COMPLETE",
+  "image": "mecprecision-vietnam:phase-13.1",
+  "docker": {
+    "available": true,
+    "detail": "",
+    "server_version": "29.4.3"
+  },
+  "build_report": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\docker\\docker_build_report.json",
+  "image_info": {
+    "exists": true,
+    "user": "appuser",
+    "healthcheck_present": true,
+    "exposed_ports": [
+      "8000/tcp"
+    ]
+  },
+  "container_start": {
+    "command": "docker run -d --name mecprecision-phase13-1-validation -p 18000:8000 mecprecision-vietnam:phase-13.1",
+    "returncode": 0,
+    "stdout": "7c969a82a5f236aac686343c69ea7913770c2fbcfbbc730180454c6e9c659e24",
+    "stderr": ""
+  },
+  "health_check": {
+    "command": "docker exec mecprecision-phase13-1-validation python -c import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=5).read()",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "",
+    "attempt": 2,
+    "attempts": 15
+  },
+  "container_logs": {
+    "skipped": true,
+    "returncode": null,
+    "stdout": "",
+    "stderr": ""
+  },
+  "cleanup": {
+    "command": "docker rm -f mecprecision-phase13-1-validation",
+    "returncode": 0,
+    "stdout": "mecprecision-phase13-1-validation",
+    "stderr": ""
+  },
+  "safety": {
+    "production_deployed": false,
+    "image_pushed_externally": false,
+    "real_registry_credentials_used": false
+  }
+}

@@ -1,0 +1,8 @@
+STATUS = PASS
+Python = 3.12.10
+Django = 5.2.16
+Ollama = 0.32.5 at http://localhost:11434
+Review model = llama3:latest (365c0bd3c000)
+Embedding model = nomic-embed-text:latest (0a109f422b47)
+External AI used = false
+Human approval required = true

@@ -1,0 +1,23 @@
+{
+  "baseline": "e10b456d21e1c190b2944fbe79befb88d81d4763",
+  "ai_01": {
+    "implementation": "a2751c3e33e0c55cec50045fe6d131701a7a1d15",
+    "integration": "3bbd6b6f609a984b062f7059104c07d9b8edd2f1"
+  },
+  "ai_02": {
+    "implementation": "5e10202a70164f410acc9e5bb273d1d1dc3661c7",
+    "integration": "db7c934369a7db97997c27ac87c0e8691314d582"
+  },
+  "ai_03": {
+    "implementation": "03b17e404374de75afa569d69e3a18fd38ca03c0",
+    "integration": "d06f2f382bc8c26580d775b157ae10d4a70b53cb"
+  },
+  "ai_04": {
+    "implementation": "a5175d9f9c03daf9e6cf1e06ab0c64329d9802c2",
+    "integration": "92174f2d2cac9897e61bd7f13ebd903a8779fd64"
+  },
+  "ai_05": {
+    "implementation": "fbf594f4f9a017a46b6d7049fe258e0204af9fc2",
+    "v2": "81232332776fd30f22d607b61ac8aec9706d7f38"
+  }
+}

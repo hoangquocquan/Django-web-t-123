@@ -1,0 +1,10 @@
+STATUS: RECORDED
+BRANCH: codex/ai-06-final-integration
+HEAD: 81232332776fd30f22d607b61ac8aec9706d7f38
+STAGED: none
+MODIFIED: none
+UNTRACKED_USER_FILES:
+- docs.zip
+- docs/reviews.zip
+- mecprecision.zip
+CLASSIFICATION: user-owned ZIP artifacts; excluded from AI-06 and not modified.

@@ -1,0 +1,49 @@
+{
+  "phase": "PROD-06",
+  "status": "PASS",
+  "focused_result": "99 passed",
+  "domains": {
+    "authentication": {
+      "tests": ["tests/test_wave1_django_foundation.py", "tests/test_prod01_business_ui_uat.py"],
+      "result": "PASS"
+    },
+    "crm": {
+      "tests": ["tests/test_prod01_business_ui_uat.py", "tests/test_sales_crm_ai.py"],
+      "result": "PASS"
+    },
+    "sales": {
+      "tests": ["tests/test_prod01_business_ui_uat.py", "tests/test_sales_crm_ai.py"],
+      "result": "PASS"
+    },
+    "knowledge_rag": {
+      "tests": ["tests/test_ai_knowledge_assistant.py"],
+      "result": "PASS"
+    },
+    "ai_sales": {
+      "tests": ["tests/test_ai_sales_grounded_synthesis.py", "tests/test_sales_crm_ai.py"],
+      "result": "PASS"
+    },
+    "ai_agent": {
+      "tests": ["tests/test_ai_agent_safe_controller.py"],
+      "result": "PASS"
+    },
+    "governance": {
+      "tests": ["tests/test_ai_governance_v2.py", "tests/test_ai_enterprise_governance.py"],
+      "result": "PASS"
+    },
+    "n8n": {
+      "tests": ["tests/test_n8n_automation.py", "scripts/prod06_n8n_live_check.py"],
+      "result": "PASS"
+    },
+    "operations": {
+      "tests": ["tests/test_prod05_operations.py", "scripts/prod06_staging_validate.py"],
+      "result": "PASS"
+    }
+  },
+  "safety_gates": {
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false,
+    "approval_bypass_detected": false
+  }
+}

@@ -1,0 +1,4 @@
+STATUS: NOT_APPLICABLE
+REASON: PROD-00 is a read-only baseline phase. Existing public website and ownership integration tests passed; browser UAT belongs to PROD-01 and PROD-06.
+IMPACT: No browser UAT claim is made for PROD-00.
+RETRY_COMMAND: python -m pytest tests/test_wave7_public_website.py -q

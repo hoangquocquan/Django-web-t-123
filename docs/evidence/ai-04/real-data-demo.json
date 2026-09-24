@@ -1,0 +1,18 @@
+{
+  "database": "local Django development database",
+  "run_id": 1,
+  "correlation_id": "efa8c10f-b591-4b51-ae89-6e132c24ad63",
+  "planner_generation_mode": "ollama",
+  "planner_model": "llama3",
+  "planned_tools": ["sales_pipeline_summary", "inventory_summary"],
+  "states": ["PLANNED", "VALIDATING", "EXECUTING", "SYNTHESIZING", "COMPLETED"],
+  "tool_statuses": [
+    {"tool": "sales_pipeline_summary", "status": "SUCCESS"},
+    {"tool": "inventory_summary", "status": "SUCCESS"}
+  ],
+  "audit_count": 2,
+  "partial_failure": false,
+  "human_approval_required": false,
+  "autonomous_action": false,
+  "business_write_performed": false
+}

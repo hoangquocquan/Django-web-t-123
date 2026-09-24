@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.",
+    "critical_findings": [],
+    "test_findings": [],
+    "missing_requirements": [],
+    "requirements_checked": [
+      "production_fail_fast",
+      "debug_false",
+      "postgres_runtime",
+      "redis_runtime",
+      "gunicorn_runtime",
+      "docker_non_root",
+      "docker_health",
+      "runtime_artifact_exclusion",
+      "empty_database_migration",
+      "dependency_audit"
+    ],
+    "high_findings": [],
+    "recommended_actions": [],
+    "medium_findings": [],
+    "migration_findings": [],
+    "security_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "human_approval_required": true,
+      "approval_bypass_detected": false,
+      "auto_deploy": false,
+      "auto_merge": false
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://127.0.0.1:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{ \"decision\": \"PASS\", \"summary\": \"The provided JSON schema is valid and meets the requirements for a technical review. No defects or warnings were found.\",\"critical_findings\": [],\"test_findings\": [],\"missing_requirements\": [],\"requirements_checked\": [\"production_fail_fast\", \"debug_false\", \"postgres_runtime\", \"redis_runtime\", \"gunicorn_runtime\", \"docker_non_root\", \"docker_health\", \"runtime_artifact_exclusion\", \"empty_database_migration\", \"dependency_audit\"],\"high_findings\": [],\"recommended_actions\": [],\"medium_findings\": [],\"migration_findings\": [],\"security_findings\": [],\"requires_human_review\": true,\"safety_gates\": {\"human_approval_required\": true, \"approval_bypass_detected\": false, \"auto_deploy\": false, \"auto_merge\": false}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\" }"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "52282f80b3dae8fff262eebb79dbc92cbfa97c47fa991b95f36c4045c1d57946",
+    "review_output_sha256": "994e90c31383661dc58029193713d615745a9ddeb90d9c02c5172db3873c935f",
+    "actual_diff_sha256": "8392f7210f188a8c37b40da5349cb105e3d0d0116ec20c1e0280e0eea280ddb1",
+    "base_commit": "97c8f2265e5c6ca4a5bcb000b65996b46bc23cc9",
+    "current_commit": "97c8f2265e5c6ca4a5bcb000b65996b46bc23cc9",
+    "correlation_id": "a18d6d90-cf39-4572-b6a0-92e7dd75c072"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  }
+}

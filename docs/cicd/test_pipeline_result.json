@@ -1,0 +1,103 @@
+{
+  "phase": "13.2",
+  "created_at": "2026-07-28T12:22:52+00:00",
+  "config": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\ci\\test_pipeline_config.yml",
+  "summary": {
+    "status": "TEST_PIPELINE_COMPLETE",
+    "duration_seconds": 22.491,
+    "passed_tests": 328,
+    "failed_tests": 0,
+    "warnings": 1,
+    "failed_required_stages": []
+  },
+  "stages": [
+    {
+      "name": "dependency_check",
+      "status": "PASS",
+      "required": true,
+      "warning": "",
+      "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -c import django, pytest; print('dependencies ok')",
+      "returncode": 0,
+      "duration_seconds": 0.584,
+      "stdout_tail": "dependencies ok\n",
+      "stderr_tail": "",
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "warnings": 0
+    },
+    {
+      "name": "lint_check",
+      "status": "WARN",
+      "required": false,
+      "warning": "Optional tool not installed: ruff",
+      "command": "ruff check .",
+      "returncode": null,
+      "duration_seconds": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "warnings": 1
+    },
+    {
+      "name": "unit_tests",
+      "status": "PASS",
+      "required": true,
+      "warning": "",
+      "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/test_phase13_2_test_pipeline.py",
+      "returncode": 0,
+      "duration_seconds": 4.571,
+      "stdout_tail": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 5 items\n\ntests\\test_phase13_2_test_pipeline.py .....                              [100%]\n\n============================== 5 passed in 2.47s ==============================\n",
+      "stderr_tail": "",
+      "passed_tests": 5,
+      "failed_tests": 0,
+      "warnings": 0
+    },
+    {
+      "name": "integration_tests",
+      "status": "PASS",
+      "required": true,
+      "warning": "",
+      "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/test_phase13_1_docker_build.py",
+      "returncode": 0,
+      "duration_seconds": 2.277,
+      "stdout_tail": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 5 items\n\ntests\\test_phase13_1_docker_build.py .....                               [100%]\n\n============================== 5 passed in 1.02s ==============================\n",
+      "stderr_tail": "",
+      "passed_tests": 5,
+      "failed_tests": 0,
+      "warnings": 0
+    },
+    {
+      "name": "security_tests",
+      "status": "PASS",
+      "required": true,
+      "warning": "",
+      "command": "C:\\Users\\hoang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m pytest tests/test_phase12_1_security.py",
+      "returncode": 0,
+      "duration_seconds": 1.469,
+      "stdout_tail": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 7 items\n\ntests\\test_phase12_1_security.py .......                                 [100%]\n\n============================== 7 passed in 0.20s ==============================\n",
+      "stderr_tail": "",
+      "passed_tests": 7,
+      "failed_tests": 0,
+      "warnings": 0
+    },
+    {
+      "name": "migration_tests",
+      "status": "PASS",
+      "required": true,
+      "warning": "",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.EXE -ExecutionPolicy Bypass -File scripts/run_migration_test.ps1",
+      "returncode": 0,
+      "duration_seconds": 13.59,
+      "stdout_tail": "\n== Step 1: Django system check ==\nSystem check identified no issues (0 silenced).\n\n== Step 2: Catalog module tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 9 items\n\ndjango_backend\\apps\\catalog\\tests\\test_catalog_orm.py .........          [100%]\n\n============================== 9 passed in 0.37s ==============================\n\n== Step 3: CRM module tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 15 items\n\ndjango_backend\\apps\\crm\\tests\\test_crm_hardening.py .....                [ 33%]\ndjango_backend\\apps\\crm\\tests\\test_crm_orm.py ..........                 [100%]\n\n============================= 15 passed in 0.23s ==============================\n\n== Step 4: Sales module tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 17 items\n\ndjango_backend\\apps\\sales\\tests\\test_sales_hardening.py ......           [ 35%]\ndjango_backend\\apps\\sales\\tests\\test_sales_orm.py ...........            [100%]\n\n============================= 17 passed in 0.24s ==============================\n\n== Step 5: CMS module tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 11 items\n\ndjango_backend\\apps\\cms\\tests\\test_cms_orm.py ...........                [100%]\n\n============================= 11 passed in 0.21s ==============================\n\n== Step 6: Auth module tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\nplugins: django-4.12.0\ncollected 21 items\n\ndjango_backend\\apps\\accounts\\tests\\test_auth_compatibility.py ........   [ 38%]\ndjango_backend\\apps\\accounts\\tests\\test_auth_readonly_orm.py ........... [ 90%]\n..                                                                       [100%]\n\n============================= 21 passed in 0.26s ==============================\n\n== Step 7: Full regression tests ==\n============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0\ndjango: version: 5.2.16, settings: config.settings.test (from env)\nrootdir: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\django_backend\nconfigfile: pytest.ini\ntestpaths: tests, apps\nplugins: django-4.12.0\ncollected 238 items\n\ntests\\test_api_compatibility_phase11_1_1.py ...............              [  6%]\ntests\\test_auth_query_patterns.py ..                                     [  7%]\ntests\\test_catalog_query_patterns.py ....                                [  8%]\ntests\\test_cms_query_patterns.py ...                                     [ 10%]\ntests\\test_crm_query_patterns.py ...                                     [ 11%]\ntests\\test_database_routing.py .....                                     [ 13%]\ntests\\test_health.py .......                                             [ 16%]\ntests\\test_phase10_cutover_readiness.py ....                             [ 18%]\ntests\\test_phase10_data_reconciliation.py ....                           [ 19%]\ntests\\test_phase10_dry_run_gate.py .........                             [ 23%]\ntests\\test_phase10_post_production_validation.py ...                     [ 24%]\ntests\\test_phase10_production_cutover.py ....                            [ 26%]\ntests\\test_phase10_readiness_snapshot.py .                               [ 26%]\ntests\\test_phase11_1_2_legacy_api_traffic.py .........                   [ 30%]\ntests\\test_phase11_1_3_api_decommission.py ........                      [ 34%]\ntests\\test_phase11_1_4_traffic_evidence.py ........                      [ 37%]\ntests\\test_phase11_1_5_1_final_shutdown_readiness.py .....               [ 39%]\ntests\\test_phase11_1_5_2_evidence_approval.py .....                      [ 41%]\ntests\\test_phase11_1_5_3_evidence_package.py ....                        [ 43%]\ntests\\test_phase11_1_5_4_production_evidence.py .....                    [ 45%]\ntests\\test_phase11_1_5_shutdown_readiness.py .....                       [ 47%]\ntests\\test_phase11_1_legacy_api_decommission.py ....                     [ 49%]\ntests\\test_phase11_legacy_shutdown_readiness.py ...                      [ 50%]\ntests\\test_sales_query_patterns.py ...                                   [ 51%]\napps\\accounts\\tests\\test_auth_compatibility.py ........                  [ 55%]\napps\\accounts\\tests\\test_auth_readonly_orm.py .............              [ 60%]\napps\\api\\tests\\test_api_hardening.py ..........................          [ 71%]\napps\\api\\tests\\test_business_api_cutover.py ................             [ 78%]\napps\\catalog\\tests\\test_catalog_orm.py .........                         [ 81%]\napps\\cms\\tests\\test_cms_orm.py ...........                               [ 86%]\napps\\crm\\tests\\test_crm_hardening.py .....                               [ 88%]\napps\\crm\\tests\\test_crm_orm.py ..........                                [ 92%]\napps\\sales\\tests\\test_sales_hardening.py ......                          [ 95%]\napps\\sales\\tests\\test_sales_orm.py ...........                           [100%]\n\n============================= 238 passed in 2.45s =============================\n\nMIGRATION TEST PASSED\n",
+      "stderr_tail": "",
+      "passed_tests": 311,
+      "failed_tests": 0,
+      "warnings": 0
+    }
+  ],
+  "safety": {
+    "production_deployed": false,
+    "real_ci_secrets_created": false,
+    "failed_tests_bypassed": false,
+    "external_push": false
+  }
+}

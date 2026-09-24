@@ -1,0 +1,52 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+      - "migration/**"
+  pull_request:
+
+jobs:
+  test-pipeline:
+    name: Phase 13.2 Test Pipeline
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r django_backend/requirements.txt
+
+      - name: Run automated test pipeline
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          PYTHONUNBUFFERED: "1"
+          CI: "true"
+        run: python scripts/phase13_2_test_pipeline.py
+
+      - name: Generate test pipeline AI review
+        env:
+          OLLAMA_URL: http://localhost:11434
+          OLLAMA_MODEL: llama3
+        run: python scripts/phase13_2_test_ai_review.py
+
+      - name: Upload test evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase-13-2-test-evidence
+          path: |
+            docs/cicd/test_pipeline_result.json
+            docs/ai-devops/TEST_PIPELINE_AI_REVIEW.md
+            docs/reviews/PHASE_13.2_TEST_PIPELINE_REPORT.md

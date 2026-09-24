@@ -1,41 +1,171 @@
 name: CI
 
-# Workflow này chạy tự động trên GitHub để kiểm tra code trước khi triển khai.
 on:
-  # Chạy khi push code lên GitHub.
   push:
-  # Chạy khi tạo pull request.
   pull_request:
 
 jobs:
-  test:
-    name: Run automated checks
-    # Dùng Windows để giống môi trường máy local hiện tại của bạn.
-    runs-on: windows-latest
+  backend:
+    name: Django checks and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: django_backend
 
     steps:
-      - name: Checkout source code
-        # Tải source code của repository vào máy runner.
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
-        # Cài Python 3.12 trên runner.
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: django_backend/requirements*.txt
 
-      - name: Compile backend
-        # Kiểm tra toàn bộ file Python có lỗi cú pháp không.
-        run: python -m compileall -q backend
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
 
-      - name: Check frontend JavaScript syntax
-        # Kiểm tra cú pháp JavaScript của frontend.
-        run: node --check frontend/js/app.js
+      - name: Django system check
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python manage.py check
 
-      - name: Run unit and integration tests
-        # Chạy toàn bộ test trong backend/tests.
-        run: python -m unittest discover -s backend/tests -p "test_*.py"
+      - name: Check for missing migrations
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python manage.py makemigrations --check --dry-run
 
-      - name: Build Docker image
-        # Build Docker image để phát hiện lỗi Dockerfile sớm.
-        run: docker build -t mecprecision-vietnam:ci .
+      - name: Phase 6A focused configuration and legacy-boundary tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: >-
+          python -m pytest -q
+          apps/core/tests/test_phase6a_configuration.py
+          apps/api/tests/test_phase6a_legacy_write_boundary.py
+          apps/api/tests/test_phase4d_order_progress_commands.py
+
+      - name: Phase 6D configuration and operations contracts
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python -m pytest -q apps/core/tests/test_phase6d_release_readiness.py
+
+      - name: Run full Django test suite
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python -m pytest -q
+
+  frontend:
+    name: React production build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figma_make_frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: figma_make_frontend/pnpm-lock.yaml
+
+      - name: Install dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Frontend typecheck
+        run: pnpm typecheck
+
+      - name: Phase 5A typecheck
+        run: pnpm typecheck:phase5a
+
+      - name: Phase 5A-5E focused tests
+        run: |
+          pnpm test:phase5a
+          pnpm test:phase5b
+          pnpm test:phase5c
+          pnpm test:phase5d
+          pnpm test:phase5e
+
+      - name: Phase 6A routing tests
+        run: pnpm test:phase6a
+
+      - name: Phase 6D frontend release contracts
+        run: pnpm test:phase6d
+
+      - name: Full frontend tests
+        run: pnpm test
+
+      - name: Focused frontend format check
+        run: |
+          pnpm format:check:phase6a
+          pnpm format:check:phase6d
+
+      - name: Build frontend
+        run: pnpm build
+
+  postgres-integration:
+    name: Phase 6A PostgreSQL migration smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: phase6_ci
+          POSTGRES_USER: phase6_ci
+          POSTGRES_PASSWORD: phase6_ci_fictional
+        options: >-
+          --health-cmd "pg_isready -U phase6_ci -d phase6_ci"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: django_backend/requirements*.txt
+      - name: Install dependencies
+        working-directory: django_backend
+        run: python -m pip install -r requirements.txt
+      - name: Clean PostgreSQL migration and consistency smoke
+        working-directory: django_backend
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.base
+          SECRET_KEY: phase6-ci-fictional
+          DATABASE_URL: postgresql://phase6_ci:phase6_ci_fictional@127.0.0.1:5432/phase6_ci?connect_timeout=5
+        run: |
+          python manage.py migrate --noinput
+          python manage.py migrate --check
+          python manage.py makemigrations --check --dry-run
+
+  phase6-static:
+    name: Phase 6A runtime syntax
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          $errors = $null
+          Get-ChildItem scripts/phase6/*.ps1 | ForEach-Object {
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errors)
+            if ($errors) { throw ($errors | Out-String) }
+          }
+      - name: Validate isolated Compose definition
+        run: docker compose -p django-web-t-123-phase6 --env-file .env.phase6.example -f docker-compose.phase6.yml config --quiet
+      - name: Validate Phase 6D production-static image definition
+        run: docker compose -p django-web-t-123-phase6 --env-file .env.phase6.example -f docker-compose.phase6.yml --profile phase6d config --quiet

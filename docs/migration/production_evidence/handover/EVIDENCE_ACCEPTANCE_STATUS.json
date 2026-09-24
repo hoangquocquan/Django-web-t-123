@@ -1,0 +1,72 @@
+{
+  "status": "EVIDENCE_REJECTED",
+  "package_dir": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence",
+  "metadata": {
+    "server": "PENDING",
+    "environment": "production",
+    "iis_site": "PENDING",
+    "site_id": "PENDING",
+    "collection_start": "PENDING",
+    "collection_end": "PENDING",
+    "operator": "PENDING",
+    "reviewer": "PENDING",
+    "notes": "PENDING"
+  },
+  "metadata_valid": false,
+  "iis_logs": {
+    "logs": [],
+    "count": 0,
+    "errors": [
+      "IIS logs do not exist."
+    ]
+  },
+  "csv": {
+    "path": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\input\\iis_api_evidence.csv",
+    "exists": true,
+    "fields": [
+      "timestamp",
+      "source",
+      "client",
+      "endpoint",
+      "status_code",
+      "user_agent"
+    ],
+    "rows": 0,
+    "errors": [
+      "CSV evidence is empty."
+    ]
+  },
+  "traffic": {
+    "total_requests": 0,
+    "legacy_requests": 0,
+    "django_requests": 0,
+    "unknown_clients": 0,
+    "error_requests": 0,
+    "error_rate": 0,
+    "known_clients": []
+  },
+  "safety": {
+    "shutdown_executed": false,
+    "legacy_api_disabled": false,
+    "iis_modified": false,
+    "proxy_modified": false,
+    "routes_changed": false,
+    "database_modified": false
+  },
+  "errors": [
+    "Metadata field is pending: server.",
+    "Metadata field is pending: iis_site.",
+    "Metadata field is pending: site_id.",
+    "Metadata field is pending: collection_start.",
+    "Metadata field is pending: collection_end.",
+    "Metadata field is pending: operator.",
+    "Metadata field is pending: reviewer.",
+    "Collection period is not complete.",
+    "IIS logs do not exist.",
+    "CSV evidence is empty.",
+    "Django `/api/v1/*` traffic was not confirmed."
+  ],
+  "decision": "EVIDENCE_REJECTED",
+  "elapsed_seconds": 0.0015,
+  "generated_at": "2026-07-26T07:08:10.220804+00:00"
+}

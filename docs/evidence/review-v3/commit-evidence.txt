@@ -1,0 +1,10 @@
+Implementation commit: f047a1b
+Full commit: f047a1b (feat(ai-review): harden mandatory review coverage and release safety)
+Files changed: 23
+Insertions: 2293
+Deletions: 73
+Branch: codex/production-readiness-full
+Merge performed: false
+Push performed: false
+Tag created: false
+Deployment performed: false

@@ -1,0 +1,6 @@
+RUNTIME_COMMAND=python -m pip_audit -r django_backend/requirements-prod.txt
+RUNTIME_STATUS=PASS
+RUNTIME_RESULT=No known vulnerabilities found.
+DEVELOPMENT_COMMAND=python -m pip_audit -r django_backend/requirements.txt
+DEVELOPMENT_STATUS=PASS
+DEVELOPMENT_RESULT=No known vulnerabilities found after pytest 9.1.1 upgrade.

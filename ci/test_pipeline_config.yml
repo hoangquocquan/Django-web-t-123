@@ -1,0 +1,50 @@
+# Phase 13.2 CI-ready test pipeline configuration.
+# File này mô tả các bước kiểm thử để sau này CI đọc và chạy lặp lại.
+
+pipeline:
+  name: phase-13.2-automated-test-pipeline
+  evidence: docs/cicd/test_pipeline_result.json
+  deploy_production: false
+  create_real_ci_secrets: false
+
+environment:
+  DJANGO_SETTINGS_MODULE: config.settings.test
+  PYTHONUNBUFFERED: "1"
+  CI: "true"
+
+stages:
+  - name: dependency_check
+    command: python -c "import django, pytest; print('dependencies ok')"
+    timeout_seconds: 60
+    required: true
+    failure_rule: block
+
+  - name: lint_check
+    command: ruff check .
+    timeout_seconds: 120
+    required: false
+    failure_rule: warn_when_tool_missing
+
+  - name: unit_tests
+    command: pytest tests/test_phase13_2_test_pipeline.py
+    timeout_seconds: 120
+    required: true
+    failure_rule: block
+
+  - name: integration_tests
+    command: pytest tests/test_phase13_1_docker_build.py
+    timeout_seconds: 180
+    required: true
+    failure_rule: block
+
+  - name: security_tests
+    command: pytest tests/test_phase12_1_security.py
+    timeout_seconds: 180
+    required: true
+    failure_rule: block
+
+  - name: migration_tests
+    command: powershell -ExecutionPolicy Bypass -File scripts/run_migration_test.ps1
+    timeout_seconds: 600
+    required: true
+    failure_rule: block

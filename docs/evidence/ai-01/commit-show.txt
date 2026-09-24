@@ -1,0 +1,6 @@
+a2751c3 feat(ai): implement real ollama embeddings and vector retrieval
+43 files changed, 980 insertions(+), 67 deletions(-)
+Focused tests: 35 passed
+Regression tests: 354 passed
+Ollama review: PASS, no fallback
+Real demo: 105 embeddings, 768 dimensions, 0 failures

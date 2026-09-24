@@ -1,0 +1,15 @@
+{
+  "release_approval": "WAITING",
+  "security_approval": "WAITING",
+  "data_recovery_approval": "WAITING",
+  "staging_acceptance": "WAITING",
+  "production_deployment_approval": "WAITING",
+  "human_approval_required": true,
+  "auto_merge": false,
+  "auto_deploy": false,
+  "approval_bypass_detected": false,
+  "merge_authorized": false,
+  "release_authorized": false,
+  "deployment_authorized": false,
+  "production_authorized": false
+}

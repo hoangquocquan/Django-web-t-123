@@ -1,0 +1,4 @@
+Development command: python django_backend/manage.py check
+Development result: PASS, 0 issues
+Container command: python manage.py check --deploy
+Production result: PASS, 0 issues

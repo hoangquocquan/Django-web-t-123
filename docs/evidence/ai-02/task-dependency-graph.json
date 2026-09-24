@@ -1,0 +1,10 @@
+{
+  "normalization": [],
+  "policy": ["normalization"],
+  "redaction": [],
+  "rate_limit": [],
+  "governance_orchestrator": ["normalization", "policy", "redaction", "rate_limit"],
+  "audit_migration": ["governance_orchestrator"],
+  "api_admin": ["audit_migration"],
+  "tests": ["governance_orchestrator", "api_admin"]
+}

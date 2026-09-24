@@ -1,0 +1,4 @@
+STATUS=PASS
+SCOPE=Live production-like API/RAG/n8n integration
+RESULT=Health 200; bilingual RAG PASS; grounded Ollama generation PASS; signed n8n webhook 200; unsafe gate 401.
+NOTE=No browser UI changed in PROD-04.

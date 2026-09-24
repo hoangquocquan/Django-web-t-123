@@ -1,0 +1,28 @@
+{
+  "wave": "django-wave-1",
+  "objective": "Migrate Django foundation ownership for authentication, users/profiles, and permissions.",
+  "domains": [
+    "authentication",
+    "users",
+    "profiles",
+    "permissions"
+  ],
+  "legacy_preserved": true,
+  "production_deployed": false,
+  "legacy_deleted": false,
+  "new_api_prefix": "/api/v1/foundation/",
+  "tests": {
+    "django_check": "PASS",
+    "makemigrations_check": "PASS",
+    "migrate": "PASS",
+    "wave_tests": "PASS: 10 tests",
+    "full_pytest": "PASS: 198 tests",
+    "ai_factory": "PASS_WITH_HUMAN_REVIEW_WARNING"
+  },
+  "ai_review": {
+    "status": "AI_SOFTWARE_FACTORY_COMPLETE",
+    "human_approval_required": true,
+    "production_approved_by_ai": false
+  },
+  "expected_status": "DJANGO_FOUNDATION_WAVE_COMPLETE"
+}

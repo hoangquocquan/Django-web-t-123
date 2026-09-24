@@ -1,0 +1,9 @@
+{
+  "engine": "PostgreSQL",
+  "container": "mecprecision-vietnam-database-1",
+  "healthy": true,
+  "migration_0006_applied": true,
+  "application_probe": "ok",
+  "data_deleted": false,
+  "production_database": false
+}

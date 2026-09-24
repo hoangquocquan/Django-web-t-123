@@ -1,0 +1,14 @@
+{
+  "phase": "AI-01",
+  "owned_paths": [
+    "django_backend/apps/knowledge/**",
+    "django_backend/config/settings/base.py",
+    "django_backend/config/settings/test.py",
+    "django_backend/.env.example",
+    "tests/test_ai_hardening_vector_search.py",
+    "docs/codex-prompts/AI_01_*",
+    "docs/reviews/AI_01_*",
+    "docs/evidence/ai-01/**"
+  ],
+  "serialized": true
+}

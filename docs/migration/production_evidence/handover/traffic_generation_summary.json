@@ -1,0 +1,11 @@
+{
+  "simulation": true,
+  "environment": "STAGING_SIMULATION",
+  "days": 7,
+  "clients": 5,
+  "output_traffic_file": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\handover\\production_like_traffic.json",
+  "total_requests": 1200,
+  "legacy_requests": 0,
+  "django_requests": 1200,
+  "unknown_clients": 0
+}

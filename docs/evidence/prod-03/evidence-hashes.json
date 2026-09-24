@@ -1,0 +1,11 @@
+{
+  "algorithm": "SHA-256",
+  "files": {
+    "ollama-review-input.json": "9a86d7780c8ac9545e1a107ead1729980540ad9658cf0f4ea27fe20d5f1c0aa0",
+    "ollama-review-output.json": "8120db84df9d86abdf6f921a5f6c60b0b02ba7a582c7336fbbf3b81d76e2e158",
+    "test-result.json": "2cc58d3578edd82b3a1f3087c8e51045ef28bd51f68d91a1864758bbe65283a2",
+    "security-results.txt": "f3c7c1929dc2dd882d7c6cba7a59e12363c44341b70bab9e3c539872eb999670",
+    "docker-validation.txt": "a2592df2bd75f9c269731b750e80752fb70e6bef98dcc7c1d112ee617a176053",
+    "foundation.0006": "7905c0d0f53be6fe908074947481fb9c3c0bb7721681a8f468892cb973479b54"
+  }
+}

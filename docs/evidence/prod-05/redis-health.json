@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "container": "mecprecision-vietnam-redis-1",
+  "container_health": "healthy",
+  "health_response": "PONG",
+  "credential_exposed": false,
+  "outage_behavior_tests": "PASS"
+}

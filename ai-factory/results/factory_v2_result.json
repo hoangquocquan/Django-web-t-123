@@ -1,0 +1,71 @@
+{
+  "version": "v2",
+  "created_at": "2026-07-30T15:53:52+00:00",
+  "requirement": "Complete Business + AI Wave 2 platform capabilities.",
+  "flow": [
+    "Requirement",
+    "AI Planner",
+    "Codex Development",
+    "Automated Tests",
+    "AI Code Review",
+    "Security Review",
+    "Human Approval"
+  ],
+  "roles": [
+    {
+      "role": "requirement_analyzer",
+      "title": "Requirement Analyzer",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Requirement Analyzer reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Clarify scope, risks, and acceptance criteria.",
+      "human_approval_required": true
+    },
+    {
+      "role": "architecture_planner",
+      "title": "Architecture Planner",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Architecture Planner reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Plan modules, dependencies, and rollback boundaries.",
+      "human_approval_required": true
+    },
+    {
+      "role": "code_reviewer",
+      "title": "Code Reviewer",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Code Reviewer reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Review code quality, maintainability, and regressions.",
+      "human_approval_required": true
+    },
+    {
+      "role": "test_generator",
+      "title": "Test Generator",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Test Generator reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Suggest unit, integration, and safety tests.",
+      "human_approval_required": true
+    },
+    {
+      "role": "security_reviewer",
+      "title": "Security Reviewer",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Security Reviewer reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Check secrets, permissions, and unsafe automation.",
+      "human_approval_required": true
+    },
+    {
+      "role": "documentation_generator",
+      "title": "Documentation Generator",
+      "status": "READY_FOR_HUMAN_REVIEW",
+      "summary": "Documentation Generator reviewed requirement: Complete Business + AI Wave 2 platform capabilities.",
+      "responsibility": "Create concise docs for operators and developers.",
+      "human_approval_required": true
+    }
+  ],
+  "decision": "WAITING_FOR_HUMAN_APPROVAL",
+  "safety": {
+    "production_deployed": false,
+    "code_auto_merged": false,
+    "external_ai_api_used": false,
+    "human_approval_required": true
+  }
+}

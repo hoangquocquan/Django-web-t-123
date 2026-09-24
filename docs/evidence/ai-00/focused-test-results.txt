@@ -1,0 +1,3 @@
+STATUS = PASS
+COMMAND = pytest tests/test_ai_ollama.py tests/test_ollama_real_inference.py tests/test_ai_enterprise_governance.py
+RESULT = 21 passed in 1.63s.

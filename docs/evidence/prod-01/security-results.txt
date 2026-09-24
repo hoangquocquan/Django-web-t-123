@@ -1,0 +1,15 @@
+STATUS=PASS_WITH_WARNINGS
+CRITICAL=0
+HIGH=0
+MEDIUM=0
+LOW=1
+BANDIT=One Low B105 false positive: constant foundation_admin_token is a session key name, not a password.
+CSRF=PASS
+UNAUTHORIZED_ROLE=HTTP 403 PASS
+APPROVAL_PERMISSION=sales:approve required
+APPROVAL_BYPASS_DETECTED=false
+AUTO_MERGE=false
+AUTO_DEPLOY=false
+HUMAN_APPROVAL_REQUIRED=true
+TYPE_CHECK=Targeted mypy PASS when unavailable Django stubs and inherited dynamic manager diagnostic are excluded; raw result is documented.
+REVIEWER_HARDENING=The phrase "ready for deployment" is now prohibited and covered by a fail-closed correction-retry test.

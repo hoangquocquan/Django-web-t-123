@@ -1,0 +1,72 @@
+{
+  "status": "PASS",
+  "gate_state": "WAITING_HUMAN_APPROVAL",
+  "review_completed": true,
+  "schema_valid": true,
+  "fallback_used": false,
+  "attempts": 1,
+  "review": {
+    "decision": "PASS",
+    "summary": "The AI software factory has completed the phase 13.8 task and produced a set of evidence files.",
+    "security_findings": [],
+    "requirements_checked": [
+      "evidence_collection"
+    ],
+    "test_findings": [],
+    "recommended_actions": [],
+    "migration_findings": [],
+    "medium_findings": [],
+    "missing_requirements": [],
+    "critical_findings": [],
+    "high_findings": [],
+    "requires_human_review": true,
+    "safety_gates": {
+      "auto_merge": false,
+      "approval_bypass_detected": false,
+      "auto_deploy": false,
+      "human_approval_required": true
+    },
+    "model": "llama3",
+    "prompt_version": "ai-review-v2.1"
+  },
+  "summary": "The AI software factory has completed the phase 13.8 task and produced a set of evidence files.",
+  "issues": [],
+  "normalization": {
+    "original_decision": "PASS",
+    "removed_human_approval_invariant_findings": []
+  },
+  "recommendation": "Human approval is required; no automatic merge or deployment.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "endpoint_reachable": true,
+    "model_available": true,
+    "response_received": true,
+    "schema_valid": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "{ \"decision\": \"PASS\", \"summary\": \"The AI software factory has completed the phase 13.8 task and produced a set of evidence files.\", \"security_findings\": [], \"requirements_checked\": [\"evidence_collection\"], \"test_findings\": [], \"recommended_actions\": [],\"migration_findings\": [], \"medium_findings\": [], \"missing_requirements\": [],\"critical_findings\": [], \"high_findings\": [], \"requires_human_review\": true, \"safety_gates\": {\"auto_merge\": false, \"approval_bypass_detected\": false, \"auto_deploy\": false, \"human_approval_required\": true}, \"model\": \"llama3\", \"prompt_version\": \"ai-review-v2.1\" }"
+  },
+  "evidence": {
+    "prompt_version": "ai-review-v2.1",
+    "review_input_sha256": "f2270b631b0e1304af3ef139ded5b4181b77ea036ea8205330f68a1b42681146",
+    "review_output_sha256": "17f5665a6ede5caed6efea04d00a8e8513879979159070fcb738169eaab90318",
+    "actual_diff_sha256": "4667271ff66f04fab235135eb161a7af0079065d887f11d3f04ced65e2eaa6b7",
+    "base_commit": "e10b456d21e1c190b2944fbe79befb88d81d4763",
+    "current_commit": "8e4a592e8b11ac21d18ccfe4598585f64737ec3c",
+    "correlation_id": "f2ad86d1-636d-4296-b23d-628021706037"
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true,
+    "auto_merge": false,
+    "auto_deploy": false
+  },
+  "phase": "AI-06",
+  "created_at": "2026-08-02T02:05:11+00:00"
+}

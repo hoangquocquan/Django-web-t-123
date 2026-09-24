@@ -1,0 +1,4 @@
+COMMAND=python django_backend/manage.py makemigrations --check --dry-run
+STATUS=PASS
+RESULT=No changes detected.
+LOCAL_VALIDATION=foundation.0005_add_sales_approval_permission applied successfully to ignored development database.

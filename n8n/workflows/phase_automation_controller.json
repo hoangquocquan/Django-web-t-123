@@ -1,0 +1,158 @@
+{
+  "name": "Phase Automation Controller",
+  "active": false,
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "path": "phase-automation-controller",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "id": "phase-input-validator",
+      "name": "Phase Input Validator",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [240, 0],
+      "parameters": {
+        "command": "python scripts/phase_validator.py --phase 13.7"
+      }
+    },
+    {
+      "id": "run-test-executor",
+      "name": "Run Test Executor",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [480, 0],
+      "parameters": {
+        "command": "python ai-review/run_phase_review.py --phase 13.7 --skip-migration"
+      }
+    },
+    {
+      "id": "decision-node",
+      "name": "Decision Node",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 0],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "WAITING_HUMAN_APPROVAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "error-collector",
+      "name": "Error Collector",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [960, 180],
+      "parameters": {
+        "command": "python ai-review/error_collector.py --command \"python -m pytest\""
+      }
+    },
+    {
+      "id": "self-correction-trigger",
+      "name": "Self Correction Trigger",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1200, 180],
+      "parameters": {
+        "command": "python ai-review/retry_controller.py"
+      }
+    },
+    {
+      "id": "ollama-reviewer",
+      "name": "Ollama Reviewer",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [960, -120],
+      "parameters": {
+        "command": "python ai-review/ollama_phase_reviewer.py"
+      }
+    },
+    {
+      "id": "report-generator",
+      "name": "Report Generator",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1200, -120],
+      "parameters": {
+        "command": "python ai-review/report_generator.py"
+      }
+    },
+    {
+      "id": "human-approval-gate",
+      "name": "Human Approval Gate",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1440, -120],
+      "parameters": {}
+    },
+    {
+      "id": "notification",
+      "name": "Notification",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1440, 0],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Phase Input Validator", "type": "main", "index": 0 }]]
+    },
+    "Phase Input Validator": {
+      "main": [[{ "node": "Run Test Executor", "type": "main", "index": 0 }]]
+    },
+    "Run Test Executor": {
+      "main": [[{ "node": "Decision Node", "type": "main", "index": 0 }]]
+    },
+    "Decision Node": {
+      "main": [
+        [{ "node": "Ollama Reviewer", "type": "main", "index": 0 }],
+        [{ "node": "Error Collector", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Collector": {
+      "main": [[{ "node": "Self Correction Trigger", "type": "main", "index": 0 }]]
+    },
+    "Self Correction Trigger": {
+      "main": [[{ "node": "Notification", "type": "main", "index": 0 }]]
+    },
+    "Ollama Reviewer": {
+      "main": [[{ "node": "Report Generator", "type": "main", "index": 0 }]]
+    },
+    "Report Generator": {
+      "main": [[{ "node": "Human Approval Gate", "type": "main", "index": 0 }]]
+    },
+    "Human Approval Gate": {
+      "main": [[{ "node": "Notification", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "phase": "13.7",
+    "productionDeploymentIncluded": false,
+    "autoMergeIncluded": false,
+    "humanApprovalRequired": true,
+    "mandatoryOllamaReview": true,
+    "allowedAdvanceState": "WAITING_HUMAN_APPROVAL"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "database_name": "mecprecision.sqlite",
+  "environment": "TRAINING",
+  "archive_type": "LEGACY_DATABASE_ARCHIVE",
+  "created_date": "2026-07-27T12:23:09+00:00",
+  "source_version": "765f73f093c86de201749d371eb9148d9da467a1",
+  "backup_location": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\database_archive\\backup\\mecprecision-legacy-archive-20260727T122309Z.sqlite",
+  "verification_status": "ARCHIVE_VERIFIED",
+  "owner": "migration-training-operator",
+  "verified_at": "2026-07-27T12:23:14+00:00"
+}

@@ -1,0 +1,4 @@
+Repository: C:/Users/hoang/Documents/Codex/mecprecision-vietnam
+Branch: codex/demo-database-validation
+Python: Python 3.12.10
+Django: 5.2.16

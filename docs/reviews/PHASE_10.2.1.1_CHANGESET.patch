@@ -1,0 +1,279 @@
+diff --git a/django_backend/tests/test_phase10_dry_run_gate.py b/django_backend/tests/test_phase10_dry_run_gate.py
+index 447809e..1c3c6e7 100644
+--- a/django_backend/tests/test_phase10_dry_run_gate.py
++++ b/django_backend/tests/test_phase10_dry_run_gate.py
+@@ -69,3 +69,13 @@ def test_postgres_environment_validator_rejects_production_database_name():
+     assert has_forbidden_database_name(database_url)
+     assert validation["has_forbidden_database_name"] is True
+     assert validation["errors"]
++
++
++def test_postgres_environment_validator_rejects_invalid_scheme():
++    """The dry-run validator should accept only PostgreSQL URL schemes."""
++    validation = validate_dryrun_database_url(
++        "sqlite:///backend/database/mecprecision.sqlite"
++    )
++
++    assert validation["is_postgresql_url"] is False
++    assert "postgres/postgresql URL scheme" in validation["errors"][0]
+diff --git a/docs/codex-prompts/PHASE_10.2.1.1_POSTGRESQL_DRY_RUN_ACTIVATION.md b/docs/codex-prompts/PHASE_10.2.1.1_POSTGRESQL_DRY_RUN_ACTIVATION.md
+new file mode 100644
+index 0000000..36426cc
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_10.2.1.1_POSTGRESQL_DRY_RUN_ACTIVATION.md
+@@ -0,0 +1,84 @@
++# Phase 10.2.1.1 - PostgreSQL Dry Run Activation & Connection Validation
++
++## Project
++
++mecprecision-vietnam
++
++## Objective
++
++Activate and validate the non-production PostgreSQL dry-run environment required
++for Phase 10.2 execution.
++
++Goal:
++
++- A working PostgreSQL dry-run database connection.
++- No data import.
++- No schema change.
++- No Django migration generation.
++- No legacy SQLite mutation.
++
++## Current Blocker
++
++PostgreSQL dry-run database is not active and
++`PHASE10_DRY_RUN_DATABASE_URL` has not been verified.
++
++## Do Not
++
++- execute migration
++- create production database
++- migrate legacy data
++- modify SQLite
++- generate Django migrations
++- change application logic
++
++## Only
++
++- activate PostgreSQL test environment
++- validate connection
++- verify safety rules
++- document configuration
++
++## Required Documents
++
++- `docs/migration/POSTGRESQL_DRY_RUN_ENVIRONMENT.md`
++- `docs/migration/PHASE_10.2.1_SETUP_GUIDE.md`
++- `scripts/check_phase10_postgres_connection.py`
++- `scripts/phase10_dry_run_migration.py`
++- `docs/testing/PHASE_TESTING_STANDARD.md`
++
++## Tasks
++
++1. Activate PostgreSQL dry-run container with `docker-compose.phase10-dryrun.yml`.
++2. Update setup guide with connection configuration details.
++3. Verify `.env.dryrun.example`.
++4. Validate PostgreSQL connection.
++5. Improve safety tests.
++6. Create `docs/migration/POSTGRESQL_DRY_RUN_VALIDATION_REPORT.md`.
++7. Run required tests.
++8. Create review package.
++
++## Git Requirements
++
++Branch:
++
++```text
++migration/phase-10.2.1.1-postgresql-activation
++```
++
++Commit:
++
++```text
++chore: activate postgresql dry run environment
++```
++
++Tag:
++
++```text
++phase-10.2.1.1-postgresql-ready
++```
++
++## Final Status
++
++WAITING FOR ARCHITECT REVIEW
++
++Do not start Phase 10.2 rerun or Phase 10.3.
+diff --git a/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md b/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md
+index 6be637e..e83bbc1 100644
+--- a/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md
++++ b/docs/migration/PHASE_10.2.1_SETUP_GUIDE.md
+@@ -16,6 +16,18 @@ Fallback for older Docker Compose installations:
+ docker-compose -f docker-compose.phase10-dryrun.yml up -d
+ ```
+ 
++Verify container health:
++
++```powershell
++docker inspect --format "{{.State.Status}} {{.State.Health.Status}}" mecprecision_phase10_dryrun_postgres
++```
++
++Expected:
++
++```text
++running healthy
++```
++
+ ## Step 2: Create Dry-Run Database
+ 
+ Required database name examples:
+@@ -30,6 +42,36 @@ Do not use names such as:
+ - `mecprecision_production`
+ - `mecprecision_live`
+ 
++The Docker Compose dry-run environment creates this database automatically:
++
++```text
++mecprecision_dryrun
++```
++
++Verify database name:
++
++```powershell
++docker exec mecprecision_phase10_dryrun_postgres psql -U dryrun_user -d mecprecision_dryrun -tAc "SELECT current_database();"
++```
++
++Expected:
++
++```text
++mecprecision_dryrun
++```
++
++Verify PostgreSQL version:
++
++```powershell
++docker exec mecprecision_phase10_dryrun_postgres psql -U dryrun_user -d mecprecision_dryrun -tAc "SHOW server_version;"
++```
++
++Expected major version:
++
++```text
++16
++```
++
+ ## Step 3: Configure Environment Variable
+ 
+ Copy the example file:
+@@ -46,6 +88,10 @@ Temporary PowerShell option:
+ $env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://dryrun_user:password@localhost:5432/mecprecision_dryrun"
+ ```
+ 
++For the local Docker dry-run container, use the container password from
++`docker-compose.phase10-dryrun.yml` only in your local shell or ignored
++`.env.dryrun` file. Do not commit real credentials.
++
+ ## Step 4: Run Connection Test
+ 
+ Run:
+diff --git a/docs/migration/POSTGRESQL_DRY_RUN_VALIDATION_REPORT.md b/docs/migration/POSTGRESQL_DRY_RUN_VALIDATION_REPORT.md
+new file mode 100644
+index 0000000..39584fb
+--- /dev/null
++++ b/docs/migration/POSTGRESQL_DRY_RUN_VALIDATION_REPORT.md
+@@ -0,0 +1,94 @@
++# PostgreSQL Dry Run Validation Report
++
++## Phase
++
++Phase 10.2.1.1 - PostgreSQL Dry Run Activation & Connection Validation
++
++## Environment
++
++| Item | Value |
++|---|---|
++| Docker Compose file | `docker-compose.phase10-dryrun.yml` |
++| Container name | `mecprecision_phase10_dryrun_postgres` |
++| Container status | `running healthy` |
++| PostgreSQL image | `postgres:16` |
++| Database name | `mecprecision_dryrun` |
++| Database user | `dryrun_user` |
++
++## PostgreSQL Version
++
++```text
++16.14 (Debian 16.14-1.pgdg13+1)
++```
++
++## Connection Status
++
++The dry-run validator was executed with a temporary PowerShell environment
++variable. No credential was committed to Git.
++
++```powershell
++$env:PHASE10_DRY_RUN_DATABASE_URL = "postgresql://dryrun_user:***@localhost:5432/mecprecision_dryrun"
++python scripts\check_phase10_postgres_connection.py
++```
++
++Result:
++
++```text
++status: ready
++safe_to_proceed: true
++connection_ok: true
++current_database: mecprecision_dryrun
++current_user: dryrun_user
++```
++
++## Permissions
++
++| Permission | Result |
++|---|---|
++| database connect | PASS |
++| database temp | PASS |
++| public schema usage | PASS |
++| public schema create | PASS |
++
++## Safety Checks
++
++| Check | Result |
++|---|---|
++| PostgreSQL URL scheme | PASS |
++| database name includes dry-run marker | PASS |
++| database name excludes `prod` | PASS |
++| database name excludes `production` | PASS |
++| database name excludes `live` | PASS |
++| password masked in output | PASS |
++| production touched | NO |
++| legacy SQLite modified | NO |
++| Django migrations generated | NO |
++| data import executed | NO |
++
++## Dry-Run Gate
++
++The Phase 10.2 dry-run gate was rerun only as a safety readiness check. It did
++not import data or change schema.
++
++Result:
++
++```text
++dry_run_allowed: true
++postgresql_schema_created: false
++django_migrations_generated: false
++data_import_executed: false
++production_touched: false
++```
++
++## Known Limitations
++
++- The PostgreSQL container is a local dry-run environment, not production.
++- Credentials are suitable only for local simulation.
++- Phase 10.2 rerun and Phase 10.3 have not been started.
++- No target schema was created in PostgreSQL during this phase.
++
++## Recommendation
++
++Keep this dry-run container available for the next approved Phase 10.2 rerun.
++Before any data import phase, rerun the connection validator and confirm that
++the database name is still `mecprecision_dryrun`.

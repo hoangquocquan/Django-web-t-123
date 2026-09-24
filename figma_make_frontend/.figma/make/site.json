@@ -1,0 +1,10 @@
+{
+  "description": "Explore a comprehensive platform for MecPrecision Việt Nam, offering detailed product catalogs, technology insights, and streamlined sales management for precision CNC manufacturing.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

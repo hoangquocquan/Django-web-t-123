@@ -1,0 +1,5 @@
+PROD-01 changes include module permission enforcement, 11 POST routes,
+transactional Sales approval/handoff logic, CRM forms, structured AI result
+cards, a permission migration, focused UAT tests, and a Chrome smoke test.
+
+Exact final stat is captured by `git show --stat` after the dedicated commit.

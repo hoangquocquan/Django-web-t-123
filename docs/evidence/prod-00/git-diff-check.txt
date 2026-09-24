@@ -1,0 +1,4 @@
+STATUS: PASS
+COMMAND: git diff HEAD --check
+EXIT_CODE: 0
+OUTPUT: no whitespace errors

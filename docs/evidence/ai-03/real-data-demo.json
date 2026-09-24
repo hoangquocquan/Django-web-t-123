@@ -1,0 +1,17 @@
+{
+  "database": "local Django development database",
+  "available_leads": 1002,
+  "available_knowledge_documents": 105,
+  "lead_id": 1,
+  "lead_company": "ABC Automotive Manufacturing",
+  "lead_status": "won",
+  "deterministic_score": 82,
+  "grade": "A",
+  "generation_mode": "ollama",
+  "model": "llama3",
+  "source_ids": [1, 97, 75],
+  "response_time_ms": 4861,
+  "human_approval_required": true,
+  "autonomous_action": false,
+  "external_ai_used": false
+}

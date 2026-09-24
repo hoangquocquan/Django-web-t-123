@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = PROD-03 changes API/security behavior and no browser UI was changed; API integration and production container HTTP checks cover the phase surface.
+RETRY_COMMAND = pytest -q tests/test_prod03_security_upload_hardening.py
+IMPACT = No browser-specific regression claim is made for PROD-03. PROD-01 Chrome E2E remains the latest UI result.

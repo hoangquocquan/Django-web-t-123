@@ -1,0 +1,55 @@
+{
+  "status": "COMPLETE",
+  "phases": [
+    {
+      "phase": "AI-01",
+      "source": "COMPLETE",
+      "migration": "knowledge/0003",
+      "tests": "tests/test_ai_hardening_vector_search.py",
+      "review": "docs/reviews/AI_01_REAL_EMBEDDING_VECTOR_SEARCH_REVIEW.md",
+      "evidence": "docs/evidence/ai-01",
+      "commit": "a2751c3e33e0c55cec50045fe6d131701a7a1d15",
+      "status": "COMPLETE"
+    },
+    {
+      "phase": "AI-02",
+      "source": "COMPLETE",
+      "migration": "ai/0003",
+      "tests": "tests/test_ai_governance_v2.py",
+      "review": "docs/reviews/AI_02_GOVERNANCE_V2_REVIEW.md",
+      "evidence": "docs/evidence/ai-02",
+      "commit": "5e10202a70164f410acc9e5bb273d1d1dc3661c7",
+      "status": "COMPLETE"
+    },
+    {
+      "phase": "AI-03",
+      "source": "COMPLETE",
+      "migration": "NONE",
+      "tests": "tests/test_ai_sales_grounded_synthesis.py",
+      "review": "docs/reviews/AI_03_GROUNDED_SALES_SYNTHESIS_REVIEW.md",
+      "evidence": "docs/evidence/ai-03",
+      "commit": "03b17e404374de75afa569d69e3a18fd38ca03c0",
+      "status": "COMPLETE"
+    },
+    {
+      "phase": "AI-04",
+      "source": "COMPLETE",
+      "migration": "ai_agent/0002",
+      "tests": "tests/test_ai_agent_safe_controller.py",
+      "review": "docs/reviews/AI_04_SAFE_AGENT_CONTROLLER_REVIEW.md",
+      "evidence": "docs/evidence/ai-04",
+      "commit": "a5175d9f9c03daf9e6cf1e06ab0c64329d9802c2",
+      "status": "COMPLETE"
+    },
+    {
+      "phase": "AI-05",
+      "source": "COMPLETE",
+      "migration": "NONE",
+      "tests": "tests/test_ai_mandatory_review_gate.py",
+      "review": "docs/reviews/AI_05_MANDATORY_OLLAMA_REVIEW_REVIEW_V2.md",
+      "evidence": "docs/evidence/ai-05",
+      "commit": "81232332776fd30f22d607b61ac8aec9706d7f38",
+      "status": "COMPLETE"
+    }
+  ]
+}

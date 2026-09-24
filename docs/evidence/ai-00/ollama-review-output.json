@@ -1,0 +1,26 @@
+{
+  "phase": "AI-00",
+  "created_at": "2026-08-01T14:59:26+00:00",
+  "status": "PASS",
+  "summary": "AI review completed.",
+  "issues": [],
+  "recommendation": "Proceed to human review; do not auto approve production.",
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3",
+    "available": true,
+    "model_available": true,
+    "installed_models": [
+      "nomic-embed-text:latest",
+      "llama3:latest"
+    ],
+    "error": "",
+    "response": "Here is the output:\n\n{\n  \"status\": \"PASS\",\n  \"summary\": \"AI-00 phase review completed successfully.\",\n  \"issues\": [],\n  \"recommendation\": \"Human approval required for production deployment.\",\n  \"production_safety\": {\n    \"human_approval_required\": true,\n    \"autonomous_action\": false,\n    \"external_ai_used\": false,\n    \"production_deployed\": false\n  }\n}\n\nNote: The status is PASS because all tests passed, and there are no critical or high findings. The recommendation is to require human approval for production deployment, as per the safety rules."
+  },
+  "safety": {
+    "production_approved": false,
+    "code_modified_by_ai": false,
+    "failed_tests_skipped": false,
+    "human_approval_required": true
+  }
+}

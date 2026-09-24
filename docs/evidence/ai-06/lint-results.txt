@@ -1,0 +1,11 @@
+﻿STATUS_CHANGED_FILES: PASS
+COMMAND_1: ruff check django_backend/apps/ai/services/ollama_client.py tests/test_ai_ollama.py
+EXIT_CODE_1: 0
+COMMAND_2: ruff format --check django_backend/apps/ai/services/ollama_client.py tests/test_ai_ollama.py
+EXIT_CODE_2: 0
+OUTPUT_1:
+All checks passed!
+OUTPUT_2:
+2 files already formatted
+
+REPOSITORY_BASELINE_NOTE: ruff check . and ruff format --check . remain non-zero from inherited formatting debt; AI-06 changed files are clean.

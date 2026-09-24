@@ -1,0 +1,48 @@
+{% extends "business_ui/base.html" %}
+{% block title %}Quotation Detail{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Quotation detail</p>
+      <h1>{{ quotation.quotation_number }}</h1>
+    </div>
+    <a class="button secondary" href="{% url 'business_ui:quotations' %}">Quay lại</a>
+  </section>
+  <section class="split">
+    <article>
+      <h2>Trạng thái</h2>
+      <dl class="details">
+        <dt>Status</dt><dd>{{ quotation.status }}</dd>
+        <dt>Approval</dt><dd>{{ quotation.approval_status }}</dd>
+        <dt>Total</dt><dd>{{ quotation.total }}</dd>
+      </dl>
+      <div class="action-row">
+        {% if can_approve_sales and quotation.approval_status != "approved" %}
+          <form method="post" action="{% url 'business_ui:quotation-approve' quotation.id %}">
+            {% csrf_token %}
+            <button class="button" type="submit">Phê duyệt</button>
+          </form>
+        {% endif %}
+        {% if can_write and quotation.approval_status == "approved" and quotation.status != "accepted" %}
+          <form method="post" action="{% url 'business_ui:quotation-handoff' quotation.id %}">
+            {% csrf_token %}
+            <button class="button secondary" type="submit">Order handoff</button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+    <article>
+      <h2>Dòng báo giá</h2>
+      <table>
+        <thead><tr><th>Mô tả</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+        <tbody>
+          {% for line in quotation.lines.all %}
+            <tr><td>{{ line.description }}</td><td>{{ line.quantity }}</td><td>{{ line.unit_price }}</td><td>{{ line.line_total }}</td></tr>
+          {% empty %}
+            <tr><td colspan="4">Chưa có dòng báo giá.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </article>
+  </section>
+{% endblock %}

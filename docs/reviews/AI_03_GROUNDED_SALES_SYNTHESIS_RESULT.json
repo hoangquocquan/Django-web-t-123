@@ -1,0 +1,29 @@
+{
+  "phase": "AI-03",
+  "branch": "codex/ai-03-sales-synthesis",
+  "baseline_commit": "db7c934369a7db97997c27ac87c0e8691314d582",
+  "status": "PASS",
+  "tests": {"focused_passed": 16, "regression_passed": 380, "failed": 0},
+  "real_demo": {
+    "generation_mode": "ollama",
+    "model": "llama3",
+    "score": 82,
+    "source_count": 3
+  },
+  "safety": {
+    "score_owned_by_model": false,
+    "email_auto_send": false,
+    "crm_auto_write": false,
+    "human_approval_required": true,
+    "autonomous_action": false,
+    "external_ai_used": false
+  },
+  "ollama_review": {
+    "status": "PASS",
+    "model": "llama3",
+    "fallback_used": false,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "output_sha256": "827344ec1d689e5c6c36392e1ea13bbc0de8c1cf7ef0e9cb8364a617d0b576d7"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "endpoint": "http://127.0.0.1:11434",
+  "endpoint_reachable": true,
+  "models": ["nomic-embed-text:latest", "llama3:latest"],
+  "selected_model": "llama3",
+  "model_available": true,
+  "external_ai_used": false
+}

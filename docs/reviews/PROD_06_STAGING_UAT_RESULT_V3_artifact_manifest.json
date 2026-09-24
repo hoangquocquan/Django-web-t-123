@@ -1,0 +1,362 @@
+{
+  "manifest_version": "review-v3",
+  "created_at": "2026-08-02T11:15:30+00:00",
+  "phase": "PROD-06",
+  "base_commit": "81c0d2ecd2f9e533718bfe5b2c86cf66af24260b",
+  "current_commit": "3aa911026eeef07d0dccff42588505380d0baea4",
+  "changed_files": [
+    {
+      "status": "M",
+      "path": "django_backend/apps/api/views/crm.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "django_backend/config/settings/staging.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "docs/codex-prompts/PROD_06_STAGING_UAT.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/backup-restore-results.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/commit-hash.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/docker-runtime.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/e2e-test-results.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/environment-summary.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/focused-test-results.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/known-limitations.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/load-test-results.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/n8n-health.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/n8n-live-execution.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/ollama-health.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/ollama-review-output.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/postgres-health.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/redis-health.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/regression-test-results.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/review-input.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/review-rules.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/rollback-results.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/security-results.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/staging-config-summary.txt",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/staging-runtime.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/test-result.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/uat-matrix.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/prod-06/uat-results.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "M",
+      "path": "docs/reviews/PRODUCTION_READINESS_PHASE_STATUS.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/reviews/PROD_06_STAGING_UAT_RESULT.json",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/reviews/PROD_06_STAGING_UAT_REVIEW.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "docs/reviews/PROD_06_UAT_BUG_REPORT.md",
+      "classification": "documentation"
+    },
+    {
+      "status": "A",
+      "path": "scripts/prod06_load_test.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "scripts/prod06_n8n_live_check.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "scripts/prod06_staging_validate.py",
+      "classification": "production"
+    },
+    {
+      "status": "A",
+      "path": "tests/test_prod06_staging_uat.py",
+      "classification": "test"
+    }
+  ],
+  "reviewed_files": [
+    "django_backend/apps/api/views/crm.py",
+    "django_backend/config/settings/staging.py",
+    "scripts/prod06_load_test.py",
+    "scripts/prod06_n8n_live_check.py",
+    "scripts/prod06_staging_validate.py"
+  ],
+  "reviewed_chunks": [
+    "django_backend/apps/api/views/crm.py#1",
+    "django_backend/apps/api/views/crm.py#2",
+    "django_backend/apps/api/views/crm.py#3",
+    "django_backend/config/settings/staging.py#1",
+    "scripts/prod06_load_test.py#1",
+    "scripts/prod06_load_test.py#2",
+    "scripts/prod06_load_test.py#3",
+    "scripts/prod06_n8n_live_check.py#1",
+    "scripts/prod06_n8n_live_check.py#2",
+    "scripts/prod06_staging_validate.py#1",
+    "scripts/prod06_staging_validate.py#2",
+    "scripts/prod06_staging_validate.py#3",
+    "scripts/prod06_staging_validate.py#4"
+  ],
+  "skipped_files": [
+    {
+      "path": "docs/codex-prompts/PROD_06_STAGING_UAT.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/backup-restore-results.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/commit-hash.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/docker-runtime.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/e2e-test-results.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/environment-summary.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/focused-test-results.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/known-limitations.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/load-test-results.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/n8n-health.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/n8n-live-execution.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/ollama-health.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/ollama-review-output.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/postgres-health.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/redis-health.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/regression-test-results.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/review-input.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/review-rules.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/rollback-results.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/security-results.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/staging-config-summary.txt",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/staging-runtime.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/test-result.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/uat-matrix.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/evidence/prod-06/uat-results.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/reviews/PRODUCTION_READINESS_PHASE_STATUS.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/reviews/PROD_06_STAGING_UAT_RESULT.json",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/reviews/PROD_06_STAGING_UAT_REVIEW.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "docs/reviews/PROD_06_UAT_BUG_REPORT.md",
+      "reason": "Handled by deterministic documentation contract."
+    },
+    {
+      "path": "tests/test_prod06_staging_uat.py",
+      "reason": "Handled by deterministic test contract."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/prod-06/review-input-v3.json",
+      "size_bytes": 109718,
+      "sha256": "e560a4725e87ac7a5b61497092bd636259a08efbc95ef180adc0f828c5b58ee4"
+    },
+    {
+      "path": "docs/evidence/prod-06/review-rules-v3.json",
+      "size_bytes": 577,
+      "sha256": "92d221380884ac56bf245ccc4d8761d7ec6ac2643e3c1156d533de62a5b06bcf"
+    },
+    {
+      "path": "docs/evidence/prod-06/test-result-v3.json",
+      "size_bytes": 1002,
+      "sha256": "38c2e2c43669367921831975affdd8b51892fda029c73d8d3021f291454f59e4"
+    },
+    {
+      "path": "docs/reviews/PROD_06_STAGING_UAT_RESULT_V3.json",
+      "size_bytes": 5803,
+      "sha256": "706d692fa60f688b085e7e3d56a3799684554ca473c46c4aa025dcf41ce1b622"
+    }
+  ],
+  "model_identity": {
+    "model": "llama3",
+    "model_digest": "365c0bd3c000a25d28ddbf732fe1c6add414de7275464c4e4d1c3b5fcb5d8ad1",
+    "family": "llama",
+    "prompt_version": "ai-review-v3.0",
+    "context_tokens": 16384,
+    "temperature": 0.0,
+    "num_predict": 1200,
+    "ollama_version": "0.32.5"
+  },
+  "correlation_id": "da8a7765-a109-48c6-804f-855aae06f673",
+  "signature_status": "SIGNATURE_NOT_AVAILABLE"
+}

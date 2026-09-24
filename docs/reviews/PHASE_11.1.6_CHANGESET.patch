@@ -1,0 +1,1336 @@
+﻿diff --git a/docs/codex-prompts/PHASE_11.1.6_LEGACY_API_DECOMMISSION_EXECUTION.md b/docs/codex-prompts/PHASE_11.1.6_LEGACY_API_DECOMMISSION_EXECUTION.md
+new file mode 100644
+index 0000000..b261f79
+--- /dev/null
++++ b/docs/codex-prompts/PHASE_11.1.6_LEGACY_API_DECOMMISSION_EXECUTION.md
+@@ -0,0 +1,109 @@
++# Phase 11.1.6 - Legacy API Decommission Execution
++
++## Project
++
++mecprecision-vietnam
++
++## Objective
++
++Execute Legacy API decommission safely.
++
++Target:
++
++- Legacy API: `/api/*`
++- Replacement API: `/api/v1/*`
++
++## Critical Safety Rules
++
++Before any shutdown action, validate:
++
++- Production evidence: `COMPLETE_EVIDENCE_PACKAGE`
++- Technical approval exists
++- Business approval exists
++- Rollback owner exists
++- Maintenance window exists
++- Monitoring is ready
++
++If any validation fails:
++
++```text
++BLOCKED_SAFELY
++```
++
++Do not:
++
++- Delete legacy code.
++- Delete database.
++- Archive database.
++- Remove migrations.
++- Modify unrelated APIs.
++- Bypass approval gate.
++
++## Required Documents
++
++Read before implementation:
++
++- `docs/migration/LEGACY_API_FINAL_SHUTDOWN_DECISION.md`
++- `docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_PLAN.md`
++- `docs/migration/LEGACY_API_DECOMMISSION_ROLLBACK.md`
++- `docs/migration/production_evidence/`
++- `docs/migration/IIS_PRODUCTION_EVIDENCE_DEPLOYMENT_GUIDE.md`
++- `docs/reviews/PHASE_11.1.5.5_GIT_FINALIZATION_REVIEW.md`
++
++## Implementation Tasks
++
++1. Create `scripts/phase11_1_6_pre_shutdown_validation.py`.
++2. Create `scripts/phase11_1_6_execute_legacy_api_decommission.py`.
++3. Create `scripts/phase11_1_6_rollback_legacy_api.py`.
++4. Create `docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md`.
++5. Create `docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md`.
++6. Create `tests/test_phase11_1_6_legacy_api_decommission.py`.
++7. Create review package:
++   - `docs/reviews/PHASE_11.1.6_REVIEW_SUMMARY.md`
++   - `docs/reviews/PHASE_11.1.6_CHANGESET.patch`
++
++## Testing Requirements
++
++Run:
++
++```powershell
++python scripts\phase11_1_6_pre_shutdown_validation.py
++cd django_backend
++python manage.py check
++cd ..
++pytest tests/test_phase11_1_6_legacy_api_decommission.py
++pytest
++powershell -ExecutionPolicy Bypass -File scripts\run_migration_test.ps1
++```
++
++Expected local result without production approval:
++
++```text
++BLOCKED_SAFELY
++```
++
++## Git Requirements
++
++Branch:
++
++```text
++migration/phase-11.1.6-legacy-api-decommission-execution
++```
++
++Commit:
++
++```text
++feat: prepare legacy api decommission execution
++```
++
++Tag:
++
++```text
++phase-11.1.6-ready-for-execution
++```
++
++## Final Status
++
++`WAITING_FOR_ARCHITECT REVIEW`
++
++Stop after Phase 11.1.6. Do not start Phase 11.2.
+diff --git a/docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md b/docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md
+new file mode 100644
+index 0000000..26d84f0
+--- /dev/null
++++ b/docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md
+@@ -0,0 +1,173 @@
++# Legacy API Decommission Execution Runbook
++
++## Purpose
++
++This runbook explains how to execute Phase 11.1.6 safely. The target is to stop
++serving legacy `/api/*` traffic only after production evidence and approvals are
++complete. Replacement Django APIs under `/api/v1/*` must remain active.
++
++## Safety Position
++
++Current repository evidence is not enough to shut down the legacy API in this
++local environment.
++
++Expected local validation result:
++
++```text
++BLOCKED_SAFELY
++```
++
++No script in this phase deletes legacy code, changes the database, edits IIS,
++changes proxy rules or modifies Django URL routing.
++
++## Pre-Check
++
++Run:
++
++```powershell
++python scripts\phase11_1_6_pre_shutdown_validation.py
++```
++
++Required result before production execution:
++
++```text
++READY_TO_EXECUTE
++```
++
++The validator checks:
++
++- Production evidence status is `COMPLETE_EVIDENCE_PACKAGE`.
++- Legacy `/api/*` traffic is zero.
++- Django `/api/v1/*` traffic is observed.
++- Unknown clients are zero.
++- Technical approval exists.
++- Business approval exists.
++- Rollback owner exists.
++- Maintenance window exists.
++- Monitoring is ready.
++
++If any check fails, stop:
++
++```text
++BLOCKED_SAFELY
++```
++
++## Approval Verification
++
++Approval records are read from:
++
++```text
++docs/migration/production_evidence/approvals/TECHNICAL_APPROVAL.md
++docs/migration/production_evidence/approvals/BUSINESS_APPROVAL.md
++docs/migration/production_evidence/approvals/ROLLBACK_OWNER.md
++docs/migration/production_evidence/approvals/MAINTENANCE_WINDOW.md
++docs/migration/production_evidence/monitoring/MONITORING_READINESS_CONFIRMATION.md
++```
++
++For local or CI validation, environment variables can override the documents:
++
++```powershell
++$env:PHASE11_1_6_TECHNICAL_APPROVAL="approved"
++$env:PHASE11_1_6_BUSINESS_APPROVAL="approved"
++$env:PHASE11_1_6_ROLLBACK_OWNER="ops-owner"
++$env:PHASE11_1_6_MAINTENANCE_WINDOW="approved"
++$env:PHASE11_1_6_MONITORING_READY="approved"
++```
++
++These overrides are for validation only. Production execution still requires
++real approval records.
++
++## Execution Steps
++
++1. Confirm the maintenance window is active.
++2. Confirm rollback owner and monitoring owner are available.
++3. Run:
++
++```powershell
++python scripts\phase11_1_6_execute_legacy_api_decommission.py
++```
++
++4. If the result is `BLOCKED_SAFELY`, do not change routing.
++5. If the result is `READY_TO_EXECUTE`, the production operator may apply the
++   approved route/proxy change for `/api/*`.
++6. Keep `/api/v1/*` active.
++7. Write the execution record into:
++
++```text
++docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json
++```
++
++## Validation Steps
++
++After production route changes are applied by the operator, verify:
++
++- `/api/*` is unavailable.
++- `/api/v1/*` is available.
++- Error rate is not increasing.
++- Contact and quotation workflows still work.
++- No important client is failing.
++
++Local route validation is represented by the helper function
++`verify_post_shutdown_state()` in:
++
++```text
++scripts/phase11_1_6_execute_legacy_api_decommission.py
++```
++
++## Monitoring
++
++Track during and after the maintenance window:
++
++- Legacy `/api/*` request attempts.
++- Replacement `/api/v1/*` traffic.
++- 4xx and 5xx error rate.
++- API latency.
++- Unknown clients.
++- Customer impact.
++
++Record findings in:
++
++```text
++docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md
++```
++
++## Rollback
++
++Run:
++
++```powershell
++python scripts\phase11_1_6_rollback_legacy_api.py
++```
++
++Rollback operator actions:
++
++1. Restore the previous router/proxy rule for `/api/*`.
++2. Keep `/api/v1/*` online.
++3. Run smoke tests.
++4. Monitor traffic and errors.
++5. Record the rollback report.
++
++Rollback report:
++
++```text
++docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json
++```
++
++## Stop Conditions
++
++Stop or roll back if:
++
++- A known client reports production API failure.
++- Unknown legacy clients appear.
++- Error rate increases.
++- `/api/v1/*` smoke tests fail.
++- Monitoring becomes unavailable.
++- Rollback owner cannot be reached.
++
++## Current Status
++
++```text
++WAITING_FOR_ARCHITECT REVIEW
++```
++
++Phase 11.2 has not been started.
+diff --git a/docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md b/docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md
+new file mode 100644
+index 0000000..c739561
+--- /dev/null
++++ b/docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md
+@@ -0,0 +1,80 @@
++# Legacy API Post Shutdown Monitoring
++
++## Purpose
++
++This document records post-shutdown monitoring for Legacy API decommission. It
++is prepared in Phase 11.1.6, but it should only be completed after a real
++approved production route change.
++
++## Current Execution Status
++
++```text
++NOT_EXECUTED
++```
++
++Reason:
++
++```text
++Production evidence and approvals must pass before shutdown.
++```
++
++## Traffic
++
++| Metric | Status | Notes |
++|---|---|---|
++| Legacy `/api/*` request attempts | PENDING | Requires production monitoring |
++| Django `/api/v1/*` requests | PENDING | Requires production monitoring |
++| Unknown clients | PENDING | Requires production monitoring |
++| Contact workflow requests | PENDING | Requires production monitoring |
++| Quote workflow requests | PENDING | Requires production monitoring |
++
++## Errors
++
++| Metric | Status | Notes |
++|---|---|---|
++| 4xx rate | PENDING | Compare with baseline |
++| 5xx rate | PENDING | Compare with baseline |
++| API exception count | PENDING | Watch during maintenance window |
++| Client failure reports | PENDING | Support team confirmation required |
++
++## Latency
++
++| Metric | Status | Notes |
++|---|---|---|
++| `/api/v1/*` p50 latency | PENDING | Requires production monitoring |
++| `/api/v1/*` p95 latency | PENDING | Requires production monitoring |
++| `/api/v1/*` p99 latency | PENDING | Requires production monitoring |
++
++## Customer Impact
++
++| Area | Status | Notes |
++|---|---|---|
++| Website visitors | PENDING | Monitor frontend API calls |
++| CMS users | PENDING | Confirm admin workflows |
++| Contact submissions | PENDING | Confirm stored successfully |
++| Quote requests | PENDING | Confirm stored successfully |
++| External integrations | PENDING | Confirm no legacy dependency |
++
++## Rollback Decision
++
++Current decision:
++
++```text
++ROLLBACK_NOT_REQUIRED_BECAUSE_SHUTDOWN_NOT_EXECUTED
++```
++
++Rollback must be executed if:
++
++- Important clients receive new 4xx or 5xx errors.
++- `/api/v1/*` fails smoke tests.
++- Unknown legacy clients appear after shutdown.
++- Error rate or latency increases beyond the approved threshold.
++
++## Final Monitoring Sign-Off
++
++| Role | Name | Status |
++|---|---|---|
++| Technical owner | PENDING | PENDING |
++| Business owner | PENDING | PENDING |
++| Monitoring owner | PENDING | PENDING |
++| Rollback owner | PENDING | PENDING |
+diff --git a/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json
+new file mode 100644
+index 0000000..0ed1103
+--- /dev/null
++++ b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json
+@@ -0,0 +1,82 @@
++{
++  "status": "BLOCKED_SAFELY",
++  "execution_status": "NOT_EXECUTED",
++  "reason": "Pre-shutdown validation did not pass.",
++  "validation": {
++    "status": "BLOCKED_SAFELY",
++    "execution_allowed": false,
++    "evidence_status": "INCOMPLETE_EVIDENCE_PACKAGE",
++    "approval_status": "PENDING_OR_INCOMPLETE",
++    "evidence": {
++      "ready_for_shutdown": false,
++      "legacy_requests": 0,
++      "django_requests": 0,
++      "unknown_clients": 0
++    },
++    "approval": {
++      "technical_approval": false,
++      "business_approval": false,
++      "rollback_owner": false,
++      "maintenance_window": false,
++      "monitoring_ready": false
++    },
++    "errors": [
++      "Django `/api/v1/...` traffic was not observed.",
++      "Production evidence is not COMPLETE_EVIDENCE_PACKAGE.",
++      "Production evidence is not marked ready_for_shutdown.",
++      "Replacement `/api/v1/*` traffic must be observed.",
++      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\TECHNICAL_APPROVAL.md.",
++      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\BUSINESS_APPROVAL.md.",
++      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\ROLLBACK_OWNER.md.",
++      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\approvals\\MAINTENANCE_WINDOW.md.",
++      "Approval document still contains pending markers: C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\production_evidence\\monitoring\\MONITORING_READINESS_CONFIRMATION.md."
++    ],
++    "safety": {
++      "legacy_code_deleted": false,
++      "database_deleted": false,
++      "database_archived": false,
++      "migrations_removed": false,
++      "approval_gate_bypassed": false
++    },
++    "elapsed_seconds": 0.0037
++  },
++  "execution_record": {
++    "phase": "11.1.6",
++    "created_at": "2026-07-26T01:58:59.473701+00:00",
++    "validation_status": "BLOCKED_SAFELY",
++    "api_state_before": {
++      "legacy_route": "/api/*",
++      "legacy_route_expected_available_before_shutdown": true,
++      "replacement_route": "/api/v1/*",
++      "replacement_route_expected_available": true,
++      "source_code_changed": false,
++      "database_changed": false,
++      "production_proxy_changed_by_script": false
++    },
++    "rollback_checkpoint": {
++      "created_at": "2026-07-26T01:58:59.473701+00:00",
++      "rollback_route": "/api/*",
++      "replacement_route": "/api/v1/*",
++      "restore_action": "restore_previous_router_or_proxy_rule",
++      "legacy_code_available": true,
++      "database_unchanged": true
++    },
++    "route_disable_plan": {
++      "action": "disable_legacy_api_route_in_production_router",
++      "legacy_route": "/api/*",
++      "keep_active": "/api/v1/*",
++      "operator_note": "Apply only during the approved maintenance window after READY_TO_EXECUTE.",
++      "script_applies_change": false
++    },
++    "legacy_routes_disabled_by_script": false,
++    "api_v1_kept_active": true,
++    "source_code_changed": false,
++    "database_changed": false
++  },
++  "post_shutdown_validation": null,
++  "elapsed_seconds": 0.0037,
++  "artifacts": {
++    "execution_record": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json",
++    "rollback_checkpoint": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json"
++  }
++}
+\ No newline at end of file
+diff --git a/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json
+new file mode 100644
+index 0000000..a804dbe
+--- /dev/null
++++ b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json
+@@ -0,0 +1,8 @@
++{
++  "created_at": "2026-07-26T01:58:59.473701+00:00",
++  "rollback_route": "/api/*",
++  "replacement_route": "/api/v1/*",
++  "restore_action": "restore_previous_router_or_proxy_rule",
++  "legacy_code_available": true,
++  "database_unchanged": true
++}
+\ No newline at end of file
+diff --git a/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json
+new file mode 100644
+index 0000000..6281857
+--- /dev/null
++++ b/docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json
+@@ -0,0 +1,30 @@
++{
++  "phase": "11.1.6",
++  "created_at": "2026-07-26T01:59:03.146642+00:00",
++  "status": "ROLLBACK_READY",
++  "rollback_available": true,
++  "legacy_route": "/api/*",
++  "replacement_route": "/api/v1/*",
++  "operator_actions": [
++    "Restore the previous router/proxy rule for /api/*.",
++    "Keep /api/v1/* online.",
++    "Run API smoke tests.",
++    "Watch error rate, latency and customer impact.",
++    "Record final rollback decision."
++  ],
++  "script_applies_change": false,
++  "legacy_code_deleted": false,
++  "database_changed": false,
++  "checkpoint": {
++    "created_at": "2026-07-26T01:58:59.473701+00:00",
++    "rollback_route": "/api/*",
++    "replacement_route": "/api/v1/*",
++    "restore_action": "restore_previous_router_or_proxy_rule",
++    "legacy_code_available": true,
++    "database_unchanged": true
++  },
++  "errors": [],
++  "artifacts": {
++    "rollback_report": "C:\\Users\\hoang\\Documents\\Codex\\mecprecision-vietnam\\docs\\migration\\phase11_1_6_execution\\LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json"
++  }
++}
+\ No newline at end of file
+diff --git a/docs/reviews/PHASE_11.1.6_REVIEW_SUMMARY.md b/docs/reviews/PHASE_11.1.6_REVIEW_SUMMARY.md
+new file mode 100644
+index 0000000..9b5e3a6
+--- /dev/null
++++ b/docs/reviews/PHASE_11.1.6_REVIEW_SUMMARY.md
+@@ -0,0 +1,166 @@
++# Phase 11.1.6 Review Summary
++
++## Phase
++
++Phase 11.1.6 - Legacy API Decommission Execution
++
++## Base Commit
++
++`704ef13720784f6b219a076f9f2dd53f47932c14`
++
++## Final Commit
++
++Recorded after final commit.
++
++## Objective
++
++Prepare a safe execution framework for Legacy API decommission.
++
++Target:
++
++- Disable legacy `/api/*` only after complete evidence and approval.
++- Keep replacement `/api/v1/*` active.
++- Preserve rollback capability.
++
++## Changed Files
++
++Added:
++
++- `docs/codex-prompts/PHASE_11.1.6_LEGACY_API_DECOMMISSION_EXECUTION.md`
++- `scripts/phase11_1_6_pre_shutdown_validation.py`
++- `scripts/phase11_1_6_execute_legacy_api_decommission.py`
++- `scripts/phase11_1_6_rollback_legacy_api.py`
++- `docs/migration/LEGACY_API_DECOMMISSION_EXECUTION_RUNBOOK.md`
++- `docs/migration/LEGACY_API_POST_SHUTDOWN_MONITORING.md`
++- `docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json`
++- `docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json`
++- `docs/migration/phase11_1_6_execution/LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json`
++- `tests/test_phase11_1_6_legacy_api_decommission.py`
++- `pytest.ini`
++- `docs/reviews/PHASE_11.1.6_REVIEW_SUMMARY.md`
++- `docs/reviews/PHASE_11.1.6_CHANGESET.patch`
++
++Modified:
++
++- None.
++
++Deleted:
++
++- None.
++
++## Validation Result
++
++Current local result:
++
++```text
++BLOCKED_SAFELY
++```
++
++Reason:
++
++- Evidence status is `INCOMPLETE_EVIDENCE_PACKAGE`.
++- Technical approval is pending.
++- Business approval is pending.
++- Rollback owner is pending.
++- Maintenance window is pending.
++- Monitoring readiness is pending.
++
++## Evidence Status
++
++```text
++INCOMPLETE_EVIDENCE_PACKAGE
++```
++
++Current production evidence report does not prove active `/api/v1/*` traffic.
++Legacy API must remain active until complete production evidence is supplied.
++
++## Approval Status
++
++```text
++PENDING_OR_INCOMPLETE
++```
++
++Approval documents still contain `PENDING` markers.
++
++## Execution Result
++
++```text
++NOT_EXECUTED
++```
++
++The execution framework created an audit record and rollback checkpoint, but it
++did not disable routes because the pre-shutdown gate returned
++`BLOCKED_SAFELY`.
++
++## Rollback Status
++
++```text
++ROLLBACK_READY
++```
++
++Rollback report was generated from the checkpoint. The rollback script does not
++modify production configuration; it records the operator actions required to
++restore `/api/*`.
++
++## Database Impact
++
++None.
++
++No schema, migration or data changes were made.
++
++## API Impact
++
++No live route changes were made.
++
++The framework documents the future action:
++
++- `/api/*`: disable only after approval.
++- `/api/v1/*`: keep active.
++
++## Security Impact
++
++The approval gate prevents shutdown without evidence, technical approval,
++business approval, rollback owner, maintenance window and monitoring readiness.
++
++## Testing
++
++Commands run:
++
++```powershell
++python scripts\phase11_1_6_pre_shutdown_validation.py
++cd django_backend
++python manage.py check
++cd ..
++pytest tests\test_phase11_1_6_legacy_api_decommission.py
++pytest
++powershell -ExecutionPolicy Bypass -File scripts\run_migration_test.ps1
++```
++
++Results:
++
++- `python scripts\phase11_1_6_pre_shutdown_validation.py`: `BLOCKED_SAFELY`
++- `python manage.py check`: PASS
++- `pytest tests\test_phase11_1_6_legacy_api_decommission.py`: 8 passed
++- `pytest`: 8 passed
++- `scripts\run_migration_test.ps1`: `MIGRATION TEST PASSED`
++- Django full regression inside migration script: 238 passed
++
++## Risks
++
++- Production shutdown is still blocked until complete evidence and approvals
++  are provided.
++- Real production route changes must be applied by an operator during the
++  approved maintenance window.
++- Post-shutdown monitoring remains pending because shutdown was not executed.
++
++## Next Step
++
++Architecture review for Phase 11.1.6.
++
++Do not start Phase 11.2 until this phase is approved.
++
++## Status
++
++```text
++WAITING_FOR_ARCHITECT REVIEW
++```
+diff --git a/pytest.ini b/pytest.ini
+new file mode 100644
+index 0000000..dd5c9b9
+--- /dev/null
++++ b/pytest.ini
+@@ -0,0 +1,6 @@
++[pytest]
++testpaths = tests
++pythonpath =
++    .
++    django_backend
++DJANGO_SETTINGS_MODULE = config.settings.test
+diff --git a/scripts/phase11_1_6_execute_legacy_api_decommission.py b/scripts/phase11_1_6_execute_legacy_api_decommission.py
+new file mode 100644
+index 0000000..2d31a4a
+--- /dev/null
++++ b/scripts/phase11_1_6_execute_legacy_api_decommission.py
+@@ -0,0 +1,170 @@
++"""Phase 11.1.6 Legacy API decommission execution framework.
++
++The framework creates auditable execution and rollback checkpoint records. It
++does not edit source code, Django URL config, IIS config, proxy rules or the
++database. In production, a human operator applies the approved route change
++after this script returns `READY_TO_EXECUTE`.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++
++try:
++    from scripts.phase11_1_6_pre_shutdown_validation import evaluate_pre_shutdown_validation
++except ModuleNotFoundError:
++    from phase11_1_6_pre_shutdown_validation import evaluate_pre_shutdown_validation
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "docs" / "migration" / "phase11_1_6_execution"
++
++
++def utc_now():
++    """Return an ISO timestamp for audit records."""
++    return datetime.now(timezone.utc).isoformat()
++
++
++def record_current_api_state():
++    """Record expected route state before production operators change routing."""
++    return {
++        "legacy_route": "/api/*",
++        "legacy_route_expected_available_before_shutdown": True,
++        "replacement_route": "/api/v1/*",
++        "replacement_route_expected_available": True,
++        "source_code_changed": False,
++        "database_changed": False,
++        "production_proxy_changed_by_script": False,
++    }
++
++
++def build_route_disable_plan():
++    """Build route-level instructions without applying them."""
++    return {
++        "action": "disable_legacy_api_route_in_production_router",
++        "legacy_route": "/api/*",
++        "keep_active": "/api/v1/*",
++        "operator_note": "Apply only during the approved maintenance window after READY_TO_EXECUTE.",
++        "script_applies_change": False,
++    }
++
++
++def verify_post_shutdown_state(route_state=None):
++    """Validate post-shutdown route state from a caller-provided snapshot."""
++    state = route_state or {}
++    legacy_unavailable = state.get("legacy_available") is False
++    replacement_available = state.get("replacement_available") is True
++    errors = []
++    if not legacy_unavailable:
++        errors.append("Legacy `/api/*` route is still available or was not verified.")
++    if not replacement_available:
++        errors.append("Replacement `/api/v1/*` route is unavailable or was not verified.")
++    return {
++        "legacy_route_unavailable": legacy_unavailable,
++        "replacement_api_available": replacement_available,
++        "valid": legacy_unavailable and replacement_available,
++        "errors": errors,
++    }
++
++
++def write_json(path, payload):
++    """Write an audit JSON file."""
++    output_path = Path(path)
++    output_path.parent.mkdir(parents=True, exist_ok=True)
++    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
++    return output_path
++
++
++def execute_legacy_api_decommission(
++    evidence_report_path=None,
++    env=None,
++    output_dir=None,
++    route_state=None,
++):
++    """Create execution records and return the decommission decision."""
++    started_at = time.perf_counter()
++    output_path = Path(output_dir or DEFAULT_OUTPUT_DIR)
++    validation = evaluate_pre_shutdown_validation(evidence_report_path=evidence_report_path, env=env)
++    api_state = record_current_api_state()
++    rollback_checkpoint = {
++        "created_at": utc_now(),
++        "rollback_route": "/api/*",
++        "replacement_route": "/api/v1/*",
++        "restore_action": "restore_previous_router_or_proxy_rule",
++        "legacy_code_available": True,
++        "database_unchanged": True,
++    }
++
++    execution_record = {
++        "phase": "11.1.6",
++        "created_at": utc_now(),
++        "validation_status": validation["status"],
++        "api_state_before": api_state,
++        "rollback_checkpoint": rollback_checkpoint,
++        "route_disable_plan": build_route_disable_plan(),
++        "legacy_routes_disabled_by_script": False,
++        "api_v1_kept_active": True,
++        "source_code_changed": False,
++        "database_changed": False,
++    }
++
++    if not validation["execution_allowed"]:
++        result = {
++            "status": "BLOCKED_SAFELY",
++            "execution_status": "NOT_EXECUTED",
++            "reason": "Pre-shutdown validation did not pass.",
++            "validation": validation,
++            "execution_record": execution_record,
++            "post_shutdown_validation": None,
++            "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++        }
++    else:
++        post_shutdown = verify_post_shutdown_state(route_state)
++        result = {
++            "status": "READY_TO_EXECUTE",
++            "execution_status": "AWAITING_APPROVED_PRODUCTION_ROUTE_CHANGE",
++            "reason": "Safety gate passed. Production operator must apply route change and provide post-shutdown state.",
++            "validation": validation,
++            "execution_record": execution_record,
++            "post_shutdown_validation": post_shutdown,
++            "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++        }
++
++    execution_file = write_json(output_path / "LEGACY_API_DECOMMISSION_EXECUTION_RECORD.json", result)
++    checkpoint_file = write_json(output_path / "LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json", rollback_checkpoint)
++    result["artifacts"] = {
++        "execution_record": str(execution_file),
++        "rollback_checkpoint": str(checkpoint_file),
++    }
++    write_json(execution_file, result)
++    return result
++
++
++def main():
++    """Command line entrypoint for the execution framework."""
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++
++    parser = argparse.ArgumentParser(description="Phase 11.1.6 legacy API decommission execution framework")
++    parser.add_argument("--evidence-report", default=None, help="Path to production evidence JSON report.")
++    parser.add_argument("--output-dir", default=None, help="Directory for execution audit records.")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when execution is blocked. Default blocked state exits 0.",
++    )
++    args = parser.parse_args()
++    result = execute_legacy_api_decommission(evidence_report_path=args.evidence_report, output_dir=args.output_dir)
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["status"] == "READY_TO_EXECUTE":
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/phase11_1_6_pre_shutdown_validation.py b/scripts/phase11_1_6_pre_shutdown_validation.py
+new file mode 100644
+index 0000000..1b1eb37
+--- /dev/null
++++ b/scripts/phase11_1_6_pre_shutdown_validation.py
+@@ -0,0 +1,216 @@
++"""Phase 11.1.6 pre-shutdown validation for Legacy API decommission.
++
++This script is the final safety gate before any `/api/*` shutdown work. It only
++reads evidence and approval records. It does not change routes, proxy config,
++legacy code, database files or production settings.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import sys
++import time
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_EVIDENCE_REPORT = (
++    PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "reports"
++    / "REAL_PRODUCTION_TRAFFIC_REPORT.json"
++)
++APPROVAL_FILES = {
++    "technical_approval": PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "approvals"
++    / "TECHNICAL_APPROVAL.md",
++    "business_approval": PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "approvals"
++    / "BUSINESS_APPROVAL.md",
++    "rollback_owner": PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "approvals"
++    / "ROLLBACK_OWNER.md",
++    "maintenance_window": PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "approvals"
++    / "MAINTENANCE_WINDOW.md",
++    "monitoring_ready": PROJECT_ROOT
++    / "docs"
++    / "migration"
++    / "production_evidence"
++    / "monitoring"
++    / "MONITORING_READINESS_CONFIRMATION.md",
++}
++
++TRUTHY_VALUES = {"1", "true", "yes", "approved", "complete", "completed", "ready", "verified"}
++PENDING_VALUES = {"pending", "not_provided", "missing", "tbd", ""}
++
++
++def truthy(value):
++    """Return True only for explicit positive values."""
++    return str(value or "").strip().lower() in TRUTHY_VALUES
++
++
++def has_pending_marker(text):
++    """Detect whether an approval document still contains placeholder values."""
++    lowered = str(text or "").lower()
++    return any(marker in lowered for marker in PENDING_VALUES if marker)
++
++
++def document_looks_approved(path):
++    """Validate a human approval document without trusting blank templates."""
++    document_path = Path(path)
++    if not document_path.exists():
++        return False, f"Approval document does not exist: {document_path}."
++
++    content = document_path.read_text(encoding="utf-8", errors="ignore")
++    if has_pending_marker(content):
++        return False, f"Approval document still contains pending markers: {document_path}."
++    if not any(token in content.lower() for token in TRUTHY_VALUES):
++        return False, f"Approval document has no explicit approval marker: {document_path}."
++    return True, None
++
++
++def load_evidence_report(path=None):
++    """Load production evidence JSON report."""
++    report_path = Path(path or DEFAULT_EVIDENCE_REPORT)
++    if not report_path.exists():
++        return {
++            "status": "INCOMPLETE_EVIDENCE_PACKAGE",
++            "ready_for_shutdown": False,
++            "errors": [f"Evidence report does not exist: {report_path}."],
++        }
++
++    try:
++        return json.loads(report_path.read_text(encoding="utf-8"))
++    except json.JSONDecodeError as exc:
++        return {
++            "status": "INCOMPLETE_EVIDENCE_PACKAGE",
++            "ready_for_shutdown": False,
++            "errors": [f"Evidence report is invalid JSON: {exc}."],
++        }
++
++
++def validate_evidence(evidence):
++    """Validate complete production evidence before shutdown execution."""
++    errors = []
++    if evidence.get("status") != "COMPLETE_EVIDENCE_PACKAGE":
++        errors.append("Production evidence is not COMPLETE_EVIDENCE_PACKAGE.")
++    if not evidence.get("ready_for_shutdown"):
++        errors.append("Production evidence is not marked ready_for_shutdown.")
++    if evidence.get("legacy_requests") != 0:
++        errors.append("Legacy `/api/*` traffic must be zero.")
++    if evidence.get("django_requests", 0) <= 0:
++        errors.append("Replacement `/api/v1/*` traffic must be observed.")
++    if evidence.get("unknown_clients") != 0:
++        errors.append("Unknown clients must be zero.")
++    if evidence.get("routes_changed") or evidence.get("proxy_modified"):
++        errors.append("Evidence package indicates routes/proxy were already changed.")
++    return errors
++
++
++def read_approval_context(env=None, approval_files=None):
++    """Read approvals from environment overrides or approval documents."""
++    env = env or os.environ
++    approval_files = approval_files or APPROVAL_FILES
++    result = {}
++    errors = []
++
++    env_map = {
++        "technical_approval": "PHASE11_1_6_TECHNICAL_APPROVAL",
++        "business_approval": "PHASE11_1_6_BUSINESS_APPROVAL",
++        "rollback_owner": "PHASE11_1_6_ROLLBACK_OWNER",
++        "maintenance_window": "PHASE11_1_6_MAINTENANCE_WINDOW",
++        "monitoring_ready": "PHASE11_1_6_MONITORING_READY",
++    }
++
++    for key, env_name in env_map.items():
++        env_value = str(env.get(env_name) or "").strip()
++        if env_value:
++            approved = truthy(env_value) or (key == "rollback_owner" and env_value.lower() not in PENDING_VALUES)
++            result[key] = approved
++            if not approved:
++                errors.append(f"{key} is not approved by {env_name}.")
++            continue
++
++        approved, error = document_looks_approved(approval_files[key])
++        result[key] = approved
++        if error:
++            errors.append(error)
++
++    return result, errors
++
++
++def evaluate_pre_shutdown_validation(evidence_report_path=None, env=None, evidence=None, approval_files=None):
++    """Return `READY_TO_EXECUTE` or `BLOCKED_SAFELY`."""
++    started_at = time.perf_counter()
++    evidence_result = evidence or load_evidence_report(evidence_report_path)
++    approval_result, approval_errors = read_approval_context(env=env, approval_files=approval_files)
++
++    errors = []
++    errors.extend(evidence_result.get("errors", []))
++    errors.extend(validate_evidence(evidence_result))
++    errors.extend(approval_errors)
++
++    ready = not errors
++    return {
++        "status": "READY_TO_EXECUTE" if ready else "BLOCKED_SAFELY",
++        "execution_allowed": ready,
++        "evidence_status": evidence_result.get("status", "UNKNOWN"),
++        "approval_status": "APPROVED" if all(approval_result.values()) else "PENDING_OR_INCOMPLETE",
++        "evidence": {
++            "ready_for_shutdown": bool(evidence_result.get("ready_for_shutdown")),
++            "legacy_requests": evidence_result.get("legacy_requests"),
++            "django_requests": evidence_result.get("django_requests"),
++            "unknown_clients": evidence_result.get("unknown_clients"),
++        },
++        "approval": approval_result,
++        "errors": errors,
++        "safety": {
++            "legacy_code_deleted": False,
++            "database_deleted": False,
++            "database_archived": False,
++            "migrations_removed": False,
++            "approval_gate_bypassed": False,
++        },
++        "elapsed_seconds": round(time.perf_counter() - started_at, 4),
++    }
++
++
++def main():
++    """Command line entrypoint for the Phase 11.1.6 safety gate."""
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++
++    parser = argparse.ArgumentParser(description="Phase 11.1.6 pre-shutdown validation")
++    parser.add_argument("--evidence-report", default=None, help="Path to production evidence JSON report.")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when shutdown is blocked. Default blocked state exits 0.",
++    )
++    args = parser.parse_args()
++    result = evaluate_pre_shutdown_validation(evidence_report_path=args.evidence_report)
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["execution_allowed"]:
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/phase11_1_6_rollback_legacy_api.py b/scripts/phase11_1_6_rollback_legacy_api.py
+new file mode 100644
+index 0000000..660477a
+--- /dev/null
++++ b/scripts/phase11_1_6_rollback_legacy_api.py
+@@ -0,0 +1,96 @@
++"""Phase 11.1.6 rollback framework for Legacy API decommission.
++
++The rollback script creates a rollback report and tells the operator what must
++be restored. It does not edit IIS, proxy rules, Django routes, legacy files or
++database state.
++"""
++
++from __future__ import annotations
++
++import argparse
++import json
++import sys
++from datetime import datetime, timezone
++from pathlib import Path
++
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_EXECUTION_DIR = PROJECT_ROOT / "docs" / "migration" / "phase11_1_6_execution"
++DEFAULT_REPORT_PATH = DEFAULT_EXECUTION_DIR / "LEGACY_API_DECOMMISSION_ROLLBACK_REPORT.json"
++
++
++def utc_now():
++    """Return an ISO timestamp for audit records."""
++    return datetime.now(timezone.utc).isoformat()
++
++
++def load_checkpoint(path=None):
++    """Load the rollback checkpoint created by the execution framework."""
++    checkpoint_path = Path(path or DEFAULT_EXECUTION_DIR / "LEGACY_API_DECOMMISSION_ROLLBACK_CHECKPOINT.json")
++    if not checkpoint_path.exists():
++        return None, f"Rollback checkpoint does not exist: {checkpoint_path}."
++    try:
++        return json.loads(checkpoint_path.read_text(encoding="utf-8")), None
++    except json.JSONDecodeError as exc:
++        return None, f"Rollback checkpoint is invalid JSON: {exc}."
++
++
++def create_rollback_report(checkpoint_path=None, report_path=None):
++    """Create a rollback report from the latest checkpoint."""
++    checkpoint, error = load_checkpoint(checkpoint_path)
++    errors = []
++    if error:
++        errors.append(error)
++
++    report = {
++        "phase": "11.1.6",
++        "created_at": utc_now(),
++        "status": "ROLLBACK_READY" if not errors else "ROLLBACK_BLOCKED",
++        "rollback_available": not errors,
++        "legacy_route": "/api/*",
++        "replacement_route": "/api/v1/*",
++        "operator_actions": [
++            "Restore the previous router/proxy rule for /api/*.",
++            "Keep /api/v1/* online.",
++            "Run API smoke tests.",
++            "Watch error rate, latency and customer impact.",
++            "Record final rollback decision.",
++        ],
++        "script_applies_change": False,
++        "legacy_code_deleted": False,
++        "database_changed": False,
++        "checkpoint": checkpoint,
++        "errors": errors,
++    }
++
++    output_path = Path(report_path or DEFAULT_REPORT_PATH)
++    output_path.parent.mkdir(parents=True, exist_ok=True)
++    output_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
++    report["artifacts"] = {"rollback_report": str(output_path)}
++    output_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
++    return report
++
++
++def main():
++    """Command line entrypoint for rollback report creation."""
++    if hasattr(sys.stdout, "reconfigure"):
++        sys.stdout.reconfigure(encoding="utf-8")
++
++    parser = argparse.ArgumentParser(description="Phase 11.1.6 rollback framework")
++    parser.add_argument("--checkpoint", default=None, help="Rollback checkpoint JSON path.")
++    parser.add_argument("--report", default=None, help="Rollback report output path.")
++    parser.add_argument(
++        "--strict",
++        action="store_true",
++        help="Return non-zero when rollback checkpoint is missing. Default exits 0 for local review.",
++    )
++    args = parser.parse_args()
++    result = create_rollback_report(checkpoint_path=args.checkpoint, report_path=args.report)
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    if result["rollback_available"]:
++        return 0
++    return 2 if args.strict else 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/test_phase11_1_6_legacy_api_decommission.py b/tests/test_phase11_1_6_legacy_api_decommission.py
+new file mode 100644
+index 0000000..cc40441
+--- /dev/null
++++ b/tests/test_phase11_1_6_legacy_api_decommission.py
+@@ -0,0 +1,125 @@
++import json
++import sys
++from pathlib import Path
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++if str(PROJECT_ROOT) not in sys.path:
++    sys.path.insert(0, str(PROJECT_ROOT))
++
++from scripts.phase11_1_6_execute_legacy_api_decommission import (
++    execute_legacy_api_decommission,
++    verify_post_shutdown_state,
++)
++from scripts.phase11_1_6_pre_shutdown_validation import evaluate_pre_shutdown_validation
++from scripts.phase11_1_6_rollback_legacy_api import create_rollback_report
++
++
++COMPLETE_EVIDENCE = {
++    "status": "COMPLETE_EVIDENCE_PACKAGE",
++    "ready_for_shutdown": True,
++    "legacy_requests": 0,
++    "django_requests": 12,
++    "unknown_clients": 0,
++    "routes_changed": False,
++    "proxy_modified": False,
++    "errors": [],
++}
++
++
++APPROVED_ENV = {
++    "PHASE11_1_6_TECHNICAL_APPROVAL": "approved",
++    "PHASE11_1_6_BUSINESS_APPROVAL": "approved",
++    "PHASE11_1_6_ROLLBACK_OWNER": "ops-owner",
++    "PHASE11_1_6_MAINTENANCE_WINDOW": "approved",
++    "PHASE11_1_6_MONITORING_READY": "approved",
++}
++
++
++def test_missing_evidence_is_blocked():
++    result = evaluate_pre_shutdown_validation(evidence={"status": "INCOMPLETE_EVIDENCE_PACKAGE"}, env=APPROVED_ENV)
++
++    assert result["status"] == "BLOCKED_SAFELY"
++    assert result["execution_allowed"] is False
++    assert "Production evidence is not COMPLETE_EVIDENCE_PACKAGE." in result["errors"]
++
++
++def test_missing_approval_is_blocked():
++    result = evaluate_pre_shutdown_validation(evidence=COMPLETE_EVIDENCE, env={})
++
++    assert result["status"] == "BLOCKED_SAFELY"
++    assert result["approval_status"] == "PENDING_OR_INCOMPLETE"
++    assert any("Approval document" in error for error in result["errors"])
++
++
++def test_complete_evidence_and_approval_is_ready_to_execute():
++    result = evaluate_pre_shutdown_validation(evidence=COMPLETE_EVIDENCE, env=APPROVED_ENV)
++
++    assert result["status"] == "READY_TO_EXECUTE"
++    assert result["execution_allowed"] is True
++    assert result["approval_status"] == "APPROVED"
++
++
++def test_legacy_route_shutdown_validation():
++    result = verify_post_shutdown_state({"legacy_available": False, "replacement_available": True})
++
++    assert result["valid"] is True
++    assert result["legacy_route_unavailable"] is True
++    assert result["replacement_api_available"] is True
++
++
++def test_django_route_must_remain_active():
++    result = verify_post_shutdown_state({"legacy_available": False, "replacement_available": False})
++
++    assert result["valid"] is False
++    assert "Replacement `/api/v1/*` route is unavailable or was not verified." in result["errors"]
++
++
++def test_execution_is_blocked_without_approval(tmp_path):
++    result = execute_legacy_api_decommission(
++        env={},
++        output_dir=tmp_path,
++        route_state={"legacy_available": False, "replacement_available": True},
++    )
++
++    assert result["status"] == "BLOCKED_SAFELY"
++    assert result["execution_status"] == "NOT_EXECUTED"
++    assert result["execution_record"]["legacy_routes_disabled_by_script"] is False
++    assert Path(result["artifacts"]["execution_record"]).exists()
++
++
++def test_execution_framework_keeps_django_route_active_when_ready(tmp_path):
++    evidence_path = tmp_path / "evidence.json"
++    evidence_path.write_text(json.dumps(COMPLETE_EVIDENCE), encoding="utf-8")
++
++    result = execute_legacy_api_decommission(
++        evidence_report_path=evidence_path,
++        env=APPROVED_ENV,
++        output_dir=tmp_path,
++        route_state={"legacy_available": False, "replacement_available": True},
++    )
++
++    assert result["status"] == "READY_TO_EXECUTE"
++    assert result["execution_status"] == "AWAITING_APPROVED_PRODUCTION_ROUTE_CHANGE"
++    assert result["post_shutdown_validation"]["replacement_api_available"] is True
++    assert result["execution_record"]["api_v1_kept_active"] is True
++
++
++def test_rollback_report_is_available_after_checkpoint(tmp_path):
++    checkpoint = tmp_path / "checkpoint.json"
++    checkpoint.write_text(
++        json.dumps(
++            {
++                "rollback_route": "/api/*",
++                "replacement_route": "/api/v1/*",
++                "restore_action": "restore_previous_router_or_proxy_rule",
++            }
++        ),
++        encoding="utf-8",
++    )
++
++    report_path = tmp_path / "rollback_report.json"
++    result = create_rollback_report(checkpoint_path=checkpoint, report_path=report_path)
++
++    assert result["status"] == "ROLLBACK_READY"
++    assert result["rollback_available"] is True
++    assert report_path.exists()

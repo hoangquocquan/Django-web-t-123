@@ -1,0 +1,7 @@
+{
+  "phase": "PROD-03",
+  "depends_on": ["PROD-00", "PROD-01", "PROD-02"],
+  "dependencies_satisfied": true,
+  "unlocks_on_pass": ["PROD-04"],
+  "execution": "serial because auth, settings, URL registry, and shared upload services overlap"
+}

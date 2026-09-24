@@ -1,0 +1,4 @@
+COMMAND=python -m pytest -q
+STATUS=PASS
+RESULT=512 passed in 61.27s
+FAILED=0

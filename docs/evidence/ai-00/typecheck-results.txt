@@ -1,0 +1,4 @@
+STATUS = NOT_RUN
+REASON = No repository-enforced mypy or pyright configuration was identified during baseline.
+RETRY_COMMAND = mypy .
+IMPACT = Static type coverage is not established.

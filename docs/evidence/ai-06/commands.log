@@ -1,0 +1,50 @@
+AI-06 command execution record - 2026-08-02
+
+BASELINE AND INVENTORY
+PASS | git rev-parse --show-toplevel
+PASS | git branch --show-current
+PASS | git rev-parse HEAD
+PASS | git status --short
+PASS | git diff --stat
+PASS | git diff --cached --stat
+PASS | git log -20 --oneline --decorate
+PASS | git remote -v
+PASS | source, migration, test, review, evidence, and commit inventory for AI-01..AI-05
+
+REQUIRED VALIDATION
+PASS | python -m compileall django_backend ai-factory ai-review scripts
+PASS | python django_backend/manage.py check
+PASS | python django_backend/manage.py makemigrations --check --dry-run
+PASS | pytest tests/test_ai_hardening_vector_search.py -q (12 passed)
+PASS | pytest tests/test_ai_governance_v2.py -q (13 passed)
+PASS | pytest tests/test_ai_sales_grounded_synthesis.py -q (38 passed)
+PASS | pytest tests/test_ai_agent_safe_controller.py -q (15 passed)
+PASS | pytest tests/test_ai_mandatory_review_gate.py -q (85 passed)
+PASS | pytest (455 passed)
+
+STATIC AND SECURITY
+PASS | ruff check django_backend/apps/ai/services/ollama_client.py tests/test_ai_ollama.py
+PASS | ruff format --check django_backend/apps/ai/services/ollama_client.py tests/test_ai_ollama.py
+PASS | mypy --ignore-missing-imports django_backend/apps/ai/services/ollama_client.py
+PASS | bandit django_backend/apps/ai/services/ollama_client.py -q
+PASS_WITH_LOW_FINDINGS | cumulative Bandit (0 High, 0 Medium, 19 Low)
+BLOCKED_BY_ENVIRONMENT | pip-audit (outbound PyPI access denied)
+PASS | docker compose -f docker-compose.yml config
+
+RUNTIME AND CONTRACT VALIDATION
+PASS | local Ollama health and model checks
+PASS | real Ollama embedding, bilingual RAG retrieval, citations, and no-context check
+PASS | real Ollama Sales AI structured draft check
+PASS | AI governance, safe agent, AI Factory, and n8n controller tests
+N8N_RUNTIME_NOT_VERIFIED | no configured or reachable live n8n server
+
+MANDATORY REVIEW
+PASS | evidence collector for phase AI-06
+PASS | mandatory local Ollama reviewer using llama3
+RESULT | decision=PASS schema_valid=true fallback_used=false Critical=0 High=0 gate_state=WAITING_HUMAN_APPROVAL
+
+GIT HANDOVER
+PASS | git diff --cached --check
+PASS | prohibited runtime file and secret-value scan
+PASS | git commit -m "docs(ai): hoàn tất tích hợp và bàn giao AI hardening v2"
+RESULT | documentation commit=919f16854f5cee5fb2da42d770bec7558ad6b715

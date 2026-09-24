@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "available": true,
+  "version": "PostgreSQL 16.14",
+  "database": "mecprecision",
+  "health": "healthy",
+  "migrations_applied": true,
+  "host_port_exposed": false
+}

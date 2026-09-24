@@ -1,0 +1,4 @@
+STATUS = PASS_WITH_LOW_FINDINGS
+Bandit: 0 Critical, 0 High, 0 Medium, 19 Low.
+Low findings are subprocess-use warnings in local evidence/test orchestration and false-positive constant names.
+Staged scan: no secret pattern, runtime database, backup, cache or ZIP.
