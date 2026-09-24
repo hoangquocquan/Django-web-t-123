@@ -104,9 +104,18 @@ def classify_requirement(requirement):
 def collect_dependencies(requirement_files=None):
     """Collect dependencies from requirement files."""
     dependencies = []
-    for path in requirement_files or DEFAULT_REQUIREMENT_FILES:
-        requirement_path = Path(path)
+    pending = [Path(path) for path in (requirement_files or DEFAULT_REQUIREMENT_FILES)]
+    visited = set()
+    while pending:
+        requirement_path = pending.pop(0).resolve()
+        if requirement_path in visited:
+            continue
+        visited.add(requirement_path)
         for requirement in read_requirement_lines(requirement_path):
+            if requirement.startswith(("-r ", "--requirement ")):
+                referenced = requirement.split(maxsplit=1)[1]
+                pending.append((requirement_path.parent / referenced).resolve())
+                continue
             item = classify_requirement(requirement)
             item["source_file"] = str(requirement_path)
             dependencies.append(item)

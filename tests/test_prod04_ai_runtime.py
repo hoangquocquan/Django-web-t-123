@@ -46,6 +46,7 @@ class FakeHealth:
 class FakeEmbedding:
     provider_name = "ollama-local"
     model_name = "nomic-embed-text"
+    dimensions = 1
     embedding_version = "v1"
 
     def health_check(self):
