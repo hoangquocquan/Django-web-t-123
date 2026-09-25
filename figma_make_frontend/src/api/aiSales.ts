@@ -1,4 +1,5 @@
 import { getInternalAi, postInternalAi } from "./aiDemo.ts"
+import { createLatestRequestGuard } from "./rfq.ts"
 
 export type AiSalesStatus =
   | "SUPPORTED"
@@ -70,6 +71,13 @@ export type AiSalesRfqOption = {
 export type AiSalesRfqList = {
   count: number
   results: AiSalesRfqOption[]
+}
+
+export function createAiSalesRequestGuards() {
+  return {
+    selector: createLatestRequestGuard(),
+    analysis: createLatestRequestGuard(),
+  }
 }
 
 export function listAiSalesRfqs(token: string, signal?: AbortSignal) {

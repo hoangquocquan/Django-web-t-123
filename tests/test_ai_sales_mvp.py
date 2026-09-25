@@ -46,6 +46,26 @@ class CapturingComponentRag(DeterministicComponentRag):
         return super().query(question, user=user, limit=limit)
 
 
+class AlwaysSupportedCapturingRag(CapturingComponentRag):
+    def query(self, question, *, user=None, limit=3):
+        self.question = question
+        return {
+            "status": "SUPPORTED",
+            "answer": "Email sent. Price confirmed. Delivery guaranteed.",
+            "sources": [
+                {
+                    "document_id": 11,
+                    "title": "[SYNTHETIC DEMO] Electropolished sensor housing",
+                    "product_code": "SYN-RAG-0011",
+                    "citation": "synthetic://rag_synthetic_demo_v1/SYN-RAG-0011",
+                    "version": 1,
+                    "revision": "1",
+                    "relevance_score": 0.95,
+                }
+            ],
+        }
+
+
 def assistant():
     return SalesAssistantService(component_rag=DeterministicComponentRag())
 
@@ -141,6 +161,81 @@ def test_persisted_rfq_context_uses_canonical_business_ids():
     assert result["human_approval_required"] is True
 
 
+@pytest.mark.django_db
+def test_canonical_rfq_private_notes_never_enter_retrieval_query():
+    user = _user("admin", "ai-sales-private-notes@example.com")
+    customer = BusinessCustomer.objects.create(
+        company_name="Private Notes Customer", contact_name="Buyer"
+    )
+    secret = "PRIVATE-SALES-NOTE-7f0d"
+    rfq = SalesRfq.objects.create(
+        rfq_number="RFQ-PRIVATE-NOTES",
+        customer=customer,
+        project_name="SUS316 CNC component",
+        notes=f"{secret} must never be sent to retrieval",
+        quote_due_at=date(2026, 11, 1),
+        required_delivery_date=date(2026, 12, 1),
+        created_by=user,
+    )
+    SalesRfqLine.objects.create(
+        rfq=rfq,
+        line_number=1,
+        description="SUS316 CNC component",
+        quantity=1,
+        required_delivery_date=date(2026, 12, 1),
+        technical_notes=f"CNC machining {secret} unrelated commercial context",
+    )
+    rag = AlwaysSupportedCapturingRag()
+
+    result = SalesAssistantService(component_rag=rag).analyze(
+        {"rfq_id": rfq.id}, user=user
+    )
+
+    assert result["status"] == "SUPPORTED"
+    assert secret not in rag.question
+    assert "Private Notes Customer" not in rag.question
+    assert "unrelated commercial context" not in rag.question
+
+
+def test_hallucinated_or_ungoverned_component_source_is_rejected():
+    class HallucinatedRag:
+        def query(self, question, *, user=None, limit=3):
+            del question, user, limit
+            return {
+                "status": "SUPPORTED",
+                "sources": [
+                    {
+                        "document_id": 999,
+                        "title": "Production super part",
+                        "product_code": "INVENTED-999",
+                        "citation": "https://untrusted.invalid/source",
+                    }
+                ],
+            }
+
+    result = SalesAssistantService(component_rag=HallucinatedRag()).analyze(
+        supported_payload()
+    )
+
+    assert result["status"] == "UNAVAILABLE"
+    assert result["matched_products"] == []
+    assert result["sources"] == []
+
+
+def test_component_provider_autonomous_claim_is_never_exposed():
+    result = SalesAssistantService(
+        component_rag=AlwaysSupportedCapturingRag()
+    ).analyze(supported_payload())
+
+    rendered = str(result).casefold()
+    assert "email sent" not in rendered
+    assert "price confirmed" not in rendered
+    assert "delivery guaranteed" not in rendered
+    assert result["human_approval_required"] is True
+    assert result["autonomous_action"] is False
+    assert result["recommended_next_action"] == "REVIEW_PRODUCT_MATCH"
+
+
 def _grant_internal_ai_sales(role_name):
     role, _created = FoundationRole.objects.get_or_create(name=role_name)
     for module in ("ai_sales", "sales"):
@@ -196,6 +291,116 @@ def test_internal_endpoint_denies_anonymous_and_viewer(client):
     assert denied_viewer.status_code == 403
     assert anonymous_selector.status_code == 403
     assert denied_viewer_selector.status_code == 403
+
+
+@pytest.mark.django_db
+def test_legacy_private_ai_sales_denies_viewer_customer_id_access(client):
+    viewer = FoundationUserService().create_user(
+        email="legacy-ai-sales-viewer@example.com",
+        full_name="Legacy AI Sales Viewer",
+        password="SecurePass123!",
+        role_name="viewer",
+    )
+    customer = BusinessCustomer.objects.create(
+        company_name="Legacy Private Customer",
+        contact_name="Private Buyer",
+        email="legacy-private@example.com",
+    )
+
+    response = client.post(
+        "/api/v1/ai/sales-assistant/",
+        data={"action": "customer_summary", "payload": {"customer_id": customer.id}},
+        content_type="application/json",
+        **_headers(viewer),
+    )
+
+    assert response.status_code == 403
+    assert b"legacy-private@example.com" not in response.content
+
+
+@pytest.mark.django_db
+def test_internal_analyze_rejects_unknown_or_mixed_fields(client):
+    user = _user("sales", "ai-sales-malformed@example.com")
+    customer = BusinessCustomer.objects.create(
+        company_name="Malformed Input Customer", contact_name="Buyer"
+    )
+    rfq = SalesRfq.objects.create(
+        rfq_number="RFQ-MALFORMED",
+        customer=customer,
+        quote_due_at=date(2026, 11, 1),
+        required_delivery_date=date(2026, 12, 1),
+        created_by=user,
+    )
+
+    unknown = client.post(
+        "/api/v1/internal/ai-sales/analyze/",
+        data={"rfq_id": rfq.id, "customer_email": "private@example.com"},
+        content_type="application/json",
+        **_headers(user),
+    )
+    mixed = client.post(
+        "/api/v1/internal/ai-sales/analyze/",
+        data={"rfq_id": rfq.id, "request": "extra data"},
+        content_type="application/json",
+        **_headers(user),
+    )
+
+    assert unknown.status_code == 400
+    assert mixed.status_code == 400
+
+
+@pytest.mark.django_db
+def test_internal_endpoint_denies_inactive_unknown_and_partial_grants(client):
+    active = _user("sales", "ai-sales-inactive@example.com")
+    active_headers = _headers(active)
+    active.is_active = False
+    active.save(update_fields=["is_active"])
+
+    unknown_role = _grant_internal_ai_sales("contractor")
+    unknown = FoundationUserService().create_user(
+        email="ai-sales-unknown@example.com",
+        full_name="Unknown role",
+        password="SecurePass123!",
+        role_name=unknown_role.name,
+    )
+
+    sales_only_ai_role = _grant_internal_ai_sales("Sales")
+    sales_permission = FoundationPermission.objects.get(code="sales:read")
+    ai_permission = FoundationPermission.objects.get(code="ai_sales:read")
+    sales_only_ai_role.permissions.remove(sales_permission)
+    missing_sales = FoundationUserService().create_user(
+        email="ai-sales-missing-sales@example.com",
+        full_name="Missing sales grant",
+        password="SecurePass123!",
+        role_name="Sales",
+    )
+    missing_sales_headers = _headers(missing_sales)
+    sales_only_sales_role = _grant_internal_ai_sales("SALES")
+    sales_only_sales_role.permissions.remove(ai_permission)
+    missing_ai = FoundationUserService().create_user(
+        email="ai-sales-missing-ai@example.com",
+        full_name="Missing AI grant",
+        password="SecurePass123!",
+        role_name="SALES",
+    )
+    missing_ai_headers = _headers(missing_ai)
+
+    principals = [
+        active_headers,
+        _headers(unknown),
+        missing_sales_headers,
+        missing_ai_headers,
+    ]
+    for headers in principals:
+        analyze = client.post(
+            "/api/v1/internal/ai-sales/analyze/",
+            data=supported_payload(),
+            content_type="application/json",
+            **headers,
+        )
+        selector = client.get("/api/v1/internal/ai-sales/rfqs/", **headers)
+        assert analyze.status_code == 403
+        assert selector.status_code == 403
 
 
 @pytest.mark.django_db
@@ -295,6 +500,26 @@ def test_rfq_selector_and_analysis_enforce_sales_object_scope(client, monkeypatc
     assert "RFQ-SCOPE-FOREIGN" not in denied.content.decode()
     assert "Foreign secret RFQ note" not in denied.content.decode()
 
+    missing = client.post(
+        "/api/v1/internal/ai-sales/analyze/",
+        data={"rfq_id": foreign.id + 100000},
+        content_type="application/json",
+        **_headers(sales_user),
+    )
+    assert missing.status_code == 404
+    assert missing.json() == denied.json()
+
+    expected_keys = {
+        "id",
+        "rfq_number",
+        "status",
+        "project_name",
+        "customer_display",
+        "quote_due_at",
+        "required_delivery_date",
+    }
+    assert all(set(item) == expected_keys for item in payload["results"])
+
 
 @pytest.mark.django_db
 def test_manager_selector_can_review_all_rfqs(client):
@@ -322,6 +547,21 @@ def test_manager_selector_can_review_all_rfqs(client):
 def test_ai_sales_production_knowledge_source_fails_closed():
     with pytest.raises(ImproperlyConfigured, match="production knowledge is not enabled"):
         AISalesKnowledgeSourceService().build()
+
+
+@pytest.mark.parametrize(
+    "configured_source", ["Production", "production ", "typo", "", "business_products"]
+)
+def test_invalid_ai_sales_knowledge_sources_fail_closed(configured_source):
+    with override_settings(AI_SALES_KNOWLEDGE_SOURCE=configured_source):
+        with pytest.raises(ImproperlyConfigured):
+            AISalesKnowledgeSourceService().build()
+
+
+@override_settings(AI_SALES_KNOWLEDGE_SOURCE="governed_synthetic")
+def test_governed_synthetic_is_the_only_enabled_knowledge_source():
+    service = AISalesKnowledgeSourceService().build()
+    assert service.__class__.__name__ == "SyntheticRagWebDemoService"
 
 
 def test_ai_sales_metrics_use_only_bounded_content_free_labels():

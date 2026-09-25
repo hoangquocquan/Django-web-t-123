@@ -10,6 +10,7 @@ from apps.ai_agent.services.sales_synthesis import GroundedSalesSynthesisService
 from apps.business_core.models import BusinessCustomer
 from apps.crm.services.crm_platform_service import CrmPlatformService
 from apps.knowledge.services.search_service import KnowledgeSearchService
+from apps.knowledge.services.synthetic_rag_demo import DATASET_ID, PART_CODE_RE
 from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
 from apps.sales.services.rfq_access_service import RfqAccessService
 
@@ -269,9 +270,17 @@ class SalesAssistantService:
                     ]
                     if value
                 ),
+                "retrieval_request": " ".join(
+                    value
+                    for value in [
+                        rfq.project_name,
+                        *[line.description for line in lines],
+                    ]
+                    if value
+                ),
                 "material": material,
                 "quantity": sum((line.quantity for line in lines), 0) if lines else None,
-                "process": self._first_value(lines, "technical_notes"),
+                "process": self._technical_process(lines),
                 "tolerance": self._first_value(lines, "tolerance"),
                 "surface_treatment": "",
                 "drawing_available": rfq.documents.exists(),
@@ -284,6 +293,7 @@ class SalesAssistantService:
             "customer_name": str(payload.get("customer_name", "")).strip(),
             "known_customer": bool(str(payload.get("customer_name", "")).strip()),
             "request": str(payload.get("request", "")).strip(),
+            "retrieval_request": str(payload.get("request", "")).strip(),
             "material": str(payload.get("material", "")).strip(),
             "quantity": payload.get("quantity"),
             "process": str(payload.get("process", "")).strip(),
@@ -299,12 +309,30 @@ class SalesAssistantService:
         return next((str(getattr(line, field, "")).strip() for line in lines if getattr(line, field, "")), "")
 
     @staticmethod
+    def _technical_process(lines):
+        """Extract only bounded manufacturing terms from free-form line notes."""
+        text = " ".join(str(line.technical_notes or "").casefold() for line in lines)
+        allowed = (
+            "cnc machining",
+            "electropolishing",
+            "milling",
+            "turning",
+            "grinding",
+            "edm",
+            "anodizing",
+            "polishing",
+            "gia công cnc",
+            "mài",
+        )
+        return " ".join(term for term in allowed if term in text)
+
+    @staticmethod
     def _analysis_query(context):
         technical_fields = " ".join(
             str(context.get(field) or "")
             for field in ("material", "process", "surface_treatment")
         ).strip()
-        return technical_fields or str(context.get("request") or "").strip()
+        return technical_fields or str(context.get("retrieval_request") or "").strip()
 
     @staticmethod
     def _is_out_of_scope(query):
@@ -321,7 +349,7 @@ class SalesAssistantService:
 
     @staticmethod
     def _is_insufficient(context):
-        query = str(context.get("request", "")).casefold()
+        query = str(context.get("retrieval_request", "")).casefold()
         material = str(context.get("material", "")).strip()
         process = " ".join(
             [str(context.get("process", "")), str(context.get("surface_treatment", ""))]
@@ -334,6 +362,7 @@ class SalesAssistantService:
 
     @staticmethod
     def _missing_information(context):
+        retrieval_request = str(context.get("retrieval_request", "")).casefold()
         fields = [
             ("quantity", "requested quantity"),
             ("tolerance", "drawing tolerance"),
@@ -343,12 +372,12 @@ class SalesAssistantService:
         ]
         missing = [label for field, label in fields if context.get(field) in (None, "", False)]
         if not context.get("material") and not any(
-            term in str(context.get("request", "")).casefold()
+            term in retrieval_request
             for term in ("sus", "steel", "aluminium", "aluminum", "bronze", "pom", "titanium", "nhôm", "thép")
         ):
             missing.insert(0, "requested material")
         if not context.get("process") and not any(
-            term in str(context.get("request", "")).casefold()
+            term in retrieval_request
             for term in ("cnc", "machin", "milling", "turning", "grinding", "edm", "polish", "anod", "gia công", "mài")
         ):
             missing.insert(0, "manufacturing process")
@@ -356,18 +385,36 @@ class SalesAssistantService:
 
     @staticmethod
     def _sales_sources(rag):
-        return [
-            {
-                "id": source.get("document_id", source.get("id")),
-                "title": source.get("title", ""),
-                "product_code": source.get("product_code", ""),
-                "citation": source.get("citation", ""),
-                "version": source.get("version"),
-                "revision": source.get("revision"),
-                "relevance_score": source.get("relevance_score", 0),
-            }
-            for source in rag.get("sources", [])
-        ]
+        sources = []
+        seen = set()
+        for source in rag.get("sources", []):
+            source_id = source.get("document_id", source.get("id"))
+            title = str(source.get("title", ""))
+            product_code = str(source.get("product_code", ""))
+            citation = str(source.get("citation", ""))
+            expected_citation = f"synthetic://{DATASET_ID}/{product_code}"
+            identity = (source_id, product_code)
+            if (
+                source_id is None
+                or not PART_CODE_RE.fullmatch(product_code)
+                or not title.startswith("[SYNTHETIC DEMO]")
+                or not citation.startswith(expected_citation)
+                or identity in seen
+            ):
+                continue
+            seen.add(identity)
+            sources.append(
+                {
+                    "id": source_id,
+                    "title": title,
+                    "product_code": product_code,
+                    "citation": citation,
+                    "version": source.get("version"),
+                    "revision": source.get("revision"),
+                    "relevance_score": source.get("relevance_score", 0),
+                }
+            )
+        return sources
 
     @staticmethod
     def _matched_products(sources):
@@ -401,9 +448,10 @@ class SalesAssistantService:
             reasons.append("known customer/company context")
         if context.get("quantity"):
             reasons.append("requested quantity is provided")
-        if context.get("material") or "sus" in str(context.get("request", "")).casefold():
+        retrieval_request = str(context.get("retrieval_request", "")).casefold()
+        if context.get("material") or "sus" in retrieval_request:
             reasons.append("material requirement is clear")
-        if context.get("process") or context.get("surface_treatment") or "polish" in str(context.get("request", "")).casefold():
+        if context.get("process") or context.get("surface_treatment") or "polish" in retrieval_request:
             reasons.append("manufacturing or surface process is clear")
         if matched_products:
             reasons.append("governed component evidence was found")

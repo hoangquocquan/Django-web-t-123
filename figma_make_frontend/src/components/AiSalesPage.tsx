@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 
 import {
   analyzeAiSales,
+  createAiSalesRequestGuards,
   listAiSalesRfqs,
   type AiSalesAnalysis,
   type AiSalesAnalyzeInput,
@@ -66,19 +67,35 @@ export default function AiSalesPage({
   const [selectorLoading, setSelectorLoading] = useState(false)
   const [selectorError, setSelectorError] = useState("")
   const abortRef = useRef<AbortController | null>(null)
+  const requestGuards = useMemo(() => createAiSalesRequestGuards(), [])
+  const { selector: selectorGuard, analysis: analysisGuard } = requestGuards
 
   useEffect(() => {
     if (!authenticated || !token) {
+      selectorGuard.next()
+      analysisGuard.next()
+      abortRef.current?.abort()
+      abortRef.current = null
       setRfqs([])
       setSelectedRfqId("")
+      setSelectorLoading(false)
+      setSelectorError("")
+      setLoading(false)
+      setError("")
+      setResult(null)
       return
     }
     const controller = new AbortController()
+    const requestId = selectorGuard.next()
     setSelectorLoading(true)
     setSelectorError("")
     void listAiSalesRfqs(token, controller.signal)
-      .then((payload) => setRfqs(payload.results))
+      .then((payload) => {
+        if (!selectorGuard.isLatest(requestId)) return
+        setRfqs(payload.results)
+      })
       .catch((requestError) => {
+        if (!selectorGuard.isLatest(requestId)) return
         if (requestError instanceof CanonicalClientError) {
           if (requestError.kind === "authentication") onAuthenticationFailure()
           if (requestError.kind !== "cancelled") {
@@ -86,9 +103,23 @@ export default function AiSalesPage({
           }
         } else setSelectorError("Không thể tải danh sách RFQ được cấp quyền.")
       })
-      .finally(() => setSelectorLoading(false))
-    return () => controller.abort()
-  }, [authenticated, token, onAuthenticationFailure])
+      .finally(() => {
+        if (selectorGuard.isLatest(requestId)) setSelectorLoading(false)
+      })
+    return () => {
+      controller.abort()
+      selectorGuard.next()
+    }
+  }, [authenticated, token, onAuthenticationFailure, selectorGuard, analysisGuard])
+
+  useEffect(
+    () => () => {
+      abortRef.current?.abort()
+      selectorGuard.next()
+      analysisGuard.next()
+    },
+    [selectorGuard, analysisGuard],
+  )
 
   const update = (field: keyof AiSalesAnalyzeInput, value: string | number | boolean | null) =>
     setInput((current) => ({ ...current, [field]: value }))
@@ -101,12 +132,16 @@ export default function AiSalesPage({
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
+    const requestId = analysisGuard.next()
     setLoading(true)
     setError("")
     setResult(null)
     try {
-      setResult(await analyzeAiSales(token, candidate, controller.signal))
+      const nextResult = await analyzeAiSales(token, candidate, controller.signal)
+      if (!analysisGuard.isLatest(requestId)) return
+      setResult(nextResult)
     } catch (requestError) {
+      if (!analysisGuard.isLatest(requestId)) return
       if (requestError instanceof CanonicalClientError) {
         if (requestError.kind === "authentication") onAuthenticationFailure()
         if (requestError.kind === "permission") setError("Tài khoản không có quyền AI Sales nội bộ.")
@@ -114,7 +149,9 @@ export default function AiSalesPage({
         else if (requestError.kind !== "cancelled") setError("Không thể phân tích yêu cầu lúc này.")
       } else setError("Không thể phân tích yêu cầu lúc này.")
     } finally {
-      if (abortRef.current === controller) setLoading(false)
+      if (analysisGuard.isLatest(requestId) && abortRef.current === controller) {
+        setLoading(false)
+      }
     }
   }
 

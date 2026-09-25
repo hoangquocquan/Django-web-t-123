@@ -4,6 +4,7 @@ import test from "node:test"
 
 import {
   analyzeAiSales,
+  createAiSalesRequestGuards,
   listAiSalesRfqs,
   type AiSalesAnalysis,
 } from "./aiSales.ts"
@@ -126,6 +127,19 @@ test("AI Sales caller cancellation is not misreported as a timeout", async () =>
   }
 })
 
+test("AI Sales request guards reject stale selector and analysis responses", () => {
+  const guards = createAiSalesRequestGuards()
+  const oldSelector = guards.selector.next()
+  const latestSelector = guards.selector.next()
+  const oldAnalysis = guards.analysis.next()
+  const latestAnalysis = guards.analysis.next()
+
+  assert.equal(guards.selector.isLatest(oldSelector), false)
+  assert.equal(guards.selector.isLatest(latestSelector), true)
+  assert.equal(guards.analysis.isLatest(oldAnalysis), false)
+  assert.equal(guards.analysis.isLatest(latestAnalysis), true)
+})
+
 test("AI Sales page exposes human review, structured output, and three demo cases", () => {
   const source = readFileSync(new URL("../components/AiSalesPage.tsx", import.meta.url), "utf8")
 
@@ -140,6 +154,7 @@ test("AI Sales page exposes human review, structured output, and three demo case
   assert.match(source, /SYNTHETIC DEMO/)
   assert.match(source, /listAiSalesRfqs/)
   assert.match(source, /run\(\{ rfq_id: selectedRfq\.id \}\)/)
+  assert.match(source, /analysisGuard\.isLatest\(requestId\)/)
   assert.doesNotMatch(source, /send email automatically/i)
   assert.doesNotMatch(source, /<button[^>]*>[^<]*(Send|Gửi (email|tin nhắn|khách hàng))/i)
 })

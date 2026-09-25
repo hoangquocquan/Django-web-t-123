@@ -53,6 +53,8 @@ class AISalesAnalyzeSerializer(serializers.Serializer):
     deadline = serializers.DateField(required=False)
 
     def validate(self, attrs):
+        if set(self.initial_data) - set(self.fields):
+            raise serializers.ValidationError("Unsupported request fields were provided.")
         if attrs.get("rfq_id") and any(key != "rfq_id" for key in attrs):
             raise serializers.ValidationError("rfq_id cannot be combined with synthetic request fields.")
         if not attrs.get("rfq_id") and not str(attrs.get("request", "")).strip():
@@ -87,17 +89,23 @@ def _require_agent_user(request):
 
 
 def _require_ai_sales_user(request):
-    """Authenticate and enforce AI sales read permission."""
+    """Authenticate and keep the compatibility endpoint private to sales roles."""
     user = FoundationAuthService().user_from_authorization_header(_authorization_header(request))
-    FoundationPermissionService().require_permission(user, "ai_sales", "read")
+    role_name = str(getattr(getattr(user, "role", None), "name", "")).casefold()
+    if role_name not in {"sales", "manager", "admin"}:
+        raise PermissionDenied("This role is not authorized for private AI Sales data.")
+    permissions = FoundationPermissionService()
+    permissions.require_permission(user, "ai_sales", "read")
+    permissions.require_permission(user, "sales", "read")
     return user
 
 
 def _require_internal_ai_sales_user(request):
     """Require both AI Sales and canonical sales visibility grants."""
     user = FoundationAuthService().user_from_authorization_header(_authorization_header(request))
-    if str(getattr(getattr(user, "role", None), "name", "")).casefold() == "viewer":
-        raise PermissionDenied("Viewer role is not authorized for private AI Sales data.")
+    role_name = str(getattr(getattr(user, "role", None), "name", "")).casefold()
+    if role_name not in {"sales", "manager", "admin"}:
+        raise PermissionDenied("This role is not authorized for private AI Sales data.")
     permissions = FoundationPermissionService()
     permissions.require_permission(user, "ai_sales", "read")
     permissions.require_permission(user, "sales", "read")
