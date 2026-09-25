@@ -2,6 +2,46 @@
 
 This is the single self-contained report to give to ChatGPT for review or continuation. It consolidates the relevant repository baseline, architecture, AI Sales audit, implementation, security boundaries, validation evidence, Git state, limitations, and recommended next work.
 
+## Latest continuation update — 2026-09-25
+
+This section supersedes older statements below that said the RFQ selector, object scope, production-source boundary, or operational metrics were still future work.
+
+```text
+WORKSPACE: C:\Users\hoang\Documents\Codex\mecprecision-main-verification-c03d555
+BRANCH: feature/ai-sales-assistant
+STARTING COMMIT: 79fdcc5aa65c8273d0725994223fd796305e806f
+ENDING IMPLEMENTATION COMMIT: a1ba5fc
+MERGED TO MAIN: NO
+STATUS: READY FOR AI SALES REVIEW
+```
+
+Completed in this continuation:
+
+- `GET /api/v1/internal/ai-sales/rfqs/` provides a minimized, permission-scoped canonical selector.
+- `#/admin-ai-sales` now separates `REAL / CANONICAL RFQ` from `SYNTHETIC DEMO`; canonical analysis sends exactly `{ "rfq_id": ... }`.
+- `RfqAccessService` is shared by listing and analysis. Admin/Manager see all; Sales see only created/assigned RFQs; foreign direct IDs return 404 semantics.
+- Selector data excludes customer email/phone, raw RFQ/customer notes, and full customer records.
+- `AI_SALES_KNOWLEDGE_SOURCE` defaults to `governed_synthetic`; unimplemented production selection fails closed.
+- Bounded operational metrics cover requests, latency, status, priority, retrieval, provider/fallback, and deterministic fallback without raw sensitive labels.
+- React caller cancellation is correctly classified, preventing a stale StrictMode request from displaying an error after a successful selector load.
+- Human approval and non-autonomous response fields remain mandatory; no n8n, LINE, send, quotation, pricing, order, RFQ, or customer mutation was added.
+
+Latest validation:
+
+```text
+Backend full suite:                       567 passed
+Targeted AI Sales:                        13 passed
+Django check:                             PASS
+Migration check:                          PASS, no changes
+Frontend typecheck:                       PASS
+Frontend tests:                           155 passed
+Frontend build:                           PASS, 31 modules
+git diff --check:                         PASS
+Browser: canonical + 3 synthetic cases + scoped Sales selector PASS
+```
+
+Authoritative details, current limitations, changed files, and browser evidence are in `AI_SALES_MVP_IMPLEMENTATION_REPORT.md`.
+
 ## 1. Instructions for the receiving ChatGPT
 
 You are reviewing or continuing development of the **MecPrecision Django + React repository**.
@@ -440,9 +480,9 @@ ed48ad8 docs(ai-sales): add MVP implementation report
 ## 16. Known limitations
 
 1. Component matching intentionally uses the governed synthetic corpus, not a production catalog.
-2. The API supports persisted `rfq_id`, but the React page does not yet contain an RFQ selector.
+2. The React page now contains a minimized canonical RFQ selector and sends only `rfq_id` for persisted analysis.
 3. Priority is a transparent rule set, not a statistically calibrated conversion model.
-4. The existing canonical domain does not provide tenant-level or per-customer object scope for this endpoint; do not claim tenant isolation beyond current role/permission boundaries.
+4. AI Sales now enforces Admin/Manager all-RFQ access and Sales creator/assignee scope through one shared service. This remains a minimal object rule, not a claim of tenant isolation or a general per-customer ACL.
 5. The legacy `/api/v1/ai/sales-assistant/` remains for compatibility and still has its historical numeric lead score. The new internal endpoint uses categorical priority only.
 6. Local Ollama may return a validated generated answer or the existing grounded source fallback.
 7. Synthetic demo seed data used for local browser validation is not a production-data migration and must not be treated as real company data.
@@ -461,11 +501,10 @@ Before integration, the reviewer should verify:
 
 Recommended next iteration after approval:
 
-1. Add an authorized canonical RFQ selector to `#/admin-ai-sales`.
-2. Define and test customer/RFQ object-scope rules before real private-data rollout.
-3. Replace or supplement the synthetic corpus only through the existing knowledge approval/indexing workflow.
-4. Add operational metrics for status distribution, retrieval misses, response latency, and human acceptance/rejection without storing raw sensitive prompts.
-5. Create a pull request from `feature/ai-sales-assistant` to `main`, request an independent reviewer, and merge only after required checks and approval.
+1. Independently review the creator/assignee object-scope rule before real private-data rollout.
+2. Replace or supplement the synthetic corpus only through the existing knowledge approval/indexing workflow and the fail-closed source boundary.
+3. Add accepted/rejected feedback metrics only when a bounded human-feedback workflow exists.
+4. Create or update a pull request from `feature/ai-sales-assistant` to `main`, request an independent reviewer, and merge only after required checks and approval.
 
 ## 18. Final handoff status
 

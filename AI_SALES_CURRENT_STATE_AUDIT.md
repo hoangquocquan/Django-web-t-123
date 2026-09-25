@@ -68,3 +68,19 @@ The legacy AI Sales service already calls `KnowledgeSearchService`; the syntheti
 - Quotation approval/send, order transitions, pricing, and customer-contact commands.
 - Existing lead/opportunity/RFQ/quotation schemas.
 - The current knowledge approval, indexing, and public-release governance rules.
+
+## Continuation decisions — 2026-09-25
+
+Repository inspection confirmed that there was no existing reusable tenant-level or customer-ACL service for `SalesRfq`. The safe minimal decision implemented for AI Sales is:
+
+- Admin and Manager can list/analyze all RFQs.
+- Sales can list/analyze only RFQs they created or that are assigned to them.
+- Viewer, inactive, and unknown roles receive no RFQs.
+- Missing and out-of-scope IDs share not-found semantics to avoid existence disclosure.
+- The selector and analyzer use the same `RfqAccessService`; the controller does not duplicate object rules.
+
+This is an explicit creator/assignee boundary, not a claim of tenant isolation. A future organization/customer ACL should replace or extend the service rather than add checks directly to individual views.
+
+The production-knowledge audit also confirmed that the existing approved/versioned knowledge pipeline, embeddings, vector store, `KnowledgeSearchService`, and access policy are the only acceptable path to real catalog knowledge. `AI_SALES_KNOWLEDGE_SOURCE` therefore remains `governed_synthetic` by default and fails closed for any unimplemented source. No second RAG engine or ungoverned production data path was added.
+
+Operational telemetry reuses the existing metrics registry with categorical allowlisted labels only. It intentionally excludes raw request text, customer identity, RFQ notes, email, source text, and credentials.
