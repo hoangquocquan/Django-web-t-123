@@ -1,10 +1,13 @@
 import pytest
 from datetime import date
+from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
 from apps.ai.models import AIGovernanceEvent
 from apps.ai_agent import views as ai_views
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
+from apps.ai_agent.services.ai_sales_knowledge import AISalesKnowledgeSourceService
+from apps.ai_agent.services.ai_sales_metrics import AISalesMetricsService
 from apps.business_core.models import BusinessCustomer, BusinessMaterial
 from apps.foundation.models import FoundationPermission, FoundationRole
 from apps.foundation.services import FoundationAuthService, FoundationUserService
@@ -184,9 +187,15 @@ def test_internal_endpoint_denies_anonymous_and_viewer(client):
         content_type="application/json",
         **_headers(viewer),
     )
+    anonymous_selector = client.get("/api/v1/internal/ai-sales/rfqs/")
+    denied_viewer_selector = client.get(
+        "/api/v1/internal/ai-sales/rfqs/", **_headers(viewer)
+    )
 
     assert anonymous.status_code == 403
     assert denied_viewer.status_code == 403
+    assert anonymous_selector.status_code == 403
+    assert denied_viewer_selector.status_code == 403
 
 
 @pytest.mark.django_db
@@ -214,11 +223,143 @@ def test_internal_endpoint_allows_governed_sales_roles_and_audits(
     assert result["request_id"]
     event = AIGovernanceEvent.objects.get(correlation_id=result["request_id"])
     assert event.user_email == user.email
-    assert event.metadata == {
-        "input_reference": "synthetic:ad-hoc",
-        "result_status": "SUPPORTED",
-        "source_ids": [11],
+    assert event.metadata["input_reference"] == "synthetic:ad-hoc"
+    assert event.metadata["result_status"] == "SUPPORTED"
+    assert event.metadata["priority"] == "HIGH"
+    assert event.metadata["source_ids"] == [11]
+    assert event.metadata["retrieval"] == "hit"
+    assert event.metadata["provider"] == "fallback"
+    assert event.metadata["deterministic_fallback"] is True
+    assert event.metadata["latency_ms"] >= 0
+    assert "Synthetic Precision Systems" not in str(event.metadata)
+
+
+@pytest.mark.django_db
+def test_rfq_selector_and_analysis_enforce_sales_object_scope(client, monkeypatch):
+    sales_user = _user("sales", "ai-sales-owner@example.com")
+    other_sales = _user("sales", "ai-sales-other@example.com")
+    customer = BusinessCustomer.objects.create(
+        company_name="Scoped Customer",
+        contact_name="Private Buyer",
+        email="private-buyer@example.com",
+        notes="Do not expose this private note in the selector.",
+    )
+    owned = SalesRfq.objects.create(
+        rfq_number="RFQ-SCOPE-OWNED",
+        customer=customer,
+        project_name="Owned project",
+        notes="Owned private RFQ note",
+        quote_due_at=date(2026, 11, 1),
+        required_delivery_date=date(2026, 12, 1),
+        created_by=sales_user,
+    )
+    assigned = SalesRfq.objects.create(
+        rfq_number="RFQ-SCOPE-ASSIGNED",
+        customer=customer,
+        project_name="Assigned project",
+        notes="Assigned private RFQ note",
+        quote_due_at=date(2026, 11, 2),
+        required_delivery_date=date(2026, 12, 2),
+        created_by=other_sales,
+        assigned_to=sales_user,
+    )
+    foreign = SalesRfq.objects.create(
+        rfq_number="RFQ-SCOPE-FOREIGN",
+        customer=customer,
+        project_name="Foreign project",
+        notes="Foreign secret RFQ note",
+        quote_due_at=date(2026, 11, 3),
+        required_delivery_date=date(2026, 12, 3),
+        created_by=other_sales,
+    )
+
+    selector = client.get(
+        "/api/v1/internal/ai-sales/rfqs/", **_headers(sales_user)
+    )
+    assert selector.status_code == 200
+    payload = selector.json()["data"]
+    assert {item["id"] for item in payload["results"]} == {owned.id, assigned.id}
+    assert foreign.id not in {item["id"] for item in payload["results"]}
+    serialized = str(payload)
+    assert "private-buyer@example.com" not in serialized
+    assert "private RFQ note" not in serialized
+
+    monkeypatch.setattr(ai_views, "SalesAssistantService", lambda: assistant())
+    denied = client.post(
+        "/api/v1/internal/ai-sales/analyze/",
+        data={"rfq_id": foreign.id},
+        content_type="application/json",
+        **_headers(sales_user),
+    )
+    assert denied.status_code == 404
+    assert "RFQ-SCOPE-FOREIGN" not in denied.content.decode()
+    assert "Foreign secret RFQ note" not in denied.content.decode()
+
+
+@pytest.mark.django_db
+def test_manager_selector_can_review_all_rfqs(client):
+    manager = _user("manager", "ai-sales-manager-scope@example.com")
+    owner = _user("sales", "ai-sales-manager-owner@example.com")
+    customer = BusinessCustomer.objects.create(
+        company_name="Manager Scope Customer", contact_name="Buyer"
+    )
+    rfq = SalesRfq.objects.create(
+        rfq_number="RFQ-MANAGER-SCOPE",
+        customer=customer,
+        quote_due_at=date(2026, 11, 1),
+        required_delivery_date=date(2026, 12, 1),
+        created_by=owner,
+    )
+
+    response = client.get(
+        "/api/v1/internal/ai-sales/rfqs/", **_headers(manager)
+    )
+    assert response.status_code == 200
+    assert rfq.id in {item["id"] for item in response.json()["data"]["results"]}
+
+
+@override_settings(AI_SALES_KNOWLEDGE_SOURCE="production")
+def test_ai_sales_production_knowledge_source_fails_closed():
+    with pytest.raises(ImproperlyConfigured, match="production knowledge is not enabled"):
+        AISalesKnowledgeSourceService().build()
+
+
+def test_ai_sales_metrics_use_only_bounded_content_free_labels():
+    class CapturingRegistry:
+        def __init__(self):
+            self.calls = []
+
+        def increment(self, name, amount=1, **labels):
+            self.calls.append((name, amount, labels))
+
+    registry = CapturingRegistry()
+    result = {
+        "status": "SUPPORTED",
+        "priority": "HIGH",
+        "customer_display": "PRIVATE CUSTOMER NAME",
+        "summary": "PRIVATE RFQ NOTES",
+        "_telemetry": {
+            "retrieval": "hit",
+            "provider": "success",
+            "deterministic_fallback": False,
+        },
     }
+    bounded = AISalesMetricsService(registry=registry).record(
+        result, duration_seconds=0.125
+    )
+
+    rendered = str(registry.calls)
+    assert "PRIVATE CUSTOMER NAME" not in rendered
+    assert "PRIVATE RFQ NOTES" not in rendered
+    assert bounded == {
+        "status": "SUPPORTED",
+        "priority": "HIGH",
+        "retrieval": "hit",
+        "provider": "success",
+        "deterministic_fallback": False,
+    }
+    assert "mecprecision_ai_sales_requests_total" in rendered
+    assert "mecprecision_ai_sales_response_seconds_sum" in rendered
 
 
 @pytest.mark.django_db
