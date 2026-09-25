@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
+from apps.ai_agent.services.ai_sales_knowledge import AISalesKnowledgeSourceService
 from apps.ai_agent.services.sales_facts import SalesFactsService
 from apps.ai_agent.services.sales_synthesis import GroundedSalesSynthesisService
 from apps.business_core.models import BusinessCustomer
 from apps.crm.services.crm_platform_service import CrmPlatformService
 from apps.knowledge.services.search_service import KnowledgeSearchService
-from apps.knowledge.services.synthetic_rag_demo import SyntheticRagWebDemoService
-from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation, SalesRfq
+from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
+from apps.sales.services.rfq_access_service import RfqAccessService
 
 
 class SalesAssistantService:
@@ -22,16 +23,18 @@ class SalesAssistantService:
         facts_service=None,
         synthesis_service=None,
         component_rag=None,
+        rfq_access=None,
     ):
         """Allow tests to inject a deterministic knowledge search service."""
         self.knowledge_search = knowledge_search or KnowledgeSearchService()
         self.facts_service = facts_service or SalesFactsService()
         self.synthesis_service = synthesis_service or GroundedSalesSynthesisService()
-        self.component_rag = component_rag or SyntheticRagWebDemoService()
+        self.component_rag = component_rag or AISalesKnowledgeSourceService().build()
+        self.rfq_access = rfq_access or RfqAccessService()
 
     def analyze(self, payload, user=None):
         """Return the internal AI Sales MVP contract without taking business action."""
-        context = self._analysis_context(payload)
+        context = self._analysis_context(payload, user=user)
         missing = self._missing_information(context)
         query = self._analysis_query(context)
 
@@ -44,6 +47,11 @@ class SalesAssistantService:
                 missing_information=[],
                 next_action="NO_ACTION",
                 next_action_reason="No grounded sales or component recommendation is available.",
+                telemetry={
+                    "retrieval": "not_run",
+                    "provider": "not_called",
+                    "deterministic_fallback": True,
+                },
             )
 
         if self._is_insufficient(context):
@@ -55,6 +63,11 @@ class SalesAssistantService:
                 missing_information=missing,
                 next_action="REQUEST_TECHNICAL_DETAILS",
                 next_action_reason="Material and manufacturing process are required before product matching.",
+                telemetry={
+                    "retrieval": "not_run",
+                    "provider": "not_called",
+                    "deterministic_fallback": True,
+                },
             )
 
         rag = self.component_rag.query(query, user=user, limit=3)
@@ -70,6 +83,7 @@ class SalesAssistantService:
                 next_action="ESCALATE_ENGINEERING_REVIEW",
                 next_action_reason="Engineering must review the request because RAG returned no supported component.",
                 risks=["Do not claim product capability without an approved source."],
+                telemetry=self._rag_telemetry(rag),
             )
 
         priority, reasons = self._priority(context, matched_products, missing)
@@ -92,6 +106,7 @@ class SalesAssistantService:
             risks=[
                 "Component matching is advisory and does not confirm price, stock, delivery, certification, or manufacturability."
             ],
+            telemetry=self._rag_telemetry(rag),
         )
 
     def handle(self, action, payload, user=None):
@@ -224,11 +239,11 @@ class SalesAssistantService:
             },
         }
 
-    def _analysis_context(self, payload):
+    def _analysis_context(self, payload, user=None):
         """Load one canonical RFQ or normalize the controlled synthetic input."""
         if payload.get("rfq_id"):
             rfq = (
-                SalesRfq.objects.select_related("customer", "assigned_to", "created_by")
+                self.rfq_access.visible_queryset(user)
                 .prefetch_related("lines__material", "lines__part", "documents")
                 .get(pk=payload["rfq_id"])
             )
@@ -368,6 +383,18 @@ class SalesAssistantService:
         ]
 
     @staticmethod
+    def _rag_telemetry(rag):
+        """Reduce retrieval diagnostics to bounded operational outcomes."""
+        retrieval = rag.get("retrieval", {})
+        has_sources = bool(rag.get("sources"))
+        llm_success = retrieval.get("llm_success") is True
+        return {
+            "retrieval": "hit" if has_sources else "miss",
+            "provider": "success" if llm_success else "fallback",
+            "deterministic_fallback": retrieval.get("fallback_used", not llm_success),
+        }
+
+    @staticmethod
     def _priority(context, matched_products, missing):
         reasons = []
         if context.get("known_customer"):
@@ -399,6 +426,7 @@ class SalesAssistantService:
         matched_products=None,
         sources=None,
         risks=None,
+        telemetry=None,
     ):
         company = context.get("customer_name") or "customer"
         request = context.get("request") or "the precision-component request"
@@ -428,10 +456,17 @@ class SalesAssistantService:
             "missing_information": missing_information,
             "sources": sources or [],
             "input_reference": context["input_reference"],
+            "rfq_reference": context.get("rfq_number", ""),
+            "customer_display": context.get("customer_name", ""),
             "synthetic_input": context["synthetic"],
             "human_approval_required": True,
             "autonomous_action": False,
             "safety_note": "AI recommendation — human review required. No email, quotation, order, price, RFQ, or customer action was executed.",
+            "_telemetry": telemetry or {
+                "retrieval": "not_run",
+                "provider": "not_called",
+                "deterministic_fallback": True,
+            },
         }
 
     def _lead_from_payload(self, payload):

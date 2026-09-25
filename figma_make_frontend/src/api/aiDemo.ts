@@ -151,12 +151,23 @@ async function boundedFetch(
     })
   } catch (error) {
     if (error instanceof CanonicalClientError) throw error
+    const cancelledByCaller = externalSignal?.aborted === true
     throw new CanonicalClientError({
-      kind: controller.signal.aborted ? "timeout" : "network",
-      code: controller.signal.aborted ? "request_timeout" : "network_error",
-      message: controller.signal.aborted
-        ? "The request timed out."
-        : "The server could not be reached.",
+      kind: cancelledByCaller
+        ? "cancelled"
+        : controller.signal.aborted
+          ? "timeout"
+          : "network",
+      code: cancelledByCaller
+        ? "request_cancelled"
+        : controller.signal.aborted
+          ? "request_timeout"
+          : "network_error",
+      message: cancelledByCaller
+        ? "The request was cancelled."
+        : controller.signal.aborted
+          ? "The request timed out."
+          : "The server could not be reached.",
     })
   } finally {
     if (timeout !== null) clearTimeout(timeout)
@@ -164,22 +175,24 @@ async function boundedFetch(
   }
 }
 
-async function postAi<T,>(
+async function requestInternalAi<T,>(
   path: string,
   token: string,
-  body: unknown,
+  method: "GET" | "POST",
+  body: unknown | undefined,
   options: AiRequestOptions = {},
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${token}`,
+  }
+  if (body !== undefined) headers["content-type"] = "application/json"
   const response = await boundedFetch(
     globalThis.fetch,
     `${aiApiBaseUrl()}${path}`,
     {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(body),
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: options.signal,
     },
     options.timeoutMs ?? DEFAULT_AI_REQUEST_TIMEOUT_MS,
@@ -209,7 +222,15 @@ export function postInternalAi<T,>(
   body: unknown,
   options?: AiRequestOptions,
 ) {
-  return postAi<T>(path, token, body, options)
+  return requestInternalAi<T>(path, token, "POST", body, options)
+}
+
+export function getInternalAi<T,>(
+  path: string,
+  token: string,
+  options?: AiRequestOptions,
+) {
+  return requestInternalAi<T>(path, token, "GET", undefined, options)
 }
 
 export function askSyntheticRagDemo(
@@ -217,9 +238,10 @@ export function askSyntheticRagDemo(
   question: string,
   options?: AiRequestOptions,
 ) {
-  return postAi<RagDemoResult>(
+  return requestInternalAi<RagDemoResult>(
     "internal/rag-demo/query/",
     token,
+    "POST",
     { question },
     options,
   )
@@ -234,9 +256,10 @@ export function askSyntheticRagChat(
   message: string,
   options?: AiRequestOptions,
 ) {
-  return postAi<RagChatResult>(
+  return requestInternalAi<RagChatResult>(
     "internal/rag-chat/",
     token,
+    "POST",
     { message },
     options,
   )

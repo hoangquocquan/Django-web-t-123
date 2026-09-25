@@ -1,6 +1,12 @@
-import { useRef, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 
-import { analyzeAiSales, type AiSalesAnalysis, type AiSalesAnalyzeInput } from "../api/aiSales.ts"
+import {
+  analyzeAiSales,
+  listAiSalesRfqs,
+  type AiSalesAnalysis,
+  type AiSalesAnalyzeInput,
+  type AiSalesRfqOption,
+} from "../api/aiSales.ts"
 import { CanonicalClientError } from "../api/canonical.ts"
 
 type Props = {
@@ -55,7 +61,34 @@ export default function AiSalesPage({
   const [result, setResult] = useState<AiSalesAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [rfqs, setRfqs] = useState<AiSalesRfqOption[]>([])
+  const [selectedRfqId, setSelectedRfqId] = useState("")
+  const [selectorLoading, setSelectorLoading] = useState(false)
+  const [selectorError, setSelectorError] = useState("")
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (!authenticated || !token) {
+      setRfqs([])
+      setSelectedRfqId("")
+      return
+    }
+    const controller = new AbortController()
+    setSelectorLoading(true)
+    setSelectorError("")
+    void listAiSalesRfqs(token, controller.signal)
+      .then((payload) => setRfqs(payload.results))
+      .catch((requestError) => {
+        if (requestError instanceof CanonicalClientError) {
+          if (requestError.kind === "authentication") onAuthenticationFailure()
+          if (requestError.kind !== "cancelled") {
+            setSelectorError("Không thể tải danh sách RFQ được cấp quyền.")
+          }
+        } else setSelectorError("Không thể tải danh sách RFQ được cấp quyền.")
+      })
+      .finally(() => setSelectorLoading(false))
+    return () => controller.abort()
+  }, [authenticated, token, onAuthenticationFailure])
 
   const update = (field: keyof AiSalesAnalyzeInput, value: string | number | boolean | null) =>
     setInput((current) => ({ ...current, [field]: value }))
@@ -90,6 +123,12 @@ export default function AiSalesPage({
     void run()
   }
 
+  const selectedRfq = rfqs.find((rfq) => String(rfq.id) === selectedRfqId)
+  const runCanonicalRfq = () => {
+    if (!selectedRfq) return
+    void run({ rfq_id: selectedRfq.id })
+  }
+
   if (!authenticated) {
     return <section className="border border-white/10 p-7" data-testid="ai-sales-login-required">
       <p className="text-sm text-zinc-400">AI Sales chỉ dành cho người dùng nội bộ được cấp quyền.</p>
@@ -105,6 +144,33 @@ export default function AiSalesPage({
 
     <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
       <form className="grid content-start gap-4 border border-white/10 p-5" onSubmit={submit}>
+        <section className="grid gap-3 border border-emerald-500/30 bg-emerald-500/5 p-4" data-testid="canonical-rfq-selector">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[.18em] text-emerald-300">REAL / CANONICAL RFQ</div>
+            <p className="mt-1 text-xs text-zinc-500">Chỉ hiển thị RFQ bạn được phép xem. Phân tích gửi duy nhất mã RFQ.</p>
+          </div>
+          <label className="grid gap-2 text-xs text-zinc-400">RFQ được cấp quyền
+            <select
+              aria-label="Canonical RFQ"
+              className="border border-white/10 bg-zinc-950 p-3 text-sm text-white"
+              disabled={selectorLoading}
+              onChange={(event) => setSelectedRfqId(event.currentTarget.value)}
+              value={selectedRfqId}
+            >
+              <option value="">{selectorLoading ? "Đang tải RFQ…" : "Chọn RFQ canonical"}</option>
+              {rfqs.map((rfq) => <option key={rfq.id} value={rfq.id}>{rfq.rfq_number} · {rfq.customer_display}</option>)}
+            </select>
+          </label>
+          {selectedRfq && <div className="text-xs leading-5 text-zinc-400">
+            <b className="text-zinc-200">{selectedRfq.rfq_number}</b> · {selectedRfq.status}<br />
+            {selectedRfq.customer_display}{selectedRfq.project_name ? ` · ${selectedRfq.project_name}` : ""}
+          </div>}
+          {selectorError && <p className="text-xs text-red-200" role="alert">{selectorError}</p>}
+          {!selectorLoading && !selectorError && rfqs.length === 0 && <p className="text-xs text-zinc-500">Không có RFQ nào trong phạm vi truy cập hiện tại.</p>}
+          <button className="bg-emerald-700 px-5 py-3 text-sm font-semibold disabled:opacity-50" disabled={!selectedRfq || loading} onClick={runCanonicalRfq} type="button">Phân tích RFQ canonical</button>
+        </section>
+
+        <div className="border-t border-white/10 pt-4 text-xs font-semibold uppercase tracking-[.18em] text-sky-300">SYNTHETIC DEMO</div>
         <label className="grid gap-2 text-xs text-zinc-400">Khách hàng
           <input className="border border-white/10 bg-zinc-950 p-3 text-sm text-white" value={input.customer_name ?? ""} onChange={(e) => update("customer_name", e.currentTarget.value)} />
         </label>
@@ -131,7 +197,8 @@ export default function AiSalesPage({
         {!result && !error && !loading && <div className="border border-white/10 p-6 text-sm text-zinc-500">Chọn một demo synthetic hoặc nhập cơ hội/RFQ cần phân tích.</div>}
         {result && <>
           <article className="border border-white/10 p-5">
-            <div className="flex flex-wrap items-center gap-3"><b>{result.status}</b><span className="border border-orange-500/40 px-2 py-1 text-xs">Priority {result.priority}</span>{result.synthetic_input && <span className="text-xs text-sky-300">SYNTHETIC INPUT</span>}</div>
+            <div className="flex flex-wrap items-center gap-3"><b>{result.status}</b><span className="border border-orange-500/40 px-2 py-1 text-xs">Priority {result.priority}</span><span className={result.synthetic_input ? "text-xs text-sky-300" : "text-xs text-emerald-300"}>{result.synthetic_input ? "SYNTHETIC DEMO" : "REAL / CANONICAL RFQ"}</span></div>
+            <div className="mt-3 text-xs text-zinc-500">Reference: {result.rfq_reference || result.input_reference}{result.customer_display ? ` · Customer: ${result.customer_display}` : ""}</div>
             <p className="mt-4 text-sm leading-6 text-zinc-300">{result.summary}</p>
             <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider">Why</h3>{list(result.priority_reasons, "Không có lý do ưu tiên.")}
           </article>

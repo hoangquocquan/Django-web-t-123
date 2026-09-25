@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
@@ -11,11 +12,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.ai.models import AIGovernanceEvent
+from apps.ai_agent.services.ai_sales_metrics import AISalesMetricsService
 from apps.ai_agent.services.agent_controller import AgentControlError, AgentController
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
 from apps.api.views.helpers import ok
 from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
+from apps.sales.services.rfq_access_service import RfqAccessService
 
 
 class AgentRunSerializer(serializers.Serializer):
@@ -243,6 +246,7 @@ def internal_ai_sales_analyze(request):
     except AIGovernanceError as exc:
         return _governance_error_response(exc)
 
+    started = time.perf_counter()
     try:
         result = SalesAssistantService().analyze(payload, user=user)
     except ValidationError as exc:
@@ -253,13 +257,55 @@ def internal_ai_sales_analyze(request):
             status=status.HTTP_404_NOT_FOUND,
         )
 
+    duration_seconds = time.perf_counter() - started
+    bounded_metrics = AISalesMetricsService().record(
+        result, duration_seconds=duration_seconds
+    )
+    result.pop("_telemetry", None)
     source_ids = [source.get("id") for source in result.get("sources", []) if source.get("id") is not None]
     AIGovernanceEvent.objects.filter(correlation_id=decision.correlation_id).update(
         metadata={
             "input_reference": result["input_reference"],
             "result_status": result["status"],
+            "priority": result["priority"],
             "source_ids": source_ids,
+            "latency_ms": int(duration_seconds * 1000),
+            "retrieval": bounded_metrics["retrieval"],
+            "provider": bounded_metrics["provider"],
+            "deterministic_fallback": bounded_metrics["deterministic_fallback"],
         }
     )
     result["request_id"] = decision.correlation_id
     return ok(result)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def internal_ai_sales_rfqs(request):
+    """Return only scoped, minimized RFQ metadata for the internal selector."""
+    try:
+        user = _require_internal_ai_sales_user(request)
+    except PermissionDenied as exc:
+        return _permission_error_response(exc)
+
+    queryset = RfqAccessService().visible_queryset(user).order_by("-created_at", "-id")
+    rfqs = list(queryset[:100])
+    return ok(
+        {
+            "count": len(rfqs),
+            "results": [
+                {
+                    "id": rfq.pk,
+                    "rfq_number": rfq.rfq_number,
+                    "status": rfq.status,
+                    "project_name": rfq.project_name,
+                    "customer_display": (
+                        rfq.customer.company_name or rfq.customer.contact_name
+                    ),
+                    "quote_due_at": str(rfq.quote_due_at),
+                    "required_delivery_date": str(rfq.required_delivery_date),
+                }
+                for rfq in rfqs
+            ],
+        }
+    )

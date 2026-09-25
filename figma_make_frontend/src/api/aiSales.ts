@@ -1,4 +1,4 @@
-import { postInternalAi } from "./aiDemo.ts"
+import { getInternalAi, postInternalAi } from "./aiDemo.ts"
 
 export type AiSalesStatus =
   | "SUPPORTED"
@@ -48,11 +48,35 @@ export type AiSalesAnalysis = {
   missing_information: string[]
   sources: AiSalesSource[]
   input_reference: string
+  rfq_reference: string
+  customer_display: string
   synthetic_input: boolean
   human_approval_required: true
   autonomous_action: false
   safety_note: string
   request_id: string
+}
+
+export type AiSalesRfqOption = {
+  id: number
+  rfq_number: string
+  status: string
+  project_name: string
+  customer_display: string
+  quote_due_at: string
+  required_delivery_date: string
+}
+
+export type AiSalesRfqList = {
+  count: number
+  results: AiSalesRfqOption[]
+}
+
+export function listAiSalesRfqs(token: string, signal?: AbortSignal) {
+  return getInternalAi<AiSalesRfqList>("internal/ai-sales/rfqs/", token, {
+    signal,
+    timeoutMs: 10_000,
+  })
 }
 
 export function analyzeAiSales(
