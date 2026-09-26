@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import secrets
+from hashlib import sha256
 from urllib import error, request
 
 from django.conf import settings
@@ -45,7 +47,26 @@ def _audit_event(action, actor="", **details):
 
 
 def _configured_recipient():
-    return str(getattr(settings, "LINE_UAT_RECIPIENT_USER_ID", "")).strip()
+    recipient = getattr(settings, "LINE_UAT_RECIPIENT_USER_ID", "")
+    return recipient.strip() if isinstance(recipient, str) else ""
+
+
+def _approved_content_hash(approval):
+    """Fingerprint the exact content and routing fields observed by the reviewer."""
+    canonical = json.dumps(
+        {
+            "channel": approval.channel,
+            "environment": approval.environment,
+            "message": approval.proposed_message,
+            "recipient_ref": approval.recipient_ref,
+            "rfq_id": approval.rfq_id,
+            "synthetic": approval.synthetic,
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class LineProviderClient:
@@ -53,7 +74,7 @@ class LineProviderClient:
 
     endpoint = "https://api.line.me/v2/bot/message/push"
 
-    def push(self, *, recipient, message, token):
+    def push(self, *, recipient, message, token, retry_key):
         payload = json.dumps(
             {"to": recipient, "messages": [{"type": "text", "text": message}]}
         ).encode("utf-8")
@@ -64,23 +85,32 @@ class LineProviderClient:
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
+                "X-Line-Retry-Key": retry_key,
             },
         )
         try:
             with request.urlopen(http_request, timeout=10) as response:
                 body = response.read(4096).decode("utf-8", errors="replace")
-                parsed = json.loads(body) if body else {}
+                try:
+                    parsed = json.loads(body) if body else {}
+                except json.JSONDecodeError:
+                    parsed = {"unparseable_response": True}
                 request_id = response.headers.get("x-line-request-id", "")
                 return request_id, {
                     "http_status": response.status,
                     "body": parsed,
                 }
         except error.HTTPError as exc:
-            body = exc.read(4096).decode("utf-8", errors="replace")
+            if exc.code == 409:
+                accepted_request_id = exc.headers.get("x-line-accepted-request-id", "")
+                return accepted_request_id, {
+                    "http_status": 409,
+                    "deduplicated": True,
+                }
             raise LineUATError(
                 "provider_failed", f"LINE provider returned HTTP {exc.code}."
             ) from exc
-        except (error.URLError, TimeoutError) as exc:
+        except (error.URLError, TimeoutError, ConnectionError, OSError) as exc:
             raise LineUATError("provider_failed", "LINE provider request failed.") from exc
 
 
@@ -158,9 +188,17 @@ class LineUATApprovalService:
         approval.status = OutboundMessageApproval.Status.APPROVED
         approval.approved_by = user
         approval.approved_at = timezone.now()
+        approval.approved_content_hash = _approved_content_hash(approval)
         approval.audit_log = [*_safe_events(approval), _audit_event("APPROVED", user.email)]
         approval.save(
-            update_fields=["status", "approved_by", "approved_at", "audit_log", "updated_at"]
+            update_fields=[
+                "status",
+                "approved_by",
+                "approved_at",
+                "approved_content_hash",
+                "audit_log",
+                "updated_at",
+            ]
         )
         return approval
 
@@ -189,63 +227,115 @@ class LineUATApprovalService:
         )
         return approval
 
-    @transaction.atomic
     def send(self, approval_id, *, user):
-        approval = self._locked(approval_id)
-        if approval.status == OutboundMessageApproval.Status.SENT:
-            return approval
-        if approval.status != OutboundMessageApproval.Status.APPROVED:
-            raise LineUATError("not_approved", "Only APPROVED messages may be sent.")
-        self._validate_uat_boundary(approval)
+        with transaction.atomic():
+            approval = self._locked(approval_id)
+            if approval.status == OutboundMessageApproval.Status.SENT:
+                return approval
+            if approval.status != OutboundMessageApproval.Status.APPROVED:
+                raise LineUATError("not_approved", "Only APPROVED messages may be sent.")
+            self._validate_uat_invariants(approval)
+            self._validate_approved_content(approval)
 
-        if not getattr(settings, "LINE_SEND_ENABLED", False):
-            approval.line_result_status = "SEND_DISABLED"
-            approval.provider_response = {"mode": "DRY_RUN", "send_attempted": False}
-            approval.audit_log = [
-                *_safe_events(approval),
-                _audit_event("SEND_DISABLED", user.email, send_attempted=False),
-            ]
-            approval.save(
-                update_fields=[
-                    "line_result_status",
-                    "provider_response",
-                    "audit_log",
-                    "updated_at",
+            if getattr(settings, "LINE_SEND_ENABLED", False) is not True:
+                approval.line_result_status = "SEND_DISABLED"
+                approval.provider_response = {"mode": "DRY_RUN", "send_attempted": False}
+                approval.audit_log = [
+                    *_safe_events(approval),
+                    _audit_event("SEND_DISABLED", user.email, send_attempted=False),
                 ]
+                approval.save(
+                    update_fields=[
+                        "line_result_status",
+                        "provider_response",
+                        "audit_log",
+                        "updated_at",
+                    ]
+                )
+                return approval
+
+            self._validate_recipient(approval)
+            token = getattr(settings, "LINE_UAT_CHANNEL_ACCESS_TOKEN", "")
+            if not isinstance(token, str) or not token.strip():
+                raise LineUATError(
+                    "missing_line_token", "LINE UAT access token is not configured."
+                )
+            token = token.strip()
+
+            if approval.send_claimed_at is not None:
+                return approval
+
+            claimed_at = timezone.now()
+            claimed_events = [
+                *_safe_events(approval),
+                _audit_event("SEND_CLAIMED", user.email, send_attempted=True),
+            ]
+            claimed = OutboundMessageApproval.objects.filter(
+                pk=approval.pk,
+                status=OutboundMessageApproval.Status.APPROVED,
+                send_claimed_at__isnull=True,
+            ).update(
+                send_attempted=True,
+                send_claimed_at=claimed_at,
+                line_result_status="SENDING",
+                audit_log=claimed_events,
+                updated_at=claimed_at,
             )
-            return approval
+            if claimed != 1:
+                approval.refresh_from_db()
+                return approval
+            approval.refresh_from_db()
 
-        token = str(getattr(settings, "LINE_UAT_CHANNEL_ACCESS_TOKEN", "")).strip()
-        if not token:
-            raise LineUATError("missing_line_token", "LINE UAT access token is not configured.")
-
-        approval.send_attempted = True
+        # The claim above is committed before the external side effect. A crash
+        # can leave SENDING for manual reconciliation, but an automatic retry
+        # cannot call the provider twice. LINE also receives the UUID retry key.
         try:
             message_id, provider_response = self.provider.push(
                 recipient=approval.recipient_ref,
                 message=approval.proposed_message,
                 token=token,
+                retry_key=str(approval.pk),
             )
         except LineUATError as exc:
-            approval.status = OutboundMessageApproval.Status.FAILED
-            approval.line_result_status = "FAILED"
-            approval.provider_response = {"error_code": exc.code}
-            approval.audit_log = [
-                *_safe_events(approval),
-                _audit_event("SEND_FAILED", user.email, send_attempted=True),
-            ]
-            approval.save(
-                update_fields=[
-                    "status",
-                    "send_attempted",
-                    "line_result_status",
-                    "provider_response",
-                    "audit_log",
-                    "updated_at",
-                ]
-            )
-            return approval
+            return self._record_failure(approval.pk, user=user, error_code=exc.code)
 
+        return self._record_success(
+            approval.pk,
+            user=user,
+            message_id=message_id,
+            provider_response=provider_response,
+        )
+
+    @transaction.atomic
+    def _record_failure(self, approval_id, *, user, error_code):
+        approval = self._locked(approval_id)
+        if approval.status == OutboundMessageApproval.Status.SENT:
+            return approval
+        approval.status = OutboundMessageApproval.Status.FAILED
+        approval.line_result_status = "FAILED"
+        approval.provider_response = {"error_code": error_code}
+        approval.audit_log = [
+            *_safe_events(approval),
+            _audit_event("SEND_FAILED", user.email, send_attempted=True),
+        ]
+        approval.save(
+            update_fields=[
+                "status",
+                "line_result_status",
+                "provider_response",
+                "audit_log",
+                "updated_at",
+            ]
+        )
+        return approval
+
+    @transaction.atomic
+    def _record_success(
+        self, approval_id, *, user, message_id, provider_response
+    ):
+        approval = self._locked(approval_id)
+        if approval.status == OutboundMessageApproval.Status.SENT:
+            return approval
         approval.status = OutboundMessageApproval.Status.SENT
         approval.sent_at = timezone.now()
         approval.provider_message_id = message_id or None
@@ -258,7 +348,6 @@ class LineUATApprovalService:
         approval.save(
             update_fields=[
                 "status",
-                "send_attempted",
                 "sent_at",
                 "provider_message_id",
                 "provider_response",
@@ -277,11 +366,24 @@ class LineUATApprovalService:
             raise LineUATError("not_found", "UAT LINE approval was not found.") from exc
 
     @staticmethod
-    def _validate_uat_boundary(approval):
+    def _validate_uat_invariants(approval):
         if approval.environment != "uat" or approval.synthetic is not True:
             raise LineUATError("uat_boundary_violation", "Only synthetic UAT messages may be sent.")
         if approval.channel != "line":
             raise LineUATError("channel_violation", "Only the LINE UAT channel is allowed.")
+
+    @staticmethod
+    def _validate_approved_content(approval):
+        expected = approval.approved_content_hash
+        actual = _approved_content_hash(approval)
+        if not expected or not secrets.compare_digest(expected, actual):
+            raise LineUATError(
+                "approved_content_changed",
+                "Approved message or routing content changed after human review.",
+            )
+
+    @staticmethod
+    def _validate_recipient(approval):
         allowlisted = _configured_recipient()
         if not allowlisted or approval.recipient_ref != allowlisted:
             raise LineUATError(
@@ -305,6 +407,7 @@ def serialize_approval(approval):
         "recipient": "UAT allowlisted recipient",
         "proposed_message": approval.proposed_message,
         "final_message": approval.proposed_message,
+        "approved_content_hash": approval.approved_content_hash,
         "status": approval.status,
         "ai_payload": approval.ai_payload,
         "approved_by": approval.approved_by.email if approval.approved_by else None,
@@ -315,6 +418,9 @@ def serialize_approval(approval):
         "provider_message_id": approval.provider_message_id,
         "provider_response": approval.provider_response,
         "send_attempted": approval.send_attempted,
+        "send_claimed_at": (
+            approval.send_claimed_at.isoformat() if approval.send_claimed_at else None
+        ),
         "line_result_status": approval.line_result_status,
         "audit_log": approval.audit_log,
         "created_at": approval.created_at.isoformat(),

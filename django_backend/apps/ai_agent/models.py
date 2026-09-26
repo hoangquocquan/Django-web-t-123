@@ -74,6 +74,7 @@ class OutboundMessageApproval(models.Model):
     channel = models.CharField(max_length=16, default="line")
     recipient_ref = models.CharField(max_length=255)
     proposed_message = models.TextField()
+    approved_content_hash = models.CharField(max_length=64, blank=True)
     status = models.CharField(
         max_length=16,
         choices=Status.choices,
@@ -101,6 +102,7 @@ class OutboundMessageApproval(models.Model):
     provider_message_id = models.CharField(max_length=160, null=True, blank=True)
     provider_response = models.JSONField(default=dict, blank=True)
     send_attempted = models.BooleanField(default=False)
+    send_claimed_at = models.DateTimeField(null=True, blank=True)
     line_result_status = models.CharField(max_length=40, blank=True)
     audit_log = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -121,6 +123,19 @@ class OutboundMessageApproval(models.Model):
             models.CheckConstraint(
                 condition=Q(channel="line"),
                 name="line_uat_channel_only",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    status__in=["PENDING", "APPROVED", "REJECTED", "SENT", "FAILED"]
+                ),
+                name="line_uat_known_status_only",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~Q(status__in=["APPROVED", "SENT", "FAILED"])
+                    | ~Q(approved_content_hash="")
+                ),
+                name="line_uat_approved_content_bound",
             ),
         ]
 

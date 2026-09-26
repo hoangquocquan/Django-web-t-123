@@ -16,24 +16,36 @@ from apps.api.views.helpers import created, ok
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
 
 
-class UATDraftSerializer(serializers.Serializer):
+class StrictBooleanField(serializers.BooleanField):
+    """Accept JSON booleans only; reject strings and numeric coercion."""
+
+    def to_internal_value(self, data):
+        if type(data) is not bool:
+            raise serializers.ValidationError("Must be a JSON boolean.")
+        return data
+
+
+class StrictPayloadSerializer(serializers.Serializer):
+    """Reject unknown fields rather than silently ignoring client input."""
+
+    def validate(self, attrs):
+        if set(self.initial_data) - set(self.fields):
+            raise serializers.ValidationError("Unsupported request fields were provided.")
+        return attrs
+
+
+class EmptyPayloadSerializer(StrictPayloadSerializer):
+    """Require an empty JSON object for state-changing actions without input."""
+
+
+class UATDraftSerializer(StrictPayloadSerializer):
     rfq_id = serializers.CharField(max_length=80)
-    synthetic = serializers.BooleanField()
-    environment = serializers.CharField(default="uat", max_length=16)
-
-    def validate(self, attrs):
-        if set(self.initial_data) - set(self.fields):
-            raise serializers.ValidationError("Unsupported request fields were provided.")
-        return attrs
+    synthetic = StrictBooleanField()
+    environment = serializers.CharField(max_length=16)
 
 
-class UATRejectSerializer(serializers.Serializer):
+class UATRejectSerializer(StrictPayloadSerializer):
     reason = serializers.CharField(required=False, allow_blank=True, max_length=500)
-
-    def validate(self, attrs):
-        if set(self.initial_data) - set(self.fields):
-            raise serializers.ValidationError("Unsupported request fields were provided.")
-        return attrs
 
 
 def _authorization_header(request):
@@ -123,6 +135,8 @@ def line_uat_approval_detail(request, approval_id):
 def line_uat_approve(request, approval_id):
     try:
         user = _require_reviewer(request)
+        serializer = EmptyPayloadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         approval = LineUATApprovalService().approve(approval_id, user=user)
     except PermissionDenied as exc:
         return _permission_error(exc)
@@ -156,6 +170,8 @@ def line_uat_reject(request, approval_id):
 def line_uat_send(request, approval_id):
     try:
         user = _require_reviewer(request)
+        serializer = EmptyPayloadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         approval = LineUATApprovalService().send(approval_id, user=user)
     except PermissionDenied as exc:
         return _permission_error(exc)

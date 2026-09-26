@@ -37,13 +37,17 @@ The LINE token is deliberately absent from n8n. This prevents an edited workflow
 - Only `APPROVED` can enter the send operation.
 - `REJECTED`, `PENDING`, and `FAILED` never send.
 - `SENT` is idempotent: a retry returns the existing result and does not call LINE again.
-- The send operation locks the approval row while checking and updating state.
+- The exact message and routing fields are hashed at approval; any later mutation fails closed.
+- The send operation commits an at-most-once claim before calling LINE. Concurrent or automatic retries observe the claim and do not call the provider again.
+- Every first provider request carries the approval UUID as `X-Line-Retry-Key`, following LINE's retry-key contract.
 - The recipient must exactly match `LINE_UAT_RECIPIENT_USER_ID`.
 - `LINE_SEND_ENABLED` defaults to `false`; disabled sends remain `APPROVED` and record `SEND_DISABLED` / `DRY_RUN` without a provider request.
 - Only a single LINE push recipient is supported. Broadcast, multicast, and narrowcast are not implemented.
 - Approval/rejection/send require an authenticated Manager or Admin. A Sales user may create and inspect a draft but cannot decide or send it.
 - Provider errors store a bounded error code, never a bearer token or raw Authorization header.
 - The n8n wait form has no automatic approval or timeout-to-send path.
+
+This is at-most-once UAT delivery, not a claim of guaranteed delivery. A process crash after the claim is committed can leave the record at `APPROVED` with `line_result_status=SENDING`. That state requires human reconciliation and is never retried automatically. See [LINE's retry guidance](https://developers.line.biz/en/docs/messaging-api/retrying-api-request/).
 
 ## Synthetic fixture
 
@@ -179,9 +183,11 @@ Only the operator may perform this scenario.
 5. Set `LINE_UAT_RECIPIENT_USER_ID` to the operator's own UAT LINE user ID.
 6. Set `LINE_SEND_ENABLED=true` and restart Django.
 7. Execute the workflow, inspect the exact text, acknowledge UAT, and explicitly approve.
-8. Verify exactly one message arrives and the audit is `SENT` with `send_attempted=true`.
+8. If LINE reports the request accepted, verify one message arrives and the audit is `SENT` with `send_attempted=true`.
 9. Retry the send endpoint or workflow step with the same approval UUID.
 10. Verify the existing `SENT` result is returned and no second LINE message arrives.
+
+If an execution remains `SENDING`, do not reset or resend it. Compare the stored claim timestamp and provider evidence, then resolve it manually. LINE retains retry keys for 24 hours; this demo deliberately has no automated reconciliation path.
 
 Immediately restore `LINE_SEND_ENABLED=false` after the demonstration.
 
@@ -197,7 +203,7 @@ Immediately restore `LINE_SEND_ENABLED=false` after the demonstration.
 
 ## Audit record
 
-Each `OutboundMessageApproval` stores the approval UUID, RFQ ID, synthetic/UAT markers, AI analysis, exact proposed/final text, status, approver/rejector and timestamp, provider attempt flag, bounded provider result, delivery timestamp, and chronological audit events. Secrets are excluded.
+Each `OutboundMessageApproval` stores the approval UUID, RFQ ID, synthetic/UAT markers, AI analysis, exact proposed/final text, approval content hash, status, approver/rejector and timestamp, provider claim/attempt flag, bounded provider result, delivery timestamp, and chronological audit events. Secrets are excluded.
 
 ## Tests and validation
 
@@ -230,4 +236,6 @@ Application rollback may revert the feature commit and migrate `ai_agent` back t
 - Draft content is deterministic around one bundled synthetic RFQ.
 - Foundation bearer token rotation and n8n secret storage remain operator responsibilities.
 - A provider `FAILED` record is terminal in this demo; create and approve a new draft for a controlled retry.
+- A stuck `SENDING` claim requires manual reconciliation and cannot be retried automatically.
+- LINE retry-key deduplication is provider-managed for 24 hours; do not reset a claim or reuse the approval after that window.
 - The Wait/Form execution remains pending until a human responds or an operator cancels it; cancellation sends nothing.

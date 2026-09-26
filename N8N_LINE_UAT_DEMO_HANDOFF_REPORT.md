@@ -23,7 +23,7 @@ Các nguyên tắc an toàn chính đã được triển khai:
 - Không có đường gửi tự động, timeout-to-approve hoặc implicit approval.
 - Django là ranh giới gửi duy nhất và kiểm tra lại toàn bộ điều kiện an toàn phía server.
 - Chỉ một LINE UAT recipient được allowlist; không hỗ trợ broadcast, multicast hoặc narrowcast.
-- Approval UUID được dùng làm business/idempotency key để ngăn gửi lặp.
+- Approval UUID được dùng làm business/idempotency key và LINE retry key để ngăn gửi lặp.
 - Kết quả gửi và toàn bộ chuyển trạng thái được lưu vào audit record.
 
 ## 2. Phạm vi thực hiện
@@ -40,7 +40,7 @@ Phạm vi bao gồm:
 6. Workflow n8n có Wait/Form human approval gate.
 7. Backend kill switch và recipient allowlist.
 8. LINE push adapter một người nhận.
-9. Idempotency và chống gửi lặp bằng transaction/row lock.
+9. At-most-once claim, content fingerprint và LINE retry key để chống gửi lặp.
 10. Bộ test an toàn và regression.
 11. Tài liệu cấu hình, chạy demo, rollback và giới hạn.
 
@@ -78,7 +78,7 @@ Thiết kế này ngăn việc chỉnh sửa workflow n8n để bỏ qua các ki
 | `PENDING` | Approve | `APPROVED` | Chưa |
 | `PENDING` | Reject | `REJECTED` | Không |
 | `APPROVED` | Send, kill switch off | `APPROVED` + `SEND_DISABLED` | Không |
-| `APPROVED` | Send, hợp lệ | `SENT` | Có, đúng một lần |
+| `APPROVED` | Send, hợp lệ | `SENT` | Tối đa một provider attempt tự động |
 | `APPROVED` | Provider lỗi | `FAILED` | Đã thử một lần |
 | `REJECTED` | Send | Bị từ chối | Không |
 | `PENDING` | Send | Bị từ chối | Không |
@@ -237,15 +237,17 @@ Payload chỉ chứa một `to` và một text message. Không có API bulk send
 
 ## 11. Idempotency
 
-Send service sử dụng `transaction.atomic()` và `select_for_update()` trên approval UUID.
+Send service sử dụng `transaction.atomic()` và `select_for_update()` trên approval UUID, lưu fingerprint của exact message/routing lúc approve, và commit `send_claimed_at` trước provider call.
 
 Nếu hai request gửi đồng thời hoặc n8n retry:
 
-1. Request đầu tiên khóa row.
-2. Chỉ record `APPROVED` được gọi provider.
-3. Sau thành công, record chuyển sang `SENT` trước khi transaction kết thúc.
-4. Request tiếp theo đọc `SENT` và trả kết quả hiện hữu.
-5. Provider không được gọi lần thứ hai.
+1. Request đầu tiên khóa row và xác minh content fingerprint.
+2. Chỉ record `APPROVED` chưa có claim được quyền claim send.
+3. Claim được commit trước external call; request đồng thời thấy `SENDING` và không gọi provider.
+4. Provider nhận approval UUID qua `X-Line-Retry-Key`.
+5. Sau thành công, record chuyển sang `SENT`; retry tiếp theo trả kết quả hiện hữu.
+
+Đây là at-most-once UAT delivery, không phải guaranteed delivery. Nếu process chết sau khi claim được commit, record có thể đứng ở `SENDING` và bắt buộc human reconciliation. Hệ thống không tự retry trạng thái này.
 
 Không sử dụng token hoặc dữ liệu khách hàng làm idempotency key.
 
@@ -303,7 +305,7 @@ Phạm vi test LINE UAT:
 | Unauthorized không approve | Anonymous và Sales đều nhận HTTP 403 |
 | Token không rò rỉ | Token không xuất hiện trong API response, audit hoặc provider response |
 
-Regression AI Sales/CRM cũng nằm trong cùng kết quả 41 test. Không có test nào liên lạc LINE API thật; toàn bộ provider calls đều dùng mock.
+Regression AI Sales/CRM nằm trong bộ kiểm thử liên quan. Không có test nào liên lạc LINE API thật; toàn bộ provider calls đều dùng mock.
 
 Các validation bổ sung:
 
@@ -444,6 +446,7 @@ Rollback application:
 - Chỉ có một synthetic RFQ cố định cho demo có tính lặp lại.
 - Token rotation và n8n secret storage thuộc trách nhiệm operator.
 - `FAILED` là trạng thái terminal; controlled retry phải tạo và approve draft mới.
+- `SENDING` bị kẹt là trạng thái cần human reconciliation; không tự reset hoặc retry.
 - Wait/Form có thể chờ vô thời hạn cho tới khi human phản hồi hoặc operator hủy; hủy không gửi.
 - Chưa thực hiện live LINE send vì chưa có UAT credential và recipient do operator cấp.
 

@@ -1,12 +1,32 @@
 """Safety and state-transition tests for the n8n + LINE UAT demo."""
 
+import io
+import json
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from threading import Event
+from urllib import error as urllib_error
+
 import pytest
 from apps.ai_agent import line_uat_views
 from apps.ai_agent.models import OutboundMessageApproval
-from apps.ai_agent.services.line_uat import LineUATApprovalService, LineUATError
+from apps.ai_agent.services import line_uat as line_uat_service
+from apps.ai_agent.services.line_uat import (
+    LineProviderClient,
+    LineUATApprovalService,
+    LineUATError,
+)
 from apps.foundation.models import FoundationPermission, FoundationRole
 from apps.foundation.services import FoundationAuthService, FoundationUserService
+from config.settings.base import env_strict_true
 from django.test import override_settings
+
+WORKFLOW_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "automation"
+    / "n8n"
+    / "line_uat_approval_demo.json"
+)
 
 
 class FakeAI:
@@ -27,11 +47,31 @@ class RecordingProvider:
         self.calls = []
         self.fail = fail
 
-    def push(self, *, recipient, message, token):
-        self.calls.append({"recipient": recipient, "message": message, "token": token})
+    def push(self, *, recipient, message, token, retry_key):
+        self.calls.append(
+            {
+                "recipient": recipient,
+                "message": message,
+                "token": token,
+                "retry_key": retry_key,
+            }
+        )
         if self.fail:
             raise LineUATError("provider_failed", "Synthetic provider failure.")
         return "uat-request-001", {"http_status": 200, "body": {}}
+
+
+class BlockingProvider(RecordingProvider):
+    def __init__(self):
+        super().__init__()
+        self.entered = Event()
+        self.release = Event()
+
+    def push(self, **kwargs):
+        self.calls.append(kwargs)
+        self.entered.set()
+        assert self.release.wait(timeout=5)
+        return "uat-request-concurrent", {"http_status": 200, "body": {}}
 
 
 def _grant(role_name):
@@ -146,6 +186,7 @@ def test_approved_message_sends_once_and_retry_is_idempotent():
     assert second.status == "SENT"
     assert first.provider_message_id == "uat-request-001"
     assert len(provider.calls) == 1
+    assert provider.calls[0]["retry_key"] == str(approval.pk)
 
 
 @pytest.mark.django_db
@@ -210,10 +251,10 @@ def test_recipient_outside_allowlist_is_rejected():
     provider = RecordingProvider()
     approval = _draft(user)
     service = LineUATApprovalService(provider=provider)
-    service.approve(approval.pk, user=user)
     OutboundMessageApproval.objects.filter(pk=approval.pk).update(
         recipient_ref="NOT-ALLOWLISTED"
     )
+    service.approve(approval.pk, user=user)
 
     with pytest.raises(LineUATError) as exc_info:
         service.send(approval.pk, user=user)
@@ -240,6 +281,116 @@ def test_kill_switch_prevents_provider_request():
     assert result.status == "APPROVED"
     assert result.line_result_status == "SEND_DISABLED"
     assert result.provider_response == {"mode": "DRY_RUN", "send_attempted": False}
+    assert provider.calls == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "malformed_value", ["false", "False", "TRUE", "true", "1", 1, None, "random"]
+)
+@override_settings(
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001",
+)
+def test_kill_switch_accepts_only_literal_boolean_true(malformed_value, settings):
+    settings.LINE_SEND_ENABLED = malformed_value
+    user = _user("admin", f"line-switch-{malformed_value!s}@example.com")
+    provider = RecordingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+
+    result = service.send(approval.pk, user=user)
+
+    assert result.line_result_status == "SEND_DISABLED"
+    assert result.send_attempted is False
+    assert provider.calls == []
+
+
+@pytest.mark.django_db
+@override_settings(
+    LINE_SEND_ENABLED=False,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="",
+    LINE_UAT_RECIPIENT_USER_ID="",
+)
+def test_dry_run_does_not_require_recipient_or_token():
+    user = _user("admin", "line-dry-run-empty-config@example.com")
+    provider = RecordingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+
+    result = service.send(approval.pk, user=user)
+
+    assert result.line_result_status == "SEND_DISABLED"
+    assert result.send_attempted is False
+    assert provider.calls == []
+
+
+@pytest.mark.django_db
+@override_settings(
+    LINE_SEND_ENABLED=True,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="",
+)
+def test_enabled_send_requires_nonempty_allowlisted_recipient():
+    user = _user("admin", "line-empty-recipient@example.com")
+    provider = RecordingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+
+    with pytest.raises(LineUATError) as exc_info:
+        service.send(approval.pk, user=user)
+
+    assert exc_info.value.code == "recipient_not_allowlisted"
+    assert provider.calls == []
+
+
+@pytest.mark.django_db
+@override_settings(
+    LINE_SEND_ENABLED=True,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001",
+)
+def test_message_change_after_approval_is_blocked():
+    user = _user("admin", "line-mutated-message@example.com")
+    provider = RecordingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+    OutboundMessageApproval.objects.filter(pk=approval.pk).update(
+        proposed_message="Different text after approval"
+    )
+
+    with pytest.raises(LineUATError) as exc_info:
+        service.send(approval.pk, user=user)
+
+    assert exc_info.value.code == "approved_content_changed"
+    assert provider.calls == []
+
+
+@pytest.mark.django_db
+@override_settings(
+    LINE_SEND_ENABLED=True,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001",
+)
+def test_recipient_and_allowlist_change_after_approval_is_blocked(settings):
+    user = _user("admin", "line-mutated-recipient@example.com")
+    provider = RecordingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+    OutboundMessageApproval.objects.filter(pk=approval.pk).update(
+        recipient_ref="SECOND-UAT-USER"
+    )
+    settings.LINE_UAT_RECIPIENT_USER_ID = "SECOND-UAT-USER"
+
+    with pytest.raises(LineUATError) as exc_info:
+        service.send(approval.pk, user=user)
+
+    assert exc_info.value.code == "approved_content_changed"
     assert provider.calls == []
 
 
@@ -329,3 +480,356 @@ def test_api_responses_never_expose_line_token(client, monkeypatch):
     assert "super-secret-token" not in draft.content.decode()
     assert "super-secret-token" not in approve.content.decode()
     assert "super-secret-token" not in send.content.decode()
+
+
+@pytest.mark.django_db
+@override_settings(LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001")
+def test_sales_and_anonymous_cannot_call_send_endpoint(client):
+    admin = _user("admin", "line-send-admin@example.com")
+    sales = _user("sales", "line-send-sales@example.com")
+    approval = _draft(admin)
+    LineUATApprovalService().approve(approval.pk, user=admin)
+    url = f"/api/v1/internal/line-uat/approvals/{approval.pk}/send/"
+
+    anonymous = client.post(url, data={}, content_type="application/json")
+    sales_response = client.post(
+        url,
+        data={},
+        content_type="application/json",
+        **_headers(sales),
+    )
+
+    assert anonymous.status_code == 403
+    assert sales_response.status_code == 403
+
+
+@pytest.mark.django_db
+@override_settings(LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001")
+def test_approval_and_rejection_are_one_way_transitions():
+    user = _user("admin", "line-one-way@example.com")
+    service = LineUATApprovalService(ai_sales=FakeAI())
+    approved = _draft(user)
+    rejected = _draft(user)
+
+    service.approve(approved.pk, user=user)
+    with pytest.raises(LineUATError, match="Only PENDING"):
+        service.approve(approved.pk, user=user)
+    with pytest.raises(LineUATError, match="Only PENDING"):
+        service.reject(approved.pk, user=user)
+
+    service.reject(rejected.pk, user=user)
+    with pytest.raises(LineUATError, match="Only PENDING"):
+        service.approve(rejected.pk, user=user)
+
+
+@pytest.mark.django_db
+def test_draft_api_rejects_coercion_unknown_fields_and_unknown_rfq(client, monkeypatch):
+    sales = _user("sales", "line-strict-input@example.com")
+    monkeypatch.setattr(
+        line_uat_views,
+        "LineUATApprovalService",
+        lambda: LineUATApprovalService(ai_sales=FakeAI()),
+    )
+    payloads = [
+        {"rfq_id": "UAT-RFQ-001", "synthetic": "true", "environment": "uat"},
+        {"rfq_id": "UAT-RFQ-001", "synthetic": 1, "environment": "uat"},
+        {"rfq_id": "UAT-RFQ-001", "synthetic": True, "environment": "UAT"},
+        {"rfq_id": "UNKNOWN", "synthetic": True, "environment": "uat"},
+        {
+            "rfq_id": "UAT-RFQ-001",
+            "synthetic": True,
+            "environment": "uat",
+            "recipient_ref": "attacker-controlled",
+        },
+        {"rfq_id": "UAT-RFQ-001", "synthetic": True},
+        {"rfq_id": None, "synthetic": True, "environment": "uat"},
+    ]
+
+    responses = [
+        client.post(
+            "/api/v1/internal/line-uat/drafts/",
+            data=payload,
+            content_type="application/json",
+            **_headers(sales),
+        )
+        for payload in payloads
+    ]
+
+    assert all(response.status_code == 400 for response in responses)
+    assert OutboundMessageApproval.objects.count() == 0
+
+
+@pytest.mark.django_db
+@override_settings(LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001")
+def test_state_endpoints_reject_mass_assignment_fields(client):
+    manager = _user("manager", "line-mass-assignment@example.com")
+    approval = _draft(manager)
+
+    approve = client.post(
+        f"/api/v1/internal/line-uat/approvals/{approval.pk}/approve/",
+        data={"status": "SENT", "proposed_message": "changed"},
+        content_type="application/json",
+        **_headers(manager),
+    )
+    send = client.post(
+        f"/api/v1/internal/line-uat/approvals/{approval.pk}/send/",
+        data={"recipient_ref": "attacker-controlled"},
+        content_type="application/json",
+        **_headers(manager),
+    )
+
+    assert approve.status_code == 400
+    assert send.status_code == 400
+    approval.refresh_from_db()
+    assert approval.status == "PENDING"
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    LINE_SEND_ENABLED=True,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001",
+)
+def test_concurrent_retry_observes_committed_claim_and_calls_provider_once():
+    user = _user("admin", "line-concurrent@example.com")
+    provider = BlockingProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        first_future = executor.submit(service.send, approval.pk, user=user)
+        assert provider.entered.wait(timeout=5)
+        concurrent = service.send(approval.pk, user=user)
+        provider.release.set()
+        first = first_future.result(timeout=5)
+
+    assert concurrent.line_result_status == "SENDING"
+    assert first.status == "SENT"
+    assert len(provider.calls) == 1
+
+
+class FakeHTTPResponse:
+    def __init__(self, body=b"{}", status=200, headers=None):
+        self.body = body
+        self.status = status
+        self.headers = headers or {}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+    def read(self, limit):
+        return self.body[:limit]
+
+
+def test_provider_uses_retry_key_and_handles_invalid_json(monkeypatch):
+    captured = {}
+
+    def fake_urlopen(http_request, timeout):
+        captured["headers"] = dict(http_request.header_items())
+        captured["timeout"] = timeout
+        return FakeHTTPResponse(body=b"not-json", headers={"x-line-request-id": "req-1"})
+
+    monkeypatch.setattr(line_uat_service.request, "urlopen", fake_urlopen)
+    request_id, response = LineProviderClient().push(
+        recipient="UAT-LINE-USER-001",
+        message="synthetic",
+        token="super-secret-token",
+        retry_key="123e4567-e89b-12d3-a456-426614174000",
+    )
+
+    assert request_id == "req-1"
+    assert response == {
+        "http_status": 200,
+        "body": {"unparseable_response": True},
+    }
+    assert captured["headers"]["X-line-retry-key"] == (
+        "123e4567-e89b-12d3-a456-426614174000"
+    )
+    assert "super-secret-token" not in str(response)
+
+
+@pytest.mark.parametrize("status_code", [400, 401, 403, 429, 500])
+def test_provider_http_failures_are_bounded_and_sanitized(monkeypatch, status_code):
+    def raise_http_error(http_request, timeout):
+        del http_request, timeout
+        raise urllib_error.HTTPError(
+            "https://api.line.me/v2/bot/message/push",
+            status_code,
+            "provider error",
+            {},
+            io.BytesIO(b'{"message":"bounded provider error"}'),
+        )
+
+    monkeypatch.setattr(line_uat_service.request, "urlopen", raise_http_error)
+    with pytest.raises(LineUATError) as exc_info:
+        LineProviderClient().push(
+            recipient="UAT-LINE-USER-001",
+            message="synthetic",
+            token="super-secret-token",
+            retry_key="123e4567-e89b-12d3-a456-426614174000",
+        )
+
+    assert exc_info.value.code == "provider_failed"
+    assert str(status_code) in exc_info.value.message
+    assert "super-secret-token" not in exc_info.value.message
+
+
+def test_provider_timeout_is_sanitized(monkeypatch):
+    def raise_timeout(http_request, timeout):
+        del http_request, timeout
+        raise TimeoutError("super-secret-token must not escape")
+
+    monkeypatch.setattr(line_uat_service.request, "urlopen", raise_timeout)
+    with pytest.raises(LineUATError) as exc_info:
+        LineProviderClient().push(
+            recipient="UAT-LINE-USER-001",
+            message="synthetic",
+            token="super-secret-token",
+            retry_key="123e4567-e89b-12d3-a456-426614174000",
+        )
+
+    assert exc_info.value.code == "provider_failed"
+    assert "super-secret-token" not in exc_info.value.message
+
+
+def test_provider_409_is_treated_as_deduplicated_success(monkeypatch):
+    def raise_conflict(http_request, timeout):
+        del http_request, timeout
+        raise urllib_error.HTTPError(
+            "https://api.line.me/v2/bot/message/push",
+            409,
+            "already accepted",
+            {"x-line-accepted-request-id": "accepted-1"},
+            io.BytesIO(b'{"message":"already accepted"}'),
+        )
+
+    monkeypatch.setattr(line_uat_service.request, "urlopen", raise_conflict)
+    request_id, response = LineProviderClient().push(
+        recipient="UAT-LINE-USER-001",
+        message="synthetic",
+        token="super-secret-token",
+        retry_key="123e4567-e89b-12d3-a456-426614174000",
+    )
+
+    assert request_id == "accepted-1"
+    assert response == {"http_status": 409, "deduplicated": True}
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        (None, False),
+        ("", False),
+        ("false", False),
+        ("False", False),
+        ("FALSE", False),
+        ("0", False),
+        ("1", False),
+        ("yes", False),
+        ("on", False),
+        ("random", False),
+        ("true", True),
+        (" TRUE ", True),
+    ],
+)
+def test_line_send_environment_parser_is_fail_closed(monkeypatch, raw_value, expected):
+    if raw_value is None:
+        monkeypatch.delenv("LINE_SEND_ENABLED", raising=False)
+    else:
+        monkeypatch.setenv("LINE_SEND_ENABLED", raw_value)
+
+    assert env_strict_true("LINE_SEND_ENABLED") is expected
+
+
+def test_n8n_workflow_has_no_direct_line_call_or_embedded_credentials():
+    workflow_text = WORKFLOW_PATH.read_text(encoding="utf-8")
+    workflow = json.loads(workflow_text)
+
+    assert "api.line.me" not in workflow_text
+    assert "LINE_UAT_CHANNEL_ACCESS_TOKEN" not in workflow_text
+    assert "LINE_UAT_CHANNEL_SECRET" not in workflow_text
+    assert workflow["active"] is False
+    assert all(
+        node["type"] != "n8n-nodes-base.line"
+        for node in workflow["nodes"]
+    )
+
+
+def test_n8n_approval_gate_is_explicit_and_reject_branch_cannot_send():
+    workflow = json.loads(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    nodes = {node["name"]: node for node in workflow["nodes"]}
+    connections = workflow["connections"]
+    gate = nodes["Explicit APPROVE + UAT Ack?"]["parameters"]["conditions"]
+    serialized_gate = json.dumps(gate, sort_keys=True)
+
+    assert '"rightValue": "APPROVE"' in serialized_gate
+    assert '"rightValue": true' in serialized_gate
+    assert gate["combinator"] == "and"
+    assert connections["Explicit APPROVE + UAT Ack?"]["main"][0][0]["node"] == (
+        "Persist APPROVED"
+    )
+    assert connections["Explicit APPROVE + UAT Ack?"]["main"][1][0]["node"] == (
+        "Persist REJECTED - No Send"
+    )
+    assert "Persist REJECTED - No Send" not in connections
+    assert connections["Verify APPROVED Safety State"]["main"][0][0]["node"] == (
+        "Django Kill Switch + LINE Send"
+    )
+
+
+def test_n8n_form_shows_exact_message_and_uat_warning_without_regeneration():
+    workflow = json.loads(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    nodes = {node["name"]: node for node in workflow["nodes"]}
+    description = nodes["Human Approval Gate"]["parameters"]["formDescription"]
+    approve_to_send_nodes = {
+        "Persist APPROVED",
+        "Re-fetch Approval",
+        "Verify APPROVED Safety State",
+        "Django Kill Switch + LINE Send",
+        "Final Audit Output",
+    }
+
+    assert "UAT / SYNTHETIC — NO REAL CUSTOMER" in description
+    assert "{{ $json.rfq_id }}" in description
+    assert "{{ $json.ai_payload.analysis.recommended_next_action }}" in description
+    assert "{{ $json.proposed_message }}" in description
+    assert all(
+        nodes[name]["type"] != "n8n-nodes-base.openAi"
+        for name in approve_to_send_nodes
+    )
+
+
+@pytest.mark.django_db
+@override_settings(
+    LINE_SEND_ENABLED=True,
+    LINE_UAT_CHANNEL_ACCESS_TOKEN="super-secret-token",
+    LINE_UAT_RECIPIENT_USER_ID="UAT-LINE-USER-001",
+)
+def test_process_crash_after_claim_cannot_auto_send_again():
+    class CrashProvider:
+        def __init__(self):
+            self.calls = 0
+
+        def push(self, **kwargs):
+            del kwargs
+            self.calls += 1
+            raise RuntimeError("simulated process crash")
+
+    user = _user("admin", "line-crash-window@example.com")
+    provider = CrashProvider()
+    approval = _draft(user)
+    service = LineUATApprovalService(provider=provider)
+    service.approve(approval.pk, user=user)
+
+    with pytest.raises(RuntimeError, match="simulated process crash"):
+        service.send(approval.pk, user=user)
+    retry = service.send(approval.pk, user=user)
+
+    assert retry.status == "APPROVED"
+    assert retry.line_result_status == "SENDING"
+    assert retry.send_claimed_at is not None
+    assert provider.calls == 1

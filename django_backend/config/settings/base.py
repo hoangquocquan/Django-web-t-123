@@ -24,6 +24,12 @@ def env_bool(name, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def env_strict_true(name):
+    """Enable a high-risk action only for the explicit string `true`."""
+    value = os.getenv(name)
+    return isinstance(value, str) and value.strip().casefold() == "true"
+
+
 def env_list(name, default=""):
     """Read a comma-separated list from environment variables."""
     return [
@@ -103,7 +109,7 @@ N8N_UAT_WEBHOOK_SECRET = os.getenv("N8N_UAT_WEBHOOK_SECRET", "").strip()
 LINE_UAT_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_UAT_CHANNEL_ACCESS_TOKEN", "").strip()
 LINE_UAT_CHANNEL_SECRET = os.getenv("LINE_UAT_CHANNEL_SECRET", "").strip()
 LINE_UAT_RECIPIENT_USER_ID = os.getenv("LINE_UAT_RECIPIENT_USER_ID", "").strip()
-LINE_SEND_ENABLED = env_bool("LINE_SEND_ENABLED", False)
+LINE_SEND_ENABLED = env_strict_true("LINE_SEND_ENABLED")
 
 
 INSTALLED_APPS = [
