@@ -768,6 +768,10 @@ def test_n8n_approval_gate_is_explicit_and_reject_branch_cannot_send():
 
     assert '"rightValue": "APPROVE"' in serialized_gate
     assert '"rightValue": true' in serialized_gate
+    assert "$json.decision ?? $json.Decision" in serialized_gate
+    assert "Array.isArray($json['I confirm this is synthetic UAT data'])" in (
+        serialized_gate
+    )
     assert gate["combinator"] == "and"
     assert connections["Explicit APPROVE + UAT Ack?"]["main"][0][0]["node"] == (
         "Persist APPROVED"
@@ -779,6 +783,15 @@ def test_n8n_approval_gate_is_explicit_and_reject_branch_cannot_send():
     assert connections["Verify APPROVED Safety State"]["main"][0][0]["node"] == (
         "Django Kill Switch + LINE Send"
     )
+
+
+def test_n8n_reject_reason_supports_runtime_form_label_keys():
+    workflow = json.loads(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    nodes = {node["name"]: node for node in workflow["nodes"]}
+    reject_body = nodes["Persist REJECTED - No Send"]["parameters"]["body"]
+
+    assert "$json.review_note" in reject_body
+    assert "$json['Review note']" in reject_body
 
 
 def test_n8n_form_shows_exact_message_and_uat_warning_without_regeneration():

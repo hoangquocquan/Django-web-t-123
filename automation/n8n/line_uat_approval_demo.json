@@ -97,8 +97,8 @@
         "conditions": {
           "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
           "conditions": [
-            {"id": "decision", "leftValue": "={{ $json.decision }}", "rightValue": "APPROVE", "operator": {"type": "string", "operation": "equals"}},
-            {"id": "ack", "leftValue": "={{ $json.uat_acknowledged }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true", "singleValue": true}}
+            {"id": "decision", "leftValue": "={{ $json.decision ?? $json.Decision ?? '' }}", "rightValue": "APPROVE", "operator": {"type": "string", "operation": "equals"}},
+            {"id": "ack", "leftValue": "={{ $json.uat_acknowledged === true || (Array.isArray($json['I confirm this is synthetic UAT data']) && $json['I confirm this is synthetic UAT data'].length > 0) }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true", "singleValue": true}}
           ],
           "combinator": "and"
         },
@@ -119,7 +119,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ reason: $json.review_note || 'Rejected in n8n UAT approval form' }) }}",
+        "body": "={{ JSON.stringify({ reason: $json.review_note || $json['Review note'] || 'Rejected in n8n UAT approval form' }) }}",
         "options": {}
       },
       "id": "reject",
