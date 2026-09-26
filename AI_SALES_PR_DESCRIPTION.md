@@ -130,7 +130,7 @@ git diff --check
 PASS
 ```
 
-The preceding feature SHA also completed the repository's CI, Test Pipeline, and AWS Learning Lab workflows successfully. PR-head checks must still complete for the final documentation commit before merge approval.
+The reviewed PR head completed the repository's CI, Test Pipeline, and AWS Learning Lab workflows successfully. The final ready-to-merge review documentation commit is rechecked before the final verdict; no result from an older SHA is used for merge readiness.
 
 ## Checklist
 
@@ -153,7 +153,7 @@ The preceding feature SHA also completed the repository's CI, Test Pipeline, and
 - [x] Independent security review completed
 - [x] Pre-merge review completed
 - [ ] Human reviewer approval
-- [ ] Required CI checks on PR
+- [x] Required CI checks on PR
 - [ ] Merge approval
 
 ## Known limitations
