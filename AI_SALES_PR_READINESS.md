@@ -1,5 +1,21 @@
 # AI Sales Assistant — Pull Request Readiness
 
+## Post-merge addendum — 2026-09-26
+
+This addendum records the outcome without rewriting the historical readiness evidence below.
+
+```text
+PR STATE: MERGED
+MERGE METHOD: merge commit
+MERGE COMMIT: 6c349268db269108f9a012656c5fef37a5b7ab85
+MAIN HEAD AFTER MERGE: 6c349268db269108f9a012656c5fef37a5b7ab85
+MERGE DATE: 2026-09-26T06:57:12Z
+POST-MERGE VALIDATION: PASS
+MERGED TO MAIN: YES
+```
+
+The owner explicitly waived a separate human approval for this solo-maintainer merge. No reviewer was fabricated and no branch-protection or repository rule was changed. See `AI_SALES_POST_MERGE_REPORT.md` for validation evidence and remaining limitations.
+
 ```text
 WORKSPACE: C:\Users\hoang\Documents\Codex\mecprecision-main-verification-c03d555
 BRANCH: feature/ai-sales-assistant

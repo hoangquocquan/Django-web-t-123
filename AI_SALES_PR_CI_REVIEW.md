@@ -1,5 +1,20 @@
 # AI Sales PR #2 — CI / Ready-to-Merge Review
 
+## Post-merge addendum — 2026-09-26
+
+This file remains the historical CI/readiness record. PR #2 was subsequently merged by explicit owner decision without a separate human approval requirement.
+
+```text
+PR STATE: MERGED
+MERGE METHOD: merge commit
+MERGE COMMIT: 6c349268db269108f9a012656c5fef37a5b7ab85
+MAIN HEAD AFTER MERGE: 6c349268db269108f9a012656c5fef37a5b7ab85
+POST-MERGE VALIDATION: PASS
+MERGED TO MAIN: YES
+```
+
+No reviewer was fabricated, no repository protection was bypassed, and the feature branch was retained. Full post-merge evidence is in `AI_SALES_POST_MERGE_REPORT.md`.
+
 ## 1. Identity
 
 ```text
