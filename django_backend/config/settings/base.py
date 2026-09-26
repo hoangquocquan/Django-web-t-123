@@ -96,6 +96,15 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-phase-2-dev-only-secret-key")
 DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
+# Synthetic n8n + LINE demo. Sending is deliberately disabled unless an
+# operator explicitly enables it and configures one allowlisted UAT recipient.
+N8N_UAT_BASE_URL = os.getenv("N8N_UAT_BASE_URL", "http://localhost:5678").strip()
+N8N_UAT_WEBHOOK_SECRET = os.getenv("N8N_UAT_WEBHOOK_SECRET", "").strip()
+LINE_UAT_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_UAT_CHANNEL_ACCESS_TOKEN", "").strip()
+LINE_UAT_CHANNEL_SECRET = os.getenv("LINE_UAT_CHANNEL_SECRET", "").strip()
+LINE_UAT_RECIPIENT_USER_ID = os.getenv("LINE_UAT_RECIPIENT_USER_ID", "").strip()
+LINE_SEND_ENABLED = env_bool("LINE_SEND_ENABLED", False)
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
