@@ -33,6 +33,7 @@ import OrderWorkspace from "./components/OrderWorkspace.tsx"
 import RagDemoPage from "./components/RagDemoPage.tsx"
 import RagChatPage from "./components/RagChatPage.tsx"
 import PublicComponentChatWidget from "./components/PublicComponentChatWidget.tsx"
+import AiSalesPage from "./components/AiSalesPage.tsx"
 
 const orange = "#ff5a1f"
 const products = [
@@ -1117,6 +1118,7 @@ const adminItems = [
   ["admin-transactions", "Giao dịch"],
   ["admin-rag-demo", "RAG kỹ thuật"],
   ["admin-ai-chat", "AI Chat Demo"],
+  ["admin-ai-sales", "AI Sales"],
 ]
 const salesItems = [
   ["sales", "Tổng quan bán hàng"],
@@ -1247,6 +1249,7 @@ function AdminPage({
   go,
   session,
   token,
+  canonicalClient,
   onLogin,
   onLogout,
 }: {
@@ -1254,6 +1257,7 @@ function AdminPage({
   go: (v: string) => void
   session: SessionState
   token: string | null
+  canonicalClient: ReturnType<typeof createCanonicalClient>
   onLogin: (email: string, password: string) => Promise<void>
   onLogout: () => void
 }) {
@@ -1274,6 +1278,7 @@ function AdminPage({
       "admin-transactions": "Giao dịch",
       "admin-rag-demo": "Internal RAG Technical Demo",
       "admin-ai-chat": "AI Component Assistant",
+      "admin-ai-sales": "AI Sales Assistant",
     }[route] || "Quản trị"
   return (
     <SideLayout mode="admin" route={route} go={go}>
@@ -1300,6 +1305,13 @@ function AdminPage({
         />
       ) : route === "admin-ai-chat" ? (
         <RagChatPage
+          token={session.status === "authenticated" ? token : null}
+          onLoginRequired={() => go("admin-login")}
+          onAuthenticationFailure={onLogout}
+        />
+      ) : route === "admin-ai-sales" ? (
+        <AiSalesPage
+          authenticated={session.status === "authenticated"}
           token={session.status === "authenticated" ? token : null}
           onLoginRequired={() => go("admin-login")}
           onAuthenticationFailure={onLogout}
@@ -1865,6 +1877,7 @@ export default function App({ dependencies }: {
         go={go}
         session={session}
         token={authSession.getAccessToken()}
+        canonicalClient={canonicalClient}
         onLogin={login}
         onLogout={logout}
       />
