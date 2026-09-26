@@ -7,6 +7,7 @@ $credentialNames = @(
     "LINE_UAT_CHANNEL_SECRET",
     "LINE_UAT_RECIPIENT_USER_ID"
 )
+$expectedN8nVersion = "2.37.10"
 
 function Test-StrictTrue {
     param([AllowNull()][string]$Value)
@@ -32,6 +33,20 @@ foreach ($scope in @("User", "Machine")) {
     if (Test-StrictTrue ([Environment]::GetEnvironmentVariable("LINE_SEND_ENABLED", $scope))) {
         throw "SAFETY STOP: persistent LINE_SEND_ENABLED=true detected."
     }
+}
+
+$n8nResolver = Join-Path $repo "scripts\line_uat\N8nCliResolver.psm1"
+Import-Module $n8nResolver -Force
+try {
+    $n8nCli = Resolve-N8nCli -Repo $repo -OverridePath $env:N8N_UAT_CLI_PATH
+}
+catch {
+    throw "N8N CLI NOT FOUND"
+}
+Write-Output "N8N_CLI_FOUND=yes"
+Write-Output "N8N_VERSION=$($n8nCli.Version)"
+if ($n8nCli.Version -ne $expectedN8nVersion) {
+    throw "SAFETY STOP: n8n version requires compatibility review; expected $expectedN8nVersion."
 }
 
 $recipient = $credentialValues["LINE_UAT_RECIPIENT_USER_ID"]
@@ -121,14 +136,19 @@ $env:N8N_BLOCK_ENV_ACCESS_IN_NODE = "false"
 $env:DJANGO_UAT_BASE_URL = "http://127.0.0.1:8000"
 $env:DJANGO_UAT_BEARER_TOKEN = $foundationToken
 
-n8n import:workflow --input=$workflowPath | Out-File `
+$n8nImportArguments = @($n8nCli.PrefixArguments) + @("import:workflow", "--input=$workflowPath")
+& $n8nCli.FilePath @n8nImportArguments | Out-File `
     -LiteralPath (Join-Path $logRoot "n8n-import.log") -Encoding utf8
 if ($LASTEXITCODE -ne 0) {
     Stop-Process -Id $django.Id -Force -ErrorAction SilentlyContinue
     throw "n8n workflow import failed."
 }
 
-$n8n = Start-Process -FilePath "n8n.cmd" -ArgumentList @("start") `
+$n8nStartArguments = @($n8nCli.PrefixArguments) + @("start")
+$n8nProcessArguments = @($n8nStartArguments | ForEach-Object {
+    if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
+})
+$n8n = Start-Process -FilePath $n8nCli.FilePath -ArgumentList $n8nProcessArguments `
     -WorkingDirectory $repo `
     -RedirectStandardOutput (Join-Path $logRoot "n8n.stdout.log") `
     -RedirectStandardError (Join-Path $logRoot "n8n.stderr.log") `

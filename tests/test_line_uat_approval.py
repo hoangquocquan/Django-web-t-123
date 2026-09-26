@@ -3,6 +3,8 @@
 import importlib.util
 import io
 import json
+import os
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
@@ -779,7 +781,6 @@ def test_n8n_workflow_has_no_direct_line_call_or_embedded_credentials():
 
 
 def test_runtime_workflow_builder_adds_fail_closed_send_interlock(tmp_path):
-    import subprocess
     import sys
 
     builder = (
@@ -813,6 +814,54 @@ def test_runtime_workflow_builder_adds_fail_closed_send_interlock(tmp_path):
     )
     send_url = nodes["Django Kill Switch + LINE Send"]["parameters"]["url"]
     assert "$('Verify APPROVED Safety State').item.json.approval_id" in send_url
+
+
+def test_n8n_cli_resolver_uses_explicit_override_without_appdata_assumption(tmp_path):
+    resolver = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "line_uat"
+        / "N8nCliResolver.psm1"
+    )
+    fake_cli = tmp_path / "n8n.cmd"
+    fake_cli.write_text(
+        '@echo off\r\nif "%~1"=="--version" echo 2.37.10\r\n',
+        encoding="utf-8",
+    )
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "N8N_RESOLVER_MODULE": str(resolver),
+            "N8N_TEST_OVERRIDE": str(fake_cli),
+            "N8N_TEST_REPO": str(Path(__file__).resolve().parents[1]),
+        }
+    )
+    command = (
+        "Import-Module $env:N8N_RESOLVER_MODULE -Force; "
+        "$result = Resolve-N8nCli -Repo $env:N8N_TEST_REPO "
+        "-OverridePath $env:N8N_TEST_OVERRIDE; "
+        "$result | ConvertTo-Json -Compress"
+    )
+    completed = subprocess.run(
+        [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            command,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    resolved = json.loads(completed.stdout)
+
+    assert resolved["Version"] == "2.37.10"
+    assert resolved["Source"] == "override"
+    assert Path(resolved["ResolvedPath"]).resolve() == fake_cli.resolve()
+    assert "AppData\\Roaming\\npm" not in resolver.read_text(encoding="utf-8")
 
 
 @pytest.mark.django_db
