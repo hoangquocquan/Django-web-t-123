@@ -1,5 +1,11 @@
 # AI Sales Assistant iteration report
 
+## Pre-merge update — 2026-09-26
+
+The independent fixes in `a93532f` and the review record in `366c83f` supersede the earlier implementation snapshot and validation counts below. The integration review re-ran the complete branch against `origin/main` at `c03d55506ef3ffd38e5e7bb290b981c1a3ccb17f`: backend `579 passed`, targeted security/governance/legacy `47 passed`, frontend `156 passed`, Django system and migration checks passed, and the production frontend build passed. The current access policy is the strict Sales/Manager/Admin allowlist plus both `ai_sales:read` and `sales:read`; unknown roles and Viewer are denied. Full pre-merge evidence and remaining limitations are in `AI_SALES_PRE_MERGE_REVIEW.md`.
+
+`AI_SALES_KNOWLEDGE_SOURCE=governed_synthetic` is now also documented in local and production environment examples. No production catalog source was enabled, and `main` was not modified or merged.
+
 ## 1. Final status
 
 `READY FOR AI SALES REVIEW`

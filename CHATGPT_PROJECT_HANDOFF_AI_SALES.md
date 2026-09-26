@@ -2,6 +2,12 @@
 
 This is the single self-contained report to give to ChatGPT for review or continuation. It consolidates the relevant repository baseline, architecture, AI Sales audit, implementation, security boundaries, validation evidence, Git state, limitations, and recommended next work.
 
+## Pre-merge review update — 2026-09-26
+
+The authoritative current review is `AI_SALES_PRE_MERGE_REVIEW.md`. It reviewed feature code at `366c83fbc31d7363a7060a2399da28f9897e4037` against `origin/main` at `c03d55506ef3ffd38e5e7bb290b981c1a3ccb17f`, including the independent security fixes from `a93532f`. Final local validation was: backend `579 passed`; targeted security/governance/legacy `47 passed`; frontend `156 passed`; Django check, migration drift check, TypeScript check, production build, and Git diff check all passed. No unresolved Blocker or High finding remained.
+
+Current policy is Sales/Manager/Admin only plus `ai_sales:read` and `sales:read`; Sales RFQ scope is creator/assignee, Manager/Admin can review all, and unsupported roles, Viewer, inactive users, missing permissions, foreign RFQs, malformed payloads, and ungoverned evidence fail closed. The selector remains exactly seven minimized fields. Production/base public AI flags remain disabled; development's pre-existing synthetic public-shaped demo remains protected by `DEBUG` and loopback checks. Knowledge remains `governed_synthetic`, with production catalog enablement intentionally unavailable. `MERGED TO MAIN: NO`.
+
 ## Latest continuation update — 2026-09-25
 
 This section supersedes older statements below that said the RFQ selector, object scope, production-source boundary, or operational metrics were still future work.
