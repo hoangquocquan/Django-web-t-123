@@ -1,5 +1,6 @@
 """Safety and state-transition tests for the n8n + LINE UAT demo."""
 
+import importlib.util
 import io
 import json
 from concurrent.futures import ThreadPoolExecutor
@@ -16,7 +17,11 @@ from apps.ai_agent.services.line_uat import (
     LineUATApprovalService,
     LineUATError,
 )
-from apps.foundation.models import FoundationPermission, FoundationRole
+from apps.foundation.models import (
+    FoundationAuthToken,
+    FoundationPermission,
+    FoundationRole,
+)
 from apps.foundation.services import FoundationAuthService, FoundationUserService
 from config.settings.base import env_strict_true
 from django.test import override_settings
@@ -27,6 +32,20 @@ WORKFLOW_PATH = (
     / "n8n"
     / "line_uat_approval_demo.json"
 )
+
+
+def _load_line_uat_helper(module_name):
+    helper_path = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "line_uat"
+        / f"{module_name}.py"
+    )
+    spec = importlib.util.spec_from_file_location(module_name, helper_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 class FakeAI:
@@ -794,6 +813,43 @@ def test_runtime_workflow_builder_adds_fail_closed_send_interlock(tmp_path):
     )
     send_url = nodes["Django Kill Switch + LINE Send"]["parameters"]["url"]
     assert "$('Verify APPROVED Safety State').item.json.approval_id" in send_url
+
+
+@pytest.mark.django_db
+def test_isolated_uat_foundation_bootstrap_is_minimal_idempotent_and_token_ready():
+    bootstrap = _load_line_uat_helper("bootstrap_foundation_uat")
+    token_helper = _load_line_uat_helper("create_foundation_token")
+    FoundationRole.objects.filter(name=bootstrap.ROLE_NAME).delete()
+
+    role = bootstrap.bootstrap_uat_role()
+    required_codes = set(bootstrap.REQUIRED_PERMISSIONS)
+
+    assert role.name == "manager"
+    assert role.description == bootstrap.ROLE_DESCRIPTION
+    assert role.is_active is True
+    assert set(role.permissions.values_list("code", flat=True)) == required_codes
+    assert not role.permissions.filter(module="*", action="*").exists()
+
+    role_count = FoundationRole.objects.filter(name=bootstrap.ROLE_NAME).count()
+    relation_count = role.permissions.count()
+    second = bootstrap.bootstrap_uat_role()
+
+    assert second.pk == role.pk
+    assert FoundationRole.objects.filter(name=bootstrap.ROLE_NAME).count() == role_count
+    assert second.permissions.count() == relation_count == 4
+    assert set(second.permissions.values_list("code", flat=True)) == required_codes
+
+    token_helper.configure_django()
+    raw_token, token = token_helper.create_temporary_principal()
+    authenticated = FoundationAuthService().authenticate_token(raw_token)
+
+    assert token.pk is not None
+    assert token.user_id == authenticated.pk
+    assert authenticated.role_id == role.pk
+    assert set(authenticated.role.permissions.values_list("code", flat=True)) == (
+        required_codes
+    )
+    assert FoundationAuthToken.objects.filter(pk=token.pk).exists()
 
 
 def test_n8n_approval_gate_is_explicit_and_reject_branch_cannot_send():

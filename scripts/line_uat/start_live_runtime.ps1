@@ -80,6 +80,13 @@ python django_backend/manage.py migrate --noinput | Out-File `
     -LiteralPath (Join-Path $logRoot "django-migrate.log") -Encoding utf8
 if ($LASTEXITCODE -ne 0) { throw "Django migration failed." }
 
+$bootstrapHelper = Join-Path $repo "scripts\line_uat\bootstrap_foundation_uat.py"
+$bootstrapOutput = @(& python $bootstrapHelper)
+if ($LASTEXITCODE -ne 0 -or $bootstrapOutput -notcontains "FOUNDATION_UAT_ROLE_READY=yes") {
+    throw "Failed to bootstrap the least-privilege Foundation UAT role."
+}
+Write-Output "FOUNDATION_UAT_ROLE_READY=yes"
+
 $tokenHelper = Join-Path $repo "scripts\line_uat\create_foundation_token.py"
 $tokenOutput = @(& python $tokenHelper)
 if ($LASTEXITCODE -ne 0 -or $tokenOutput.Count -eq 0) { throw "Failed to create temporary Foundation token." }
@@ -88,6 +95,7 @@ if ([string]::IsNullOrWhiteSpace($foundationToken)) { throw "Failed to capture t
 $foundationSecure = ConvertTo-SecureString $foundationToken -AsPlainText -Force
 $foundationProtected = ConvertFrom-SecureString $foundationSecure
 [IO.File]::WriteAllText((Join-Path $runtimeRoot "foundation-token.dpapi"), $foundationProtected, [Text.Encoding]::UTF8)
+Write-Output "FOUNDATION_UAT_TOKEN_READY=yes"
 
 $django = Start-Process -FilePath "python" `
     -ArgumentList @("django_backend/manage.py", "runserver", "127.0.0.1:8000", "--noreload") `
@@ -164,4 +172,3 @@ Write-Output "N8N_LISTENING_127_0_0_1_5678=yes"
 Write-Output "LINE_SEND_ENABLED=false"
 Write-Output "WORKFLOW_ACTIVE=false"
 Write-Output "RUNTIME_ROOT=$runtimeRoot"
-
