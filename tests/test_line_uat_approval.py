@@ -759,6 +759,43 @@ def test_n8n_workflow_has_no_direct_line_call_or_embedded_credentials():
     )
 
 
+def test_runtime_workflow_builder_adds_fail_closed_send_interlock(tmp_path):
+    import subprocess
+    import sys
+
+    builder = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "line_uat"
+        / "build_live_workflow.py"
+    )
+    destination = tmp_path / "runtime-workflow.json"
+    subprocess.run(
+        [sys.executable, str(builder), str(WORKFLOW_PATH), str(destination)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    runtime_text = destination.read_text(encoding="utf-8")
+    runtime = json.loads(runtime_text)
+    nodes = {node["name"]: node for node in runtime["nodes"]}
+    connections = runtime["connections"]
+
+    assert runtime["active"] is False
+    assert "api.line.me" not in runtime_text
+    assert "LINE_UAT_CHANNEL_ACCESS_TOKEN" not in runtime_text
+    assert nodes["Final Runtime Send Interlock"]["type"] == "n8n-nodes-base.wait"
+    assert connections["Verify APPROVED Safety State"]["main"][0][0]["node"] == (
+        "Final Runtime Send Interlock"
+    )
+    assert connections["Final Runtime Send Interlock"]["main"][0][0]["node"] == (
+        "Django Kill Switch + LINE Send"
+    )
+    send_url = nodes["Django Kill Switch + LINE Send"]["parameters"]["url"]
+    assert "$('Verify APPROVED Safety State').item.json.approval_id" in send_url
+
+
 def test_n8n_approval_gate_is_explicit_and_reject_branch_cannot_send():
     workflow = json.loads(WORKFLOW_PATH.read_text(encoding="utf-8"))
     nodes = {node["name"]: node for node in workflow["nodes"]}
