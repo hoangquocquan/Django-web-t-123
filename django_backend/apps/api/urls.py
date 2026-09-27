@@ -30,8 +30,6 @@ from apps.knowledge.views import (
     knowledge_pilot_training_acknowledgement,
     knowledge_pilot_user_transition,
     knowledge_search,
-    public_knowledge_chat,
-    public_synthetic_rag_demo,
     synthetic_rag_chat,
     synthetic_rag_demo_query,
 )
@@ -62,13 +60,13 @@ from .views.business_core import (
     inventory_items,
     inventory_warehouses,
 )
-from .views.catalog import categories, materials, product_detail, products
-from .views.cms import menu, page_detail, pages
 from .views.capabilities import (
     admin_capabilities,
     admin_capability_detail,
     public_capabilities,
 )
+from .views.catalog import categories, materials, product_detail, products
+from .views.cms import menu, page_detail, pages
 from .views.crm import (
     contact_requests,
     crm_customer_interactions,
@@ -260,16 +258,6 @@ urlpatterns = [
     path("public/home/", home, name="api-public-home"),
     path("public/products/", public_products, name="api-public-products"),
     path("public/capabilities/", public_capabilities, name="api-public-capabilities"),
-    path(
-        "public/ai/assistant/",
-        public_knowledge_chat,
-        name="api-public-knowledge-chat",
-    ),
-    path(
-        "public/ai-component-demo/",
-        public_synthetic_rag_demo,
-        name="api-public-ai-component-demo",
-    ),
     path("news/", news, name="api-news"),
     path("openapi.json", openapi_schema, name="api-openapi-schema"),
     path("version/", version, name="api-version"),
