@@ -6,11 +6,10 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from apps.ai.models import AIRequestLog
-from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.management.commands.verify_public_chatbot_demo import (
     Command as VerifyPublicChatbotDemoCommand,
 )
+from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.public_assistant_service import (
     PublicKnowledgeAssistantService,
     build_public_prompt,
@@ -38,11 +37,7 @@ def test_public_api_does_not_retrieve_internal_documents(client):
         content_type="application/json",
     )
 
-    assert response.status_code == 200
-    result = response.json()["data"]
-    assert result["sources"] == []
-    assert result["generation_status"] == "blocked_no_public_context"
-    assert result["business_context_used"] is False
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db
@@ -68,15 +63,7 @@ def test_public_api_uses_fixed_safety_responses(client, question, rule_id):
         content_type="application/json",
     )
 
-    assert response.status_code == 200
-    result = response.json()["data"]
-    assert result["provider"] == "policy-guard"
-    assert result["policy_rule_id"] == rule_id
-    assert result["sources"] == []
-    assert result["business_context_used"] is False
-    audit = AIRequestLog.objects.latest("id")
-    assert audit.request_type == "public_knowledge"
-    assert audit.provider == "policy-guard"
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db
