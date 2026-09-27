@@ -1,11 +1,11 @@
 # N8N + LINE UAT DEMO — BÁO CÁO TỔNG HỢP VÀ BÀN GIAO
 
-**Ngày lập báo cáo:** 2026-09-26  
-**Repository:** `https://github.com/hoangquocquan/Django-web-t-123.git`  
-**Worktree triển khai:** `C:\Users\hoang\Documents\Codex\n8n-line-uat-demo`  
-**Nhánh:** `feature/n8n-line-uat-demo`  
-**Base commit:** `6c349268db269108f9a012656c5fef37a5b7ab85`  
-**Implementation commit:** `25d2f2a7a67a4fac2c76599913d6c52c7bfab350`  
+**Ngày lập báo cáo:** 2026-09-26
+**Repository:** `https://github.com/hoangquocquan/Django-web-t-123.git`
+**Worktree triển khai:** `C:\Users\hoang\Documents\Codex\n8n-line-uat-demo`
+**Nhánh:** `feature/n8n-line-uat-demo`
+**Base commit:** `6c349268db269108f9a012656c5fef37a5b7ab85`
+**Implementation commit:** `25d2f2a7a67a4fac2c76599913d6c52c7bfab350`
 **Trạng thái:** Đã triển khai và kiểm thử; chưa merge, chưa push; chờ human review.
 
 > **THIS WORKFLOW IS UAT ONLY. DO NOT CONNECT REAL CUSTOMER DATA. DO NOT ENABLE PRODUCTION SENDING.**
@@ -169,7 +169,7 @@ Endpoint AI Sales hiện hữu không bị thay đổi contract:
 
 ## 9. Workflow n8n
 
-**Tên workflow:** `UAT - AI Sales LINE Approval Demo`  
+**Tên workflow:** `UAT - AI Sales LINE Approval Demo`
 **Đường dẫn:** `automation/n8n/line_uat_approval_demo.json`
 
 Các node chính:
