@@ -29,6 +29,8 @@ import OrderWorkspace from "./components/OrderWorkspace.tsx"
 import RagDemoPage from "./components/RagDemoPage.tsx"
 import RagChatPage from "./components/RagChatPage.tsx"
 import AiSalesPage from "./components/AiSalesPage.tsx"
+import AdminTablePage from "./components/AdminTablePage.tsx"
+import { createAdminApi, type AdminApi } from "./services/adminApi.ts"
 
 const orange = "#ff5a1f"
 const products = [
@@ -96,6 +98,7 @@ type AuthDependencies = {
   authSession: InMemoryAuthSession
   foundationAuth: ReturnType<typeof createFoundationAuthClient>
   canonicalClient: ReturnType<typeof createCanonicalClient>
+  adminApi: AdminApi
 }
 
 const defaultAuthSession = new InMemoryAuthSession()
@@ -106,6 +109,7 @@ const defaultCanonicalClient = createCanonicalClient({
   baseUrl: canonicalBaseUrlForPhase5b(),
   auth: defaultAuthSession,
 })
+const defaultAdminApi = createAdminApi({ auth: defaultAuthSession })
 
 function loginMessage(error: unknown): string {
   if (error instanceof CanonicalClientError) {
@@ -1103,6 +1107,7 @@ function AdminPage({
   session,
   token,
   canonicalClient,
+  adminApi,
   onLogin,
   onLogout,
 }: {
@@ -1111,6 +1116,7 @@ function AdminPage({
   session: SessionState
   token: string | null
   canonicalClient: ReturnType<typeof createCanonicalClient>
+  adminApi: AdminApi
   onLogin: (email: string, password: string) => Promise<void>
   onLogout: () => void
 }) {
@@ -1210,105 +1216,17 @@ function AdminPage({
           </div>
         </>
       ) : route === "admin-products" ? (
-        <DataTable
-          headers={["Mã", "Tên sản phẩm", "Vật liệu", "Dung sai", "Trạng thái"]}
-          rows={products}
-        />
+        <AdminTablePage api={adminApi} resource="products" />
       ) : route === "admin-customers" ? (
-        <DataTable
-          headers={["Khách hàng", "Ngành", "Dự án", "Giá trị", "Trạng thái"]}
-          rows={customers}
-        />
+        <AdminTablePage api={adminApi} resource="customers" />
       ) : route === "admin-inventory" ? (
-        <DataTable
-          headers={["Mã vật tư", "Mô tả", "Tồn kho", "Đơn vị", "Trạng thái"]}
-          rows={[
-            ["AL7075-T6", "Nhôm tấm 7075 T6", "128", "kg", "Sắp hết"],
-            ["SUS304", "Inox tấm 304", "420", "kg", "Sẵn sàng"],
-            ["SCM440", "Thép hợp kim", "86", "kg", "Sắp hết"],
-            ["TI-G5", "Titan Grade 5", "42", "kg", "Kiểm định"],
-          ]}
-        />
+        <AdminTablePage api={adminApi} resource="inventory" />
       ) : route === "admin-orders" ? (
-        <DataTable
-          headers={[
-            "Đơn hàng",
-            "Khách hàng",
-            "Tiến độ",
-            "Ngày giao",
-            "Trạng thái",
-          ]}
-          rows={[
-            [
-              "PO-2026-1048",
-              "Samsung SDI",
-              "72%",
-              "05/09/2026",
-              "Đang hoạt động",
-            ],
-            ["PO-2026-1051", "Thaco", "48%", "12/09/2026", "Đang hoạt động"],
-            ["PO-2026-1055", "Viettel", "15%", "20/09/2026", "Kiểm định"],
-          ]}
-        />
+        <AdminTablePage api={adminApi} resource="orders" />
       ) : route === "admin-workflows" ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {[
-            "Chờ xác nhận",
-            "Lập trình CAM",
-            "Đang gia công",
-            "Kiểm tra & giao",
-          ].map((x, i) => (
-            <div className="border border-white/10 p-4" key={x}>
-              <div className="mb-4 flex justify-between">
-                <b>{x}</b>
-                <Badge>{i + 3}</Badge>
-              </div>
-              {["PO-1048 · Housing", "PO-1051 · Shaft", "PO-1055 · Jig"]
-                .slice(0, i + 1)
-                .map((y) => (
-                  <div
-                    className="mb-3 border border-white/10 bg-zinc-900 p-4 text-sm"
-                    key={y}
-                  >
-                    {y}
-                    <div className="mt-3 text-xs text-zinc-500">
-                      Ưu tiên cao · Nguyễn Minh
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ))}
-        </div>
+        <AdminTablePage api={adminApi} resource="workflows" />
       ) : (
-        <DataTable
-          headers={["Mã", "Ngày", "Loại", "Đối tác", "Giá trị", "Trạng thái"]}
-          rows={[
-            [
-              "TX-8821",
-              "31/08/2026",
-              "Thu",
-              "Samsung SDI",
-              "1,2 tỷ ₫",
-              "Đã đối soát",
-            ],
-            [
-              "TX-8820",
-              "30/08/2026",
-              "Chi",
-              "Mazak Việt Nam",
-              "480 triệu ₫",
-              "Đang xử lý",
-            ],
-            [
-              "TX-8819",
-              "29/08/2026",
-              "Thu",
-              "Thaco",
-              "820 triệu ₫",
-              "Đã đối soát",
-            ],
-          ]}
-        />
+        <AdminTablePage api={adminApi} resource="transactions" />
       )}
     </SideLayout>
   )
@@ -1600,6 +1518,7 @@ export default function App({ dependencies }: {
   const foundationAuth = dependencies?.foundationAuth ?? defaultFoundationAuth
   const canonicalClient =
     dependencies?.canonicalClient ?? defaultCanonicalClient
+  const adminApi = dependencies?.adminApi ?? defaultAdminApi
   const requestGuard = useMemo(() => createLatestRequestGuard(), [])
   const loginGuard = useMemo(() => createLatestRequestGuard(), [])
   const loginAbort = useRef<AbortController | null>(null)
@@ -1731,6 +1650,7 @@ export default function App({ dependencies }: {
         session={session}
         token={authSession.getAccessToken()}
         canonicalClient={canonicalClient}
+        adminApi={adminApi}
         onLogin={login}
         onLogout={logout}
       />
