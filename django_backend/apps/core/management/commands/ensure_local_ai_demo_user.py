@@ -78,4 +78,4 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"Local AI demo user {action}: {email} (role={role.name}, password not printed)"
             )
-        )`r`n
+        )
