@@ -6,11 +6,13 @@ services or repositories.
 """
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.db.models import F, Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from apps.api.admin_query import apply_admin_query
 from apps.api.serializers.admin_interface import (
     BusinessCustomerSerializer,
     BusinessCustomerUpdateSerializer,
@@ -38,12 +40,15 @@ from apps.api.services.admin_dashboard_service import AdminDashboardQueryService
 from apps.api.views.foundation import _require_foundation_permission
 from apps.api.views.helpers import handle_not_found, ok, paginated_ok
 from apps.business_core.services import (
+    VALID_CUSTOMER_STATUSES,
+    VALID_PRODUCT_STATUSES,
     BusinessCustomerService,
     BusinessProductService,
     InventoryService,
 )
 from apps.foundation.services import FoundationAuthService, FoundationPermissionService
 from apps.transaction_domain.services import (
+    VALID_ORDER_STATUSES,
     OrderService,
     TransactionHistoryService,
     WorkflowService,
@@ -82,6 +87,56 @@ def _validation_response(exc):
 def _admin_user(request, module, action="read"):
     """Authenticate an admin request and enforce the required permission."""
     return _require_foundation_permission(request, module, action)
+
+
+def _boolean_filter(field_name):
+    """Build a strict boolean filter for one endpoint-owned model field."""
+
+    def apply(queryset, value):
+        normalized = value.lower()
+        if normalized not in {"true", "false"}:
+            raise ValueError("Boolean filters must be `true` or `false`.")
+        return queryset.filter(**{field_name: normalized == "true"})
+
+    return apply
+
+
+def _choice_filter(field_name, allowed_values):
+    """Build an exact case-insensitive filter constrained to known values."""
+    normalized_values = {value.lower() for value in allowed_values}
+
+    def apply(queryset, value):
+        normalized = value.lower()
+        if normalized not in normalized_values:
+            raise ValueError(f"Unsupported `{field_name}` value.")
+        return queryset.filter(**{f"{field_name}__iexact": normalized})
+
+    return apply
+
+
+def _material_filter(queryset, value):
+    """Filter products by material code or material name."""
+    return queryset.filter(
+        Q(default_material__material_code__iexact=value)
+        | Q(default_material__name__icontains=value)
+    )
+
+
+def _warehouse_filter(queryset, value):
+    """Filter inventory by a numeric warehouse id or exact warehouse code."""
+    if value.isdigit():
+        return queryset.filter(warehouse_id=int(value))
+    return queryset.filter(warehouse__code__iexact=value)
+
+
+def _availability_filter(queryset, value):
+    """Filter stock by positive or zero computed availability."""
+    normalized = value.lower()
+    if normalized == "positive":
+        return queryset.filter(quantity__gt=F("reserved_quantity"))
+    if normalized == "zero":
+        return queryset.filter(quantity__lte=F("reserved_quantity"))
+    raise ValueError("`availability` must be `positive` or `zero`.")
 
 
 @api_view(["POST"])
@@ -153,7 +208,30 @@ def admin_products(request):
 
     service = BusinessProductService()
     if request.method == "GET":
-        return paginated_ok(request, service.list_products(), business_product_to_dict)
+        queryset, error_response = apply_admin_query(
+            request,
+            service.list_products(),
+            search_fields=(
+                "part_code",
+                "sku",
+                "name",
+                "default_material__material_code",
+                "default_material__name",
+            ),
+            filters={
+                "status": _choice_filter("status", VALID_PRODUCT_STATUSES),
+                "active": _boolean_filter("is_active"),
+                "material": _material_filter,
+            },
+            ordering_fields={
+                "created_at": "created_at",
+                "product_code": "part_code",
+                "name": "name",
+            },
+        )
+        if error_response:
+            return error_response
+        return paginated_ok(request, queryset, business_product_to_dict)
 
     serializer = BusinessProductSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -204,9 +282,22 @@ def admin_customers(request):
 
     service = BusinessCustomerService()
     if request.method == "GET":
-        return paginated_ok(
-            request, service.list_customers(), business_customer_to_dict
+        queryset, error_response = apply_admin_query(
+            request,
+            service.list_customers(),
+            search_fields=("company_name", "contact_name"),
+            filters={
+                "status": _choice_filter("status", VALID_CUSTOMER_STATUSES),
+            },
+            ordering_fields={
+                "created_at": "created_at",
+                "company_name": "company_name",
+                "contact_name": "contact_name",
+            },
         )
+        if error_response:
+            return error_response
+        return paginated_ok(request, queryset, business_customer_to_dict)
 
     serializer = BusinessCustomerSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -282,7 +373,26 @@ def admin_inventory_items(request):
 
     service = InventoryService()
     if request.method == "GET":
-        return paginated_ok(request, service.list_items(), inventory_item_to_dict)
+        queryset, error_response = apply_admin_query(
+            request,
+            service.list_items(),
+            search_fields=(
+                "product__name",
+                "product__default_material__material_code",
+                "product__default_material__name",
+            ),
+            filters={
+                "warehouse": _warehouse_filter,
+                "availability": _availability_filter,
+            },
+            ordering_fields={
+                "quantity": "quantity",
+                "updated_at": "updated_at",
+            },
+        )
+        if error_response:
+            return error_response
+        return paginated_ok(request, queryset, inventory_item_to_dict)
 
     serializer = InventoryItemSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -347,7 +457,29 @@ def admin_orders(request):
 
     service = OrderService()
     if request.method == "GET":
-        return paginated_ok(request, service.list_orders(), order_to_dict)
+        queryset, error_response = apply_admin_query(
+            request,
+            service.list_orders(),
+            search_fields=(
+                "order_number",
+                "customer__company_name",
+                "customer__contact_name",
+            ),
+            filters={
+                "workflow_status": _choice_filter(
+                    "workflow_status",
+                    {"CONFIRMED", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELLED"},
+                ),
+                "status": _choice_filter("status", VALID_ORDER_STATUSES),
+            },
+            ordering_fields={
+                "order_date": "ordered_at",
+                "expected_delivery_date": "expected_delivery_date",
+            },
+        )
+        if error_response:
+            return error_response
+        return paginated_ok(request, queryset, order_to_dict)
 
     serializer = OrderCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -399,9 +531,30 @@ def admin_workflows(request):
 
     service = WorkflowService()
     if request.method == "GET":
-        return paginated_ok(
+        queryset, error_response = apply_admin_query(
             request,
             service.list_approvals(),
+            search_fields=(
+                "order__order_number",
+                "requested_by",
+                "reviewed_by",
+                "note",
+            ),
+            filters={
+                "decision": _choice_filter(
+                    "decision", {"pending", "approved", "rejected"}
+                ),
+                "requested_status": _choice_filter(
+                    "requested_status", VALID_ORDER_STATUSES
+                ),
+            },
+            ordering_fields={"created_at": "created_at", "order": "order_id"},
+        )
+        if error_response:
+            return error_response
+        return paginated_ok(
+            request,
+            queryset,
             lambda approval: {
                 "id": approval.id,
                 "order_id": approval.order_id,
@@ -436,6 +589,16 @@ def admin_transactions(request):
     except PermissionDenied as exc:
         return _permission_response(exc)
 
-    return paginated_ok(
-        request, TransactionHistoryService().list_history(), transaction_history_to_dict
+    queryset, error_response = apply_admin_query(
+        request,
+        TransactionHistoryService().list_history(),
+        search_fields=("entity_id", "action", "actor"),
+        filters={
+            "entity_type": "entity_type__iexact",
+            "action": "action__iexact",
+        },
+        ordering_fields={"created_at": "created_at"},
     )
+    if error_response:
+        return error_response
+    return paginated_ok(request, queryset, transaction_history_to_dict)
