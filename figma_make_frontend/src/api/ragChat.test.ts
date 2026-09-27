@@ -51,3 +51,25 @@ test("chat page provides session history, loading, citations and unavailable sta
   assert.match(component, /Thời tiết Tokyo hôm nay thế nào/)
   assert.doesNotMatch(component, /dangerouslySetInnerHTML/)
 })
+
+test("internal RAG client preserves auth failures and has no anonymous fallback", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    success: false,
+    error: { code: "authentication_required", message: "Login required." },
+  }), { status: 401, headers: { "content-type": "application/json" } })
+  try {
+    await assert.rejects(
+      () => askSyntheticRagChat("expired-token", "question"),
+      (error: unknown) => error instanceof Error &&
+        "kind" in error && error.kind === "authentication",
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+
+  const app = await readFile(new URL("../App.tsx", import.meta.url), "utf8")
+  const client = await readFile(new URL("./aiDemo.ts", import.meta.url), "utf8")
+  assert.doesNotMatch(app, /public\/ai\/assistant|PublicChatbotPage|PublicComponentChatWidget/)
+  assert.doesNotMatch(client, /public\/ai\/assistant|public\/ai-component-demo|localStorage|sessionStorage/)
+})
