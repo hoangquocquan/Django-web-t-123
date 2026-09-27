@@ -407,3 +407,35 @@ class InventoryTransaction(models.Model):
     def __str__(self):
         """Return transaction type and quantity."""
         return f"{self.transaction_type}: {self.quantity_delta}"
+
+
+class AIMachiningEstimate(models.Model):
+    """AI-powered technical estimation and DFM analysis for CNC machining requests."""
+
+    part_name = models.CharField(max_length=220)
+    material = models.CharField(max_length=120)
+    machining_type = models.CharField(max_length=120)
+    dimensions = models.CharField(max_length=160, blank=True)
+    tolerance = models.CharField(max_length=80, default="±0.01mm")
+    surface_treatment = models.CharField(max_length=120, default="None")
+    quantity = models.PositiveIntegerField(default=1)
+    customer_name = models.CharField(max_length=160, blank=True)
+    customer_email = models.EmailField(blank=True)
+    customer_phone = models.CharField(max_length=60, blank=True)
+    notes = models.TextField(blank=True)
+    estimated_unit_price = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    estimated_total_price = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    estimated_lead_time_days = models.PositiveIntegerField(default=3)
+    dfm_score = models.PositiveIntegerField(default=85)
+    dfm_analysis = models.TextField(blank=True)
+    material_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    machining_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    matched_products = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ai_machining_estimates"
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.part_name} ({self.material}) - Qty: {self.quantity}"
