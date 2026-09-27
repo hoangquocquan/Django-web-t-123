@@ -1,5 +1,121 @@
 # N8N + DJANGO AI SALES + LINE APPROVAL GATE — UAT DRY-RUN REPORT
 
+## Current runtime verification — PASS
+
+**Timestamp:** 2026-09-27 +09:00
+
+**Worktree:** `C:\Users\hoang\Documents\Codex\n8n-line-uat-demo`
+
+**Branch:** `feature/n8n-line-uat-demo`
+
+**HEAD:** `8be071e fix(line-uat): support nvm windows cli discovery`
+
+**n8n version:** `2.37.10`
+
+**Workflow:** `UAT - AI Sales LINE Approval Demo`
+
+**Source path:** `automation/n8n/line_uat_approval_demo.json`
+
+### Runtime preflight and owner initialization
+
+```text
+DJANGO_LISTENING_127_0_0_1_8000=yes
+N8N_LISTENING_127_0_0_1_5678=yes
+LINE_SEND_ENABLED=false
+SOURCE_WORKFLOW_ACTIVE=false
+RUNTIME_WORKFLOW_ACTIVE=false
+RUNTIME_BRANCH=feature/n8n-line-uat-demo
+```
+
+The operator completed n8n's supported owner-setup flow for this isolated UAT instance. The owner is local-only and synthetic; its password was entered by the operator, was not exposed to automation, and was not written to the repository or this report. The n8n UI subsequently opened the normal authenticated Overview/Workflows page and showed the single UAT workflow.
+
+Because the workflow was originally imported before the owner existed, it was re-imported into the owner's personal project with the supported n8n `--projectId` option and `--activeState=false`. Read-only database verification found one enabled `global:owner`, the personal-project ownership relation, and `workflow_entity.active=false`.
+
+Launcher evidence for this same runtime also recorded all three LINE UAT settings as `configured=yes` and the configured recipient profile as `verified=yes`. No credential value is included here.
+
+### Scenario A — REJECT
+
+```text
+execution ID: 2
+decision: REJECT
+synthetic acknowledgement: true
+execution status: success
+final status: REJECTED
+line_result_status: REJECTED_NO_SEND
+send_attempted: false
+provider message ID present: false
+provider send count: 0
+negative send check on rejected record: HTTP 409
+proof no LINE request: no LINE message API endpoint in runtime logs
+```
+
+### Scenario B — APPROVE + SEND DISABLED
+
+```text
+execution ID: 3
+decision: APPROVE
+synthetic acknowledgement: true
+exact message preview: verified before approval
+post-approval canonical content hash: verified
+execution status: success
+final status: APPROVED
+line_result_status: SEND_DISABLED
+send_attempted: false
+provider message ID present: false
+provider send count: 0
+proof no LINE request: no LINE message API endpoint in runtime logs
+```
+
+### Security and negative checks
+
+The approval records and runtime logs were inspected without printing credentials or the recipient value. Evidence:
+
+- both controlled records are `environment=uat`, `synthetic=true`, `channel=line`;
+- the approved record's canonical routing-and-content hash matches the hash fixed at approval time;
+- configured recipient format is valid and launcher profile verification passed;
+- no tracked file contains the configured recipient value;
+- no runtime log contains the configured recipient value;
+- no runtime log contains the LINE message API endpoint;
+- no record has `send_attempted=true` or a provider message ID;
+- provider send count is `0`.
+
+The rejected-record negative send check called the Django send boundary and returned HTTP `409`; it did not reach the provider adapter. Scenario B reached the same Django boundary only after approval, re-fetch, canonical-hash verification, and the final runtime interlock. With `LINE_SEND_ENABLED=false`, Django recorded `SEND_DISABLED` before the provider adapter.
+
+One preliminary execution (`ID 1`) failed after the signed form response was submitted with a PowerShell multipart part `Content-Type` that browser `FormData` does not send. n8n therefore classified text fields as binary objects and the strict IF node rejected the type. This debug execution created one isolated `PENDING` record, made no send attempt, and is not counted as Scenario A or B. The retry used browser-equivalent multipart text parts; no workflow safety condition was removed or weakened.
+
+### Regression status for this attempt
+
+```text
+pytest relevant suite: 91 passed
+Django system check: PASS (0 issues)
+Ruff: PASS
+source workflow JSON: PASS
+runtime workflow JSON: PASS
+n8n UI owner/session check: PASS
+workflow active state: false
+```
+
+### Current-attempt verdict
+
+```text
+SCENARIO A: PASS
+SCENARIO B: PASS
+LINE SEND ENABLED DURING TEST: NO
+LIVE LINE PROVIDER REQUEST OBSERVED: NO
+PROVIDER SEND COUNT: 0
+SECRET/LOG CHECK: PASS
+REAL CUSTOMER DATA USED: NO
+PRODUCTION LINE CHANNEL USED: NO
+WORKFLOW ACTIVE: NO
+MAIN MERGED: NO
+REMOTE PUSH: NO
+READY FOR PHASE C LIVE UAT: YES
+```
+
+`READY FOR PHASE C LIVE UAT: YES` means only that the current dry-run safety gates passed. This run stopped before any live LINE send and does not authorize production use.
+
+The remainder of this document is the historical dry-run evidence from 2026-09-26 and must not be interpreted as the result of the current runtime verification.
+
 **Timestamp:** 2026-09-26 22:09:17 +09:00
 
 **Repository:** `https://github.com/hoangquocquan/Django-web-t-123.git`
