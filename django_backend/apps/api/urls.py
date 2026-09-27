@@ -3,6 +3,13 @@
 from django.urls import include, path
 
 from apps.ai.views import ai_chat, ai_governance_events, ai_health
+from apps.ai_agent.line_uat_views import (
+    line_uat_approval_detail,
+    line_uat_approve,
+    line_uat_drafts,
+    line_uat_reject,
+    line_uat_send,
+)
 from apps.ai_agent.views import (
     agent_run,
     internal_ai_sales_analyze,
@@ -319,5 +326,30 @@ urlpatterns = [
         "internal/ai-sales/rfqs/",
         internal_ai_sales_rfqs,
         name="api-internal-ai-sales-rfqs",
+    ),
+    path(
+        "internal/line-uat/drafts/",
+        line_uat_drafts,
+        name="api-internal-line-uat-drafts",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/",
+        line_uat_approval_detail,
+        name="api-internal-line-uat-approval-detail",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/approve/",
+        line_uat_approve,
+        name="api-internal-line-uat-approve",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/reject/",
+        line_uat_reject,
+        name="api-internal-line-uat-reject",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/send/",
+        line_uat_send,
+        name="api-internal-line-uat-send",
     ),
 ]

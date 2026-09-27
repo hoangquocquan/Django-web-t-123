@@ -1,0 +1,211 @@
+{
+  "id": "uatAiSalesLineApprovalDemo",
+  "name": "UAT - AI Sales LINE Approval Demo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1060, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "rfq", "name": "rfq_id", "value": "UAT-RFQ-001", "type": "string"},
+            {"id": "synthetic", "name": "synthetic", "value": true, "type": "boolean"},
+            {"id": "environment", "name": "environment", "value": "uat", "type": "string"},
+            {"id": "warning", "name": "warning", "value": "UAT / SYNTHETIC — NO REAL CUSTOMER", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-fixture",
+      "name": "Set Synthetic RFQ",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-840, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DJANGO_UAT_BASE_URL + '/api/v1/internal/line-uat/drafts/' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $env.DJANGO_UAT_BEARER_TOKEN }}"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ rfq_id: $json.rfq_id, synthetic: $json.synthetic, environment: $json.environment }) }}",
+        "options": {}
+      },
+      "id": "create-draft",
+      "name": "Create PENDING Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-620, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json.data;\nif (!d || d.synthetic !== true || d.environment !== 'uat' || d.status !== 'PENDING') {\n  throw new Error('Fail closed: draft is not synthetic UAT PENDING');\n}\nif (d.ai_payload?.analysis?.autonomous_action !== false) {\n  throw new Error('Fail closed: autonomous_action must be false');\n}\nreturn [{ json: d }];"
+      },
+      "id": "validate-draft",
+      "name": "Validate Synthetic PENDING",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-390, 120]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "UAT LINE message approval",
+        "formDescription": "=⚠ UAT / SYNTHETIC — NO REAL CUSTOMER\n\nRFQ: {{ $json.rfq_id }}\nAI recommendation: {{ $json.ai_payload.analysis.recommended_next_action }}\nRecipient: UAT allowlisted recipient\n\nExact LINE message:\n{{ $json.proposed_message }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldName": "decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {"values": [{"option": "APPROVE"}, {"option": "REJECT"}]},
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "I confirm this is synthetic UAT data",
+              "fieldName": "uat_acknowledged",
+              "fieldType": "checkbox",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Review note",
+              "fieldName": "review_note",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {"limitWaitTime": false}
+      },
+      "id": "human-approval",
+      "name": "Human Approval Gate",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-150, 120],
+      "webhookId": "line-uat-human-approval"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {"id": "decision", "leftValue": "={{ $json.decision ?? $json.Decision ?? '' }}", "rightValue": "APPROVE", "operator": {"type": "string", "operation": "equals"}},
+            {"id": "ack", "leftValue": "={{ $json.uat_acknowledged === true || (Array.isArray($json['I confirm this is synthetic UAT data']) && $json['I confirm this is synthetic UAT data'].length > 0) }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true", "singleValue": true}}
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "approved-if",
+      "name": "Explicit APPROVE + UAT Ack?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [90, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DJANGO_UAT_BASE_URL + '/api/v1/internal/line-uat/approvals/' + $('Validate Synthetic PENDING').item.json.approval_id + '/reject/' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $env.DJANGO_UAT_BEARER_TOKEN }}"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ reason: $json.review_note || $json['Review note'] || 'Rejected in n8n UAT approval form' }) }}",
+        "options": {}
+      },
+      "id": "reject",
+      "name": "Persist REJECTED - No Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [330, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DJANGO_UAT_BASE_URL + '/api/v1/internal/line-uat/approvals/' + $('Validate Synthetic PENDING').item.json.approval_id + '/approve/' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $env.DJANGO_UAT_BEARER_TOKEN }}"}]},
+        "options": {}
+      },
+      "id": "approve",
+      "name": "Persist APPROVED",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [330, 40]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DJANGO_UAT_BASE_URL + '/api/v1/internal/line-uat/approvals/' + $json.data.approval_id + '/' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $env.DJANGO_UAT_BEARER_TOKEN }}"}]},
+        "options": {}
+      },
+      "id": "refetch",
+      "name": "Re-fetch Approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 40]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json.data;\nif (!d || d.status !== 'APPROVED' || d.synthetic !== true || d.environment !== 'uat') {\n  throw new Error('Fail closed: approval safety state is invalid');\n}\nreturn [{ json: d }];"
+      },
+      "id": "verify-approved",
+      "name": "Verify APPROVED Safety State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [790, 40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DJANGO_UAT_BASE_URL + '/api/v1/internal/line-uat/approvals/' + $json.approval_id + '/send/' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Authorization", "value": "={{ 'Bearer ' + $env.DJANGO_UAT_BEARER_TOKEN }}"}]},
+        "options": {}
+      },
+      "id": "send",
+      "name": "Django Kill Switch + LINE Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 40]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json.data;\nreturn [{ json: { approval_id: d.approval_id, rfq_id: d.rfq_id, final_status: d.status, line_result_status: d.line_result_status, send_attempted: d.send_attempted, sent_at: d.sent_at, warning: d.warning } }];"
+      },
+      "id": "audit",
+      "name": "Final Audit Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 40]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Set Synthetic RFQ", "type": "main", "index": 0}]]},
+    "Set Synthetic RFQ": {"main": [[{"node": "Create PENDING Draft", "type": "main", "index": 0}]]},
+    "Create PENDING Draft": {"main": [[{"node": "Validate Synthetic PENDING", "type": "main", "index": 0}]]},
+    "Validate Synthetic PENDING": {"main": [[{"node": "Human Approval Gate", "type": "main", "index": 0}]]},
+    "Human Approval Gate": {"main": [[{"node": "Explicit APPROVE + UAT Ack?", "type": "main", "index": 0}]]},
+    "Explicit APPROVE + UAT Ack?": {"main": [[{"node": "Persist APPROVED", "type": "main", "index": 0}], [{"node": "Persist REJECTED - No Send", "type": "main", "index": 0}]]},
+    "Persist APPROVED": {"main": [[{"node": "Re-fetch Approval", "type": "main", "index": 0}]]},
+    "Re-fetch Approval": {"main": [[{"node": "Verify APPROVED Safety State", "type": "main", "index": 0}]]},
+    "Verify APPROVED Safety State": {"main": [[{"node": "Django Kill Switch + LINE Send", "type": "main", "index": 0}]]},
+    "Django Kill Switch + LINE Send": {"main": [[{"node": "Final Audit Output", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "2d8a5ba6-3c6b-4fd5-a415-b730bdca23cc",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}
