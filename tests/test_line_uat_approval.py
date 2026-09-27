@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -816,51 +817,145 @@ def test_runtime_workflow_builder_adds_fail_closed_send_interlock(tmp_path):
     assert "$('Verify APPROVED Safety State').item.json.approval_id" in send_url
 
 
-def test_n8n_cli_resolver_uses_explicit_override_without_appdata_assumption(tmp_path):
+def _write_fake_n8n(path, *, version="2.37.10", broken=False):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if broken:
+        content = "@echo off\r\nexit /b 1\r\n"
+    else:
+        content = f'@echo off\r\nif "%~1"=="--version" echo {version}\r\n'
+    path.write_text(content, encoding="utf-8")
+
+
+def _run_n8n_resolver(
+    tmp_path,
+    *,
+    process_override="",
+    user_override="",
+    path_value=None,
+    nvm_symlink=None,
+):
     resolver = (
         Path(__file__).resolve().parents[1]
         / "scripts"
         / "line_uat"
         / "N8nCliResolver.psm1"
     )
-    fake_cli = tmp_path / "n8n.cmd"
-    fake_cli.write_text(
-        '@echo off\r\nif "%~1"=="--version" echo 2.37.10\r\n',
-        encoding="utf-8",
-    )
     environment = os.environ.copy()
     environment.update(
         {
             "N8N_RESOLVER_MODULE": str(resolver),
-            "N8N_TEST_OVERRIDE": str(fake_cli),
-            "N8N_TEST_REPO": str(Path(__file__).resolve().parents[1]),
+            "N8N_TEST_PROCESS_OVERRIDE": str(process_override),
+            "N8N_TEST_USER_OVERRIDE": str(user_override),
+            "N8N_TEST_REPO": str(tmp_path / "repo-without-local-n8n"),
         }
     )
+    if path_value is not None:
+        environment["PATH"] = path_value
+    if nvm_symlink is None:
+        environment.pop("NVM_SYMLINK", None)
+    else:
+        environment["NVM_SYMLINK"] = str(nvm_symlink)
+
     command = (
+        "$ErrorActionPreference = 'Stop'; "
         "Import-Module $env:N8N_RESOLVER_MODULE -Force; "
-        "$result = Resolve-N8nCli -Repo $env:N8N_TEST_REPO "
-        "-OverridePath $env:N8N_TEST_OVERRIDE; "
-        "$result | ConvertTo-Json -Compress"
+        "try { $result = Resolve-N8nCli -Repo $env:N8N_TEST_REPO "
+        "-ProcessOverridePath $env:N8N_TEST_PROCESS_OVERRIDE "
+        "-UserOverridePath $env:N8N_TEST_USER_OVERRIDE "
+        "-ExpectedVersion '2.37.10'; "
+        "$result | ConvertTo-Json -Compress } "
+        "catch { [Console]::Error.WriteLine($_.Exception.Message); exit 2 }"
     )
-    completed = subprocess.run(
+    powershell = shutil.which("powershell")
+    assert powershell is not None
+    return subprocess.run(
         [
-            "powershell",
+            powershell,
             "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
             command,
         ],
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
         env=environment,
     )
+
+
+def test_n8n_cli_resolver_uses_explicit_process_override(tmp_path):
+    fake_cli = tmp_path / "override" / "n8n.cmd"
+    _write_fake_n8n(fake_cli)
+    completed = _run_n8n_resolver(tmp_path, process_override=fake_cli)
+
+    assert completed.returncode == 0, completed.stderr
     resolved = json.loads(completed.stdout)
 
     assert resolved["Version"] == "2.37.10"
-    assert resolved["Source"] == "override"
+    assert resolved["Source"] == "process-override"
     assert Path(resolved["ResolvedPath"]).resolve() == fake_cli.resolve()
+
+
+def test_n8n_cli_resolver_supports_nvm_for_windows_symlink(tmp_path):
+    nvm_symlink = tmp_path / "nvm4w" / "nodejs"
+    fake_cli = nvm_symlink / "n8n.cmd"
+    _write_fake_n8n(fake_cli)
+    completed = _run_n8n_resolver(
+        tmp_path,
+        path_value="",
+        nvm_symlink=nvm_symlink,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    resolved = json.loads(completed.stdout)
+    assert resolved["Version"] == "2.37.10"
+    assert resolved["Source"] == "nvm-symlink"
+    assert Path(resolved["ResolvedPath"]).resolve() == fake_cli.resolve()
+
+
+def test_n8n_cli_resolver_skips_stale_appdata_shim(tmp_path):
+    stale_dir = tmp_path / "AppData" / "Roaming" / "npm"
+    valid_dir = tmp_path / "nvm4w" / "nodejs"
+    stale_cli = stale_dir / "n8n.cmd"
+    valid_cli = valid_dir / "n8n.cmd"
+    _write_fake_n8n(stale_cli, broken=True)
+    _write_fake_n8n(valid_cli)
+    completed = _run_n8n_resolver(
+        tmp_path,
+        path_value=os.pathsep.join((str(stale_dir), str(valid_dir))),
+        nvm_symlink=valid_dir,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    resolved = json.loads(completed.stdout)
+    assert Path(resolved["ResolvedPath"]).resolve() == valid_cli.resolve()
+    assert Path(resolved["ResolvedPath"]).resolve() != stale_cli.resolve()
+
+
+def test_n8n_cli_resolver_rejects_wrong_override_version(tmp_path):
+    fake_cli = tmp_path / "wrong-version" / "n8n.cmd"
+    _write_fake_n8n(fake_cli, version="1.99.0")
+    completed = _run_n8n_resolver(tmp_path, process_override=fake_cli)
+
+    assert completed.returncode != 0
+    assert "N8N VERSION MISMATCH" in completed.stderr
+
+
+def test_n8n_cli_resolver_fails_closed_when_binary_is_missing(tmp_path):
+    completed = _run_n8n_resolver(tmp_path, path_value="")
+
+    assert completed.returncode != 0
+    assert "N8N CLI NOT FOUND" in completed.stderr
+
+
+def test_n8n_cli_resolver_has_no_hardcoded_appdata_install_path():
+    resolver = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "line_uat"
+        / "N8nCliResolver.psm1"
+    )
     assert "AppData\\Roaming\\npm" not in resolver.read_text(encoding="utf-8")
 
 

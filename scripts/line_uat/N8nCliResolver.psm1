@@ -3,7 +3,8 @@ Set-StrictMode -Version Latest
 function New-N8nCliDescriptor {
     param(
         [Parameter(Mandatory = $true)][string]$Candidate,
-        [Parameter(Mandatory = $true)][string]$Source
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$ExpectedVersion
     )
 
     $resolved = (Resolve-Path -LiteralPath $Candidate -ErrorAction Stop).Path
@@ -36,6 +37,7 @@ function New-N8nCliDescriptor {
     if ($LASTEXITCODE -ne 0) { throw "N8N CLI NOT FOUND" }
     $versionMatch = [regex]::Match(($versionOutput -join " "), '\b\d+\.\d+\.\d+\b')
     if (-not $versionMatch.Success) { throw "N8N CLI NOT FOUND" }
+    if ($versionMatch.Value -ne $ExpectedVersion) { throw "N8N VERSION MISMATCH" }
 
     return [pscustomobject]@{
         FilePath = $filePath
@@ -49,54 +51,107 @@ function New-N8nCliDescriptor {
 function Resolve-N8nCli {
     param(
         [Parameter(Mandatory = $true)][string]$Repo,
-        [AllowNull()][string]$OverridePath
+        [AllowNull()][string]$ProcessOverridePath,
+        [AllowNull()][string]$UserOverridePath,
+        [Parameter(Mandatory = $true)][string]$ExpectedVersion
     )
 
-    if (-not [string]::IsNullOrWhiteSpace($OverridePath)) {
-        if (-not (Test-Path -LiteralPath $OverridePath -PathType Leaf)) {
-            throw "N8N CLI NOT FOUND"
+    foreach ($override in @(
+        [pscustomobject]@{ Path = $ProcessOverridePath; Source = "process-override" },
+        [pscustomobject]@{ Path = $UserOverridePath; Source = "user-override" }
+    )) {
+        if (-not [string]::IsNullOrWhiteSpace($override.Path)) {
+            if (-not (Test-Path -LiteralPath $override.Path -PathType Leaf)) {
+                throw "N8N CLI NOT FOUND"
+            }
+            return New-N8nCliDescriptor -Candidate $override.Path `
+                -Source $override.Source -ExpectedVersion $ExpectedVersion
         }
-        return New-N8nCliDescriptor -Candidate $OverridePath -Source "override"
+    }
+
+    $candidates = [Collections.Generic.List[object]]::new()
+    $seen = [Collections.Generic.HashSet[string]]::new(
+        [StringComparer]::OrdinalIgnoreCase
+    )
+
+    function Add-N8nCandidate {
+        param([AllowNull()][string]$Path, [string]$Source)
+        if ([string]::IsNullOrWhiteSpace($Path)) { return }
+        if ($seen.Add($Path)) {
+            [void]$candidates.Add([pscustomobject]@{ Path = $Path; Source = $Source })
+        }
     }
 
     foreach ($commandName in @("n8n", "n8n.cmd")) {
-        $command = Get-Command $commandName -CommandType Application, ExternalScript `
-            -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($command -and (Test-Path -LiteralPath $command.Source -PathType Leaf)) {
-            return New-N8nCliDescriptor -Candidate $command.Source -Source "path"
+        $commands = @(Get-Command $commandName -All `
+            -CommandType Application, ExternalScript -ErrorAction SilentlyContinue)
+        foreach ($command in $commands) {
+            Add-N8nCandidate -Path $command.Source -Source "path"
         }
     }
 
     $localBin = Join-Path $Repo "node_modules\.bin"
-    foreach ($candidate in @(
-        (Join-Path $localBin "n8n.cmd"),
-        (Join-Path $localBin "n8n.ps1"),
-        (Join-Path $Repo "node_modules\n8n\bin\n8n")
-    )) {
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            return New-N8nCliDescriptor -Candidate $candidate -Source "project-local"
+    Add-N8nCandidate -Path (Join-Path $localBin "n8n.cmd") -Source "project-local"
+    Add-N8nCandidate -Path (Join-Path $localBin "n8n.ps1") -Source "project-local"
+    Add-N8nCandidate -Path (Join-Path $Repo "node_modules\n8n\bin\n8n") `
+        -Source "project-local"
+
+    $npmCommands = @(Get-Command npm.cmd, npm -All `
+        -CommandType Application, ExternalScript -ErrorAction SilentlyContinue)
+    foreach ($npm in $npmCommands) {
+        $prefixOutput = @(& $npm.Source config get prefix 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $prefixOutput.Count -gt 0) {
+            $prefix = [string]$prefixOutput[-1]
+            Add-N8nCandidate -Path (Join-Path $prefix "n8n.cmd") -Source "npm-prefix"
+            Add-N8nCandidate -Path (Join-Path $prefix "n8n.ps1") -Source "npm-prefix"
+            Add-N8nCandidate -Path (Join-Path $prefix "node_modules\n8n\bin\n8n") `
+                -Source "npm-prefix"
+        }
+
+        $rootOutput = @(& $npm.Source root -g 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $rootOutput.Count -gt 0) {
+            $npmRoot = [string]$rootOutput[-1]
+            $npmBinRoot = Split-Path -Parent $npmRoot
+            Add-N8nCandidate -Path (Join-Path $npmBinRoot "n8n.cmd") `
+                -Source "npm-global-root"
+            Add-N8nCandidate -Path (Join-Path $npmBinRoot "n8n.ps1") `
+                -Source "npm-global-root"
+            Add-N8nCandidate -Path (Join-Path $npmRoot "n8n\bin\n8n") `
+                -Source "npm-global-root"
         }
     }
 
-    $npm = Get-Command npm.cmd, npm -CommandType Application, ExternalScript `
-        -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($npm) {
-        $npmRootOutput = @(& $npm.Source root -g 2>$null)
-        if ($LASTEXITCODE -eq 0 -and $npmRootOutput.Count -gt 0) {
-            $npmRoot = [string]$npmRootOutput[-1]
-            $npmBinRoot = Split-Path -Parent $npmRoot
-            foreach ($candidate in @(
-                (Join-Path $npmBinRoot "n8n.cmd"),
-                (Join-Path $npmBinRoot "n8n.ps1"),
-                (Join-Path $npmRoot "n8n\bin\n8n")
-            )) {
-                if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-                    return New-N8nCliDescriptor -Candidate $candidate -Source "npm-global-root"
-                }
+    if (-not [string]::IsNullOrWhiteSpace($env:NVM_SYMLINK)) {
+        Add-N8nCandidate -Path (Join-Path $env:NVM_SYMLINK "n8n.cmd") `
+            -Source "nvm-symlink"
+        Add-N8nCandidate -Path (Join-Path $env:NVM_SYMLINK "n8n.ps1") `
+            -Source "nvm-symlink"
+    }
+
+    foreach ($pathEntry in @($env:PATH -split ';')) {
+        if (-not [string]::IsNullOrWhiteSpace($pathEntry)) {
+            Add-N8nCandidate -Path (Join-Path $pathEntry "n8n.cmd") `
+                -Source "active-path"
+            Add-N8nCandidate -Path (Join-Path $pathEntry "n8n.ps1") `
+                -Source "active-path"
+        }
+    }
+
+    $versionMismatch = $false
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path -LiteralPath $candidate.Path -PathType Leaf)) { continue }
+        try {
+            return New-N8nCliDescriptor -Candidate $candidate.Path `
+                -Source $candidate.Source -ExpectedVersion $ExpectedVersion
+        }
+        catch {
+            if ($_.Exception.Message -eq "N8N VERSION MISMATCH") {
+                $versionMismatch = $true
             }
         }
     }
 
+    if ($versionMismatch) { throw "N8N VERSION MISMATCH" }
     throw "N8N CLI NOT FOUND"
 }
 

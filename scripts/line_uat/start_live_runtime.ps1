@@ -38,16 +38,26 @@ foreach ($scope in @("User", "Machine")) {
 $n8nResolver = Join-Path $repo "scripts\line_uat\N8nCliResolver.psm1"
 Import-Module $n8nResolver -Force
 try {
-    $n8nCli = Resolve-N8nCli -Repo $repo -OverridePath $env:N8N_UAT_CLI_PATH
+    $processN8nOverride = [Environment]::GetEnvironmentVariable(
+        "N8N_UAT_CLI_PATH", "Process"
+    )
+    $userN8nOverride = [Environment]::GetEnvironmentVariable(
+        "N8N_UAT_CLI_PATH", "User"
+    )
+    $n8nCli = Resolve-N8nCli -Repo $repo `
+        -ProcessOverridePath $processN8nOverride `
+        -UserOverridePath $userN8nOverride `
+        -ExpectedVersion $expectedN8nVersion
 }
 catch {
+    if ($_.Exception.Message -eq "N8N VERSION MISMATCH") {
+        throw "SAFETY STOP: n8n version requires compatibility review; expected $expectedN8nVersion."
+    }
     throw "N8N CLI NOT FOUND"
 }
 Write-Output "N8N_CLI_FOUND=yes"
+Write-Output "N8N_CLI_PATH=$($n8nCli.ResolvedPath)"
 Write-Output "N8N_VERSION=$($n8nCli.Version)"
-if ($n8nCli.Version -ne $expectedN8nVersion) {
-    throw "SAFETY STOP: n8n version requires compatibility review; expected $expectedN8nVersion."
-}
 
 $recipient = $credentialValues["LINE_UAT_RECIPIENT_USER_ID"]
 if ($recipient -notmatch '^U[0-9a-fA-F]{32}$') {
