@@ -111,6 +111,28 @@ Create or select a synthetic UAT Manager/Admin account using the existing founda
 
 If n8n is running in Docker, `DJANGO_UAT_BASE_URL` must be reachable from the n8n container (for example, the Compose service URL rather than `127.0.0.1`).
 
+### Isolated Windows UAT launcher
+
+The isolated launcher intentionally uses two stages because a fresh n8n database has no owner or personal project yet. Importing before owner initialization creates a workflow that the eventual owner cannot access.
+
+1. Keep the persistent `LINE_SEND_ENABLED` setting false or unset.
+2. Run `scripts/line_uat/start_live_runtime.ps1` from the operator's PowerShell session.
+3. Confirm the launcher reports `N8N_OWNER_SETUP_REQUIRED=yes`, `WORKFLOW_IMPORTED=no`, and `LINE_SEND_ENABLED=false`.
+4. Open the isolated local n8n instance and complete the supported owner-setup screen. Do not bypass n8n authentication and do not store the owner password in the repository.
+5. Run `scripts/line_uat/attach_runtime_workflow.ps1` from the same Windows account that started the runtime.
+6. Confirm it reports:
+
+```text
+N8N_OWNER_PROJECT_READY=yes
+WORKFLOW_IMPORTED=yes
+WORKFLOW_OWNER_ATTACHMENT_READY=yes
+N8N_LISTENING_127_0_0_1_5678=yes
+LINE_SEND_ENABLED=false
+WORKFLOW_ACTIVE=false
+```
+
+The attachment helper resolves exactly one enabled n8n owner and its personal project from the isolated database, imports with n8n's supported `--projectId` and `--activeState=false` options, verifies `workflow:owner`, and restarts the isolated n8n process so its permission cache is current. It fails closed when owner setup is incomplete or ambiguous.
+
 ## Internal endpoints
 
 All endpoints require a foundation Bearer token.
@@ -239,3 +261,4 @@ Application rollback may revert the feature commit and migrate `ai_agent` back t
 - A stuck `SENDING` claim requires manual reconciliation and cannot be retried automatically.
 - LINE retry-key deduplication is provider-managed for 24 hours; do not reset a claim or reuse the approval after that window.
 - The Wait/Form execution remains pending until a human responds or an operator cancels it; cancellation sends nothing.
+- A fresh isolated n8n runtime requires operator-created owner credentials before the workflow can be attached to the owner's personal project.

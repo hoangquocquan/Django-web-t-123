@@ -5,6 +5,7 @@ import io
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -957,6 +958,96 @@ def test_n8n_cli_resolver_has_no_hardcoded_appdata_install_path():
         / "N8nCliResolver.psm1"
     )
     assert "AppData\\Roaming\\npm" not in resolver.read_text(encoding="utf-8")
+
+
+def _n8n_owner_database(path):
+    connection = sqlite3.connect(path)
+    connection.executescript(
+        """
+        CREATE TABLE user (
+            id TEXT PRIMARY KEY,
+            disabled INTEGER NOT NULL,
+            roleSlug TEXT NOT NULL
+        );
+        CREATE TABLE project (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            creatorId TEXT
+        );
+        CREATE TABLE project_relation (
+            projectId TEXT NOT NULL,
+            userId TEXT NOT NULL,
+            role TEXT NOT NULL
+        );
+        CREATE TABLE workflow_entity (
+            id TEXT PRIMARY KEY,
+            active INTEGER NOT NULL
+        );
+        CREATE TABLE shared_workflow (
+            workflowId TEXT NOT NULL,
+            projectId TEXT NOT NULL,
+            role TEXT NOT NULL
+        );
+        """
+    )
+    return connection
+
+
+def test_n8n_owner_project_resolution_and_inactive_workflow_verification(tmp_path):
+    helper = _load_line_uat_helper("n8n_owner_project")
+    database = tmp_path / "database.sqlite"
+    with _n8n_owner_database(database) as connection:
+        connection.execute(
+            "INSERT INTO user VALUES (?, ?, ?)",
+            ("owner-1", 0, "global:owner"),
+        )
+        connection.execute(
+            "INSERT INTO project VALUES (?, ?, ?)",
+            ("personal-project-1", "personal", "owner-1"),
+        )
+        connection.execute(
+            "INSERT INTO project_relation VALUES (?, ?, ?)",
+            ("personal-project-1", "owner-1", "project:personalOwner"),
+        )
+        connection.execute(
+            "INSERT INTO workflow_entity VALUES (?, ?)",
+            (helper.WORKFLOW_ID, 0),
+        )
+        connection.execute(
+            "INSERT INTO shared_workflow VALUES (?, ?, ?)",
+            (helper.WORKFLOW_ID, "personal-project-1", "workflow:owner"),
+        )
+
+    project_id = helper.resolve_owner_project(database)
+    helper.verify_workflow_ownership(database, project_id)
+
+    assert project_id == "personal-project-1"
+
+
+def test_n8n_owner_project_resolution_fails_closed_without_exactly_one_owner(tmp_path):
+    helper = _load_line_uat_helper("n8n_owner_project")
+    database = tmp_path / "database.sqlite"
+    with _n8n_owner_database(database):
+        pass
+
+    with pytest.raises(RuntimeError, match="exactly one initialized"):
+        helper.resolve_owner_project(database)
+
+
+def test_n8n_runtime_launcher_defers_import_until_owner_attachment():
+    script_root = Path(__file__).resolve().parents[1] / "scripts" / "line_uat"
+    launcher = (script_root / "start_live_runtime.ps1").read_text(encoding="utf-8")
+    attachment = (script_root / "attach_runtime_workflow.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert "import:workflow" not in launcher
+    assert 'Write-Output "N8N_OWNER_SETUP_REQUIRED=yes"' in launcher
+    assert 'Write-Output "WORKFLOW_IMPORTED=no"' in launcher
+    assert '"import:workflow"' in attachment
+    assert '"--projectId=$projectId"' in attachment
+    assert '"--activeState=false"' in attachment
+    assert 'Write-Output "LINE_SEND_ENABLED=false"' in attachment
 
 
 @pytest.mark.django_db

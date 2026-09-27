@@ -146,14 +146,6 @@ $env:N8N_BLOCK_ENV_ACCESS_IN_NODE = "false"
 $env:DJANGO_UAT_BASE_URL = "http://127.0.0.1:8000"
 $env:DJANGO_UAT_BEARER_TOKEN = $foundationToken
 
-$n8nImportArguments = @($n8nCli.PrefixArguments) + @("import:workflow", "--input=$workflowPath")
-& $n8nCli.FilePath @n8nImportArguments | Out-File `
-    -LiteralPath (Join-Path $logRoot "n8n-import.log") -Encoding utf8
-if ($LASTEXITCODE -ne 0) {
-    Stop-Process -Id $django.Id -Force -ErrorAction SilentlyContinue
-    throw "n8n workflow import failed."
-}
-
 $n8nStartArguments = @($n8nCli.PrefixArguments) + @("start")
 $n8nProcessArguments = @($n8nStartArguments | ForEach-Object {
     if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
@@ -201,4 +193,6 @@ Write-Output "DJANGO_LISTENING_127_0_0_1_8000=yes"
 Write-Output "N8N_LISTENING_127_0_0_1_5678=yes"
 Write-Output "LINE_SEND_ENABLED=false"
 Write-Output "WORKFLOW_ACTIVE=false"
+Write-Output "N8N_OWNER_SETUP_REQUIRED=yes"
+Write-Output "WORKFLOW_IMPORTED=no"
 Write-Output "RUNTIME_ROOT=$runtimeRoot"
