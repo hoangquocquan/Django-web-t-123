@@ -64,6 +64,11 @@ from .views.business_core import (
 )
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
+from .views.capabilities import (
+    admin_capabilities,
+    admin_capability_detail,
+    public_capabilities,
+)
 from .views.crm import (
     contact_requests,
     crm_customer_interactions,
@@ -80,6 +85,11 @@ from .views.foundation import (
     foundation_users,
 )
 from .views.newsletter import subscribers as newsletter_subscribers
+from .views.public_products import (
+    admin_public_product_detail,
+    admin_public_products,
+    public_products,
+)
 from .views.replacement import (
     aws_demo,
     capabilities,
@@ -116,6 +126,10 @@ urlpatterns = [
     path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
     path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
     path("admin/products/", admin_products, name="api-admin-products"),
+    path("admin/capabilities/", admin_capabilities, name="api-admin-capabilities"),
+    path("admin/capabilities/<int:capability_id>/", admin_capability_detail, name="api-admin-capability-detail"),
+    path("admin/public-products/", admin_public_products, name="api-admin-public-products"),
+    path("admin/public-products/<int:projection_id>/", admin_public_product_detail, name="api-admin-public-product-detail"),
     path(
         "admin/products/<int:product_id>/",
         admin_product_detail,
@@ -244,6 +258,8 @@ urlpatterns = [
         name="api-foundation-permission-check",
     ),
     path("public/home/", home, name="api-public-home"),
+    path("public/products/", public_products, name="api-public-products"),
+    path("public/capabilities/", public_capabilities, name="api-public-capabilities"),
     path(
         "public/ai/assistant/",
         public_knowledge_chat,
