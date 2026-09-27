@@ -1,6 +1,16 @@
 """Managed Django models for product, customer, and inventory ownership."""
 
+import uuid
+
 from django.db import models
+
+PUBLICATION_STATUS_CHOICES = [
+    ("DRAFT", "Draft"),
+    ("REVIEW", "Review"),
+    ("APPROVED", "Approved"),
+    ("PUBLISHED", "Published"),
+    ("ARCHIVED", "Archived"),
+]
 
 
 DATA_CONTRACT_CHOICES = [
@@ -244,6 +254,75 @@ class BusinessProduct(models.Model):
     def __str__(self):
         """Return product name for admin/debug output."""
         return self.name
+
+
+class PublicProductProjection(models.Model):
+    """Editorial, explicitly published projection of one business product."""
+
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    source_product = models.OneToOneField(
+        BusinessProduct, on_delete=models.PROTECT, related_name="public_projection"
+    )
+    title = models.CharField(max_length=220)
+    slug = models.SlugField(max_length=240, unique=True)
+    public_description = models.TextField(blank=True)
+    public_material = models.JSONField(default=dict, blank=True)
+    public_specifications = models.JSONField(default=list, blank=True)
+    category = models.CharField(max_length=160, blank=True)
+    main_image = models.URLField(max_length=500, blank=True)
+    seo_title = models.CharField(max_length=255, blank=True)
+    seo_description = models.TextField(blank=True)
+    display_order = models.IntegerField(default=0)
+    publication_status = models.CharField(
+        max_length=16, choices=PUBLICATION_STATUS_CHOICES, default="DRAFT", db_index=True
+    )
+    published_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "public_product_projections"
+        ordering = ["display_order", "title", "id"]
+        indexes = [models.Index(fields=["publication_status", "display_order"], name="public_product_state_order_idx")]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(publication_status__in=["DRAFT", "REVIEW", "APPROVED", "PUBLISHED", "ARCHIVED"]), name="ck_public_product_status"),
+            models.CheckConstraint(condition=(~models.Q(publication_status="PUBLISHED") | models.Q(published_at__isnull=False)), name="ck_public_product_published_at"),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.publication_status})"
+
+
+class Capability(models.Model):
+    """Editorial capability content with an explicit publication lifecycle."""
+
+    title = models.CharField(max_length=220)
+    slug = models.SlugField(max_length=240, unique=True)
+    short_description = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    image = models.URLField(max_length=500, blank=True)
+    technology_type = models.CharField(max_length=120, blank=True)
+    process_category = models.CharField(max_length=120, blank=True)
+    display_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True, db_index=True)
+    status = models.CharField(max_length=16, choices=PUBLICATION_STATUS_CHOICES, default="DRAFT", db_index=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    seo_title = models.CharField(max_length=255, blank=True)
+    seo_description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "business_capabilities"
+        ordering = ["display_order", "title", "id"]
+        indexes = [models.Index(fields=["status", "is_active", "display_order"], name="capability_public_order_idx")]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(status__in=["DRAFT", "REVIEW", "APPROVED", "PUBLISHED", "ARCHIVED"]), name="ck_capability_status"),
+            models.CheckConstraint(condition=(~models.Q(status="PUBLISHED") | models.Q(published_at__isnull=False)), name="ck_capability_published_at"),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.status})"
 
 
 class BusinessCustomer(models.Model):
