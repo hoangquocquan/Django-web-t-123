@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
 from apps.ai_agent.services.ai_sales_knowledge import AISalesKnowledgeSourceService
+from apps.ai_agent.services.sales_access import AISalesAccessPolicy
 from apps.ai_agent.services.sales_facts import SalesFactsService
 from apps.ai_agent.services.sales_synthesis import GroundedSalesSynthesisService
-from apps.business_core.models import BusinessCustomer
 from apps.crm.services.crm_platform_service import CrmPlatformService
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.knowledge.services.synthetic_rag_demo import DATASET_ID, PART_CODE_RE
-from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
+from apps.sales.models import SalesLead
 from apps.sales.services.rfq_access_service import RfqAccessService
 
 
@@ -25,6 +25,7 @@ class SalesAssistantService:
         synthesis_service=None,
         component_rag=None,
         rfq_access=None,
+        access_policy=None,
     ):
         """Allow tests to inject a deterministic knowledge search service."""
         self.knowledge_search = knowledge_search or KnowledgeSearchService()
@@ -32,6 +33,7 @@ class SalesAssistantService:
         self.synthesis_service = synthesis_service or GroundedSalesSynthesisService()
         self.component_rag = component_rag or AISalesKnowledgeSourceService().build()
         self.rfq_access = rfq_access or RfqAccessService()
+        self.access_policy = access_policy or AISalesAccessPolicy()
 
     def analyze(self, payload, user=None):
         """Return the internal AI Sales MVP contract without taking business action."""
@@ -134,8 +136,8 @@ class SalesAssistantService:
 
     def analyze_lead(self, payload, user=None):
         """Score a lead by fit, urgency, and available technical knowledge."""
-        lead = self._lead_from_payload(payload)
-        query = " ".join([lead.company, lead.industry, lead.notes, "CNC quotation product fit"])
+        lead = self._lead_from_payload(payload, user=user)
+        query = f"{lead.company} {lead.industry} {lead.notes} CNC quotation product fit"
         knowledge = self.knowledge_search.search(query, limit=3, user=user)
         score = self._lead_score(lead, knowledge)
         grade = self._grade(score)
@@ -159,11 +161,11 @@ class SalesAssistantService:
         customer_id = payload.get("customer_id")
         if not customer_id:
             raise ValidationError("customer_id is required.")
-        context = CrmPlatformService().get_customer_context(customer_id)
-        customer = context["customer"]
+        customer = self.access_policy.customers(user).get(id=customer_id)
+        context = CrmPlatformService().get_customer_context(customer.id)
         knowledge = self.knowledge_search.search(customer.company_name or customer.contact_name, limit=3, user=user)
-        open_opportunities = SalesOpportunity.objects.filter(customer=customer).exclude(status__in=["won", "lost"])
-        open_quotations = SalesQuotation.objects.filter(customer=customer).exclude(status__in=["accepted", "lost"])
+        open_opportunities = self.access_policy.opportunities(user).filter(customer=customer).exclude(status__in=["won", "lost"])
+        open_quotations = self.access_policy.quotations(user).filter(customer=customer).exclude(status__in=["accepted", "lost"])
         return {
             "customer": self._customer_snapshot(customer),
             "summary": {
@@ -187,10 +189,9 @@ class SalesAssistantService:
         lead = None
         customer = None
         if payload.get("lead_id"):
-            lead = SalesLead.objects.get(id=payload["lead_id"])
+            lead = self.access_policy.leads(user).get(id=payload["lead_id"])
         if payload.get("customer_id"):
-            customer = BusinessCustomer.objects.get(id=payload["customer_id"])
-        recipient_name = payload.get("recipient_name") or self._recipient_name(lead, customer)
+            customer = self.access_policy.customers(user).get(id=payload["customer_id"])
         company = payload.get("company") or self._company_name(lead, customer)
         product_interest = payload.get("product_interest", "giai phap gia cong co khi chinh xac")
         knowledge = self.knowledge_search.search(f"{company} {product_interest}", limit=2, user=user)
@@ -214,15 +215,14 @@ class SalesAssistantService:
 
     def weekly_recommendation(self, payload, user=None):
         """Recommend leads and opportunities that need human sales attention."""
-        leads = SalesLead.objects.exclude(status__in=["won", "lost"]).order_by("-updated_at", "-id")[:5]
-        opportunities = SalesOpportunity.objects.exclude(status__in=["won", "lost"]).order_by("-value", "-id")[:5]
+        leads = self.access_policy.leads(user).exclude(status__in=["won", "lost"]).order_by("-updated_at", "-id")[:5]
+        opportunities = self.access_policy.opportunities(user).exclude(status__in=["won", "lost"]).order_by("-updated_at", "-id")[:5]
         return {
             "leads_to_contact": [self._lead_snapshot(lead) for lead in leads],
             "opportunities_to_review": [
                 {
                     "id": opportunity.id,
                     "title": opportunity.title,
-                    "value": str(opportunity.value),
                     "probability": opportunity.probability,
                     "status": opportunity.status,
                 }
@@ -517,10 +517,10 @@ class SalesAssistantService:
             },
         }
 
-    def _lead_from_payload(self, payload):
+    def _lead_from_payload(self, payload, user=None):
         """Return a database lead or a temporary lead-like object from payload."""
         if payload.get("lead_id"):
-            return SalesLead.objects.get(id=payload["lead_id"])
+            return self.access_policy.leads(user).get(id=payload["lead_id"])
         required = ["company", "contact_person"]
         missing = [field for field in required if not payload.get(field)]
         if missing:
@@ -626,7 +626,6 @@ class SalesAssistantService:
             "id": customer.id,
             "company_name": customer.company_name,
             "contact_name": customer.contact_name,
-            "email": customer.email,
             "status": customer.status,
         }
 
