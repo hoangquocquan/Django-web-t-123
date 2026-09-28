@@ -33,7 +33,7 @@ AWS PLATFORM SELECTED: YES
 
 APPLICATION CODE CHANGE REQUIRED: NO
 
-TERRAFORM VALIDATION: PASS (`terraform fmt`, `terraform init -backend=false`, `terraform validate`)
+TERRAFORM VALIDATION: NOT_EXECUTED_TOOL_UNAVAILABLE
 
 AWS MUTATION PERFORMED: NO
 
@@ -60,7 +60,7 @@ READY FOR STAGING DRESS REHEARSAL: NO
 ## Delivery status
 
 - PR: [#14](https://github.com/hoangquocquan/Django-web-t-123/pull/14)
-- PR HEAD at final refresh: `9bfe60e2b239b33cf31d4f919b6bfece2a2eb4cb`.
+- PR HEAD at final refresh: `e2b2a8208dd64d864a4ec148a73979ad3211392b`.
 - Branch pushed: `feat/aws-staging-platform-binding`.
-- Exact PR CI at final refresh: Security gates partially PASS (secret scan, SAST and filesystem scan); CI, Test Pipeline, AWS Learning Lab and remaining required jobs are PENDING/IN_PROGRESS.
-- Merge: **NOT PERFORMED**. Required checks must finish PASS before any human merge decision.
+- Exact PR CI at final refresh: all 18 reported check runs PASS, including Django, frontend build, Phase 13.2, AWS Learning Lab, secret scan, SAST, filesystem vulnerability scan, dependency audits and SBOM.
+- Merge: **NOT PERFORMED**. Static review found operator-binding controls that are documented but not yet implemented in Terraform; see `AWS_STAGING_PLATFORM_BINDING_FINAL_REVIEW.md`.
