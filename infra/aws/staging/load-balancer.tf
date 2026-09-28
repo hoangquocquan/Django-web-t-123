@@ -1,3 +1,6 @@
+# The staging web entry point is intentionally internet-facing. Only this ALB
+# occupies public subnets; its targets remain in private application subnets.
+#trivy:ignore:AVD-AWS-0053:exp:2027-09-28
 resource "aws_lb" "staging" {
   name               = substr(replace(local.name, "_", "-"), 0, 32)
   internal           = false

@@ -41,6 +41,9 @@ The originally requested checkout `C:\Users\hoang\Documents\Django-web-t-123` wa
 - Redis is private, authenticated, and encrypted in transit/at rest.
 - EFS is encrypted; ECS mounts require TLS and IAM authorization.
 - ECS tasks have no public IP. The ALB is the sole public entry point.
+- Trivy `AVD-AWS-0053` is suppressed only on that ALB resource, with an expiry,
+  because public exposure is the reviewed purpose of the HTTPS web entry point;
+  no workload or data-tier resource is made public by the suppression.
 - IAM contains no `Action = "*"`. Four `Resource = "*"` cases are limited to APIs that do not support useful resource scoping (`ecr:GetAuthorizationToken`, ECS/RDS Describe) and are documented inline.
 - ECR tags are immutable and scan on push.
 - Runtime safety flags are explicit. Normal web task commands contain no migration.
@@ -63,7 +66,7 @@ AWS_LEARNING_LAB=PASS (8 passed; Compose config valid)
 RUNTIME_SYNTAX=PASS
 SECRET_SCAN=PASS_STATIC; GITLEAKS_LOCAL=NOT_RUN_TOOL_UNAVAILABLE; EXACT_HEAD_CI_REQUIRED
 SAST=PASS (Bandit high-severity gate; no issues)
-VULNERABILITY_SCAN=PASS_DEPENDENCY_AUDITS; TRIVY_LOCAL=NOT_RUN_TOOL_UNAVAILABLE; EXACT_HEAD_CI_REQUIRED
+VULNERABILITY_SCAN=PASS_DEPENDENCY_AUDITS; INITIAL_EXACT_HEAD_TRIVY=FAIL_INTENTIONAL_PUBLIC_ALB_ONLY; RESOURCE_SCOPED_EXPIRING_EXCEPTION_ADDED; NEW_EXACT_HEAD_CI_REQUIRED
 POSTGRES_MIGRATION_SMOKE=NOT_RUN_LOCAL; EXACT_HEAD_CI_REQUIRED
 PHASE_13_2=NOT_RUN_LOCAL; EXACT_HEAD_CI_REQUIRED
 ```
