@@ -33,7 +33,7 @@ AWS PLATFORM SELECTED: YES
 
 APPLICATION CODE CHANGE REQUIRED: NO
 
-TERRAFORM VALIDATION: NOT_RUN (Terraform CLI unavailable)
+TERRAFORM VALIDATION: PASS (`terraform fmt`, `terraform init -backend=false`, `terraform validate`)
 
 AWS MUTATION PERFORMED: NO
 
@@ -56,3 +56,11 @@ READY FOR AWS INFRA PR: NO
 READY TO TERRAFORM APPLY: NO
 
 READY FOR STAGING DRESS REHEARSAL: NO
+
+## Delivery status
+
+- PR: [#14](https://github.com/hoangquocquan/Django-web-t-123/pull/14)
+- PR HEAD at last refresh: `c35cf7c9e40b61199cde181c8702a1b1c98f0be6`.
+- Branch pushed: `feat/aws-staging-platform-binding`.
+- Exact PR CI: Security gates PASS; AWS Learning Lab PASS; CI and Test Pipeline still PENDING/IN_PROGRESS at report update.
+- Merge: **NOT PERFORMED**. Required checks must finish PASS before any human merge decision.
