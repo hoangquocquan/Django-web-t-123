@@ -31,6 +31,9 @@ resource "aws_s3_bucket_ownership_controls" "terraform_state" {
   }
 }
 
+# The approved bootstrap decision is SSE-S3 to avoid a KMS key dependency and
+# recurring key cost. Revisit this scoped exception if the operator selects KMS.
+#trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
