@@ -1,0 +1,37 @@
+# Non-secret examples only. Replace every placeholder with approved staging input.
+aws_region     = "ap-northeast-1"
+aws_account_id = "000000000000"
+candidate_sha  = "0000000000000000000000000000000000000000"
+owner          = "TO_BE_APPROVED"
+cost_center    = "TO_BE_APPROVED"
+
+staging_hostname = "staging.example.invalid"
+certificate_arn   = "arn:aws:acm:ap-northeast-1:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+
+# Set to a public hosted-zone ID only when DNS is managed in Route 53.
+# Leave null for external DNS and create the documented CNAME/alias manually.
+route53_zone_id = null
+
+# Digests must be produced by the exact candidate_sha build workflow.
+backend_image_digest  = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+frontend_image_digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+# Pre-existing operator-managed secret containing only the Redis auth token.
+# Never place the token itself in this file or a Terraform CLI argument.
+redis_auth_secret_arn = "arn:aws:secretsmanager:ap-northeast-1:000000000000:secret:django-web-t-123-staging-redis-auth-placeholder"
+
+availability_zones = []
+
+rds_instance_class       = "db.t4g.small"
+rds_allocated_storage    = 30
+redis_node_type          = "cache.t4g.micro"
+redis_num_cache_clusters = 1
+service_desired_count    = 0 # Deployment workflow raises this only after migration succeeds.
+log_retention_days       = 14
+backup_retention_days    = 7
+
+enable_github_oidc_role = false
+github_oidc_provider_arn = null
+
+alb_deletion_protection = true
+rds_deletion_protection = true
