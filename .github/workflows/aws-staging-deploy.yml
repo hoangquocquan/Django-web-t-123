@@ -1,24 +1,162 @@
 name: AWS Staging Deploy (manual, gated)
+
 on:
   workflow_dispatch:
     inputs:
-      candidate_sha: { description: Reviewed SHA, required: true, type: string }
-      backend_digest: { description: Immutable backend digest, required: true, type: string }
-      frontend_digest: { description: Immutable frontend digest, required: true, type: string }
-      approve: { description: Two-person staging approval, required: true, default: false, type: boolean }
-permissions: { contents: read }
+      candidate_sha:
+        description: Exact independently reviewed commit SHA
+        required: true
+        type: string
+      backend_digest:
+        description: Immutable backend sha256 digest produced for candidate_sha
+        required: true
+        type: string
+      frontend_digest:
+        description: Immutable frontend sha256 digest produced for candidate_sha
+        required: true
+        type: string
+      approve:
+        description: Explicit staging deployment approval
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: aws-staging-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     environment: staging
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_STAGING_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_STAGING_ROLE_ARN }}
+      ECS_CLUSTER: ${{ vars.AWS_STAGING_ECS_CLUSTER }}
+      BACKEND_SERVICE: ${{ vars.AWS_STAGING_BACKEND_SERVICE }}
+      FRONTEND_SERVICE: ${{ vars.AWS_STAGING_FRONTEND_SERVICE }}
+      MIGRATION_TASK_DEFINITION: ${{ vars.AWS_STAGING_MIGRATION_TASK_DEFINITION }}
+      APPLICATION_SUBNETS: ${{ vars.AWS_STAGING_APPLICATION_SUBNETS }}
+      BACKEND_SECURITY_GROUP: ${{ vars.AWS_STAGING_BACKEND_SECURITY_GROUP }}
+      RDS_IDENTIFIER: ${{ vars.AWS_STAGING_RDS_IDENTIFIER }}
+      BACKEND_REPOSITORY: ${{ vars.AWS_STAGING_BACKEND_ECR_REPOSITORY }}
+      FRONTEND_REPOSITORY: ${{ vars.AWS_STAGING_FRONTEND_ECR_REPOSITORY }}
+      STAGING_URL: ${{ vars.AWS_STAGING_URL }}
+      SERVICE_DESIRED_COUNT: ${{ vars.AWS_STAGING_SERVICE_DESIRED_COUNT }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      BACKEND_DIGEST: ${{ inputs.backend_digest }}
+      FRONTEND_DIGEST: ${{ inputs.frontend_digest }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.candidate_sha }}
           fetch-depth: 1
-      - name: Hard safety gate
+
+      - name: Verify exact reviewed candidate and fail-closed binding
+        shell: bash
         run: |
-          test "$(git rev-parse HEAD)" = "${{ inputs.candidate_sha }}"
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BACKEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$FRONTEND_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           test "${{ inputs.approve }}" = "true"
-          echo "AWS/ECS/OIDC binding is not configured in this repository"
-          exit 1
+          for value in AWS_REGION AWS_ROLE_ARN ECS_CLUSTER BACKEND_SERVICE FRONTEND_SERVICE MIGRATION_TASK_DEFINITION APPLICATION_SUBNETS BACKEND_SECURITY_GROUP RDS_IDENTIFIER BACKEND_REPOSITORY FRONTEND_REPOSITORY STAGING_URL SERVICE_DESIRED_COUNT; do
+            test -n "${!value:-}"
+            [[ "${!value}" != *TO_BE_* ]]
+          done
+          [[ "$STAGING_URL" == https://* ]]
+          [[ "$SERVICE_DESIRED_COUNT" =~ ^[12]$ ]]
+
+      - name: Configure staging AWS credentials through OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify candidate image digests and bound task definitions
+        shell: bash
+        run: |
+          set -euo pipefail
+          published_backend="$(aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids imageTag="$CANDIDATE_SHA" --query 'imageDetails[0].imageDigest' --output text)"
+          published_frontend="$(aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids imageTag="$CANDIDATE_SHA" --query 'imageDetails[0].imageDigest' --output text)"
+          test "$published_backend" = "$BACKEND_DIGEST"
+          test "$published_frontend" = "$FRONTEND_DIGEST"
+
+          migration_image="$(aws ecs describe-task-definition --task-definition "$MIGRATION_TASK_DEFINITION" --query 'taskDefinition.containerDefinitions[?name==`migration`].image | [0]' --output text)"
+          [[ "$migration_image" == *@"$BACKEND_DIGEST" ]]
+
+          backend_task="$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$BACKEND_SERVICE" --query 'services[0].taskDefinition' --output text)"
+          frontend_task="$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$FRONTEND_SERVICE" --query 'services[0].taskDefinition' --output text)"
+          backend_image="$(aws ecs describe-task-definition --task-definition "$backend_task" --query 'taskDefinition.containerDefinitions[?name==`backend`].image | [0]' --output text)"
+          frontend_image="$(aws ecs describe-task-definition --task-definition "$frontend_task" --query 'taskDefinition.containerDefinitions[?name==`frontend`].image | [0]' --output text)"
+          [[ "$backend_image" == *@"$BACKEND_DIGEST" ]]
+          [[ "$frontend_image" == *@"$FRONTEND_DIGEST" ]]
+
+      - name: Create and wait for pre-deployment database snapshot
+        id: snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          snapshot_id="${RDS_IDENTIFIER}-predeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          aws rds create-db-snapshot --db-instance-identifier "$RDS_IDENTIFIER" --db-snapshot-identifier "$snapshot_id" >/dev/null
+          aws rds wait db-snapshot-available --db-snapshot-identifier "$snapshot_id"
+          echo "snapshot_id=$snapshot_id" >> "$GITHUB_OUTPUT"
+
+      - name: Run one-off migration task
+        id: migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          network="awsvpcConfiguration={subnets=[$APPLICATION_SUBNETS],securityGroups=[$BACKEND_SECURITY_GROUP],assignPublicIp=DISABLED}"
+          task_arn="$(aws ecs run-task --cluster "$ECS_CLUSTER" --launch-type FARGATE --task-definition "$MIGRATION_TASK_DEFINITION" --count 1 --network-configuration "$network" --query 'tasks[0].taskArn' --output text)"
+          test -n "$task_arn"
+          test "$task_arn" != "None"
+          aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$task_arn" --query 'tasks[0].containers[?name==`migration`].exitCode | [0]' --output text)"
+          if test "$exit_code" != "0"; then
+            aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$task_arn" --query 'tasks[0].{stopCode:stopCode,stoppedReason:stoppedReason,containers:containers[*].{name:name,exitCode:exitCode,reason:reason}}'
+            exit 1
+          fi
+          echo "task_arn=$task_arn" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy services only after migration succeeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$BACKEND_SERVICE" --desired-count "$SERVICE_DESIRED_COUNT" --force-new-deployment >/dev/null
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$BACKEND_SERVICE"
+          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$FRONTEND_SERVICE" --desired-count "$SERVICE_DESIRED_COUNT" --force-new-deployment >/dev/null
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$FRONTEND_SERVICE"
+
+      - name: Verify readiness and read-only health
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=false
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "$STAGING_URL/api/v1/phase6/ready/" >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 10
+          done
+          test "$ready" = "true"
+          curl --fail --silent --show-error --max-time 10 "$STAGING_URL/api/v1/health/" >/dev/null
+
+      - name: Record deployment evidence
+        shell: bash
+        run: |
+          {
+            echo "candidate_sha=$CANDIDATE_SHA"
+            echo "backend_digest=$BACKEND_DIGEST"
+            echo "frontend_digest=$FRONTEND_DIGEST"
+            echo "snapshot_id=${{ steps.snapshot.outputs.snapshot_id }}"
+            echo "migration_task=${{ steps.migration.outputs.task_arn }}"
+            echo "line_send_enabled=false"
+            echo "public_ai_enabled=false"
+          } >> "$GITHUB_STEP_SUMMARY"

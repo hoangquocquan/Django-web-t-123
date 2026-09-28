@@ -42,3 +42,8 @@ media/uploads/
 Thumbs.db
 
 infra/aws/**/.terraform/
+infra/aws/**/*.tfstate
+infra/aws/**/*.tfstate.*
+infra/aws/**/*.tfplan
+infra/aws/**/crash.log
+infra/aws/**/terraform.tfvars

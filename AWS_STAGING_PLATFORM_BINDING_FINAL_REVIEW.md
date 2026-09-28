@@ -1,5 +1,7 @@
 # AWS staging platform binding final review
 
+> Historical review of PR head `e2b2a8208dd64d864a4ec148a73979ad3211392b`. Its blockers were addressed by the later remediation documented in `AWS_STAGING_PLATFORM_BINDING_REMEDIATION_REPORT.md`; do not use this file as the current readiness decision.
+
 ## Pull request state
 
 - PR NUMBER: `14`

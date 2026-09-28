@@ -1,15 +1,18 @@
 # AWS staging binding
 
-This is a reviewable, staging-only Terraform definition for the candidate SHA. It is intentionally not a production stack and does not create resources by itself.
+`staging/` is the staging-only Terraform root for the reviewed candidate SHA. It defines the VPC/subnet tiers, public HTTPS ALB, private ECS Fargate services, private TLS data services, encrypted EFS media, immutable ECR repositories, Secrets Manager bindings, CloudWatch controls, AWS Backup and optional staging GitHub OIDC role.
 
-Architecture: Route 53/external DNS → ACM → ALB → ECS Fargate; private RDS PostgreSQL, ElastiCache Redis/Valkey, EFS media, ECR artifacts, Secrets Manager, CloudWatch and AWS Backup.
+Safety properties implemented in code:
 
-Safety:
+- the `environment` variable accepts only `staging`;
+- the AWS provider is restricted to the approved account ID;
+- ECS tasks receive no public IP and only the ALB is in public subnets;
+- RDS and Redis accept traffic only from backend tasks;
+- EFS uses encryption, TLS and IAM-authorized access-point mounts;
+- RDS has `rds.force_ssl=1`; Redis has at-rest/in-transit encryption plus operator-secret authentication;
+- images are digest-pinned and ECR tags are immutable;
+- LINE send and supported AI runtime flags are explicitly disabled;
+- migration has a separate task definition and is not part of web startup;
+- no Terraform backend, state, credential or secret value is committed.
 
-- Run only `terraform fmt`, `terraform init -backend=false`, `terraform validate`, and review-only `terraform plan` after operator context exists.
-- Never run `terraform apply`/`destroy` in this feature.
-- Do not commit state, credentials, secret values, plan output or real account/domain values.
-- `environment` is validated as `staging`; `LINE_SEND_ENABLED` and anonymous AI flags remain false in the eventual ECS task definition.
-- Remote state is designed as an operator-owned encrypted/versioned S3 backend with the locking mechanism supported by the chosen Terraform workflow; no state resources are created here.
-
-The root configuration is deliberately readable. Security groups, ECS task definitions, ALB listeners/target groups, IAM roles, OIDC and detailed observability alarms remain platform-binding follow-up work before any plan can be meaningful; see the handoff/report for the explicit gap list.
+The configuration is not production infrastructure and does not authorize provisioning. Account, region, hostname, certificate, DNS, budget, image digests, secure Redis token, runtime secret values, remote state and explicit operator authorization are still required.
