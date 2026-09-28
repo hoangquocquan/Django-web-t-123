@@ -1,0 +1,41 @@
+name: AWS Staging Terraform Validation
+
+on:
+  pull_request:
+    paths:
+      - "infra/aws/**"
+      - ".github/workflows/aws-staging-terraform-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/aws/**"
+      - ".github/workflows/aws-staging-terraform-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate ${{ matrix.layer }} root
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - layer: bootstrap
+            root: infra/aws/bootstrap
+          - layer: staging
+            root: infra/aws/staging
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+      - name: Check formatting
+        run: terraform -chdir=${{ matrix.root }} fmt -check -recursive
+      - name: Initialize providers without backend
+        run: terraform -chdir=${{ matrix.root }} init -backend=false -input=false
+      - name: Validate configuration
+        run: terraform -chdir=${{ matrix.root }} validate -no-color

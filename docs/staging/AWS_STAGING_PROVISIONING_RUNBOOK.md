@@ -5,9 +5,9 @@ This is an operator procedure, not provisioning authorization. Never run `terraf
 ## Preflight
 
 1. Confirm the AWS account, region, budget, hostname, DNS ownership, ACM certificate and two availability zones.
-2. Create or approve encrypted, versioned remote Terraform state and locking. The Redis auth value is sensitive and can be represented in state even though it is sourced from Secrets Manager.
-3. Create an operator-managed Secrets Manager secret containing only a Redis auth token that meets ElastiCache constraints. Record its ARN, never the value.
-4. If GitHub deployment is approved, confirm the account-level GitHub OIDC provider. Terraform creates a repository/environment-scoped role only when explicitly enabled.
+2. Complete the independent `infra/aws/bootstrap` procedure in `AWS_STAGING_BOOTSTRAP_RUNBOOK.md`. It owns the versioned/SSE-S3 state bucket, optional OIDC provider, image-build role, ECR repositories, and Redis AUTH secret/version.
+3. Treat bootstrap state access as credential access because Terraform manages the Redis secret value. Record the secret ARN, never the value.
+4. If GitHub deployment is approved, enable the full-root deployment role using the bootstrap-selected OIDC provider ARN. It remains separate from the bootstrap image-build role.
 5. Copy `terraform.tfvars.example` to ignored `terraform.tfvars`, replace every placeholder, and use exact reviewed image digests.
 
 ## Validation and plan
@@ -24,10 +24,10 @@ Only after operator context exists, use a saved, reviewed plan. This repository 
 
 ## Provisioning order for an authorized future session
 
-1. Provision/verify ECR and the staging OIDC role, then use the manual build workflow for the exact reviewed SHA.
+1. After the separately authorized bootstrap apply and GitHub environment binding, use the manual build workflow for the exact reviewed SHA.
 2. Bind the resulting backend/frontend digests in Terraform and review the full plan.
 3. Provision the VPC, public ALB subnets, private application/data subnets, VPC endpoints and least-privilege security groups.
-4. Provision private RDS (`rds.force_ssl=1`), authenticated TLS Redis, encrypted EFS/mount targets, ECR, logs and backups.
+4. Provision private RDS (`rds.force_ssl=1`), authenticated TLS Redis, encrypted EFS/mount targets, logs and backups. ECR remains bootstrap-owned.
 5. Keep ECS service desired counts at zero during initial binding. Populate `/django-web-t-123/staging/django-secret-key`, `database-url`, `redis-url`, and `metrics-token` directly in Secrets Manager. The Redis URL must use `rediss://` and the same approved token used by ElastiCache. Never print values in CI.
 6. Confirm the ACM certificate is issued in the ALB region. If `route53_zone_id` is null, create the external DNS record pointing the approved hostname to the ALB DNS name.
 7. Configure the GitHub `staging` environment protections and non-secret variables listed in `AWS_STAGING_OPERATOR_INPUTS.md`.

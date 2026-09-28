@@ -16,7 +16,10 @@ flowchart LR
   VPCE --> CW[CloudWatch logs]
   RDS --> BACKUP[AWS Backup / RDS snapshot]
   EFS --> BACKUP
-  CI[GitHub OIDC: staging environment] --> ECR
+  BUILD[GitHub OIDC: image-build role] --> ECR
+  DEPLOY[GitHub OIDC: deploy role] --> DJANGO
+  DEPLOY --> WEB
+  DEPLOY --> RDS
 ```
 
 ## Network boundary
@@ -36,7 +39,7 @@ ALB health uses Django liveness and the frontend root page. The public deploymen
 ## Data protection
 
 - RDS is private, encrypted, uses an AWS-managed master password, and has a PostgreSQL 16 parameter group with `rds.force_ssl=1`.
-- Redis is private, encrypted at rest and in transit, and uses an auth token read from an operator-managed Secrets Manager secret. Sensitive Terraform values require encrypted remote state.
+- Redis is private, encrypted at rest and in transit, and uses an auth token read from the bootstrap-owned Secrets Manager secret. The token is present in bootstrap state, so state access is credential access.
 - EFS is encrypted and mounted through one access point with TLS and IAM authorization. Django mounts it read/write at `MEDIA_ROOT`; Nginx mounts it read-only for `/media/`.
 - Runtime Django/database/Redis/metrics values are empty Secrets Manager containers populated out-of-band; secret values are not stored in Git.
 
@@ -47,3 +50,7 @@ Backend tasks explicitly set `LINE_SEND_ENABLED=false`, disable both supported O
 Web task startup remains Gunicorn only. Migration uses a distinct one-off task definition. The manual deployment workflow verifies exact Git SHA and ECR digests, creates and waits for an RDS snapshot, runs the migration task, checks exit code, then updates services and runs health checks. Any failed gate stops deployment.
 
 Route 53 alias creation is optional. External DNS operators bind the documented ALB DNS name themselves. ACM certificate issuance and validation remain operator-owned; Terraform binds only an approved certificate ARN.
+
+## Terraform ownership boundary
+
+`infra/aws/bootstrap` owns the state bucket, optional account OIDC provider, image-build role, immutable ECR repositories, and Redis AUTH secret/version. `infra/aws/staging` consumes their non-secret identifiers and owns the network, ALB, ECS, RDS, Redis cluster, EFS, observability, backup, runtime secret containers, and distinct deployment role. The roots use different state keys and never share ownership of a physical resource.

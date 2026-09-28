@@ -1,6 +1,6 @@
 # Staging Terraform root
 
-This root is staging-only. It contains no remote backend configuration and no real operator values.
+This root is staging-only. It contains an empty S3 backend declaration and no populated backend configuration or real operator values. Supply an operator-reviewed partial configuration with a state key distinct from the bootstrap root.
 
 Permitted local validation:
 
@@ -12,7 +12,7 @@ terraform validate
 
 Do not run `terraform plan` without approved account/operator context. Never run `terraform apply` as part of repository remediation.
 
-Copy `terraform.tfvars.example` to ignored `terraform.tfvars` only in an authorized operator environment. Replace every placeholder. The Redis authentication token remains in an operator-managed Secrets Manager secret; provide its ARN, not the value. Because the AWS provider must read that secret to configure ElastiCache, use encrypted/versioned remote state before any authorized plan/apply and tightly restrict state access.
+Copy `terraform.tfvars.example` to ignored `terraform.tfvars` only in an authorized operator environment. Replace every placeholder. Supply ECR URLs/ARNs, the Redis secret ARN, and the OIDC provider ARN from bootstrap outputs; this root must not import or own those bootstrap resources. The AWS provider reads the Redis secret to configure ElastiCache, so use encrypted/versioned remote state before any authorized plan/apply and tightly restrict state access.
 
 Before services can start, populate the four Terraform-created Secrets Manager containers out-of-band:
 

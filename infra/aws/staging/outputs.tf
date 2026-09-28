@@ -27,11 +27,11 @@ output "staging_url" {
 }
 
 output "ecr_backend" {
-  value = aws_ecr_repository.backend.repository_url
+  value = var.backend_ecr_repository_url
 }
 
 output "ecr_frontend" {
-  value = aws_ecr_repository.frontend.repository_url
+  value = var.frontend_ecr_repository_url
 }
 
 output "ecs_cluster_name" {
@@ -59,6 +59,6 @@ output "runtime_secret_arns" {
   value       = { for name, secret in aws_secretsmanager_secret.runtime : name => secret.arn }
 }
 
-output "github_staging_role_arn" {
-  value = var.enable_github_oidc_role ? aws_iam_role.github_staging[0].arn : null
+output "github_staging_deploy_role_arn" {
+  value = var.enable_github_deploy_role ? aws_iam_role.github_staging_deploy[0].arn : null
 }

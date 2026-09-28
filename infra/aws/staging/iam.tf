@@ -36,8 +36,8 @@ resource "aws_iam_role_policy" "ecs_execution" {
           "ecr:GetDownloadUrlForLayer",
         ]
         Resource = [
-          aws_ecr_repository.backend.arn,
-          aws_ecr_repository.frontend.arn,
+          var.backend_ecr_repository_arn,
+          var.frontend_ecr_repository_arn,
         ]
       },
       {
@@ -114,10 +114,10 @@ resource "aws_iam_role_policy" "frontend_efs" {
   })
 }
 
-resource "aws_iam_role" "github_staging" {
-  count = var.enable_github_oidc_role ? 1 : 0
+resource "aws_iam_role" "github_staging_deploy" {
+  count = var.enable_github_deploy_role ? 1 : 0
 
-  name_prefix = "${local.name}-github-"
+  name_prefix = "${local.name}-github-deploy-"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -129,44 +129,29 @@ resource "aws_iam_role" "github_staging" {
       Condition = {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.repository}:environment:staging"
+          "token.actions.githubusercontent.com:sub" = "repo:hoangquocquan/Django-web-t-123:environment:staging"
         }
       }
     }]
   })
 }
 
-resource "aws_iam_role_policy" "github_staging" {
-  count = var.enable_github_oidc_role ? 1 : 0
+resource "aws_iam_role_policy" "github_staging_deploy" {
+  count = var.enable_github_deploy_role ? 1 : 0
 
-  name = "build-migrate-deploy-staging"
-  role = aws_iam_role.github_staging[0].id
+  name = "migrate-deploy-staging"
+  role = aws_iam_role.github_staging_deploy[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "EcrAuthorizationToken"
-        Effect   = "Allow"
-        Action   = ["ecr:GetAuthorizationToken"]
-        Resource = "*" # AWS does not support resource scoping for this action.
-      },
-      {
-        Sid    = "PublishReviewedImages"
+        Sid    = "VerifyReviewedImages"
         Effect = "Allow"
-        Action = [
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:CompleteLayerUpload",
-          "ecr:DescribeImages",
-          "ecr:InitiateLayerUpload",
-          "ecr:PutImage",
-          "ecr:UploadLayerPart",
-        ]
+        Action = ["ecr:DescribeImages"]
         Resource = [
-          aws_ecr_repository.backend.arn,
-          aws_ecr_repository.frontend.arn,
+          var.backend_ecr_repository_arn,
+          var.frontend_ecr_repository_arn,
         ]
       },
       {

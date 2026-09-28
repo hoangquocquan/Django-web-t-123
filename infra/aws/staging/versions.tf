@@ -8,8 +8,9 @@ terraform {
     }
   }
 
-  # Configure an operator-owned encrypted/versioned S3 backend after account selection.
-  # backend "s3" {}
+  # Supply bucket, key, region, encrypt=true and use_lockfile=true through a
+  # reviewed partial backend configuration. Never commit credentials here.
+  backend "s3" {}
 }
 
 provider "aws" {
