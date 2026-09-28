@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import secrets
+
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from rest_framework import serializers, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from apps.ai.services.health_service import OllamaHealthService
-from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
 from apps.ai.models import AIGovernanceEvent
+from apps.ai.services.governance_service import AIGovernanceError, AIGovernanceService
+from apps.ai.services.health_service import OllamaHealthService
 from apps.ai.services.ollama_client import OllamaClient, OllamaClientError
 from apps.ai.services.prompt_manager import PromptManager
 from apps.api.views.helpers import bad_request, ok
@@ -123,10 +130,20 @@ def ai_chat(request):
 
 
 @api_view(["GET"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def ai_health(request):
-    """Return local Ollama runtime health for monitoring screens."""
-    return Response(OllamaHealthService().check())
+    """Return sanitized public status; details require operations auth."""
+    payload = OllamaHealthService().check()
+    authorization = request.META.get("HTTP_AUTHORIZATION", "")
+    supplied = authorization[7:] if authorization.startswith("Bearer ") else ""
+    expected = str(getattr(settings, "METRICS_BEARER_TOKEN", "") or "")
+    if expected and supplied and secrets.compare_digest(expected, supplied):
+        return Response(payload)
+    status_value = "ok" if payload.get("status") == "ready" else (
+        "degraded" if payload.get("endpoint_reachable") else "unavailable"
+    )
+    return Response({"status": status_value})
 
 
 @api_view(["GET"])
