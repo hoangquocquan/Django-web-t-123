@@ -40,3 +40,5 @@ media/uploads/
 # OS
 .DS_Store
 Thumbs.db
+
+infra/aws/**/.terraform/

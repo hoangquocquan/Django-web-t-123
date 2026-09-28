@@ -1,0 +1,24 @@
+# AWS staging operator inputs
+
+Names and decisions only. Never enter secret values here.
+
+- `AWS_ACCOUNT_ID:`
+- `AWS_REGION:`
+- `STAGING_HOSTNAME:`
+- `ROUTE53_ZONE_ID_OR_EXTERNAL_DNS:`
+- `ACM_CERTIFICATE_STRATEGY:`
+- `MONTHLY_COST_CATEGORY: LOW | MEDIUM | HIGH | TO_BE_APPROVED`
+- `PRIMARY_OPERATOR_IDENTIFIER:`
+- `AWS_ADMIN_OR_PROVISIONING_ROLE:`
+- `GITHUB_OIDC_APPROVAL: YES | NO`
+- `BACKUP_RETENTION:`
+- `LOG_RETENTION:`
+- `RDS_SIZE_APPROVAL:`
+- `REDIS_SIZE_APPROVAL:`
+- `EFS_APPROVAL: YES | NO`
+- `NAT_MODE: STANDARD_STAGING | COST_OPTIMIZED_STAGING`
+- `AI_STAGING_MODE: DISABLED_INITIAL | ISOLATED_PROVIDER`
+- `SECRET_MANAGER_APPROVAL: YES | NO`
+- `PROVISIONING_AUTHORIZATION: YES | NO`
+
+Populate secrets directly in the selected AWS Secrets Manager paths after approval. Do not copy values to Terraform variables, GitHub files, chat or logs.

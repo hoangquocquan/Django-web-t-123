@@ -1,0 +1,24 @@
+name: AWS Staging Deploy (manual, gated)
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha: { description: Reviewed SHA, required: true, type: string }
+      backend_digest: { description: Immutable backend digest, required: true, type: string }
+      frontend_digest: { description: Immutable frontend digest, required: true, type: string }
+      approve: { description: Two-person staging approval, required: true, default: false, type: boolean }
+permissions: { contents: read }
+jobs:
+  deploy:
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+      - name: Hard safety gate
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.candidate_sha }}"
+          test "${{ inputs.approve }}" = "true"
+          echo "AWS/ECS/OIDC binding is not configured in this repository"
+          exit 1

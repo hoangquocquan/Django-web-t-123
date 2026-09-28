@@ -1,0 +1,22 @@
+name: AWS Staging Build (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha: { description: Exact reviewed commit SHA, required: true, type: string }
+      publish: { description: Publish only after ECR/OIDC approval, required: true, default: false, type: boolean }
+permissions: { contents: read }
+jobs:
+  validate:
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+      - name: Verify candidate
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.candidate_sha }}"
+      - name: Publish guard
+        run: |
+          test "${{ inputs.publish }}" = "false"
+          echo "Validation-only until AWS ECR/OIDC binding is configured"

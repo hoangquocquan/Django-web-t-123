@@ -1,0 +1,10 @@
+aws_region = "TO_BE_APPROVED"
+aws_account_id = "TO_BE_APPROVED"
+staging_hostname = "TO_BE_APPROVED"
+route53_zone_id = "TO_BE_APPROVED"
+certificate_arn = "TO_BE_APPROVED"
+owner = "TO_BE_APPROVED"
+cost_center = "TO_BE_APPROVED"
+backend_image = "TO_BE_PUBLISHED"
+frontend_image = "TO_BE_PUBLISHED"
+# No secret values belong here. Use Secrets Manager after resource creation.
