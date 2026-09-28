@@ -60,7 +60,7 @@ READY FOR STAGING DRESS REHEARSAL: NO
 ## Delivery status
 
 - PR: [#14](https://github.com/hoangquocquan/Django-web-t-123/pull/14)
-- PR HEAD at last refresh: `c35cf7c9e40b61199cde181c8702a1b1c98f0be6`.
+- PR HEAD at final refresh: `9bfe60e2b239b33cf31d4f919b6bfece2a2eb4cb`.
 - Branch pushed: `feat/aws-staging-platform-binding`.
-- Exact PR CI: Security gates PASS; AWS Learning Lab PASS; CI and Test Pipeline still PENDING/IN_PROGRESS at report update.
+- Exact PR CI at final refresh: Security gates partially PASS (secret scan, SAST and filesystem scan); CI, Test Pipeline, AWS Learning Lab and remaining required jobs are PENDING/IN_PROGRESS.
 - Merge: **NOT PERFORMED**. Required checks must finish PASS before any human merge decision.
