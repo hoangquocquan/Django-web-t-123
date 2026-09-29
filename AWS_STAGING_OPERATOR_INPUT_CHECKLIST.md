@@ -7,6 +7,7 @@ Never place secret values in this checklist.
 | AWS account ID | `REQUIRED_OPERATOR_INPUT` | Bootstrap plan |
 | AWS region | `ap-northeast-1` | Bootstrap plan |
 | Monthly budget | `USD 50` | Bootstrap plan |
+| Budget alert thresholds | `50%`, `80%`, `100%` | Bootstrap plan |
 | Budget alert destination | `REQUIRED_OPERATOR_INPUT` | Bootstrap plan |
 | Owner and cost center | `REQUIRED_OPERATOR_INPUT` | Bootstrap plan |
 | State bucket name | `REQUIRED_OPERATOR_INPUT` | Bootstrap plan |

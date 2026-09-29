@@ -9,7 +9,7 @@ This runbook defines future operator sequencing. It is not plan/apply authorizat
 - Globally unique state bucket name.
 - State keys for bootstrap and staging; the keys must differ.
 - Owner and cost-center tags.
-- USD 50 monthly budget alert destination.
+- USD 50 monthly budget with alerts at 50%, 80%, and 100%; the alert destination is a required operator input.
 - `oidc_provider_mode`: `create` or `existing`.
 - Exact existing GitHub OIDC provider ARN when using `existing` mode.
 - Redis AUTH token delivered through an approved sensitive input channel.
@@ -80,7 +80,7 @@ Before requesting full-plan authorization, confirm:
 - hostname, DNS ownership and regional ACM certificate are approved;
 - the Redis secret version exists;
 - both image digests resolve in the two bootstrap repositories;
-- budget alerts and ownership are approved;
+- USD 50 monthly budget alerts at 50%, 80%, and 100%, their destination, and ownership are approved;
 - all static validation and security checks pass.
 
 ## 8. Post-full-apply binding

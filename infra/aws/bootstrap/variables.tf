@@ -22,6 +22,11 @@ variable "aws_account_id" {
 variable "project_name" {
   type    = string
   default = "django-web-t-123"
+
+  validation {
+    condition     = var.project_name == "django-web-t-123"
+    error_message = "project_name must be django-web-t-123 to preserve the exact staging resource identities."
+  }
 }
 
 variable "environment" {

@@ -6,6 +6,7 @@
 - Bootstrap model: separate Terraform root and state.
 - Region: `ap-northeast-1`.
 - Monthly budget: USD 50.
+- Budget alert thresholds: 50%, 80%, and 100%.
 - State: S3, versioning enabled, SSE-S3, native lockfile design.
 - GitHub authentication: OIDC only.
 - Redis secret ownership: bootstrap root.

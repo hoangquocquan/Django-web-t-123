@@ -1,6 +1,6 @@
 # AWS staging cost guardrails
 
-- Monthly budget and alert destination are mandatory operator inputs; no amount is assumed in code.
+- The staging monthly budget contract is USD 50 with alert thresholds at 50%, 80%, and 100%; the alert destination remains a mandatory operator input, and no budget resource is created by this code.
 - Every resource receives `Project`, `Environment=staging`, `ManagedBy=terraform`, `Repository`, `Owner`, `CostCenter`, and `CandidateSHA` tags where AWS supports them.
 - Fargate services default to zero tasks during binding. The gated deployment workflow raises them to one or two only after migration succeeds.
 - RDS defaults to single-AZ `db.t4g.small`, 30 GiB gp3 with bounded autoscaling. Redis defaults to one `cache.t4g.micro`; a second node is explicit.

@@ -25,7 +25,7 @@ frontend_ecr_repository_arn = "arn:aws:ecr:ap-northeast-1:000000000000:repositor
 
 # Bootstrap-owned secret containing only the Redis auth token. Copy its ARN
 # from the bootstrap output; never place the token itself in this file.
-redis_auth_secret_arn = "arn:aws:secretsmanager:ap-northeast-1:000000000000:secret:django-web-t-123-staging-redis-auth-placeholder"
+redis_auth_secret_arn = "arn:aws:secretsmanager:ap-northeast-1:000000000000:secret:/django-web-t-123/staging/redis-auth-placeholder"
 
 availability_zones = []
 

@@ -21,6 +21,11 @@ variable "aws_account_id" {
 variable "project_name" {
   type    = string
   default = "django-web-t-123"
+
+  validation {
+    condition     = var.project_name == "django-web-t-123"
+    error_message = "project_name must be django-web-t-123 to preserve the exact staging resource identities."
+  }
 }
 
 variable "environment" {
@@ -234,7 +239,7 @@ variable "redis_num_cache_clusters" {
 }
 
 variable "redis_auth_secret_arn" {
-  description = "ARN of an operator-managed Secrets Manager secret whose entire value is the Redis auth token."
+  description = "ARN output of the bootstrap-owned Secrets Manager secret whose entire value is the Redis auth token; the staging root consumes only this reference and the secret value must not be placed in staging tfvars."
   type        = string
 
   validation {
