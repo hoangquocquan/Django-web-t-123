@@ -47,3 +47,6 @@ infra/aws/**/*.tfstate.*
 infra/aws/**/*.tfplan
 infra/aws/**/crash.log
 infra/aws/**/terraform.tfvars
+infra/aws/**/*.auto.tfvars
+infra/aws/**/backend.hcl
+infra/aws/**/*.tfplan

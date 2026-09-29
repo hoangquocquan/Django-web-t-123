@@ -21,6 +21,11 @@ variable "aws_account_id" {
 variable "project_name" {
   type    = string
   default = "django-web-t-123"
+
+  validation {
+    condition     = var.project_name == "django-web-t-123"
+    error_message = "project_name must be django-web-t-123 to preserve the exact staging resource identities."
+  }
 }
 
 variable "environment" {
@@ -121,6 +126,46 @@ variable "frontend_image_digest" {
   }
 }
 
+variable "backend_ecr_repository_url" {
+  description = "Bootstrap-owned backend ECR repository URL, without tag or digest."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com(?:\\.cn)?/[a-z0-9][a-z0-9._/-]*$", var.backend_ecr_repository_url))
+    error_message = "backend_ecr_repository_url must be a valid ECR repository URL without a tag or digest."
+  }
+}
+
+variable "backend_ecr_repository_arn" {
+  description = "Bootstrap-owned backend ECR repository ARN used for least-privilege image pulls and verification."
+  type        = string
+
+  validation {
+    condition     = can(regex("^arn:[^:]+:ecr:[^:]+:[0-9]{12}:repository/[a-z0-9][a-z0-9._/-]*$", var.backend_ecr_repository_arn))
+    error_message = "backend_ecr_repository_arn must be a valid ECR repository ARN."
+  }
+}
+
+variable "frontend_ecr_repository_url" {
+  description = "Bootstrap-owned frontend ECR repository URL, without tag or digest."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com(?:\\.cn)?/[a-z0-9][a-z0-9._/-]*$", var.frontend_ecr_repository_url))
+    error_message = "frontend_ecr_repository_url must be a valid ECR repository URL without a tag or digest."
+  }
+}
+
+variable "frontend_ecr_repository_arn" {
+  description = "Bootstrap-owned frontend ECR repository ARN used for least-privilege image pulls and verification."
+  type        = string
+
+  validation {
+    condition     = can(regex("^arn:[^:]+:ecr:[^:]+:[0-9]{12}:repository/[a-z0-9][a-z0-9._/-]*$", var.frontend_ecr_repository_arn))
+    error_message = "frontend_ecr_repository_arn must be a valid ECR repository ARN."
+  }
+}
+
 variable "backend_cpu" {
   type    = number
   default = 512
@@ -194,7 +239,7 @@ variable "redis_num_cache_clusters" {
 }
 
 variable "redis_auth_secret_arn" {
-  description = "ARN of an operator-managed Secrets Manager secret whose entire value is the Redis auth token."
+  description = "ARN output of the bootstrap-owned Secrets Manager secret whose entire value is the Redis auth token; the staging root consumes only this reference and the secret value must not be placed in staging tfvars."
   type        = string
 
   validation {
@@ -213,21 +258,21 @@ variable "backup_retention_days" {
   default = 7
 }
 
-variable "enable_github_oidc_role" {
-  description = "Create the staging-only GitHub deployment role after an account OIDC provider is approved."
+variable "enable_github_deploy_role" {
+  description = "Create the staging deployment role, separate from the bootstrap-owned image-build role."
   type        = bool
   default     = false
 }
 
 variable "github_oidc_provider_arn" {
-  description = "Existing account-level GitHub OIDC provider ARN. Required when enable_github_oidc_role is true."
+  description = "Bootstrap-selected account-level GitHub OIDC provider ARN. Required when enable_github_deploy_role is true."
   type        = string
   default     = null
   nullable    = true
 
   validation {
-    condition     = !var.enable_github_oidc_role || (var.github_oidc_provider_arn != null && can(regex("^arn:[^:]+:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$", var.github_oidc_provider_arn)))
-    error_message = "github_oidc_provider_arn must identify the GitHub Actions OIDC provider when the role is enabled."
+    condition     = !var.enable_github_deploy_role || (var.github_oidc_provider_arn != null && can(regex("^arn:[^:]+:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$", var.github_oidc_provider_arn)))
+    error_message = "github_oidc_provider_arn must identify the GitHub Actions OIDC provider when the deploy role is enabled."
   }
 }
 

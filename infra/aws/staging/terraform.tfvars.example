@@ -16,9 +16,16 @@ route53_zone_id = null
 backend_image_digest  = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 frontend_image_digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 
-# Pre-existing operator-managed secret containing only the Redis auth token.
-# Never place the token itself in this file or a Terraform CLI argument.
-redis_auth_secret_arn = "arn:aws:secretsmanager:ap-northeast-1:000000000000:secret:django-web-t-123-staging-redis-auth-placeholder"
+# Copy these non-secret values from the bootstrap root outputs. The full root
+# consumes these repositories and must never create or import them.
+backend_ecr_repository_url  = "000000000000.dkr.ecr.ap-northeast-1.amazonaws.com/django-web-t-123-staging/backend"
+backend_ecr_repository_arn  = "arn:aws:ecr:ap-northeast-1:000000000000:repository/django-web-t-123-staging/backend"
+frontend_ecr_repository_url = "000000000000.dkr.ecr.ap-northeast-1.amazonaws.com/django-web-t-123-staging/frontend"
+frontend_ecr_repository_arn = "arn:aws:ecr:ap-northeast-1:000000000000:repository/django-web-t-123-staging/frontend"
+
+# Bootstrap-owned secret containing only the Redis auth token. Copy its ARN
+# from the bootstrap output; never place the token itself in this file.
+redis_auth_secret_arn = "arn:aws:secretsmanager:ap-northeast-1:000000000000:secret:/django-web-t-123/staging/redis-auth-placeholder"
 
 availability_zones = []
 
@@ -30,8 +37,8 @@ service_desired_count    = 0 # Deployment workflow raises this only after migrat
 log_retention_days       = 14
 backup_retention_days    = 7
 
-enable_github_oidc_role = false
-github_oidc_provider_arn = null
+enable_github_deploy_role = false
+github_oidc_provider_arn  = null
 
 alb_deletion_protection = true
 rds_deletion_protection = true

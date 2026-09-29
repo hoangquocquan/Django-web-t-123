@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: ${{ vars.AWS_STAGING_REGION }}
-      AWS_ROLE_ARN: ${{ vars.AWS_STAGING_ROLE_ARN }}
+      AWS_ROLE_ARN: ${{ vars.AWS_STAGING_DEPLOY_ROLE_ARN }}
       ECS_CLUSTER: ${{ vars.AWS_STAGING_ECS_CLUSTER }}
       BACKEND_SERVICE: ${{ vars.AWS_STAGING_BACKEND_SERVICE }}
       FRONTEND_SERVICE: ${{ vars.AWS_STAGING_FRONTEND_SERVICE }}
