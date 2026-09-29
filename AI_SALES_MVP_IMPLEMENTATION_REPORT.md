@@ -1,5 +1,16 @@
 # AI Sales Assistant iteration report
 
+## Post-merge update — 2026-09-26
+
+PR #2 was merged from `feature/ai-sales-assistant` into `main` using GitHub's merge-commit method. Merge commit and merged main SHA: `6c349268db269108f9a012656c5fef37a5b7ab85`.
+
+Post-merge validation passed on the merged state: backend `579 passed`, targeted AI Sales/security/governance `47 passed`, frontend `156 passed`, Django system check passed, no migration drift was detected, TypeScript passed, the production frontend build passed, and `git diff --check` passed. The implementation remains advisory, human-reviewed, non-autonomous, and restricted to the governed synthetic knowledge source.
+
+```text
+MERGED TO MAIN: YES
+POST-MERGE VALIDATION: PASS
+```
+
 ## Pre-merge update — 2026-09-26
 
 The independent fixes in `a93532f` and the review record in `366c83f` supersede the earlier implementation snapshot and validation counts below. The integration review re-ran the complete branch against `origin/main` at `c03d55506ef3ffd38e5e7bb290b981c1a3ccb17f`: backend `579 passed`, targeted security/governance/legacy `47 passed`, frontend `156 passed`, Django system and migration checks passed, and the production frontend build passed. The current access policy is the strict Sales/Manager/Admin allowlist plus both `ai_sales:read` and `sales:read`; unknown roles and Viewer are denied. Full pre-merge evidence and remaining limitations are in `AI_SALES_PRE_MERGE_REVIEW.md`.
