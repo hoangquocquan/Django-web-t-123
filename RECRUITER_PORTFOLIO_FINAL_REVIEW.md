@@ -72,7 +72,7 @@ All screenshots were captured from the running local application with fictional 
 - The worktree contains extensive uncommitted application changes unrelated to portfolio presentation.
 - The full Django suite has the pre-existing `scripts` import issue described above.
 - The local standalone full Django invocation still has the previously documented phase 10/11 `scripts` import-path issue, although the repository's GitHub Actions Django checks passed.
-- Real portfolio screenshots still need to be captured.
+- The four requested portfolio screenshots have been captured from the local application and committed.
 
 ## Blockers
 
@@ -82,4 +82,4 @@ No technical blocker remains for this portfolio PR. Final owner review is still 
 
 `READY TO MERGE`
 
-The repository is suitable for PR review. Do not merge into `main` until the owner reviews the diff, adds screenshots, and confirms the remaining validation notes.
+The repository is suitable for PR review and merge after the owner reviews the diff and confirms the documented pre-existing local test issue. This review does not merge into `main`.
