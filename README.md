@@ -60,7 +60,25 @@ Do not commit `.env` files, credentials, tokens, API keys, AWS credentials, or L
 
 ## Screenshots
 
-The intended portfolio screenshots are documented in [docs/images/README.md](docs/images/README.md). Real screenshots should be captured from the running application; no artificial screenshots are included.
+These screenshots were captured from the running local application with fictional demo data. No artificial screenshots are included.
+
+### Product page
+
+![Product page](docs/images/product-page.png)
+
+### AI Sales Assistant
+
+![AI Sales Assistant](docs/images/ai-sales-chatbot.png)
+
+### RFQ workflow
+
+![RFQ workflow](docs/images/rfq-workflow.png)
+
+### Admin operations
+
+![Admin operations](docs/images/admin-operations.png)
+
+Capture and sanitization notes are documented in [docs/images/README.md](docs/images/README.md).
 
 ## Project status
 

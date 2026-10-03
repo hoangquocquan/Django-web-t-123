@@ -6,7 +6,7 @@
 
 ## 2. Moved files
 
-Root-level internal handoff, audit, review, readiness, remediation, and development-history Markdown files were moved to `docs/internal/`. Existing structured technical documentation was preserved.
+Root-level internal handoff, audit, review, readiness, remediation, and development-history Markdown files were moved to `docs/internal/`. A further review moved 43 tracked phase/report/handoff files from the root into `docs/internal/`; no non-document references to the moved filenames were found. Existing structured technical documentation was preserved.
 
 ## 3. Created or updated files
 
@@ -40,6 +40,7 @@ The configured remote currently points to `https://github.com/hoangquocquan/Djan
 
 - README relative links: reviewed; referenced files exist.
 - Mermaid: diagrams use standard `flowchart LR` syntax and were reviewed statically.
+- Root Markdown cleanup: root now contains only `README.md`, `README_JA.md`, and this recruiter report; technical history remains under `docs/internal/`.
 - Migration check: `python manage.py makemigrations --check --dry-run` passed with no changes.
 - Frontend tests: passed, 167 tests.
 - Frontend production build: passed with Vite.
@@ -52,6 +53,7 @@ The configured remote currently points to `https://github.com/hoangquocquan/Djan
 - Pre-existing uncommitted application changes were preserved.
 - AWS content is staging/target architecture unless deployment evidence says otherwise.
 - Real screenshots are still required.
+- Local screenshot capture was not performed in this pass; no artificial images were created.
 
 ## 10. Recruiter readiness
 

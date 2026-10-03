@@ -9,3 +9,15 @@ Django、React、RAG、AI Sales Assistant、n8n、LINEを組み合わせた個�
 AIコーディングツールは実装とレビューの補助として利用しましたが、テスト、API検証、マイグレーション確認、ビルド、CI向けチェックでコードを確認しています。
 
 詳細は [アーキテクチャ資料](docs/architecture/ARCHITECTURE.md) と [整理レポート](RECRUITER_PORTFOLIO_CLEANUP_REPORT.md) を参照してください。
+
+## スクリーンショット
+
+以下の画像は、架空のデモデータを使用してローカル環境で稼働中のアプリケーションから取得しました。
+
+![製品ページ](docs/images/product-page.png)
+
+![AI Sales Assistant](docs/images/ai-sales-chatbot.png)
+
+![RFQワークフロー](docs/images/rfq-workflow.png)
+
+![管理画面](docs/images/admin-operations.png)
