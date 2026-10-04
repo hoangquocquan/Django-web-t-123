@@ -18,7 +18,7 @@
 
 > Đây là báo cáo bàn giao giữa chừng. Phase B live E2E chưa gửi LINE và chưa được phép kết luận PASS.
 
-> Final review note (2026-09-27): báo cáo này là lịch sử điều tra. Quy trình isolated runtime cuối cùng đã được harden thành hai bước: `start_live_runtime.ps1` khởi động n8n để operator tạo owner, sau đó `attach_runtime_workflow.ps1` import workflow inactive vào đúng personal project và xác minh ownership. Xem `FINAL_REVIEW_REPORT.md` và báo cáo Phase C cho trạng thái cuối.
+> Final review note (2026-09-27): báo cáo này là lịch sử điều tra. Quy trình isolated runtime cuối cùng đã được harden thành hai bước: `start_live_runtime.ps1` khởi động n8n để operator tạo owner, sau đó `attach_runtime_workflow.ps1` import workflow inactive vào đúng personal project và xác minh ownership. Xem `docs/internal/FINAL_REVIEW_REPORT.md` và báo cáo Phase C cho trạng thái cuối.
 
 ## 1. Trạng thái hiện tại
 

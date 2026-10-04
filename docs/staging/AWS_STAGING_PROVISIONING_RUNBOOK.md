@@ -5,7 +5,7 @@ This is an operator procedure, not provisioning authorization. Never run `terraf
 ## Preflight
 
 1. Confirm the AWS account, region, budget, hostname, DNS ownership, ACM certificate and two availability zones.
-2. Complete the independent `infra/aws/bootstrap` procedure in `AWS_STAGING_BOOTSTRAP_RUNBOOK.md`. It owns the versioned/SSE-S3 state bucket, optional OIDC provider, image-build role, ECR repositories, and Redis AUTH secret/version.
+2. Complete the independent `infra/aws/bootstrap` procedure in `docs/aws/AWS_STAGING_BOOTSTRAP_RUNBOOK.md`. It owns the versioned/SSE-S3 state bucket, optional OIDC provider, image-build role, ECR repositories, and Redis AUTH secret/version.
 3. Treat bootstrap state access as credential access because Terraform manages the Redis secret value. Record the secret ARN, never the value.
 4. If GitHub deployment is approved, enable the full-root deployment role using the bootstrap-selected OIDC provider ARN. It remains separate from the bootstrap image-build role.
 5. Copy `terraform.tfvars.example` to ignored `terraform.tfvars`, replace every placeholder, and use exact reviewed image digests.

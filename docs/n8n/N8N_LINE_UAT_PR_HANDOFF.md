@@ -111,7 +111,7 @@ Evidence is documented in:
 - `N8N_LINE_UAT_PHASE_B_HANDOFF_REPORT.md`
 - `N8N_LINE_UAT_PHASE_C_LIVE_REPORT.md`
 - `N8N_LINE_UAT_SECURITY_REVIEW.md`
-- `FINAL_REVIEW_REPORT.md`
+- `docs/internal/FINAL_REVIEW_REPORT.md`
 
 ## 9. Known limitations
 
