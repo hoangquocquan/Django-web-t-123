@@ -1,5 +1,7 @@
 # AI-Powered Automotive Parts Sales Platform
 
+[English](README.md) | [日本語](README_JA.md)
+
 An engineering portfolio project for automotive parts sales, combining a Django backend, React frontend, retrieval-augmented generation (RAG), and workflow automation.
 
 ## Project
@@ -35,7 +37,7 @@ AI coding tools were used as implementation and review aids. The code was still 
 django_backend/          Django backend and API
 figma_make_frontend/     React/Vite frontend
 docs/architecture/       System and AWS-oriented architecture
-docs/images/             Screenshot documentation and placeholders
+docs/images/             Real portfolio screenshots and capture notes
 docs/internal/           Internal handoff, audit, and development history
 .github/workflows/       CI workflows
 ```
@@ -82,4 +84,4 @@ Capture and sanitization notes are documented in [docs/images/README.md](docs/im
 
 ## Project status
 
-Review [RECRUITER_PORTFOLIO_CLEANUP_REPORT.md](RECRUITER_PORTFOLIO_CLEANUP_REPORT.md) before presenting the repository to a recruiter.
+Portfolio cleanup and validation details are available in the [internal portfolio report](docs/internal/RECRUITER_PORTFOLIO_CLEANUP_REPORT.md).

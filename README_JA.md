@@ -1,5 +1,7 @@
 # AI搭載 自動車部品販売プラットフォーム
 
+[English](README.md) | 日本語
+
 Django、React、RAG、AI Sales Assistant、n8n、LINEを組み合わせた個人開発の技術ポートフォリオプロジェクトです。
 
 自動車部品の検索、AIによる販売支援、見積依頼（RFQ）を扱います。AWS関連の内容は、明記がない限りステージングまたはターゲット構成であり、本番稼働を意味しません。
@@ -8,7 +10,7 @@ Django、React、RAG、AI Sales Assistant、n8n、LINEを組み合わせた個�
 
 AIコーディングツールは実装とレビューの補助として利用しましたが、テスト、API検証、マイグレーション確認、ビルド、CI向けチェックでコードを確認しています。
 
-詳細は [アーキテクチャ資料](docs/architecture/ARCHITECTURE.md) と [整理レポート](RECRUITER_PORTFOLIO_CLEANUP_REPORT.md) を参照してください。
+詳細は [アーキテクチャ資料](docs/architecture/ARCHITECTURE.md) と [ポートフォリオ整理レポート](docs/internal/RECRUITER_PORTFOLIO_CLEANUP_REPORT.md) を参照してください。
 
 ## スクリーンショット
 
