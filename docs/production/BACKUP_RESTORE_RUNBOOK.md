@@ -1,0 +1,5 @@
+# Backup and restore runbook
+
+Status: `MANUAL_EXECUTION_REQUIRED`; never run against production from an automated test.
+
+Select an isolated production-like database, disable integrations, and use the platform-native backup or an equivalent `pg_dump --format=custom --no-owner --no-acl --file=<encrypted-controlled-path> <operator-supplied-connection>` command. Never place a connection string in shell history. Record identifier, SHA-256 checksum, encryption/key-manager reference, storage owner, retention, RPO and RTO. Media is backed up under the same recovery policy; n8n is included only after a separate production approval. Restore with a platform-native operation or `pg_restore` into a newly provisioned isolated database, run migrations, integrity/row-count checks, representative reads and application smoke tests. Measure RPO/RTO, obtain owner sign-off, retire the isolated restore, and attach sanitized evidence. Quarterly rehearsal is required; a backup is not accepted until restore succeeds.

@@ -21,6 +21,15 @@ def run_production_settings(overrides=None):
         "DATABASE_URL",
         "REDIS_URL",
         "METRICS_BEARER_TOKEN",
+        "DATABASE_SSLMODE",
+        "MEDIA_STORAGE_DURABLE",
+        "MEDIA_BACKUP_ENABLED",
+        "AI_SALES_OLLAMA_ENABLED",
+        "AI_AGENT_OLLAMA_PLANNER_ENABLED",
+        "AI_REDIS_RATE_LIMIT_ENABLED",
+        "AI_OLLAMA_CAPACITY_ENABLED",
+        "LINE_SEND_ENABLED",
+        "LEGACY_DATABASE_ENABLED",
     ):
         environment.pop(key, None)
     environment.update(overrides or {})
@@ -50,8 +59,17 @@ def valid_environment():
         "SECRET_KEY": "prod02-test-key-not-for-runtime",
         "ALLOWED_HOSTS": "example.test",
         "DATABASE_URL": "postgresql://user:password@database:5432/mecprecision",
-        "REDIS_URL": "redis://:password@redis:6379/0",
+        "REDIS_URL": "rediss://:password@redis:6379/0",
         "METRICS_BEARER_TOKEN": "metrics-test-token-not-for-runtime",
+        "DATABASE_SSLMODE": "require",
+        "MEDIA_STORAGE_DURABLE": "true",
+        "MEDIA_BACKUP_ENABLED": "true",
+        "AI_SALES_OLLAMA_ENABLED": "false",
+        "AI_AGENT_OLLAMA_PLANNER_ENABLED": "false",
+        "AI_REDIS_RATE_LIMIT_ENABLED": "true",
+        "AI_OLLAMA_CAPACITY_ENABLED": "false",
+        "LINE_SEND_ENABLED": "false",
+        "LEGACY_DATABASE_ENABLED": "false",
     }
 
 
@@ -74,6 +92,59 @@ def test_production_settings_require_postgres_and_redis_schemes():
     environment = valid_environment()
     environment["DATABASE_URL"] = "sqlite:///unsafe.sqlite3"
     assert run_production_settings(environment).returncode != 0
+
+    environment = valid_environment()
+    environment["REDIS_URL"] = "redis://:password@redis:6379/0"
+    result = run_production_settings(environment)
+    assert result.returncode != 0
+    assert "rediss://" in result.stderr
+
+
+def test_production_safety_switches_fail_closed():
+    for name in ("LINE_SEND_ENABLED", "LEGACY_DATABASE_ENABLED"):
+        environment = valid_environment()
+        environment[name] = "true"
+        result = run_production_settings(environment)
+        assert result.returncode != 0
+        assert name in result.stderr
+
+
+def test_production_requires_explicit_ai_provider_flags():
+    for name in (
+        "AI_SALES_OLLAMA_ENABLED",
+        "AI_AGENT_OLLAMA_PLANNER_ENABLED",
+        "AI_REDIS_RATE_LIMIT_ENABLED",
+        "AI_OLLAMA_CAPACITY_ENABLED",
+    ):
+        environment = valid_environment()
+        environment.pop(name)
+        result = run_production_settings(environment)
+        assert result.returncode != 0
+        assert name in result.stderr
+
+
+def test_production_database_tls_fails_closed():
+    for unsafe in ("disable", "allow", "prefer"):
+        environment = valid_environment()
+        environment["DATABASE_SSLMODE"] = unsafe
+        result = run_production_settings(environment)
+        assert result.returncode != 0
+        assert "DATABASE_SSLMODE" in result.stderr
+
+    for safe in ("require", "verify-full"):
+        environment = valid_environment()
+        environment["DATABASE_SSLMODE"] = safe
+        result = run_production_settings(environment)
+        assert result.returncode == 0, result.stderr
+
+
+def test_production_requires_durable_backed_up_media():
+    for missing in ("MEDIA_STORAGE_DURABLE", "MEDIA_BACKUP_ENABLED"):
+        environment = valid_environment()
+        environment.pop(missing)
+        result = run_production_settings(environment)
+        assert result.returncode != 0
+        assert "Production media requires" in result.stderr
 
     environment = valid_environment()
     environment["REDIS_URL"] = "http://redis:6379"

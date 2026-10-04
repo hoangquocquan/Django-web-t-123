@@ -10,14 +10,14 @@ from apps.foundation.services import (
     FoundationPermissionService,
     FoundationUserService,
 )
-from scripts.copy_legacy_database_for_test import copy_legacy_database
+from tests.legacy_sqlite_helpers import create_legacy_sqlite_fixture
 
 
 @pytest.fixture
 def legacy_db(tmp_path):
     """Return a read-only copied legacy database path for compatibility checks."""
-    return copy_legacy_database(
-        destination=tmp_path / "legacy_database" / "mecprecision-test.sqlite"
+    return create_legacy_sqlite_fixture(
+        tmp_path / "legacy_database" / "mecprecision-test.sqlite"
     )
 
 
@@ -48,11 +48,11 @@ def bearer_header(user):
 
 
 @pytest.mark.django_db
-def test_foundation_migrations_seed_roles_permissions_and_legacy_users():
+def test_foundation_migrations_seed_roles_and_permissions_without_legacy_artifact():
     assert FoundationRole.objects.filter(name__in=["admin", "editor", "viewer"]).count() == 3
     assert FoundationPermission.objects.filter(code="*:*").exists()
     assert FoundationPermission.objects.filter(code="*:read").exists()
-    assert FoundationUser.objects.filter(legacy_admin_id__isnull=False).count() >= 1
+    assert FoundationUser._meta.get_field("legacy_admin_id").null is True
 
 
 @pytest.mark.django_db

@@ -1,0 +1,20 @@
+{
+  "customer": {
+    "id": "UAT-CUST-001",
+    "name": "UAT Tanaka Manufacturing",
+    "line_user_id": "ENV:LINE_UAT_RECIPIENT_USER_ID",
+    "environment": "uat",
+    "synthetic": true
+  },
+  "rfq": {
+    "id": "UAT-RFQ-001",
+    "part_name": "SUS304 Precision Bracket",
+    "quantity": 100,
+    "due_date": "2027-12-01",
+    "material": "SUS304",
+    "process": "CNC machining",
+    "notes": "UAT ONLY - DO NOT CONTACT REAL CUSTOMER",
+    "environment": "uat",
+    "synthetic": true
+  }
+}

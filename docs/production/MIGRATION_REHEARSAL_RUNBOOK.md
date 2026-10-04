@@ -1,0 +1,3 @@
+# Migration rehearsal runbook
+
+Status: `MANUAL_EXECUTION_REQUIRED`. Restore a recent sanitized production-like PostgreSQL snapshot into isolation; record table sizes and row counts; run `manage.py migrate --plan`; then capture total duration, per-step duration, lock waits and blocked queries while executing with integrations disabled. Verify constraints, permission seed migrations, `manage.py migrate --check`, application smoke and recovery/headroom. Give special review to the non-reversible `ai_agent/0004` data step, immutable Knowledge `0004`–`0010`, and legacy sales/order phases. Stop for large-table rewrites, lock-budget breaches, destructive operations or missing recovery plans. Prefer a forward fix; never blindly reverse or rewrite committed migrations.

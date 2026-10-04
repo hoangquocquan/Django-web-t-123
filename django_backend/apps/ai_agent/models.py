@@ -1,6 +1,11 @@
-"""Models for audited AI agent executions."""
+"""Models for audited AI agent executions and UAT outbound approvals."""
+
+# ruff: noqa: RUF012 - Django Meta attributes are declarative ORM configuration.
+
+import uuid
 
 from django.db import models
+from django.db.models import Q
 
 
 class AgentRun(models.Model):
@@ -50,3 +55,90 @@ class AgentToolAudit(models.Model):
         indexes = [
             models.Index(fields=["tool_name", "status"], name="ai_tool_name_status_idx"),
         ]
+
+
+class OutboundMessageApproval(models.Model):
+    """Human approval and delivery audit for one synthetic UAT LINE message."""
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+        SENT = "SENT", "Sent"
+        FAILED = "FAILED", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    environment = models.CharField(max_length=16, default="uat")
+    synthetic = models.BooleanField(default=True)
+    rfq_id = models.CharField(max_length=80, db_index=True)
+    channel = models.CharField(max_length=16, default="line")
+    recipient_ref = models.CharField(max_length=255)
+    proposed_message = models.TextField()
+    approved_content_hash = models.CharField(max_length=64, blank=True)
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    ai_payload = models.JSONField(default=dict)
+    approved_by = models.ForeignKey(
+        "foundation.FoundationUser",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="approved_uat_line_messages",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(
+        "foundation.FoundationUser",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="rejected_uat_line_messages",
+    )
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    provider_message_id = models.CharField(max_length=160, null=True, blank=True)
+    provider_response = models.JSONField(default=dict, blank=True)
+    send_attempted = models.BooleanField(default=False)
+    send_claimed_at = models.DateTimeField(null=True, blank=True)
+    line_result_status = models.CharField(max_length=40, blank=True)
+    audit_log = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ai_agent_outbound_message_approvals"
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(environment="uat"),
+                name="line_uat_environment_only",
+            ),
+            models.CheckConstraint(
+                condition=Q(synthetic=True),
+                name="line_uat_synthetic_only",
+            ),
+            models.CheckConstraint(
+                condition=Q(channel="line"),
+                name="line_uat_channel_only",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    status__in=["PENDING", "APPROVED", "REJECTED", "SENT", "FAILED"]
+                ),
+                name="line_uat_known_status_only",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~Q(status__in=["APPROVED", "SENT", "FAILED"])
+                    | ~Q(approved_content_hash="")
+                ),
+                name="line_uat_approved_content_bound",
+            ),
+        ]
+
+    def __str__(self):
+        """Return the business-safe approval identifier."""
+        return f"line-uat-{self.id}"

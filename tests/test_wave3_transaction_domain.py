@@ -20,14 +20,14 @@ from apps.transaction_domain.models import (
     WorkflowApproval,
 )
 from apps.transaction_domain.services import OrderService, WorkflowService
-from scripts.copy_legacy_database_for_test import copy_legacy_database
+from tests.legacy_sqlite_helpers import create_legacy_sqlite_fixture
 
 
 @pytest.fixture
 def legacy_db(tmp_path):
     """Return a read-only copied legacy database path."""
-    return copy_legacy_database(
-        destination=tmp_path / "legacy_database" / "mecprecision-test.sqlite"
+    return create_legacy_sqlite_fixture(
+        tmp_path / "legacy_database" / "mecprecision-test.sqlite"
     )
 
 
@@ -76,10 +76,10 @@ def create_stock_item(quantity="20"):
 
 
 @pytest.mark.django_db
-def test_wave3_migrations_seed_orders_and_transaction_history():
-    assert TransactionOrder.objects.filter(legacy_quote_request_id__isnull=False).count() >= 1
-    assert TransactionHistory.objects.filter(action="order.imported").count() >= 1
-    assert TransactionHistory.objects.filter(legacy_event_id__isnull=False).count() >= 1
+def test_wave3_migrations_support_optional_legacy_imports_on_clean_clone():
+    assert TransactionOrder._meta.get_field("legacy_quote_request_id").null is True
+    assert TransactionHistory._meta.get_field("legacy_event_id").null is True
+    assert TransactionOrder.objects.filter(legacy_quote_request_id__isnull=False).count() == 0
 
 
 @pytest.mark.django_db

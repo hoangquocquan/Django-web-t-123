@@ -101,8 +101,17 @@ def test_security_configuration_validation(monkeypatch):
     monkeypatch.setenv(
         "DATABASE_URL", "postgresql://user:password@database:5432/mecprecision"
     )
-    monkeypatch.setenv("REDIS_URL", "redis://:password@redis:6379/0")
+    monkeypatch.setenv("REDIS_URL", "rediss://:password@redis:6379/0")
     monkeypatch.setenv("METRICS_BEARER_TOKEN", "metrics-test-token-not-for-runtime")
+    monkeypatch.setenv("DATABASE_SSLMODE", "require")
+    monkeypatch.setenv("MEDIA_STORAGE_DURABLE", "true")
+    monkeypatch.setenv("MEDIA_BACKUP_ENABLED", "true")
+    monkeypatch.setenv("AI_SALES_OLLAMA_ENABLED", "false")
+    monkeypatch.setenv("AI_AGENT_OLLAMA_PLANNER_ENABLED", "false")
+    monkeypatch.setenv("AI_REDIS_RATE_LIMIT_ENABLED", "true")
+    monkeypatch.setenv("AI_OLLAMA_CAPACITY_ENABLED", "false")
+    monkeypatch.setenv("LINE_SEND_ENABLED", "false")
+    monkeypatch.setenv("LEGACY_DATABASE_ENABLED", "false")
     production = importlib.import_module("config.settings.production")
 
     assert production.DEBUG is False

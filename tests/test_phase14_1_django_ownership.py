@@ -8,14 +8,14 @@ from apps.cms.models import CmsPage, NewsletterSubscriber as LegacyNewsletterSub
 from apps.cms.repositories.newsletter_repository import NewsletterRepository
 from apps.newsletter.models import NewsletterSubscriber
 from apps.newsletter.services import NewsletterService
-from scripts.copy_legacy_database_for_test import copy_legacy_database
+from tests.legacy_sqlite_helpers import create_legacy_sqlite_fixture
 
 
 @pytest.fixture
 def legacy_db(tmp_path):
     """Return a read-only copied legacy SQLite database path."""
-    return copy_legacy_database(
-        destination=tmp_path / "legacy_database" / "mecprecision-test.sqlite"
+    return create_legacy_sqlite_fixture(
+        tmp_path / "legacy_database" / "mecprecision-test.sqlite"
     )
 
 

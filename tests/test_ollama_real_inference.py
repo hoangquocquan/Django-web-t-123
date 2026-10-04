@@ -1,12 +1,16 @@
 import pytest
-
 from apps.ai.models import AIRequestLog
 from apps.ai.services.health_service import OllamaHealthService
-from apps.ai.services.ollama_client import OllamaClient, OllamaClientError, OllamaResponse
+from apps.ai.services.ollama_client import (
+    OllamaClient,
+    OllamaClientError,
+    OllamaResponse,
+)
 from apps.ai_agent.services.sales_assistant import SalesAssistantService
 from apps.foundation.services import FoundationUserService
 from apps.knowledge.services.assistant_service import KnowledgeAssistantService
-from apps.knowledge.services.knowledge_service import KnowledgeService
+
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 
 
 class FakeHealthClient:
@@ -110,7 +114,7 @@ def test_ollama_health_accepts_latest_model_suffix(monkeypatch):
     assert result["model_available"] is True
 
 
-def test_ai_health_api_returns_direct_payload(client, monkeypatch):
+def test_ai_health_api_is_sanitized_for_anonymous_callers(client, monkeypatch, settings):
     class FakeHealthService:
         def check(self):
             return {
@@ -118,6 +122,9 @@ def test_ai_health_api_returns_direct_payload(client, monkeypatch):
                 "available": True,
                 "model": "llama3.1",
                 "model_available": True,
+                "endpoint": "http://internal-provider:11434",
+                "models": ["private-model"],
+                "error": "raw provider exception",
             }
 
     monkeypatch.setattr("apps.ai.views.OllamaHealthService", lambda: FakeHealthService())
@@ -125,18 +132,42 @@ def test_ai_health_api_returns_direct_payload(client, monkeypatch):
     response = client.get("/api/v1/ai/health/")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "ready"
-    assert response.json()["available"] is True
+    assert response.json() == {"status": "ok"}
+
+
+def test_ai_health_details_require_operations_token(client, monkeypatch, settings):
+    settings.METRICS_BEARER_TOKEN = "synthetic-operations-token"
+
+    class FakeHealthService:
+        def check(self):
+            return {
+                "status": "unavailable",
+                "available": False,
+                "endpoint_reachable": False,
+                "endpoint": "http://internal-provider:11434",
+                "model": "private-model",
+                "models": [],
+                "error": "raw provider exception",
+            }
+
+    monkeypatch.setattr("apps.ai.views.OllamaHealthService", lambda: FakeHealthService())
+    assert client.get("/api/v1/ai/health/").json() == {"status": "unavailable"}
+    detailed = client.get(
+        "/api/v1/ai/health/",
+        HTTP_AUTHORIZATION="Bearer synthetic-operations-token",
+    )
+    assert detailed.json()["endpoint"] == "http://internal-provider:11434"
+    assert detailed.json()["error"] == "raw provider exception"
 
 
 @pytest.mark.django_db
 def test_rag_generation_uses_ollama_and_logs_request(ai_user):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="CNC Capability",
         content="MecPrecision supports CNC shaft machining and fixture inspection.",
         category_name="AI",
         permission_level="internal",
-        created_by_email=ai_user.email,
+        reader=ai_user,
     )
 
     result = KnowledgeAssistantService(ollama_client=FakeOllamaClient()).answer(
@@ -152,18 +183,18 @@ def test_rag_generation_uses_ollama_and_logs_request(ai_user):
     log = AIRequestLog.objects.first()
     assert log.model_name == "llama3.1"
     assert log.question_hash
-    assert "CNC shaft" in log.question_preview
-    assert log.retrieved_documents[0]["title"] == "CNC Capability"
+    assert log.question_preview == ""
+    assert set(log.retrieved_documents[0]) == {"id", "version", "relevance_score"}
 
 
 @pytest.mark.django_db
 def test_rag_generation_falls_back_when_ollama_is_down(ai_user):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="Fixture Capability",
         content="MecPrecision supports fixture design and quality inspection.",
         category_name="AI",
         permission_level="internal",
-        created_by_email=ai_user.email,
+        reader=ai_user,
     )
 
     result = KnowledgeAssistantService(ollama_client=FailingOllamaClient()).answer(

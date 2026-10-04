@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 import pytest
-
 from apps.core import views
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -13,11 +12,20 @@ BASE_ENV = {
     "DJANGO_SETTINGS_MODULE": "config.settings.production",
     "SECRET_KEY": "fictional-phase6-test-key",
     "ALLOWED_HOSTS": "localhost,127.0.0.1",
-    "DATABASE_URL": "postgresql://fictional:fictional@127.0.0.1:5432/fictional",
-    "REDIS_URL": "redis://:fictional@127.0.0.1:6379/0",
+    "DATABASE_URL": "postgresql://fictional:fictional@database:5432/fictional",
+    "DATABASE_SSLMODE": "require",
+    "REDIS_URL": "rediss://:fictional@redis:6379/0",
     "METRICS_BEARER_TOKEN": "fictional-metrics-token",
     "CORS_ALLOWED_ORIGINS": "",
     "CSRF_TRUSTED_ORIGINS": "https://localhost",
+    "MEDIA_STORAGE_DURABLE": "true",
+    "MEDIA_BACKUP_ENABLED": "true",
+    "AI_SALES_OLLAMA_ENABLED": "false",
+    "AI_AGENT_OLLAMA_PLANNER_ENABLED": "false",
+    "AI_REDIS_RATE_LIMIT_ENABLED": "true",
+    "AI_OLLAMA_CAPACITY_ENABLED": "false",
+    "LINE_SEND_ENABLED": "false",
+    "LEGACY_DATABASE_ENABLED": "false",
 }
 
 

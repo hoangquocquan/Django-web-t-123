@@ -8,6 +8,7 @@ from apps.knowledge.models import KnowledgeDocument
 from apps.knowledge.services.search_service import KnowledgeSearchService
 from apps.sales.models import SalesLead, SalesOpportunity, SalesQuotation
 from apps.transaction_domain.models import TransactionOrder
+from tests.knowledge_test_helpers import approve_and_index_existing_document
 
 
 DEMO_DOMAIN = "demo.mecprecision.local"
@@ -95,6 +96,10 @@ def test_clear_demo_data_removes_only_demo_records():
 def test_demo_knowledge_is_ai_search_compatible():
     generate_small_demo()
     user = FoundationUser.objects.get(email=f"engineer1@{DEMO_DOMAIN}")
+    documents = list(KnowledgeDocument.objects.filter(title__startswith="[DEMO]"))
+    assert documents
+    assert all(document.status == "DRAFT" for document in documents)
+    approve_and_index_existing_document(documents[0], reader=user)
 
     result = KnowledgeSearchService().search("CNC material quality inspection", user=user)
 

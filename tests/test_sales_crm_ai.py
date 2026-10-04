@@ -1,10 +1,12 @@
 import pytest
-
+from apps.ai_agent.services.sales_access import AISalesAccessPolicy
 from apps.business_core.models import BusinessCustomer, BusinessProduct
 from apps.crm.models import CrmCustomerProfile, CrmInteraction, CrmTimelineEvent
 from apps.foundation.services import FoundationAuthService, FoundationUserService
-from apps.knowledge.services.knowledge_service import KnowledgeService
 from apps.sales.models import SalesActivity, SalesLead, SalesOpportunity, SalesQuotation
+from django.core.exceptions import PermissionDenied
+
+from tests.knowledge_test_helpers import create_approved_indexed_knowledge
 
 
 @pytest.fixture
@@ -69,6 +71,34 @@ def test_sales_lead_creation_requires_permission(client, sales_admin, viewer_use
     assert admin_response.status_code == 201
     assert admin_response.json()["data"]["company"] == "ABC Precision"
     assert SalesLead.objects.filter(company="ABC Precision", owner=sales_admin).exists()
+
+
+@pytest.mark.django_db
+def test_ai_sales_access_denies_unrelated_and_unowned_rows(sales_admin):
+    other = FoundationUserService().create_user(
+        email="other-sales@example.com", full_name="Other Sales",
+        password="SecurePass123!", role_name="admin",
+    )
+    owned_lead = SalesLead.objects.create(
+        company="Owned", contact_person="Owner", owner=sales_admin,
+    )
+    other_lead = SalesLead.objects.create(
+        company="Other", contact_person="Other", owner=other,
+    )
+    owned_customer = BusinessCustomer.objects.create(
+        company_name="Owned Customer", contact_name="Owner", created_by=sales_admin,
+    )
+    unowned_customer = BusinessCustomer.objects.create(
+        company_name="Legacy Customer", contact_name="Legacy",
+    )
+    policy = AISalesAccessPolicy()
+
+    assert policy.leads(sales_admin).filter(pk=owned_lead.pk).exists()
+    assert not policy.leads(sales_admin).filter(pk=other_lead.pk).exists()
+    assert policy.customers(sales_admin).filter(pk=owned_customer.pk).exists()
+    assert not policy.customers(sales_admin).filter(pk=unowned_customer.pk).exists()
+    with pytest.raises(PermissionDenied):
+        policy.leads(None)
 
 
 @pytest.mark.django_db
@@ -188,12 +218,12 @@ def test_crm_customer_profile_and_interaction_timeline(client, sales_admin):
 
 @pytest.mark.django_db
 def test_ai_sales_assistant_uses_rag_and_keeps_human_approval(client, sales_admin):
-    KnowledgeService().create_document(
+    create_approved_indexed_knowledge(
         title="CNC shaft capability",
-        content="MecPrecision supports CNC shaft machining, fixture design, quality inspection, and quotation review.",
+        content="MecPrecision supports CNC shaft machining, fixture design, and quality inspection.",
         category_name="Sales",
         permission_level="internal",
-        created_by_email=sales_admin.email,
+        reader=sales_admin,
     )
     lead = SalesLead.objects.create(
         company="AI Lead Co",
@@ -207,6 +237,7 @@ def test_ai_sales_assistant_uses_rag_and_keeps_human_approval(client, sales_admi
         company_name="AI Lead Co",
         contact_name="Pham D",
         email="ai-lead@example.com",
+        created_by=sales_admin,
     )
     headers = bearer_header(sales_admin)
 

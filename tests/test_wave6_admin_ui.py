@@ -263,8 +263,8 @@ def test_admin_ui_order_workflow_and_transaction_history(client, admin_user):
     assert TransactionHistory.objects.filter(order=order).exists()
 
 
-def test_wave6_legacy_admin_compatibility_files_remain():
-    """Wave 6 cuts over Django UI without deleting legacy admin code."""
-    assert (PROJECT_ROOT / "backend" / "app.py").exists()
-    assert (PROJECT_ROOT / "backend" / "services" / "cms_service.py").exists()
-    assert (PROJECT_ROOT / "backend" / "repositories" / "cms_repository.py").exists()
+def test_wave6_keeps_django_admin_as_canonical_ui():
+    """The cutover keeps the retired backend absent and Django UI present."""
+    assert not (PROJECT_ROOT / "backend").exists()
+    assert (PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "views.py").exists()
+    assert (PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "urls.py").exists()

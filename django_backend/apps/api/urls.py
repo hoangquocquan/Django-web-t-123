@@ -3,13 +3,35 @@
 from django.urls import include, path
 
 from apps.ai.views import ai_chat, ai_governance_events, ai_health
-from apps.ai_agent.views import agent_run, sales_assistant
+from apps.ai_agent.line_uat_views import (
+    line_uat_approval_detail,
+    line_uat_approve,
+    line_uat_drafts,
+    line_uat_reject,
+    line_uat_send,
+)
+from apps.ai_agent.views import (
+    agent_run,
+    internal_ai_sales_analyze,
+    internal_ai_sales_rfqs,
+    sales_assistant,
+)
 from apps.knowledge.views import (
     knowledge_chat,
     knowledge_document_download,
+    knowledge_document_transition,
     knowledge_documents,
+    knowledge_feedback,
+    knowledge_gap_review,
     knowledge_health,
+    knowledge_human_evaluation,
+    knowledge_pilot_monitoring,
+    knowledge_pilot_program_transition,
+    knowledge_pilot_training_acknowledgement,
+    knowledge_pilot_user_transition,
     knowledge_search,
+    synthetic_rag_chat,
+    synthetic_rag_demo_query,
 )
 
 from .views.admin_interface import (
@@ -38,6 +60,11 @@ from .views.business_core import (
     inventory_items,
     inventory_warehouses,
 )
+from .views.capabilities import (
+    admin_capabilities,
+    admin_capability_detail,
+    public_capabilities,
+)
 from .views.catalog import categories, materials, product_detail, products
 from .views.cms import menu, page_detail, pages
 from .views.crm import (
@@ -56,6 +83,11 @@ from .views.foundation import (
     foundation_users,
 )
 from .views.newsletter import subscribers as newsletter_subscribers
+from .views.public_products import (
+    admin_public_product_detail,
+    admin_public_products,
+    public_products,
+)
 from .views.replacement import (
     aws_demo,
     capabilities,
@@ -92,6 +124,10 @@ urlpatterns = [
     path("admin/dashboard/", admin_dashboard, name="api-admin-dashboard"),
     path("admin/permissions/", admin_permissions, name="api-admin-permissions"),
     path("admin/products/", admin_products, name="api-admin-products"),
+    path("admin/capabilities/", admin_capabilities, name="api-admin-capabilities"),
+    path("admin/capabilities/<int:capability_id>/", admin_capability_detail, name="api-admin-capability-detail"),
+    path("admin/public-products/", admin_public_products, name="api-admin-public-products"),
+    path("admin/public-products/<int:projection_id>/", admin_public_product_detail, name="api-admin-public-product-detail"),
     path(
         "admin/products/<int:product_id>/",
         admin_product_detail,
@@ -220,6 +256,8 @@ urlpatterns = [
         name="api-foundation-permission-check",
     ),
     path("public/home/", home, name="api-public-home"),
+    path("public/products/", public_products, name="api-public-products"),
+    path("public/capabilities/", public_capabilities, name="api-public-capabilities"),
     path("news/", news, name="api-news"),
     path("openapi.json", openapi_schema, name="api-openapi-schema"),
     path("version/", version, name="api-version"),
@@ -236,9 +274,86 @@ urlpatterns = [
         knowledge_document_download,
         name="api-knowledge-document-download",
     ),
+    path(
+        "knowledge/documents/<int:document_id>/<str:transition>/",
+        knowledge_document_transition,
+        name="api-knowledge-document-transition",
+    ),
     path("knowledge/search/", knowledge_search, name="api-knowledge-search"),
     path("knowledge/chat/", knowledge_chat, name="api-knowledge-chat"),
+    path(
+        "internal/rag-demo/query/",
+        synthetic_rag_demo_query,
+        name="api-internal-rag-demo-query",
+    ),
+    path(
+        "internal/rag-chat/",
+        synthetic_rag_chat,
+        name="api-internal-rag-chat",
+    ),
     path("knowledge/health/", knowledge_health, name="api-knowledge-health"),
+    path("knowledge/feedback/", knowledge_feedback, name="api-knowledge-feedback"),
+    path("knowledge/gap-review/", knowledge_gap_review, name="api-knowledge-gap-review"),
+    path(
+        "knowledge/human-evaluation/",
+        knowledge_human_evaluation,
+        name="api-knowledge-human-evaluation",
+    ),
+    path(
+        "knowledge/pilot/monitoring/",
+        knowledge_pilot_monitoring,
+        name="api-knowledge-pilot-monitoring",
+    ),
+    path(
+        "knowledge/pilot/program/<str:transition>/",
+        knowledge_pilot_program_transition,
+        name="api-knowledge-pilot-program-transition",
+    ),
+    path(
+        "knowledge/pilot/training/acknowledge/",
+        knowledge_pilot_training_acknowledgement,
+        name="api-knowledge-pilot-training-acknowledgement",
+    ),
+    path(
+        "knowledge/pilot/users/<int:scope_id>/<str:transition>/",
+        knowledge_pilot_user_transition,
+        name="api-knowledge-pilot-user-transition",
+    ),
     path("agent/run/", agent_run, name="api-agent-run"),
     path("ai/sales-assistant/", sales_assistant, name="api-ai-sales-assistant"),
+    path(
+        "internal/ai-sales/analyze/",
+        internal_ai_sales_analyze,
+        name="api-internal-ai-sales-analyze",
+    ),
+    path(
+        "internal/ai-sales/rfqs/",
+        internal_ai_sales_rfqs,
+        name="api-internal-ai-sales-rfqs",
+    ),
+    path(
+        "internal/line-uat/drafts/",
+        line_uat_drafts,
+        name="api-internal-line-uat-drafts",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/",
+        line_uat_approval_detail,
+        name="api-internal-line-uat-approval-detail",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/approve/",
+        line_uat_approve,
+        name="api-internal-line-uat-approve",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/reject/",
+        line_uat_reject,
+        name="api-internal-line-uat-reject",
+    ),
+    path(
+        "internal/line-uat/approvals/<uuid:approval_id>/send/",
+        line_uat_send,
+        name="api-internal-line-uat-send",
+    ),
 ]

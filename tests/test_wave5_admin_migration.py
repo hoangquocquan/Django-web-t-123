@@ -234,8 +234,8 @@ def test_admin_permissions_endpoint_returns_roles(client, admin_user):
     assert "admin" in role_names
 
 
-def test_legacy_admin_compatibility_files_remain():
-    """Wave 5 must not delete the legacy admin surface."""
-    assert (PROJECT_ROOT / "backend" / "app.py").exists()
-    assert (PROJECT_ROOT / "backend" / "services" / "cms_service.py").exists()
-    assert (PROJECT_ROOT / "backend" / "repositories" / "cms_repository.py").exists()
+def test_django_admin_is_the_only_runtime_admin_surface():
+    """Retired backend files stay removed after the Django cutover."""
+    assert not (PROJECT_ROOT / "backend").exists()
+    assert (PROJECT_ROOT / "django_backend" / "apps" / "api" / "urls.py").exists()
+    assert (PROJECT_ROOT / "django_backend" / "apps" / "admin_ui" / "urls.py").exists()

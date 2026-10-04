@@ -24,6 +24,12 @@ def env_bool(name, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def env_strict_true(name):
+    """Enable a high-risk action only for the explicit string `true`."""
+    value = os.getenv(name)
+    return isinstance(value, str) and value.strip().casefold() == "true"
+
+
 def env_list(name, default=""):
     """Read a comma-separated list from environment variables."""
     return [
@@ -95,6 +101,15 @@ def database_from_url(database_url):
 SECRET_KEY = os.getenv("SECRET_KEY", "django-phase-2-dev-only-secret-key")
 DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
+
+# Synthetic n8n + LINE demo. Sending is deliberately disabled unless an
+# operator explicitly enables it and configures one allowlisted UAT recipient.
+N8N_UAT_BASE_URL = os.getenv("N8N_UAT_BASE_URL", "http://localhost:5678").strip()
+N8N_UAT_WEBHOOK_SECRET = os.getenv("N8N_UAT_WEBHOOK_SECRET", "").strip()
+LINE_UAT_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_UAT_CHANNEL_ACCESS_TOKEN", "").strip()
+LINE_UAT_CHANNEL_SECRET = os.getenv("LINE_UAT_CHANNEL_SECRET", "").strip()
+LINE_UAT_RECIPIENT_USER_ID = os.getenv("LINE_UAT_RECIPIENT_USER_ID", "").strip()
+LINE_SEND_ENABLED = env_strict_true("LINE_SEND_ENABLED")
 
 
 INSTALLED_APPS = [
@@ -278,6 +293,9 @@ OLLAMA_TIMEOUT_SECONDS = env_int("OLLAMA_TIMEOUT_SECONDS", 30)
 OLLAMA_TEMPERATURE = env_float("OLLAMA_TEMPERATURE", 0.2)
 OLLAMA_NUM_PREDICT = env_int("OLLAMA_NUM_PREDICT", 512)
 AI_SALES_OLLAMA_ENABLED = env_bool("AI_SALES_OLLAMA_ENABLED", True)
+AI_SALES_KNOWLEDGE_SOURCE = os.getenv(
+    "AI_SALES_KNOWLEDGE_SOURCE", "governed_synthetic"
+)
 AI_SALES_SYNTHESIS_ATTEMPTS = env_int("AI_SALES_SYNTHESIS_ATTEMPTS", 2)
 AI_AGENT_OLLAMA_PLANNER_ENABLED = env_bool("AI_AGENT_OLLAMA_PLANNER_ENABLED", True)
 AI_AGENT_MAX_STEPS = env_int("AI_AGENT_MAX_STEPS", 5)
@@ -295,6 +313,10 @@ OLLAMA_EMBEDDING_RETRIES = env_int("OLLAMA_EMBEDDING_RETRIES", 1)
 OLLAMA_EMBEDDING_DIMENSIONS = env_int("OLLAMA_EMBEDDING_DIMENSIONS", 768)
 KNOWLEDGE_EMBEDDING_PROVIDER = os.getenv("KNOWLEDGE_EMBEDDING_PROVIDER", "ollama")
 KNOWLEDGE_MIN_RELEVANCE_SCORE = env_float("KNOWLEDGE_MIN_RELEVANCE_SCORE", 0.5)
+PUBLIC_AI_ENABLED = False  # Separate release approval is required; not environment-overridable here.
+PUBLIC_SYNTHETIC_RAG_DEMO_ENABLED = False  # Never expose internal synthetic data by default.
+AI_PILOT_CORPUS_MAX_DOCUMENTS = 100
+AI_PILOT_CORPUS_MIN_DOCUMENTS = 50
 AI_CHAT_MAX_MESSAGE_LENGTH = env_int("AI_CHAT_MAX_MESSAGE_LENGTH", 2000)
 AI_RATE_LIMIT_PER_USER = env_int("AI_RATE_LIMIT_PER_USER", 30)
 AI_RATE_LIMIT_WINDOW_SECONDS = env_int("AI_RATE_LIMIT_WINDOW_SECONDS", 60)

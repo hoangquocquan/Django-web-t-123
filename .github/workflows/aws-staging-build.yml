@@ -1,0 +1,87 @@
+name: AWS Staging Build (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact independently reviewed commit SHA
+        required: true
+        type: string
+      publish:
+        description: Publish immutable images after staging ECR/OIDC approval
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: aws-staging-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    environment: staging
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_STAGING_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_STAGING_ROLE_ARN }}
+      BACKEND_REPOSITORY: ${{ vars.AWS_STAGING_BACKEND_ECR_REPOSITORY }}
+      FRONTEND_REPOSITORY: ${{ vars.AWS_STAGING_FRONTEND_ECR_REPOSITORY }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+
+      - name: Verify exact reviewed candidate and operator binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "${{ inputs.publish }}" = "true"
+          for value in AWS_REGION AWS_ROLE_ARN BACKEND_REPOSITORY FRONTEND_REPOSITORY; do
+            test -n "${!value:-}"
+            [[ "${!value}" != *TO_BE_* ]]
+          done
+
+      - name: Configure staging AWS credentials through OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and publish exact-SHA images
+        shell: bash
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          backend_image="$REGISTRY/$BACKEND_REPOSITORY:$CANDIDATE_SHA"
+          frontend_image="$REGISTRY/$FRONTEND_REPOSITORY:$CANDIDATE_SHA"
+          docker build --pull --file Dockerfile --tag "$backend_image" .
+          docker build --pull --file Dockerfile.phase6-frontend --tag "$frontend_image" .
+          docker push "$backend_image"
+          docker push "$frontend_image"
+
+      - name: Record immutable digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          backend_digest="$(aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids imageTag="$CANDIDATE_SHA" --query 'imageDetails[0].imageDigest' --output text)"
+          frontend_digest="$(aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids imageTag="$CANDIDATE_SHA" --query 'imageDetails[0].imageDigest' --output text)"
+          [[ "$backend_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$frontend_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          {
+            echo "candidate_sha=$CANDIDATE_SHA"
+            echo "backend_digest=$backend_digest"
+            echo "frontend_digest=$frontend_digest"
+          } >> "$GITHUB_STEP_SUMMARY"
